@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客户转移 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        /* 页面特定样式 */
+        .page-header {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ffa726 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-subtitle {
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        /* 转移向导容器 */
+        .transfer-wizard {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        /* 步骤指示器 */
+        .wizard-steps {
+            display: flex;
+            background: #fafafa;
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .step-item {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #d9d9d9;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-right: 12px;
+        }
+
+        .step-item.active .step-number {
+            background: #1890ff;
+            color: white;
+        }
+
+        .step-item.completed .step-number {
+            background: #52c41a;
+            color: white;
+        }
+
+        .step-title {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .step-item.active .step-title {
+            color: #1890ff;
+        }
+
+        .step-item.completed .step-title {
+            color: #52c41a;
+        }
+
+        .step-line {
+            position: absolute;
+            top: 16px;
+            left: calc(100% - 50px);
+            width: 100px;
+            height: 2px;
+            background: #d9d9d9;
+            z-index: 1;
+        }
+
+        .step-item:last-child .step-line {
+            display: none;
+        }
+
+        .step-item.completed .step-line {
+            background: #52c41a;
+        }
+
+        /* 向导内容 */
+        .wizard-content {
+            padding: 30px;
+            min-height: 600px;
+        }
+
+        .step-content {
+            display: none;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        /* 客户选择步骤 */
+        .customer-selection {
+            max-width: 800px;
+        }
+
+        .selection-header {
+            margin-bottom: 24px;
+        }
+
+        .selection-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .selection-subtitle {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 10px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-btn {
+            padding: 10px 20px;
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        /* 客户列表 */
+        .customer-list {
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .customer-header {
+            background: #fafafa;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .customer-item {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .customer-item:hover {
+            background: #f8f9fa;
+        }
+
+        .customer-item:last-child {
+            border-bottom: none;
+        }
+
+        .customer-checkbox {
+            width: 18px;
+            height: 18px;
+        }
+
+        .customer-info {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .customer-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .customer-owner {
+            color: #666;
+        }
+
+        .customer-status {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .status-potential {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .status-active {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .status-inactive {
+            background: #fff2e6;
+            color: #fa8c16;
+        }
+
+        .customer-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* 负责人选择步骤 */
+        .owner-selection {
+            max-width: 600px;
+        }
+
+        .selected-customers {
+            background: #f8f9fa;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .selected-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .selected-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .selected-tag {
+            background: #1890ff;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tag-remove {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .owner-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .owner-card {
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .owner-card:hover {
+            border-color: #1890ff;
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.15);
+        }
+
+        .owner-card.selected {
+            border-color: #1890ff;
+            background: #f6f9ff;
+        }
+
+        .owner-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .owner-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .owner-info h4 {
+            margin: 0 0 4px 0;
+            color: #333;
+        }
+
+        .owner-info p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .owner-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1890ff;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* 转移原因步骤 */
+        .transfer-reason {
+            max-width: 600px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        /* 确认步骤 */
+        .transfer-summary {
+            max-width: 800px;
+        }
+
+        .summary-section {
+            background: #f8f9fa;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .summary-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .summary-content {
+            line-height: 1.6;
+            color: #666;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 12px;
+        }
+
+        .summary-table th,
+        .summary-table td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .summary-table th {
+            background: #fafafa;
+            font-weight: 600;
+        }
+
+        /* 向导导航 */
+        .wizard-navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            border-top: 1px solid #f0f0f0;
+            background: #fafafa;
+        }
+
+        .nav-btn {
+            padding: 10px 24px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .nav-btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        .nav-btn-primary:hover {
+            background: #40a9ff;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .wizard-steps {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .step-line {
+                display: none;
+            }
+
+            .customer-info {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .owner-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 左侧导航 -->
+        <aside class="app-sidebar">
+            <!-- 导航内容将由navigation.js动态生成 -->
+        </aside>
+
+        <!-- 头部区域 -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">客户管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">客户转移</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索客户...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">3</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">管</div>
+                    <span>管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    <span>🔄</span>
+                    客户转移
+                </h1>
+                <p class="page-subtitle">将客户转移给其他销售人员，确保客户关系的连续性和专业性</p>
+            </div>
+
+            <!-- 转移向导 -->
+            <div class="transfer-wizard">
+                <!-- 步骤指示器 -->
+                <div class="wizard-steps">
+                    <div class="step-item active" id="step1">
+                        <div class="step-number">1</div>
+                        <div class="step-title">选择客户</div>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step-item" id="step2">
+                        <div class="step-number">2</div>
+                        <div class="step-title">选择接收人</div>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step-item" id="step3">
+                        <div class="step-number">3</div>
+                        <div class="step-title">转移原因</div>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step-item" id="step4">
+                        <div class="step-number">4</div>
+                        <div class="step-title">确认转移</div>
+                    </div>
+                </div>
+
+                <!-- 向导内容 -->
+                <div class="wizard-content">
+                    <!-- 步骤1: 选择客户 -->
+                    <div class="step-content active" id="content1">
+                        <div class="customer-selection">
+                            <div class="selection-header">
+                                <h3 class="selection-title">选择要转移的客户</h3>
+                                <p class="selection-subtitle">请从下列客户中选择需要转移的客户，可以选择多个客户进行批量转移</p>
+                            </div>
+
+                            <div class="search-bar">
+                                <input type="text" class="search-input" placeholder="搜索客户名称、联系人或公司...">
+                                <button class="search-btn" onclick="searchCustomers()">搜索</button>
+                            </div>
+
+                            <div class="customer-list">
+                                <div class="customer-header">
+                                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                    <div class="customer-info">
+                                        <span>客户名称</span>
+                                        <span>当前负责人</span>
+                                        <span>客户状态</span>
+                                        <span>客户价值</span>
+                                    </div>
+                                </div>
+
+                                <div class="customer-item" onclick="toggleCustomer(this)">
+                                    <input type="checkbox" class="customer-checkbox" value="1">
+                                    <div class="customer-info">
+                                        <div class="customer-name">李明科技有限公司</div>
+                                        <div class="customer-owner">张销售</div>
+                                        <div class="customer-status status-active">活跃客户</div>
+                                        <div class="customer-value">¥125,000</div>
+                                    </div>
+                                </div>
+
+                                <div class="customer-item" onclick="toggleCustomer(this)">
+                                    <input type="checkbox" class="customer-checkbox" value="2">
+                                    <div class="customer-info">
+                                        <div class="customer-name">华润商贸集团</div>
+                                        <div class="customer-owner">张销售</div>
+                                        <div class="customer-status status-potential">潜在客户</div>
+                                        <div class="customer-value">¥85,000</div>
+                                    </div>
+                                </div>
+
+                                <div class="customer-item" onclick="toggleCustomer(this)">
+                                    <input type="checkbox" class="customer-checkbox" value="3">
+                                    <div class="customer-info">
+                                        <div class="customer-name">创新科技公司</div>
+                                        <div class="customer-owner">张销售</div>
+                                        <div class="customer-status status-active">活跃客户</div>
+                                        <div class="customer-value">¥156,000</div>
+                                    </div>
+                                </div>
+
+                                <div class="customer-item" onclick="toggleCustomer(this)">
+                                    <input type="checkbox" class="customer-checkbox" value="4">
+                                    <div class="customer-info">
+                                        <div class="customer-name">万达商业广场</div>
+                                        <div class="customer-owner">张销售</div>
+                                        <div class="customer-status status-inactive">休眠客户</div>
+                                        <div class="customer-value">¥68,000</div>
+                                    </div>
+                                </div>
+
+                                <div class="customer-item" onclick="toggleCustomer(this)">
+                                    <input type="checkbox" class="customer-checkbox" value="5">
+                                    <div class="customer-info">
+                                        <div class="customer-name">中信建设集团</div>
+                                        <div class="customer-owner">张销售</div>
+                                        <div class="customer-status status-potential">潜在客户</div>
+                                        <div class="customer-value">¥200,000</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤2: 选择接收人 -->
+                    <div class="step-content" id="content2">
+                        <div class="owner-selection">
+                            <div class="selection-header">
+                                <h3 class="selection-title">选择新的负责人</h3>
+                                <p class="selection-subtitle">请选择一位销售人员作为这些客户的新负责人</p>
+                            </div>
+
+                            <div class="selected-customers">
+                                <div class="selected-title">已选择的客户：</div>
+                                <div class="selected-list" id="selectedCustomersList">
+                                    <!-- 选中的客户将在这里显示 -->
+                                </div>
+                            </div>
+
+                            <div class="owner-options">
+                                <div class="owner-card" onclick="selectOwner(this, 'li')" data-owner="li">
+                                    <div class="owner-header">
+                                        <div class="owner-avatar">李</div>
+                                        <div class="owner-info">
+                                            <h4>李经理</h4>
+                                            <p>高级销售经理 • 5年经验</p>
+                                        </div>
+                                    </div>
+                                    <div class="owner-stats">
+                                        <div class="stat-item">
+                                            <div class="stat-number">45</div>
+                                            <div class="stat-label">客户数量</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-number">98%</div>
+                                            <div class="stat-label">满意度</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-number">¥2.5M</div>
+                                            <div class="stat-label">年业绩</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="owner-card" onclick="selectOwner(this, 'wang')" data-owner="wang">
+                                    <div class="owner-header">
+                                        <div class="owner-avatar">王</div>
+                                        <div class="owner-info">
+                                            <h4>王主管</h4>
+                                            <p>销售主管 • 3年经验</p>
+                                        </div>
+                                    </div>
+                                    <div class="owner-stats">
+                                        <div class="stat-item">
+                                            <div class="stat-number">32</div>
+                                            <div class="stat-label">客户数量</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-number">95%</div>
+                                            <div class="stat-label">满意度</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-number">¥1.8M</div>
+                                            <div class="stat-label">年业绩</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="owner-card" onclick="selectOwner(this, 'chen')" data-owner="chen">
+                                    <div class="owner-header">
+                                        <div class="owner-avatar">陈</div>
+                                        <div class="owner-info">
+                                            <h4>陈销售</h4>
+                                            <p>销售专员 • 2年经验</p>
+                                        </div>
+                                    </div>
+                                    <div class="owner-stats">
+                                        <div class="stat-item">
+                                            <div class="stat-number">28</div>
+                                            <div class="stat-label">客户数量</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-number">92%</div>
+                                            <div class="stat-label">满意度</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-number">¥1.2M</div>
+                                            <div class="stat-label">年业绩</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="owner-card" onclick="selectOwner(this, 'liu')" data-owner="liu">
+                                    <div class="owner-header">
+                                        <div class="owner-avatar">刘</div>
+                                        <div class="owner-info">
+                                            <h4>刘助理</h4>
+                                            <p>销售助理 • 1年经验</p>
+                                        </div>
+                                    </div>
+                                    <div class="owner-stats">
+                                        <div class="stat-item">
+                                            <div class="stat-number">15</div>
+                                            <div class="stat-label">客户数量</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-number">88%</div>
+                                            <div class="stat-label">满意度</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-number">¥0.8M</div>
+                                            <div class="stat-label">年业绩</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤3: 转移原因 -->
+                    <div class="step-content" id="content3">
+                        <div class="transfer-reason">
+                            <div class="selection-header">
+                                <h3 class="selection-title">转移原因</h3>
+                                <p class="selection-subtitle">请说明客户转移的原因，这将有助于新负责人更好地了解客户情况</p>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">转移类型 *</label>
+                                <select class="form-select" id="transferType" required>
+                                    <option value="">请选择转移类型</option>
+                                    <option value="workload">工作负荷调整</option>
+                                    <option value="expertise">专业匹配</option>
+                                    <option value="region">区域调整</option>
+                                    <option value="vacation">人员休假</option>
+                                    <option value="resignation">人员离职</option>
+                                    <option value="customer_request">客户要求</option>
+                                    <option value="other">其他原因</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">详细说明 *</label>
+                                <textarea class="form-textarea" id="transferReason" required 
+                                    placeholder="请详细说明转移原因，包括：&#10;1. 转移的具体原因&#10;2. 客户的当前状态和需求&#10;3. 重要的客户信息和注意事项&#10;4. 交接工作的要点"></textarea>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">转移时间</label>
+                                <select class="form-select" id="transferTime">
+                                    <option value="immediate">立即转移</option>
+                                    <option value="tomorrow">明天</option>
+                                    <option value="next_week">下周</option>
+                                    <option value="custom">自定义时间</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="form-label">是否通知客户</label>
+                                <select class="form-select" id="notifyCustomer">
+                                    <option value="yes">是，发送转移通知</option>
+                                    <option value="no">否，暂不通知</option>
+                                    <option value="manual">手动通知客户</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 步骤4: 确认转移 -->
+                    <div class="step-content" id="content4">
+                        <div class="transfer-summary">
+                            <div class="selection-header">
+                                <h3 class="selection-title">确认转移信息</h3>
+                                <p class="selection-subtitle">请仔细检查转移信息，确认无误后点击完成转移</p>
+                            </div>
+
+                            <div class="summary-section">
+                                <div class="summary-title">
+                                    <span>👥</span>
+                                    转移客户
+                                </div>
+                                <div class="summary-content">
+                                    <table class="summary-table" id="summaryCustomersTable">
+                                        <thead>
+                                            <tr>
+                                                <th>客户名称</th>
+                                                <th>当前负责人</th>
+                                                <th>客户状态</th>
+                                                <th>客户价值</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- 选中的客户信息将在这里显示 -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="summary-section">
+                                <div class="summary-title">
+                                    <span>🎯</span>
+                                    新负责人
+                                </div>
+                                <div class="summary-content" id="summaryNewOwner">
+                                    <!-- 新负责人信息将在这里显示 -->
+                                </div>
+                            </div>
+
+                            <div class="summary-section">
+                                <div class="summary-title">
+                                    <span>📝</span>
+                                    转移原因
+                                </div>
+                                <div class="summary-content" id="summaryTransferReason">
+                                    <!-- 转移原因将在这里显示 -->
+                                </div>
+                            </div>
+
+                            <div class="summary-section">
+                                <div class="summary-title">
+                                    <span>⚙️</span>
+                                    转移设置
+                                </div>
+                                <div class="summary-content" id="summaryTransferSettings">
+                                    <!-- 转移设置将在这里显示 -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 向导导航 -->
+                <div class="wizard-navigation">
+                    <button class="nav-btn" id="prevBtn" onclick="previousStep()" disabled>上一步</button>
+                    <div>
+                        <span id="stepInfo">第 1 步，共 4 步</span>
+                    </div>
+                    <button class="nav-btn nav-btn-primary" id="nextBtn" onclick="nextStep()">下一步</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentStep = 1;
+        let selectedCustomers = [];
+        let selectedOwner = null;
+        let transferData = {};
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('客户转移页面已加载');
+            updateStepInfo();
+        });
+
+        // 搜索客户
+        function searchCustomers() {
+            const searchTerm = document.querySelector('.search-input').value;
+            console.log('搜索客户:', searchTerm);
+            showMessage('搜索功能开发中...', 'info');
+        }
+
+        // 切换全选
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.customer-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+                if (selectAll.checked) {
+                    if (!selectedCustomers.includes(checkbox.value)) {
+                        selectedCustomers.push(checkbox.value);
+                    }
+                } else {
+                    selectedCustomers = [];
+                }
+            });
+        }
+
+        // 切换客户选择
+        function toggleCustomer(item) {
+            const checkbox = item.querySelector('.customer-checkbox');
+            checkbox.checked = !checkbox.checked;
+            
+            const customerId = checkbox.value;
+            if (checkbox.checked) {
+                if (!selectedCustomers.includes(customerId)) {
+                    selectedCustomers.push(customerId);
+                }
+            } else {
+                selectedCustomers = selectedCustomers.filter(id => id !== customerId);
+            }
+            
+            updateSelectedCustomersList();
+        }
+
+        // 更新已选择客户列表
+        function updateSelectedCustomersList() {
+            const list = document.getElementById('selectedCustomersList');
+            if (!list) return;
+            
+            list.innerHTML = '';
+            selectedCustomers.forEach(customerId => {
+                const customerName = getCustomerName(customerId);
+                const tag = document.createElement('div');
+                tag.className = 'selected-tag';
+                tag.innerHTML = `
+                    ${customerName}
+                    <span class="tag-remove" onclick="removeCustomer('${customerId}')">&times;</span>
+                `;
+                list.appendChild(tag);
+            });
+        }
+
+        // 获取客户名称
+        function getCustomerName(customerId) {
+            const customerNames = {
+                '1': '李明科技有限公司',
+                '2': '华润商贸集团',
+                '3': '创新科技公司',
+                '4': '万达商业广场',
+                '5': '中信建设集团'
+            };
+            return customerNames[customerId] || '未知客户';
+        }
+
+        // 移除客户
+        function removeCustomer(customerId) {
+            selectedCustomers = selectedCustomers.filter(id => id !== customerId);
+            const checkbox = document.querySelector(`input[value="${customerId}"]`);
+            if (checkbox) {
+                checkbox.checked = false;
+            }
+            updateSelectedCustomersList();
+        }
+
+        // 选择负责人
+        function selectOwner(card, ownerId) {
+            // 清除之前的选择
+            document.querySelectorAll('.owner-card').forEach(c => c.classList.remove('selected'));
+            // 选择当前卡片
+            card.classList.add('selected');
+            selectedOwner = ownerId;
+        }
+
+        // 下一步
+        function nextStep() {
+            if (currentStep === 1) {
+                if (selectedCustomers.length === 0) {
+                    showMessage('请至少选择一个客户！', 'error');
+                    return;
+                }
+                updateSelectedCustomersList();
+            } else if (currentStep === 2) {
+                if (!selectedOwner) {
+                    showMessage('请选择新的负责人！', 'error');
+                    return;
+                }
+            } else if (currentStep === 3) {
+                const transferType = document.getElementById('transferType').value;
+                const transferReason = document.getElementById('transferReason').value;
+                if (!transferType || !transferReason) {
+                    showMessage('请填写转移类型和详细说明！', 'error');
+                    return;
+                }
+                updateTransferSummary();
+            }
+
+            if (currentStep < 4) {
+                currentStep++;
+                updateWizardUI();
+            } else {
+                completeTransfer();
+            }
+        }
+
+        // 上一步
+        function previousStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateWizardUI();
+            }
+        }
+
+        // 更新向导UI
+        function updateWizardUI() {
+            // 更新步骤指示器
+            for (let i = 1; i <= 4; i++) {
+                const step = document.getElementById(`step${i}`);
+                const content = document.getElementById(`content${i}`);
+                
+                if (i < currentStep) {
+                    step.classList.add('completed');
+                    step.classList.remove('active');
+                } else if (i === currentStep) {
+                    step.classList.add('active');
+                    step.classList.remove('completed');
+                } else {
+                    step.classList.remove('active', 'completed');
+                }
+                
+                content.classList.toggle('active', i === currentStep);
+            }
+
+            // 更新导航按钮
+            document.getElementById('prevBtn').disabled = currentStep === 1;
+            const nextBtn = document.getElementById('nextBtn');
+            if (currentStep === 4) {
+                nextBtn.textContent = '完成转移';
+                nextBtn.classList.add('nav-btn-primary');
+            } else {
+                nextBtn.textContent = '下一步';
+            }
+
+            updateStepInfo();
+        }
+
+        // 更新步骤信息
+        function updateStepInfo() {
+            document.getElementById('stepInfo').textContent = `第 ${currentStep} 步，共 4 步`;
+        }
+
+        // 更新转移摘要
+        function updateTransferSummary() {
+            // 更新客户表格
+            updateSummaryCustomersTable();
+            
+            // 更新新负责人信息
+            updateSummaryNewOwner();
+            
+            // 更新转移原因
+            updateSummaryTransferReason();
+            
+            // 更新转移设置
+            updateSummaryTransferSettings();
+        }
+
+        // 更新摘要中的客户表格
+        function updateSummaryCustomersTable() {
+            const tbody = document.querySelector('#summaryCustomersTable tbody');
+            tbody.innerHTML = '';
+            
+            selectedCustomers.forEach(customerId => {
+                const customerData = getCustomerData(customerId);
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${customerData.name}</td>
+                    <td>${customerData.owner}</td>
+                    <td><span class="customer-status ${customerData.statusClass}">${customerData.status}</span></td>
+                    <td>${customerData.value}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 获取客户数据
+        function getCustomerData(customerId) {
+            const customerDatabase = {
+                '1': { name: '李明科技有限公司', owner: '张销售', status: '活跃客户', statusClass: 'status-active', value: '¥125,000' },
+                '2': { name: '华润商贸集团', owner: '张销售', status: '潜在客户', statusClass: 'status-potential', value: '¥85,000' },
+                '3': { name: '创新科技公司', owner: '张销售', status: '活跃客户', statusClass: 'status-active', value: '¥156,000' },
+                '4': { name: '万达商业广场', owner: '张销售', status: '休眠客户', statusClass: 'status-inactive', value: '¥68,000' },
+                '5': { name: '中信建设集团', owner: '张销售', status: '潜在客户', statusClass: 'status-potential', value: '¥200,000' }
+            };
+            return customerDatabase[customerId];
+        }
+
+        // 更新新负责人信息
+        function updateSummaryNewOwner() {
+            const ownerData = {
+                'li': { name: '李经理', title: '高级销售经理', experience: '5年经验', customers: 45, satisfaction: '98%', performance: '¥2.5M' },
+                'wang': { name: '王主管', title: '销售主管', experience: '3年经验', customers: 32, satisfaction: '95%', performance: '¥1.8M' },
+                'chen': { name: '陈销售', title: '销售专员', experience: '2年经验', customers: 28, satisfaction: '92%', performance: '¥1.2M' },
+                'liu': { name: '刘助理', title: '销售助理', experience: '1年经验', customers: 15, satisfaction: '88%', performance: '¥0.8M' }
+            };
+            
+            const owner = ownerData[selectedOwner];
+            if (owner) {
+                document.getElementById('summaryNewOwner').innerHTML = `
+                    <p><strong>${owner.name}</strong> - ${owner.title}</p>
+                    <p>工作经验：${owner.experience}</p>
+                    <p>当前客户：${owner.customers}个 | 满意度：${owner.satisfaction} | 年业绩：${owner.performance}</p>
+                `;
+            }
+        }
+
+        // 更新转移原因
+        function updateSummaryTransferReason() {
+            const transferType = document.getElementById('transferType').value;
+            const transferReason = document.getElementById('transferReason').value;
+            
+            const typeNames = {
+                'workload': '工作负荷调整',
+                'expertise': '专业匹配',
+                'region': '区域调整',
+                'vacation': '人员休假',
+                'resignation': '人员离职',
+                'customer_request': '客户要求',
+                'other': '其他原因'
+            };
+            
+            document.getElementById('summaryTransferReason').innerHTML = `
+                <p><strong>转移类型：</strong>${typeNames[transferType] || transferType}</p>
+                <p><strong>详细说明：</strong></p>
+                <p style="white-space: pre-line;">${transferReason}</p>
+            `;
+        }
+
+        // 更新转移设置
+        function updateSummaryTransferSettings() {
+            const transferTime = document.getElementById('transferTime').value;
+            const notifyCustomer = document.getElementById('notifyCustomer').value;
+            
+            const timeNames = {
+                'immediate': '立即转移',
+                'tomorrow': '明天',
+                'next_week': '下周',
+                'custom': '自定义时间'
+            };
+            
+            const notifyNames = {
+                'yes': '是，发送转移通知',
+                'no': '否，暂不通知',
+                'manual': '手动通知客户'
+            };
+            
+            document.getElementById('summaryTransferSettings').innerHTML = `
+                <p><strong>转移时间：</strong>${timeNames[transferTime] || transferTime}</p>
+                <p><strong>客户通知：</strong>${notifyNames[notifyCustomer] || notifyCustomer}</p>
+            `;
+        }
+
+        // 完成转移
+        function completeTransfer() {
+            if (confirm('确定要执行客户转移吗？此操作将立即生效。')) {
+                console.log('执行客户转移');
+                showMessage('客户转移成功！相关人员将收到通知。', 'success');
+                setTimeout(() => {
+                    window.location.href = 'customer-list.html';
+                }, 2000);
+            }
+        }
+
+        // 消息提示函数
+        function showMessage(message, type) {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            alert(message);
+        }
+    </script>
+    
+    <!-- 引入统一导航系统 -->
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html> 

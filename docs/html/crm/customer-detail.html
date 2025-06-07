@@ -5,61 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>客户详情 - Portal 3.0</title>
     <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
     <style>
-        /* 引用通用布局样式 */
-        .app-layout {
-            display: grid;
-            grid-template-areas: 
-                "sidebar header"
-                "sidebar main"
-                "sidebar footer";
-            grid-template-columns: 240px 1fr;
-            grid-template-rows: 60px 1fr auto;
-            min-height: 100vh;
-            background: #f5f5f5;
-        }
-
-        .app-header {
-            grid-area: header;
-            background: white;
-            border-bottom: 1px solid #e8e8e8;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-        }
-
-        .app-sidebar {
-            grid-area: sidebar;
-            background: white;
-            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-            position: sticky;
-            top: 0;
-            height: 100vh;
-            overflow-y: auto;
-            z-index: 100;
-        }
-
-        .app-main {
-            grid-area: main;
-            padding: 24px;
-            overflow-y: auto;
-            min-height: calc(100vh - 120px);
-        }
-
-        .app-footer {
-            grid-area: footer;
-            background: white;
-            border-top: 1px solid #e8e8e8;
-            padding: 16px 24px;
-            color: #666;
-            font-size: 14px;
-            text-align: center;
-        }
+        /* 页面特定样式 - 使用统一导航系统但保持页面布局 */
 
         /* 页面内容样式 */
         .customer-header {
@@ -374,108 +322,7 @@
     <div class="app-layout">
         <!-- 左侧导航 -->
         <aside class="app-sidebar">
-            <div class="sidebar-header">
-                <div class="logo">P3</div>
-                <div class="brand-name">Portal 3.0</div>
-            </div>
-            
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="../index.html" class="nav-link">
-                        <span class="nav-icon">🏠</span>
-                        <span>首页总览</span>
-                    </a>
-                </li>
-                
-                <!-- 工作台模块 -->
-                <li class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">💼</span>
-                        <span>工作台</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../dashboard/oa-workspace.html" class="nav-subitem">OA工作台</a>
-                        <a href="../dashboard/crm-workspace.html" class="nav-subitem">CRM工作台</a>
-                        <a href="../dashboard/sales-workspace.html" class="nav-subitem">销售工作台</a>
-                        <a href="../dashboard/workspace-config.html" class="nav-subitem">工作台配置</a>
-                    </div>
-                </li>
-                
-                <!-- 组织架构模块 -->
-                <li class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">🏢</span>
-                        <span>组织架构</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../organization/department-tree.html" class="nav-subitem">部门管理</a>
-                        <a href="../organization/employee-list.html" class="nav-subitem">员工管理</a>
-                        <a href="../organization/position-manage.html" class="nav-subitem">岗位管理</a>
-                        <a href="../organization/role-permission.html" class="nav-subitem">角色权限</a>
-                    </div>
-                </li>
-                
-                <!-- 客户管理模块 -->
-                <li class="nav-item">
-                    <button class="nav-group expanded" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">👥</span>
-                        <span>客户管理</span>
-                        <span class="nav-arrow rotated">▶</span>
-                    </button>
-                    <div class="nav-submenu expanded">
-                        <a href="customer-list.html" class="nav-subitem">客户列表</a>
-                        <a href="customer-detail.html" class="nav-subitem active">客户详情</a>
-                        <a href="follow-record.html" class="nav-subitem">跟进记录</a>
-                        <a href="customer-transfer.html" class="nav-subitem">客户转移</a>
-                    </div>
-                </li>
-                
-                <!-- 商品管理模块 -->
-                <li class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">📦</span>
-                        <span>商品管理</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../product/product-list.html" class="nav-subitem">商品列表</a>
-                        <a href="../product/category-manage.html" class="nav-subitem">商品分类</a>
-                        <a href="../product/inventory-monitor.html" class="nav-subitem">库存管理</a>
-                        <a href="#" class="nav-subitem">价格策略</a>
-                    </div>
-                </li>
-                
-                <!-- 订单管理模块 -->
-                <li class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">📋</span>
-                        <span>订单管理</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../order/order-list.html" class="nav-subitem">订单列表</a>
-                        <a href="../order/order-detail.html" class="nav-subitem">订单详情</a>
-                        <a href="../order/order-dashboard.html" class="nav-subitem">订单统计</a>
-                        <a href="#" class="nav-subitem">退货管理</a>
-                    </div>
-                </li>
-                
-                <!-- 客服中心模块 -->
-                <li class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">🎧</span>
-                        <span>客服中心</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../support/ticket-list.html" class="nav-subitem">工单管理</a>
-                        <a href="../support/knowledge-base.html" class="nav-subitem">知识库</a>
-                        <a href="#" class="nav-subitem">在线客服</a>
-                    </div>
-                </li>
-            </ul>
+            <!-- 导航内容将由navigation.js动态生成 -->
         </aside>
 
         <!-- 头部区域 -->
@@ -824,55 +671,15 @@
             alert(message);
         }
 
-        // 二级菜单控制
-        function toggleNavGroup(button) {
-            const submenu = button.nextElementSibling;
-            const arrow = button.querySelector('.nav-arrow');
-            const isExpanded = submenu.classList.contains('expanded');
-            
-            // 关闭所有其他展开的菜单
-            document.querySelectorAll('.nav-submenu.expanded').forEach(menu => {
-                if (menu !== submenu) {
-                    menu.classList.remove('expanded');
-                    menu.previousElementSibling.classList.remove('expanded');
-                    menu.previousElementSibling.querySelector('.nav-arrow').classList.remove('rotated');
-                }
-            });
-            
-            // 切换当前菜单状态
-            if (isExpanded) {
-                submenu.classList.remove('expanded');
-                button.classList.remove('expanded');
-                arrow.classList.remove('rotated');
-            } else {
-                submenu.classList.add('expanded');
-                button.classList.add('expanded');
-                arrow.classList.add('rotated');
-            }
-        }
-
-        // 移动端菜单切换
-        function toggleMobileMenu() {
-            const sidebar = document.querySelector('.app-sidebar');
-            sidebar.classList.toggle('mobile-open');
-        }
-
-        // 点击主内容区域时关闭移动端菜单
-        document.addEventListener('click', function(e) {
-            const sidebar = document.querySelector('.app-sidebar');
-            const toggleBtn = document.querySelector('.mobile-menu-toggle');
-            
-            if (window.innerWidth <= 768 && 
-                !sidebar.contains(e.target) && 
-                !toggleBtn.contains(e.target)) {
-                sidebar.classList.remove('mobile-open');
-            }
-        });
-
         // 页面初始化
         document.addEventListener('DOMContentLoaded', function() {
             console.log('客户详情页面已加载');
+            console.log('当前路径:', window.location.pathname);
+            console.log('侧边栏容器:', document.querySelector('.app-sidebar'));
         });
     </script>
+    
+    <!-- 引入统一导航系统 -->
+    <script src="../assets/js/navigation.js"></script>
 </body>
 </html> 

@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>库存管理 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        /* 页面特定样式 */
+        .page-header {
+            background: linear-gradient(135deg, #fa541c 0%, #ff7a45 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-subtitle {
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        /* 仪表盘统计 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .stat-card.warning::before { background: #fa8c16; }
+        .stat-card.danger::before { background: #ff4d4f; }
+        .stat-card.success::before { background: #52c41a; }
+        .stat-card.info::before { background: #1890ff; }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-title {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .stat-icon.warning { background: #fff7e6; color: #fa8c16; }
+        .stat-icon.danger { background: #fff2f0; color: #ff4d4f; }
+        .stat-icon.success { background: #f6ffed; color: #52c41a; }
+        .stat-icon.info { background: #e6f7ff; color: #1890ff; }
+
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .stat-desc {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .stat-trend {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .trend-up { color: #52c41a; }
+        .trend-down { color: #ff4d4f; }
+
+        /* 库存预警 */
+        .alert-section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .alert-header {
+            background: linear-gradient(135deg, #ff4d4f 0%, #ff7875 100%);
+            color: white;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-content {
+            padding: 20px;
+        }
+
+        .alert-list {
+            display: grid;
+            gap: 12px;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            border-radius: 8px;
+        }
+
+        .alert-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert-icon {
+            width: 32px;
+            height: 32px;
+            background: #ff4d4f;
+            color: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .alert-details h4 {
+            margin: 0 0 4px 0;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .alert-details p {
+            margin: 0;
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* 库存操作 */
+        .inventory-actions {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .action-card {
+            background: #fafafa;
+            border: 2px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-card:hover {
+            border-color: #1890ff;
+            background: #f6f9ff;
+        }
+
+        .action-icon {
+            font-size: 32px;
+            margin-bottom: 12px;
+        }
+
+        .action-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .action-desc {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* 库存表格 */
+        .inventory-table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .table-toolbar {
+            background: #fafafa;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .table-filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select, .filter-input {
+            padding: 6px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        .btn-warning {
+            background: #fa8c16;
+            border-color: #fa8c16;
+            color: white;
+        }
+
+        .inventory-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .inventory-table th,
+        .inventory-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .inventory-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .inventory-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* 商品信息 */
+        .product-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .product-image {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .product-details h4 {
+            margin: 0 0 4px 0;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .product-details p {
+            margin: 0;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* 库存状态 */
+        .stock-level {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stock-bar {
+            width: 60px;
+            height: 6px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .stock-fill {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        .stock-high { background: #52c41a; }
+        .stock-medium { background: #fa8c16; }
+        .stock-low { background: #ff4d4f; }
+
+        .stock-text {
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        /* 库存预警标签 */
+        .warning-badge {
+            background: #fff2e6;
+            color: #fa8c16;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .danger-badge {
+            background: #fff2f0;
+            color: #ff4d4f;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        /* 操作按钮 */
+        .action-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-edit {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .btn-add {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .btn-reduce {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .page-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .page-btn.active {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .table-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .inventory-table-container {
+                overflow-x: auto;
+            }
+
+            .inventory-table {
+                min-width: 800px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 左侧导航 -->
+        <aside class="app-sidebar">
+            <!-- 导航内容将由navigation.js动态生成 -->
+        </aside>
+
+        <!-- 头部区域 -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">商品管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">库存管理</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索商品...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">8</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">管</div>
+                    <span>管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    <span>📊</span>
+                    库存管理中心
+                </h1>
+                <p class="page-subtitle">实时监控商品库存状态，智能预警和补货管理</p>
+            </div>
+
+            <!-- 仪表盘统计 -->
+            <div class="dashboard-grid">
+                <div class="stat-card warning">
+                    <div class="stat-header">
+                        <div class="stat-title">库存预警</div>
+                        <div class="stat-icon warning">⚠️</div>
+                    </div>
+                    <div class="stat-number">28</div>
+                    <div class="stat-desc">商品库存不足需要补货</div>
+                    <div class="stat-trend trend-up">
+                        <span>↑</span>
+                        <span>较昨日 +3</span>
+                    </div>
+                </div>
+
+                <div class="stat-card danger">
+                    <div class="stat-header">
+                        <div class="stat-title">缺货商品</div>
+                        <div class="stat-icon danger">🚫</div>
+                    </div>
+                    <div class="stat-number">5</div>
+                    <div class="stat-desc">商品已售罄需要紧急补货</div>
+                    <div class="stat-trend trend-down">
+                        <span>↓</span>
+                        <span>较昨日 -2</span>
+                    </div>
+                </div>
+
+                <div class="stat-card success">
+                    <div class="stat-header">
+                        <div class="stat-title">库存充足</div>
+                        <div class="stat-icon success">✅</div>
+                    </div>
+                    <div class="stat-number">1,156</div>
+                    <div class="stat-desc">商品库存状态良好</div>
+                    <div class="stat-trend trend-up">
+                        <span>↑</span>
+                        <span>较昨日 +12</span>
+                    </div>
+                </div>
+
+                <div class="stat-card info">
+                    <div class="stat-header">
+                        <div class="stat-title">库存总值</div>
+                        <div class="stat-icon info">💰</div>
+                    </div>
+                    <div class="stat-number">¥2.5M</div>
+                    <div class="stat-desc">当前库存商品总价值</div>
+                    <div class="stat-trend trend-up">
+                        <span>↑</span>
+                        <span>较昨日 +5.2%</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 库存预警 -->
+            <div class="alert-section">
+                <div class="alert-header">
+                    <span>🚨</span>
+                    <span>库存预警通知</span>
+                </div>
+                <div class="alert-content">
+                    <div class="alert-list">
+                        <div class="alert-item">
+                            <div class="alert-info">
+                                <div class="alert-icon">📱</div>
+                                <div class="alert-details">
+                                    <h4>iPhone 15 Pro Max</h4>
+                                    <p>当前库存：3件 | 预警阈值：10件 | SKU: IP15PM001</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-warning" onclick="replenishStock('IP15PM001')">立即补货</button>
+                        </div>
+
+                        <div class="alert-item">
+                            <div class="alert-info">
+                                <div class="alert-icon">👕</div>
+                                <div class="alert-details">
+                                    <h4>优衣库基础款T恤</h4>
+                                    <p>当前库存：0件 | 预警阈值：5件 | SKU: UQ-TEE001</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-warning" onclick="replenishStock('UQ-TEE001')">紧急补货</button>
+                        </div>
+
+                        <div class="alert-item">
+                            <div class="alert-info">
+                                <div class="alert-icon">💻</div>
+                                <div class="alert-details">
+                                    <h4>MacBook Pro 16寸</h4>
+                                    <p>当前库存：8件 | 预警阈值：15件 | SKU: MBP16001</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-warning" onclick="replenishStock('MBP16001')">补货计划</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 库存操作 -->
+            <div class="inventory-actions">
+                <div class="action-grid">
+                    <div class="action-card" onclick="bulkReplenish()">
+                        <div class="action-icon">📦</div>
+                        <div class="action-title">批量补货</div>
+                        <div class="action-desc">批量导入补货单据</div>
+                    </div>
+
+                    <div class="action-card" onclick="inventoryAdjust()">
+                        <div class="action-icon">⚖️</div>
+                        <div class="action-title">库存调整</div>
+                        <div class="action-desc">手动调整库存数量</div>
+                    </div>
+
+                    <div class="action-card" onclick="stockTaking()">
+                        <div class="action-icon">📋</div>
+                        <div class="action-title">库存盘点</div>
+                        <div class="action-desc">创建盘点任务</div>
+                    </div>
+
+                    <div class="action-card" onclick="exportInventory()">
+                        <div class="action-icon">📤</div>
+                        <div class="action-title">导出报表</div>
+                        <div class="action-desc">导出库存报表数据</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 库存表格 -->
+            <div class="inventory-table-container">
+                <div class="table-toolbar">
+                    <div class="table-title">库存明细</div>
+                    <div class="table-filters">
+                        <select class="filter-select" id="categoryFilter">
+                            <option value="">全部分类</option>
+                            <option value="electronics">数码电子</option>
+                            <option value="clothing">服装鞋帽</option>
+                            <option value="home">家居日用</option>
+                        </select>
+
+                        <select class="filter-select" id="stockFilter">
+                            <option value="">库存状态</option>
+                            <option value="sufficient">库存充足</option>
+                            <option value="warning">库存预警</option>
+                            <option value="danger">库存不足</option>
+                            <option value="out">已售罄</option>
+                        </select>
+
+                        <input type="text" class="filter-input" placeholder="搜索商品..." id="searchInput">
+                        <button class="btn btn-primary" onclick="filterInventory()">筛选</button>
+                    </div>
+                </div>
+
+                <table class="inventory-table">
+                    <thead>
+                        <tr>
+                            <th>商品信息</th>
+                            <th>当前库存</th>
+                            <th>预警阈值</th>
+                            <th>库存状态</th>
+                            <th>最后更新</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div class="product-info">
+                                    <div class="product-image">📱</div>
+                                    <div class="product-details">
+                                        <h4>iPhone 15 Pro Max</h4>
+                                        <p>SKU: IP15PM001 | 数码电子</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="stock-level">
+                                    <div class="stock-bar">
+                                        <div class="stock-fill stock-low" style="width: 30%;"></div>
+                                    </div>
+                                    <span class="stock-text">3件</span>
+                                </div>
+                            </td>
+                            <td>10件</td>
+                            <td>
+                                <span class="danger-badge">库存不足</span>
+                            </td>
+                            <td>2024-03-15 14:30</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="action-btn btn-add" onclick="addStock('IP15PM001')">补货</button>
+                                    <button class="action-btn btn-edit" onclick="editStock('IP15PM001')">调整</button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <div class="product-info">
+                                    <div class="product-image">💻</div>
+                                    <div class="product-details">
+                                        <h4>MacBook Pro 16寸</h4>
+                                        <p>SKU: MBP16001 | 数码电子</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="stock-level">
+                                    <div class="stock-bar">
+                                        <div class="stock-fill stock-medium" style="width: 60%;"></div>
+                                    </div>
+                                    <span class="stock-text">12件</span>
+                                </div>
+                            </td>
+                            <td>15件</td>
+                            <td>
+                                <span class="warning-badge">库存预警</span>
+                            </td>
+                            <td>2024-03-15 12:15</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="action-btn btn-add" onclick="addStock('MBP16001')">补货</button>
+                                    <button class="action-btn btn-edit" onclick="editStock('MBP16001')">调整</button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <div class="product-info">
+                                    <div class="product-image">👕</div>
+                                    <div class="product-details">
+                                        <h4>优衣库基础款T恤</h4>
+                                        <p>SKU: UQ-TEE001 | 服装鞋帽</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="stock-level">
+                                    <div class="stock-bar">
+                                        <div class="stock-fill stock-low" style="width: 0%;"></div>
+                                    </div>
+                                    <span class="stock-text">0件</span>
+                                </div>
+                            </td>
+                            <td>5件</td>
+                            <td>
+                                <span class="danger-badge">已售罄</span>
+                            </td>
+                            <td>2024-03-14 18:45</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="action-btn btn-add" onclick="addStock('UQ-TEE001')">补货</button>
+                                    <button class="action-btn btn-edit" onclick="editStock('UQ-TEE001')">调整</button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <div class="product-info">
+                                    <div class="product-image">🪑</div>
+                                    <div class="product-details">
+                                        <h4>宜家办公椅</h4>
+                                        <p>SKU: IKEA-CH001 | 家居日用</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="stock-level">
+                                    <div class="stock-bar">
+                                        <div class="stock-fill stock-high" style="width: 90%;"></div>
+                                    </div>
+                                    <span class="stock-text">32件</span>
+                                </div>
+                            </td>
+                            <td>8件</td>
+                            <td>
+                                <span style="background: #f6ffed; color: #52c41a; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600;">库存充足</span>
+                            </td>
+                            <td>2024-03-15 09:20</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="action-btn btn-add" onclick="addStock('IKEA-CH001')">补货</button>
+                                    <button class="action-btn btn-edit" onclick="editStock('IKEA-CH001')">调整</button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td>
+                                <div class="product-info">
+                                    <div class="product-image">📚</div>
+                                    <div class="product-details">
+                                        <h4>JavaScript权威指南</h4>
+                                        <p>SKU: BOOK-JS001 | 图书文具</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="stock-level">
+                                    <div class="stock-bar">
+                                        <div class="stock-fill stock-medium" style="width: 75%;"></div>
+                                    </div>
+                                    <span class="stock-text">18件</span>
+                                </div>
+                            </td>
+                            <td>5件</td>
+                            <td>
+                                <span style="background: #f6ffed; color: #52c41a; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600;">库存充足</span>
+                            </td>
+                            <td>2024-03-14 16:30</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="action-btn btn-add" onclick="addStock('BOOK-JS001')">补货</button>
+                                    <button class="action-btn btn-edit" onclick="editStock('BOOK-JS001')">调整</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            <div class="pagination">
+                <button class="page-btn" onclick="changePage('prev')">上一页</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn" onclick="changePage(2)">2</button>
+                <button class="page-btn" onclick="changePage(3)">3</button>
+                <button class="page-btn" onclick="changePage(4)">4</button>
+                <button class="page-btn" onclick="changePage('next')">下一页</button>
+            </div>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('库存管理页面已加载');
+            checkStockAlerts();
+        });
+
+        // 检查库存预警
+        function checkStockAlerts() {
+            console.log('检查库存预警状态');
+            // 这里可以定期检查库存状态
+        }
+
+        // 补货操作
+        function replenishStock(sku) {
+            console.log('补货商品:', sku);
+            showMessage('正在打开补货界面...', 'info');
+        }
+
+        // 添加库存
+        function addStock(sku) {
+            const quantity = prompt('请输入补货数量:');
+            if (quantity && parseInt(quantity) > 0) {
+                console.log('增加库存:', sku, quantity);
+                showMessage(`商品 ${sku} 补货 ${quantity} 件成功！`, 'success');
+            }
+        }
+
+        // 编辑库存
+        function editStock(sku) {
+            console.log('编辑库存:', sku);
+            showMessage('编辑库存功能开发中...', 'info');
+        }
+
+        // 批量补货
+        function bulkReplenish() {
+            console.log('批量补货');
+            showMessage('批量补货功能开发中...', 'info');
+        }
+
+        // 库存调整
+        function inventoryAdjust() {
+            console.log('库存调整');
+            showMessage('库存调整功能开发中...', 'info');
+        }
+
+        // 库存盘点
+        function stockTaking() {
+            console.log('库存盘点');
+            showMessage('库存盘点功能开发中...', 'info');
+        }
+
+        // 导出库存报表
+        function exportInventory() {
+            console.log('导出库存报表');
+            showMessage('正在导出库存报表...', 'info');
+            setTimeout(() => {
+                showMessage('库存报表导出成功！', 'success');
+            }, 2000);
+        }
+
+        // 筛选库存
+        function filterInventory() {
+            const category = document.getElementById('categoryFilter').value;
+            const stock = document.getElementById('stockFilter').value;
+            const search = document.getElementById('searchInput').value;
+            
+            console.log('筛选条件:', { category, stock, search });
+            showMessage('筛选功能开发中...', 'info');
+        }
+
+        // 分页
+        function changePage(page) {
+            console.log('切换到页面:', page);
+            showMessage('分页功能开发中...', 'info');
+        }
+
+        // 消息提示函数
+        function showMessage(message, type) {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            alert(message);
+        }
+
+        // 自动刷新库存数据
+        setInterval(() => {
+            console.log('自动刷新库存数据...');
+        }, 30000); // 每30秒刷新一次
+    </script>
+    
+    <!-- 引入统一导航系统 -->
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html> 

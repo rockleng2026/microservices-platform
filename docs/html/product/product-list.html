@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品列表 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        /* 页面特定样式 */
+        .page-header {
+            background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-subtitle {
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .stat-icon-1 { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stat-icon-2 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .stat-icon-3 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .stat-icon-4 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+
+        .stat-content h3 {
+            margin: 0 0 4px 0;
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .stat-content p {
+            margin: 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* 工具栏 */
+        .toolbar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .toolbar-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filter-select, .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            min-width: 120px;
+        }
+
+        .filter-input {
+            min-width: 200px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        .btn-success {
+            background: #52c41a;
+            border-color: #52c41a;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 商品表格 */
+        .product-table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #fafafa;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .product-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow-x: auto;
+        }
+
+        .product-table th,
+        .product-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .product-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            top: 0;
+        }
+
+        .product-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* 商品图片 */
+        .product-image {
+            width: 50px;
+            height: 50px;
+            border-radius: 8px;
+            object-fit: cover;
+            background: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 12px;
+        }
+
+        /* 商品信息 */
+        .product-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .product-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .product-sku {
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* 分类标签 */
+        .category-tag {
+            background: #f0f0f0;
+            color: #666;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        /* 状态标签 */
+        .status-tag {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .status-inactive {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+
+        .status-draft {
+            background: #fff7e6;
+            color: #fa8c16;
+        }
+
+        /* 库存状态 */
+        .stock-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stock-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .stock-high { background: #52c41a; }
+        .stock-medium { background: #fa8c16; }
+        .stock-low { background: #ff4d4f; }
+
+        /* 价格 */
+        .price {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .price-original {
+            text-decoration: line-through;
+            color: #999;
+            font-size: 12px;
+        }
+
+        /* 操作按钮 */
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-edit {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .btn-copy {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .btn-delete {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .page-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .page-btn.active {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .toolbar-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                justify-content: center;
+            }
+
+            .product-table-container {
+                overflow-x: auto;
+            }
+
+            .product-table {
+                min-width: 800px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 左侧导航 -->
+        <aside class="app-sidebar">
+            <!-- 导航内容将由navigation.js动态生成 -->
+        </aside>
+
+        <!-- 头部区域 -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">商品管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">商品列表</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索商品...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">3</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">管</div>
+                    <span>管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    <span>📦</span>
+                    商品列表管理
+                </h1>
+                <p class="page-subtitle">管理所有商品信息、库存状态、价格体系和销售数据</p>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-1">📦</div>
+                    <div class="stat-content">
+                        <h3>1,234</h3>
+                        <p>商品总数</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-2">✅</div>
+                    <div class="stat-content">
+                        <h3>1,156</h3>
+                        <p>在售商品</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-3">⚠️</div>
+                    <div class="stat-content">
+                        <h3>28</h3>
+                        <p>库存预警</p>
+                    </div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon stat-icon-4">💰</div>
+                    <div class="stat-content">
+                        <h3>¥2.5M</h3>
+                        <p>库存价值</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 工具栏 -->
+            <div class="toolbar">
+                <div class="toolbar-row">
+                    <div class="filter-group">
+                        <select class="filter-select" id="categoryFilter">
+                            <option value="">全部分类</option>
+                            <option value="electronics">数码电子</option>
+                            <option value="clothing">服装鞋帽</option>
+                            <option value="home">家居日用</option>
+                            <option value="books">图书文具</option>
+                        </select>
+
+                        <select class="filter-select" id="statusFilter">
+                            <option value="">全部状态</option>
+                            <option value="active">在售</option>
+                            <option value="inactive">下架</option>
+                            <option value="draft">草稿</option>
+                        </select>
+
+                        <select class="filter-select" id="stockFilter">
+                            <option value="">库存状态</option>
+                            <option value="high">库存充足</option>
+                            <option value="medium">库存适中</option>
+                            <option value="low">库存不足</option>
+                        </select>
+
+                        <input type="text" class="filter-input" placeholder="搜索商品名称或SKU..." id="searchInput">
+                    </div>
+
+                    <div class="filter-group">
+                        <a href="product-form.html" class="btn btn-primary">
+                            <span>➕</span>
+                            新增商品
+                        </a>
+                        <button class="btn btn-success" onclick="exportProducts()">
+                            <span>📤</span>
+                            导出数据
+                        </button>
+                        <button class="btn" onclick="importProducts()">
+                            <span>📥</span>
+                            批量导入
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 商品表格 -->
+            <div class="product-table-container">
+                <div class="table-header">
+                    <div class="table-title">商品列表</div>
+                    <div class="table-actions">
+                        <button class="btn" onclick="batchEdit()">批量编辑</button>
+                        <button class="btn" onclick="batchDelete()">批量删除</button>
+                    </div>
+                </div>
+
+                <table class="product-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                            </th>
+                            <th>商品信息</th>
+                            <th>分类</th>
+                            <th>库存状态</th>
+                            <th>销售价格</th>
+                            <th>成本价格</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="checkbox" class="product-checkbox" value="1"></td>
+                            <td>
+                                <div class="product-info">
+                                    <div class="product-image">📱</div>
+                                    <div>
+                                        <div class="product-name">iPhone 15 Pro Max</div>
+                                        <div class="product-sku">SKU: IP15PM001</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="category-tag">数码电子</span></td>
+                            <td>
+                                <div class="stock-status">
+                                    <span class="stock-indicator stock-high"></span>
+                                    <span>85件</span>
+                                </div>
+                            </td>
+                            <td class="price">¥9,999</td>
+                            <td class="price">¥8,500</td>
+                            <td><span class="status-tag status-active">在售</span></td>
+                            <td>2024-03-15</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="action-btn btn-edit" onclick="editProduct(1)">编辑</button>
+                                    <button class="action-btn btn-copy" onclick="copyProduct(1)">复制</button>
+                                    <button class="action-btn btn-delete" onclick="deleteProduct(1)">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><input type="checkbox" class="product-checkbox" value="2"></td>
+                            <td>
+                                <div class="product-info">
+                                    <div class="product-image">💻</div>
+                                    <div>
+                                        <div class="product-name">MacBook Pro 16寸</div>
+                                        <div class="product-sku">SKU: MBP16001</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="category-tag">数码电子</span></td>
+                            <td>
+                                <div class="stock-status">
+                                    <span class="stock-indicator stock-medium"></span>
+                                    <span>12件</span>
+                                </div>
+                            </td>
+                            <td class="price">¥18,999</td>
+                            <td class="price">¥16,200</td>
+                            <td><span class="status-tag status-active">在售</span></td>
+                            <td>2024-03-14</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="action-btn btn-edit" onclick="editProduct(2)">编辑</button>
+                                    <button class="action-btn btn-copy" onclick="copyProduct(2)">复制</button>
+                                    <button class="action-btn btn-delete" onclick="deleteProduct(2)">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><input type="checkbox" class="product-checkbox" value="3"></td>
+                            <td>
+                                <div class="product-info">
+                                    <div class="product-image">👕</div>
+                                    <div>
+                                        <div class="product-name">优衣库基础款T恤</div>
+                                        <div class="product-sku">SKU: UQ-TEE001</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="category-tag">服装鞋帽</span></td>
+                            <td>
+                                <div class="stock-status">
+                                    <span class="stock-indicator stock-low"></span>
+                                    <span>5件</span>
+                                </div>
+                            </td>
+                            <td class="price">¥79</td>
+                            <td class="price">¥45</td>
+                            <td><span class="status-tag status-active">在售</span></td>
+                            <td>2024-03-13</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="action-btn btn-edit" onclick="editProduct(3)">编辑</button>
+                                    <button class="action-btn btn-copy" onclick="copyProduct(3)">复制</button>
+                                    <button class="action-btn btn-delete" onclick="deleteProduct(3)">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><input type="checkbox" class="product-checkbox" value="4"></td>
+                            <td>
+                                <div class="product-info">
+                                    <div class="product-image">🪑</div>
+                                    <div>
+                                        <div class="product-name">宜家办公椅</div>
+                                        <div class="product-sku">SKU: IKEA-CH001</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="category-tag">家居日用</span></td>
+                            <td>
+                                <div class="stock-status">
+                                    <span class="stock-indicator stock-high"></span>
+                                    <span>32件</span>
+                                </div>
+                            </td>
+                            <td class="price">¥899</td>
+                            <td class="price">¥650</td>
+                            <td><span class="status-tag status-draft">草稿</span></td>
+                            <td>2024-03-12</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="action-btn btn-edit" onclick="editProduct(4)">编辑</button>
+                                    <button class="action-btn btn-copy" onclick="copyProduct(4)">复制</button>
+                                    <button class="action-btn btn-delete" onclick="deleteProduct(4)">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><input type="checkbox" class="product-checkbox" value="5"></td>
+                            <td>
+                                <div class="product-info">
+                                    <div class="product-image">📚</div>
+                                    <div>
+                                        <div class="product-name">JavaScript权威指南</div>
+                                        <div class="product-sku">SKU: BOOK-JS001</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td><span class="category-tag">图书文具</span></td>
+                            <td>
+                                <div class="stock-status">
+                                    <span class="stock-indicator stock-medium"></span>
+                                    <span>18件</span>
+                                </div>
+                            </td>
+                            <td class="price">¥128</td>
+                            <td class="price">¥95</td>
+                            <td><span class="status-tag status-inactive">下架</span></td>
+                            <td>2024-03-11</td>
+                            <td>
+                                <div class="action-btns">
+                                    <button class="action-btn btn-edit" onclick="editProduct(5)">编辑</button>
+                                    <button class="action-btn btn-copy" onclick="copyProduct(5)">复制</button>
+                                    <button class="action-btn btn-delete" onclick="deleteProduct(5)">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 分页 -->
+            <div class="pagination">
+                <button class="page-btn" onclick="changePage('prev')">上一页</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn" onclick="changePage(2)">2</button>
+                <button class="page-btn" onclick="changePage(3)">3</button>
+                <button class="page-btn" onclick="changePage(4)">4</button>
+                <button class="page-btn" onclick="changePage(5)">5</button>
+                <button class="page-btn" onclick="changePage('next')">下一页</button>
+            </div>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('商品列表页面已加载');
+            bindFilterEvents();
+        });
+
+        // 绑定筛选事件
+        function bindFilterEvents() {
+            document.getElementById('categoryFilter').addEventListener('change', filterProducts);
+            document.getElementById('statusFilter').addEventListener('change', filterProducts);
+            document.getElementById('stockFilter').addEventListener('change', filterProducts);
+            document.getElementById('searchInput').addEventListener('input', filterProducts);
+        }
+
+        // 筛选商品
+        function filterProducts() {
+            console.log('筛选商品');
+            showMessage('筛选功能开发中...', 'info');
+        }
+
+        // 全选切换
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.product-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+        }
+
+        // 编辑商品
+        function editProduct(id) {
+            console.log('编辑商品:', id);
+            window.location.href = `product-form.html?id=${id}&mode=edit`;
+        }
+
+        // 复制商品
+        function copyProduct(id) {
+            console.log('复制商品:', id);
+            if (confirm('确定要复制这个商品吗？')) {
+                showMessage('商品复制成功！', 'success');
+                setTimeout(() => {
+                    window.location.href = `product-form.html?copy=${id}`;
+                }, 1000);
+            }
+        }
+
+        // 删除商品
+        function deleteProduct(id) {
+            console.log('删除商品:', id);
+            if (confirm('确定要删除这个商品吗？此操作不可恢复！')) {
+                showMessage('商品删除成功！', 'success');
+                // 这里可以添加删除商品的逻辑
+            }
+        }
+
+        // 批量编辑
+        function batchEdit() {
+            const selectedProducts = getSelectedProducts();
+            if (selectedProducts.length === 0) {
+                showMessage('请先选择要编辑的商品！', 'warning');
+                return;
+            }
+            console.log('批量编辑商品:', selectedProducts);
+            showMessage('批量编辑功能开发中...', 'info');
+        }
+
+        // 批量删除
+        function batchDelete() {
+            const selectedProducts = getSelectedProducts();
+            if (selectedProducts.length === 0) {
+                showMessage('请先选择要删除的商品！', 'warning');
+                return;
+            }
+            if (confirm(`确定要删除这 ${selectedProducts.length} 个商品吗？此操作不可恢复！`)) {
+                console.log('批量删除商品:', selectedProducts);
+                showMessage('商品删除成功！', 'success');
+            }
+        }
+
+        // 获取选中的商品
+        function getSelectedProducts() {
+            const checkboxes = document.querySelectorAll('.product-checkbox:checked');
+            return Array.from(checkboxes).map(checkbox => checkbox.value);
+        }
+
+        // 导出商品
+        function exportProducts() {
+            console.log('导出商品数据');
+            showMessage('正在导出商品数据...', 'info');
+            // 模拟导出过程
+            setTimeout(() => {
+                showMessage('商品数据导出成功！', 'success');
+            }, 2000);
+        }
+
+        // 导入商品
+        function importProducts() {
+            console.log('批量导入商品');
+            showMessage('批量导入功能开发中...', 'info');
+        }
+
+        // 分页
+        function changePage(page) {
+            console.log('切换到页面:', page);
+            showMessage('分页功能开发中...', 'info');
+        }
+
+        // 消息提示函数
+        function showMessage(message, type) {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            alert(message);
+        }
+    </script>
+    
+    <!-- 引入统一导航系统 -->
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html> 

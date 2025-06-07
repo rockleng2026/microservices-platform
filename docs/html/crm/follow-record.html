@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>跟进记录 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        /* 页面特定样式 */
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-subtitle {
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        /* 筛选工具栏 */
+        .filter-toolbar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-weight: 500;
+            color: #333;
+            white-space: nowrap;
+        }
+
+        .filter-select, .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            min-width: 120px;
+        }
+
+        .filter-input {
+            min-width: 200px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+        }
+
+        .btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        /* 跟进记录列表 */
+        .follow-list {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .follow-header {
+            background: #fafafa;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .follow-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .follow-stats {
+            display: flex;
+            gap: 24px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .stat-number {
+            font-weight: 600;
+            color: #1890ff;
+        }
+
+        /* 跟进记录项 */
+        .follow-item {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            position: relative;
+            transition: background 0.3s;
+        }
+
+        .follow-item:hover {
+            background: #fafafa;
+        }
+
+        .follow-item:last-child {
+            border-bottom: none;
+        }
+
+        .follow-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .follow-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .follow-type {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .type-call {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .type-meeting {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .type-email {
+            background: #fff2e6;
+            color: #fa8c16;
+        }
+
+        .type-visit {
+            background: #f9f0ff;
+            color: #722ed1;
+        }
+
+        .follow-customer {
+            font-weight: 600;
+            color: #333;
+            text-decoration: none;
+            font-size: 16px;
+        }
+
+        .follow-customer:hover {
+            color: #1890ff;
+        }
+
+        .follow-time {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .follow-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-edit {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .btn-delete {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .follow-content {
+            color: #333;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .follow-details {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* 添加跟进记录弹窗样式 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .page-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .page-btn.active {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .filter-row {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .filter-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .follow-meta {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .follow-details {
+                flex-direction: column;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 左侧导航 -->
+        <aside class="app-sidebar">
+            <!-- 导航内容将由navigation.js动态生成 -->
+        </aside>
+
+        <!-- 头部区域 -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">客户管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">跟进记录</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索跟进记录...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">3</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">管</div>
+                    <span>管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    <span>📝</span>
+                    跟进记录管理
+                </h1>
+                <p class="page-subtitle">查看和管理所有客户跟进记录，追踪销售进度和客户关系维护</p>
+            </div>
+
+            <!-- 筛选工具栏 -->
+            <div class="filter-toolbar">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <span class="filter-label">跟进类型:</span>
+                        <select class="filter-select" id="typeFilter">
+                            <option value="">全部类型</option>
+                            <option value="call">电话沟通</option>
+                            <option value="meeting">会议拜访</option>
+                            <option value="email">邮件跟进</option>
+                            <option value="visit">实地拜访</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <span class="filter-label">时间范围:</span>
+                        <select class="filter-select" id="timeFilter">
+                            <option value="">全部时间</option>
+                            <option value="today">今天</option>
+                            <option value="week">本周</option>
+                            <option value="month">本月</option>
+                            <option value="quarter">本季度</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <span class="filter-label">负责人:</span>
+                        <select class="filter-select" id="ownerFilter">
+                            <option value="">全部人员</option>
+                            <option value="zhang">张销售</option>
+                            <option value="li">李经理</option>
+                            <option value="wang">王主管</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <span class="filter-label">客户搜索:</span>
+                        <input type="text" class="filter-input" placeholder="输入客户名称..." id="customerSearch">
+                    </div>
+
+                    <button class="btn btn-primary" onclick="addFollowRecord()">新增跟进</button>
+                </div>
+            </div>
+
+            <!-- 跟进记录列表 -->
+            <div class="follow-list">
+                <div class="follow-header">
+                    <div class="follow-title">跟进记录列表</div>
+                    <div class="follow-stats">
+                        <div class="stat-item">
+                            <span>📊</span>
+                            <span>总记录: <span class="stat-number">156</span></span>
+                        </div>
+                        <div class="stat-item">
+                            <span>📅</span>
+                            <span>本周: <span class="stat-number">28</span></span>
+                        </div>
+                        <div class="stat-item">
+                            <span>🎯</span>
+                            <span>有效跟进: <span class="stat-number">142</span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 跟进记录项 -->
+                <div class="follow-item">
+                    <div class="follow-meta">
+                        <div class="follow-info">
+                            <span class="follow-type type-meeting">会议拜访</span>
+                            <a href="customer-detail.html" class="follow-customer">李明科技有限公司</a>
+                            <span class="follow-time">2024-03-15 14:30</span>
+                        </div>
+                        <div class="follow-actions">
+                            <button class="action-btn btn-edit" onclick="editFollow(1)">编辑</button>
+                            <button class="action-btn btn-delete" onclick="deleteFollow(1)">删除</button>
+                        </div>
+                    </div>
+                    <div class="follow-content">
+                        与李总进行深度产品演示，详细讲解了ERP系统的库存管理模块功能。客户对自动补货和预警功能表现出浓厚兴趣，提出了一些定制化需求。已安排技术团队准备详细的技术方案。
+                    </div>
+                    <div class="follow-details">
+                        <div class="detail-item">
+                            <span>👤</span>
+                            <span>跟进人: 张销售</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>⏱️</span>
+                            <span>用时: 2小时</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>📍</span>
+                            <span>地点: 客户公司会议室</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>🎯</span>
+                            <span>下次跟进: 2024-03-20</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="follow-item">
+                    <div class="follow-meta">
+                        <div class="follow-info">
+                            <span class="follow-type type-call">电话沟通</span>
+                            <a href="customer-detail.html" class="follow-customer">华润商贸集团</a>
+                            <span class="follow-time">2024-03-14 10:15</span>
+                        </div>
+                        <div class="follow-actions">
+                            <button class="action-btn btn-edit" onclick="editFollow(2)">编辑</button>
+                            <button class="action-btn btn-delete" onclick="deleteFollow(2)">删除</button>
+                        </div>
+                    </div>
+                    <div class="follow-content">
+                        电话回访客户系统使用情况，客户反馈系统运行稳定，但希望增加移动端APP功能。已记录客户需求，将在下次产品规划会议中讨论。客户表示满意现有服务质量。
+                    </div>
+                    <div class="follow-details">
+                        <div class="detail-item">
+                            <span>👤</span>
+                            <span>跟进人: 李经理</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>⏱️</span>
+                            <span>用时: 30分钟</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>📞</span>
+                            <span>方式: 电话回访</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>🎯</span>
+                            <span>下次跟进: 2024-03-21</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="follow-item">
+                    <div class="follow-meta">
+                        <div class="follow-info">
+                            <span class="follow-type type-email">邮件跟进</span>
+                            <a href="customer-detail.html" class="follow-customer">创新科技公司</a>
+                            <span class="follow-time">2024-03-13 16:45</span>
+                        </div>
+                        <div class="follow-actions">
+                            <button class="action-btn btn-edit" onclick="editFollow(3)">编辑</button>
+                            <button class="action-btn btn-delete" onclick="deleteFollow(3)">删除</button>
+                        </div>
+                    </div>
+                    <div class="follow-content">
+                        发送产品升级通知邮件，介绍了新版本的功能改进和性能优化。客户回复表示感兴趣，询问升级时间安排和费用情况。已转发给商务团队跟进合同续约事宜。
+                    </div>
+                    <div class="follow-details">
+                        <div class="detail-item">
+                            <span>👤</span>
+                            <span>跟进人: 王主管</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>📧</span>
+                            <span>方式: 邮件营销</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>📨</span>
+                            <span>回复率: 100%</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>🎯</span>
+                            <span>下次跟进: 2024-03-18</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="follow-item">
+                    <div class="follow-meta">
+                        <div class="follow-info">
+                            <span class="follow-type type-visit">实地拜访</span>
+                            <a href="customer-detail.html" class="follow-customer">万达商业广场</a>
+                            <span class="follow-time">2024-03-12 09:00</span>
+                        </div>
+                        <div class="follow-actions">
+                            <button class="action-btn btn-edit" onclick="editFollow(4)">编辑</button>
+                            <button class="action-btn btn-delete" onclick="deleteFollow(4)">删除</button>
+                        </div>
+                    </div>
+                    <div class="follow-content">
+                        实地拜访客户，了解其门店管理痛点。客户反馈现有收银系统老旧，希望升级到智能POS系统。现场演示了我们的解决方案，客户非常满意，已提交正式报价单。
+                    </div>
+                    <div class="follow-details">
+                        <div class="detail-item">
+                            <span>👤</span>
+                            <span>跟进人: 张销售</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>⏱️</span>
+                            <span>用时: 3小时</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>📍</span>
+                            <span>地点: 万达广场总部</span>
+                        </div>
+                        <div class="detail-item">
+                            <span>💰</span>
+                            <span>预估订单: ¥85,000</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 分页 -->
+            <div class="pagination">
+                <button class="page-btn" onclick="changePage('prev')">上一页</button>
+                <button class="page-btn active">1</button>
+                <button class="page-btn" onclick="changePage(2)">2</button>
+                <button class="page-btn" onclick="changePage(3)">3</button>
+                <button class="page-btn" onclick="changePage(4)">4</button>
+                <button class="page-btn" onclick="changePage('next')">下一页</button>
+            </div>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台
+            </div>
+        </footer>
+    </div>
+
+    <!-- 添加跟进记录弹窗 -->
+    <div class="modal" id="followModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">新增跟进记录</h3>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            
+            <form id="followForm">
+                <div class="form-group">
+                    <label class="form-label">客户名称 *</label>
+                    <select class="form-select" required>
+                        <option value="">请选择客户</option>
+                        <option value="1">李明科技有限公司</option>
+                        <option value="2">华润商贸集团</option>
+                        <option value="3">创新科技公司</option>
+                        <option value="4">万达商业广场</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">跟进类型 *</label>
+                    <select class="form-select" required>
+                        <option value="">请选择类型</option>
+                        <option value="call">电话沟通</option>
+                        <option value="meeting">会议拜访</option>
+                        <option value="email">邮件跟进</option>
+                        <option value="visit">实地拜访</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">跟进时间 *</label>
+                    <input type="datetime-local" class="form-input" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">跟进内容 *</label>
+                    <textarea class="form-textarea" placeholder="请详细描述本次跟进的内容、客户反馈、达成的共识等..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">跟进地点</label>
+                    <input type="text" class="form-input" placeholder="请输入跟进地点（如客户公司、电话、邮件等）">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">用时（分钟）</label>
+                    <input type="number" class="form-input" placeholder="请输入本次跟进用时">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">下次跟进时间</label>
+                    <input type="date" class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">备注</label>
+                    <textarea class="form-textarea" placeholder="其他需要记录的信息..."></textarea>
+                </div>
+            </form>
+
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveFollow()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('跟进记录页面已加载');
+            // 绑定筛选事件
+            bindFilterEvents();
+        });
+
+        // 绑定筛选事件
+        function bindFilterEvents() {
+            document.getElementById('typeFilter').addEventListener('change', filterRecords);
+            document.getElementById('timeFilter').addEventListener('change', filterRecords);
+            document.getElementById('ownerFilter').addEventListener('change', filterRecords);
+            document.getElementById('customerSearch').addEventListener('input', filterRecords);
+        }
+
+        // 筛选记录
+        function filterRecords() {
+            console.log('筛选跟进记录');
+            showMessage('筛选功能开发中...', 'info');
+        }
+
+        // 添加跟进记录
+        function addFollowRecord() {
+            document.getElementById('followModal').classList.add('show');
+        }
+
+        // 编辑跟进记录
+        function editFollow(id) {
+            console.log('编辑跟进记录:', id);
+            showMessage('编辑功能开发中...', 'info');
+        }
+
+        // 删除跟进记录
+        function deleteFollow(id) {
+            if (confirm('确定要删除这条跟进记录吗？')) {
+                console.log('删除跟进记录:', id);
+                showMessage('删除功能开发中...', 'warning');
+            }
+        }
+
+        // 关闭弹窗
+        function closeModal() {
+            document.getElementById('followModal').classList.remove('show');
+        }
+
+        // 保存跟进记录
+        function saveFollow() {
+            const form = document.getElementById('followForm');
+            // 简单验证
+            if (form.checkValidity()) {
+                console.log('保存跟进记录');
+                showMessage('跟进记录保存成功！', 'success');
+                closeModal();
+            } else {
+                showMessage('请填写必填项！', 'error');
+            }
+        }
+
+        // 分页
+        function changePage(page) {
+            console.log('切换到页面:', page);
+            showMessage('分页功能开发中...', 'info');
+        }
+
+        // 消息提示函数
+        function showMessage(message, type) {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            alert(message);
+        }
+
+        // 点击弹窗外部关闭
+        document.getElementById('followModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeModal();
+            }
+        });
+    </script>
+    
+    <!-- 引入统一导航系统 -->
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html> 

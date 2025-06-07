@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品编辑 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        /* 页面特定样式 */
+        .page-header {
+            background: linear-gradient(135deg, #722ed1 0%, #b37feb 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-subtitle {
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        /* 表单容器 */
+        .form-container {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .form-main {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .form-sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* 表单区块 */
+        .form-section {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+        }
+
+        .section-header {
+            background: #fafafa;
+            padding: 16px 24px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-content {
+            padding: 24px;
+        }
+
+        /* 表单组件 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group.required .form-label::after {
+            content: ' *';
+            color: #ff4d4f;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-help {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        /* 图片上传 */
+        .image-upload {
+            border: 2px dashed #d9d9d9;
+            border-radius: 8px;
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .image-upload:hover {
+            border-color: #1890ff;
+            background: #f6f9ff;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            color: #d9d9d9;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            color: #666;
+        }
+
+        .image-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .preview-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 1;
+        }
+
+        .preview-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        /* 规格变体 */
+        .variant-container {
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .variant-header {
+            background: #fafafa;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .variant-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .variant-item {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 80px;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .variant-item:last-child {
+            border-bottom: none;
+        }
+
+        /* 侧边栏卡片 */
+        .sidebar-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: #fafafa;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        /* 状态选择 */
+        .status-options {
+            display: grid;
+            gap: 12px;
+        }
+
+        .status-option {
+            padding: 12px 16px;
+            border: 2px solid #f0f0f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .status-option:hover {
+            border-color: #1890ff;
+        }
+
+        .status-option.selected {
+            border-color: #1890ff;
+            background: #f6f9ff;
+        }
+
+        .status-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .status-active .status-icon {
+            background: #52c41a;
+            color: white;
+        }
+
+        .status-draft .status-icon {
+            background: #fa8c16;
+            color: white;
+        }
+
+        .status-inactive .status-icon {
+            background: #ff4d4f;
+            color: white;
+        }
+
+        /* 分类树 */
+        .category-tree {
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid #f0f0f0;
+            border-radius: 6px;
+        }
+
+        .tree-node {
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .tree-node:hover {
+            background: #f8f9fa;
+        }
+
+        .tree-node.selected {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .tree-node.child {
+            padding-left: 32px;
+        }
+
+        /* 动作按钮 */
+        .action-bar {
+            position: sticky;
+            bottom: 0;
+            background: white;
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        .btn-success {
+            background: #52c41a;
+            border-color: #52c41a;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .form-container {
+                grid-template-columns: 1fr;
+            }
+
+            .variant-item {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .image-preview {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 左侧导航 -->
+        <aside class="app-sidebar">
+            <!-- 导航内容将由navigation.js动态生成 -->
+        </aside>
+
+        <!-- 头部区域 -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">商品管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">商品编辑</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索商品...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">3</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">管</div>
+                    <span>管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    <span>✏️</span>
+                    商品编辑
+                </h1>
+                <p class="page-subtitle">创建或编辑商品信息、规格、价格和库存管理</p>
+            </div>
+
+            <form id="productForm">
+                <div class="form-container">
+                    <!-- 主表单区域 -->
+                    <div class="form-main">
+                        <!-- 基本信息 -->
+                        <div class="form-section">
+                            <div class="section-header">
+                                <h3 class="section-title">
+                                    <span>📝</span>
+                                    基本信息
+                                </h3>
+                            </div>
+                            <div class="section-content">
+                                <div class="form-group required">
+                                    <label class="form-label">商品名称</label>
+                                    <input type="text" class="form-input" placeholder="请输入商品名称" required>
+                                    <div class="form-help">商品名称将显示在商店前台</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">商品SKU</label>
+                                    <input type="text" class="form-input" placeholder="自动生成或手动输入">
+                                    <div class="form-help">唯一标识符，留空则自动生成</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">商品描述</label>
+                                    <textarea class="form-textarea" placeholder="请输入商品详细描述..."></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">简短描述</label>
+                                    <textarea class="form-textarea" placeholder="商品的简短介绍，显示在列表页"></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 商品图片 -->
+                        <div class="form-section">
+                            <div class="section-header">
+                                <h3 class="section-title">
+                                    <span>🖼️</span>
+                                    商品图片
+                                </h3>
+                            </div>
+                            <div class="section-content">
+                                <div class="form-group">
+                                    <label class="form-label">商品图片</label>
+                                    <div class="image-upload" onclick="uploadImage()">
+                                        <div class="upload-icon">📸</div>
+                                        <div class="upload-text">点击上传商品图片</div>
+                                    </div>
+                                    <div class="image-preview" id="imagePreview">
+                                        <!-- 预览图片将在这里显示 -->
+                                        <div class="preview-item">
+                                            <img src="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIwIiBoZWlnaHQ9IjEyMCIgdmlld0JveD0iMCAwIDEyMCAxMjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiBmaWxsPSIjRjBGMEYwIi8+Cjx0ZXh0IHg9IjYwIiB5PSI2NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0iIzk5OTk5OSIgZm9udC1zaXplPSIzNiI+📱PC90ZXh0Pgo8L3N2Zz4K" alt="商品图片" class="preview-image">
+                                            <button class="preview-remove" onclick="removeImage(0)">&times;</button>
+                                        </div>
+                                    </div>
+                                    <div class="form-help">建议尺寸：800x800像素，支持JPG、PNG格式</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 价格与库存 -->
+                        <div class="form-section">
+                            <div class="section-header">
+                                <h3 class="section-title">
+                                    <span>💰</span>
+                                    价格与库存
+                                </h3>
+                            </div>
+                            <div class="section-content">
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                                    <div class="form-group required">
+                                        <label class="form-label">销售价格</label>
+                                        <input type="number" class="form-input" placeholder="0.00" step="0.01" required>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">成本价格</label>
+                                        <input type="number" class="form-input" placeholder="0.00" step="0.01">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">库存数量</label>
+                                        <input type="number" class="form-input" placeholder="0" min="0">
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label">库存预警</label>
+                                        <input type="number" class="form-input" placeholder="10" min="0">
+                                        <div class="form-help">库存低于此数量时发出预警</div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">库存管理</label>
+                                    <div style="display: flex; gap: 16px; align-items: center;">
+                                        <label style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="checkbox" checked>
+                                            <span>跟踪库存数量</span>
+                                        </label>
+                                        <label style="display: flex; align-items: center; gap: 8px;">
+                                            <input type="checkbox">
+                                            <span>允许缺货销售</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 商品规格 -->
+                        <div class="form-section">
+                            <div class="section-header">
+                                <h3 class="section-title">
+                                    <span>📐</span>
+                                    商品规格
+                                </h3>
+                            </div>
+                            <div class="section-content">
+                                <div class="variant-container">
+                                    <div class="variant-header">
+                                        <span>规格变体</span>
+                                        <button type="button" class="btn btn-primary" onclick="addVariant()">
+                                            <span>+</span>
+                                            添加规格
+                                        </button>
+                                    </div>
+                                    <div class="variant-list">
+                                        <div class="variant-item">
+                                            <input type="text" class="form-input" placeholder="规格名称 (如: 颜色)" value="颜色">
+                                            <input type="text" class="form-input" placeholder="规格值 (如: 红色)" value="红色">
+                                            <input type="number" class="form-input" placeholder="库存" value="20">
+                                            <button type="button" class="btn" onclick="removeVariant(this)">删除</button>
+                                        </div>
+                                        <div class="variant-item">
+                                            <input type="text" class="form-input" placeholder="规格名称 (如: 尺寸)" value="尺寸">
+                                            <input type="text" class="form-input" placeholder="规格值 (如: M)" value="M">
+                                            <input type="number" class="form-input" placeholder="库存" value="15">
+                                            <button type="button" class="btn" onclick="removeVariant(this)">删除</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SEO设置 -->
+                        <div class="form-section">
+                            <div class="section-header">
+                                <h3 class="section-title">
+                                    <span>🔍</span>
+                                    SEO设置
+                                </h3>
+                            </div>
+                            <div class="section-content">
+                                <div class="form-group">
+                                    <label class="form-label">页面标题</label>
+                                    <input type="text" class="form-input" placeholder="SEO页面标题">
+                                    <div class="form-help">建议长度：50-60个字符</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">页面描述</label>
+                                    <textarea class="form-textarea" placeholder="SEO页面描述"></textarea>
+                                    <div class="form-help">建议长度：150-160个字符</div>
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label">关键词</label>
+                                    <input type="text" class="form-input" placeholder="用逗号分隔多个关键词">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 侧边栏 -->
+                    <div class="form-sidebar">
+                        <!-- 发布状态 -->
+                        <div class="sidebar-card">
+                            <div class="card-header">
+                                <h4 class="card-title">发布状态</h4>
+                            </div>
+                            <div class="card-content">
+                                <div class="status-options">
+                                    <div class="status-option status-active selected" onclick="selectStatus(this, 'active')">
+                                        <div class="status-icon">✓</div>
+                                        <div>
+                                            <div style="font-weight: 600;">立即发布</div>
+                                            <div style="font-size: 12px; color: #666;">商品将立即在商店显示</div>
+                                        </div>
+                                    </div>
+                                    <div class="status-option status-draft" onclick="selectStatus(this, 'draft')">
+                                        <div class="status-icon">📝</div>
+                                        <div>
+                                            <div style="font-weight: 600;">保存草稿</div>
+                                            <div style="font-size: 12px; color: #666;">暂不发布，保存为草稿</div>
+                                        </div>
+                                    </div>
+                                    <div class="status-option status-inactive" onclick="selectStatus(this, 'inactive')">
+                                        <div class="status-icon">⏸</div>
+                                        <div>
+                                            <div style="font-weight: 600;">暂停销售</div>
+                                            <div style="font-size: 12px; color: #666;">商品下架，不显示在商店</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 商品分类 -->
+                        <div class="sidebar-card">
+                            <div class="card-header">
+                                <h4 class="card-title">商品分类</h4>
+                            </div>
+                            <div class="card-content">
+                                <div class="category-tree">
+                                    <div class="tree-node selected" onclick="selectCategory(this)">
+                                        <span>📱</span> 数码电子
+                                    </div>
+                                    <div class="tree-node child" onclick="selectCategory(this)">
+                                        手机通讯
+                                    </div>
+                                    <div class="tree-node child" onclick="selectCategory(this)">
+                                        电脑办公
+                                    </div>
+                                    <div class="tree-node" onclick="selectCategory(this)">
+                                        <span>👕</span> 服装鞋帽
+                                    </div>
+                                    <div class="tree-node child" onclick="selectCategory(this)">
+                                        男装
+                                    </div>
+                                    <div class="tree-node child" onclick="selectCategory(this)">
+                                        女装
+                                    </div>
+                                    <div class="tree-node" onclick="selectCategory(this)">
+                                        <span>🏠</span> 家居日用
+                                    </div>
+                                    <div class="tree-node child" onclick="selectCategory(this)">
+                                        家具
+                                    </div>
+                                    <div class="tree-node child" onclick="selectCategory(this)">
+                                        厨具
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 商品标签 -->
+                        <div class="sidebar-card">
+                            <div class="card-header">
+                                <h4 class="card-title">商品标签</h4>
+                            </div>
+                            <div class="card-content">
+                                <div class="form-group">
+                                    <input type="text" class="form-input" placeholder="输入标签，按回车添加">
+                                    <div class="form-help">用于商品筛选和搜索</div>
+                                </div>
+                                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;">
+                                    <span style="background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                                        热销 <span onclick="removeTag(this)" style="cursor: pointer; margin-left: 4px;">&times;</span>
+                                    </span>
+                                    <span style="background: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-size: 12px;">
+                                        新品 <span onclick="removeTag(this)" style="cursor: pointer; margin-left: 4px;">&times;</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="action-bar">
+                    <div>
+                        <a href="product-list.html" class="btn">
+                            <span>👈</span>
+                            返回列表
+                        </a>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button type="button" class="btn" onclick="previewProduct()">
+                            <span>👁️</span>
+                            预览
+                        </button>
+                        <button type="button" class="btn" onclick="saveDraft()">
+                            <span>💾</span>
+                            保存草稿
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <span>✅</span>
+                            保存并发布
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 全局变量
+        let selectedStatus = 'active';
+        let selectedCategory = '数码电子';
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('商品编辑页面已加载');
+            initializeForm();
+        });
+
+        // 初始化表单
+        function initializeForm() {
+            // 检查URL参数
+            const urlParams = new URLSearchParams(window.location.search);
+            const productId = urlParams.get('id');
+            const mode = urlParams.get('mode');
+            const copyId = urlParams.get('copy');
+
+            if (productId && mode === 'edit') {
+                loadProduct(productId);
+            } else if (copyId) {
+                copyProduct(copyId);
+            }
+        }
+
+        // 加载商品数据
+        function loadProduct(id) {
+            console.log('加载商品数据:', id);
+            // 模拟加载商品数据
+            showMessage('商品数据加载成功！', 'success');
+        }
+
+        // 复制商品
+        function copyProduct(id) {
+            console.log('复制商品:', id);
+            showMessage('商品数据已复制！', 'info');
+        }
+
+        // 上传图片
+        function uploadImage() {
+            console.log('上传商品图片');
+            showMessage('图片上传功能开发中...', 'info');
+        }
+
+        // 移除图片
+        function removeImage(index) {
+            console.log('移除图片:', index);
+            if (confirm('确定要删除这张图片吗？')) {
+                showMessage('图片删除成功！', 'success');
+            }
+        }
+
+        // 选择状态
+        function selectStatus(element, status) {
+            // 清除所有选中状态
+            document.querySelectorAll('.status-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            // 选中当前状态
+            element.classList.add('selected');
+            selectedStatus = status;
+            console.log('选择状态:', status);
+        }
+
+        // 选择分类
+        function selectCategory(element) {
+            // 清除所有选中状态
+            document.querySelectorAll('.tree-node').forEach(node => {
+                node.classList.remove('selected');
+            });
+            // 选中当前分类
+            element.classList.add('selected');
+            selectedCategory = element.textContent.trim();
+            console.log('选择分类:', selectedCategory);
+        }
+
+        // 添加规格
+        function addVariant() {
+            const variantList = document.querySelector('.variant-list');
+            const variantItem = document.createElement('div');
+            variantItem.className = 'variant-item';
+            variantItem.innerHTML = `
+                <input type="text" class="form-input" placeholder="规格名称 (如: 颜色)">
+                <input type="text" class="form-input" placeholder="规格值 (如: 红色)">
+                <input type="number" class="form-input" placeholder="库存">
+                <button type="button" class="btn" onclick="removeVariant(this)">删除</button>
+            `;
+            variantList.appendChild(variantItem);
+        }
+
+        // 移除规格
+        function removeVariant(button) {
+            if (confirm('确定要删除这个规格吗？')) {
+                button.parentElement.remove();
+            }
+        }
+
+        // 移除标签
+        function removeTag(span) {
+            span.parentElement.remove();
+        }
+
+        // 预览商品
+        function previewProduct() {
+            console.log('预览商品');
+            showMessage('预览功能开发中...', 'info');
+        }
+
+        // 保存草稿
+        function saveDraft() {
+            console.log('保存草稿');
+            showMessage('草稿保存成功！', 'success');
+        }
+
+        // 表单提交
+        document.getElementById('productForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            console.log('保存并发布商品');
+            
+            // 验证表单
+            if (validateForm()) {
+                showMessage('商品保存成功！', 'success');
+                setTimeout(() => {
+                    window.location.href = 'product-list.html';
+                }, 1500);
+            }
+        });
+
+        // 验证表单
+        function validateForm() {
+            const requiredFields = document.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.style.borderColor = '#ff4d4f';
+                    isValid = false;
+                } else {
+                    field.style.borderColor = '#d9d9d9';
+                }
+            });
+            
+            if (!isValid) {
+                showMessage('请填写所有必填项！', 'error');
+            }
+            
+            return isValid;
+        }
+
+        // 消息提示函数
+        function showMessage(message, type) {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            alert(message);
+        }
+    </script>
+    
+    <!-- 引入统一导航系统 -->
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html> 

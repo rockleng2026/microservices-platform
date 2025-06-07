@@ -1,0 +1,368 @@
+/* Portal 3.0 统一导航菜单样式 */
+/* 版本: v1.0 */
+
+/* 基础布局 */
+.app-layout {
+    display: grid;
+    grid-template-areas: 
+        "sidebar header"
+        "sidebar main"
+        "sidebar footer";
+    grid-template-columns: 240px 1fr;
+    grid-template-rows: 60px 1fr auto;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* 侧边栏 */
+.app-sidebar {
+    grid-area: sidebar;
+    background: #001529;
+    color: #fff;
+    overflow-y: auto;
+    transition: transform 0.3s ease;
+    position: relative;
+}
+
+/* 头部 */
+.app-header {
+    grid-area: header;
+    background: #fff;
+    border-bottom: 1px solid #e8e8e8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 24px;
+    z-index: 100;
+}
+
+/* 主内容 */
+.app-main {
+    grid-area: main;
+    background: #f5f5f5;
+    overflow-y: auto;
+    padding: 24px;
+}
+
+/* 尾部 */
+.app-footer {
+    grid-area: footer;
+    background: #fff;
+    border-top: 1px solid #e8e8e8;
+    padding: 12px 24px;
+    text-align: center;
+    color: #666;
+}
+
+/* 侧边栏头部 */
+.sidebar-header {
+    height: 60px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 1px solid #112a45;
+    background: #002140;
+}
+
+.logo {
+    width: 32px;
+    height: 32px;
+    background: linear-gradient(135deg, #1890ff, #722ed1);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: bold;
+    font-size: 14px;
+    margin-right: 12px;
+}
+
+.brand-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+}
+
+/* 导航菜单 */
+.nav-menu {
+    list-style: none;
+    padding: 16px 0;
+    margin: 0;
+}
+
+.nav-item {
+    margin: 0;
+}
+
+/* 普通链接 */
+.nav-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 24px;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    transition: all 0.3s;
+    border: none;
+    background: none;
+    width: 100%;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+}
+
+.nav-link:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.nav-link.active {
+    background: #1890ff;
+    color: #fff;
+    border-left-color: #fff;
+}
+
+/* 分组按钮 */
+.nav-group {
+    display: flex;
+    align-items: center;
+    padding: 12px 24px;
+    color: rgba(255, 255, 255, 0.85);
+    background: none;
+    border: none;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.3s;
+    text-align: left;
+    border-left: 3px solid transparent;
+}
+
+.nav-group:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.nav-group.expanded {
+    background: rgba(24, 144, 255, 0.1);
+    color: #1890ff;
+}
+
+/* 图标 */
+.nav-icon {
+    margin-right: 8px;
+    font-size: 16px;
+    width: 16px;
+    text-align: center;
+}
+
+/* 箭头 */
+.nav-arrow {
+    margin-left: auto;
+    font-size: 12px;
+    transition: transform 0.3s;
+}
+
+.nav-arrow.rotated {
+    transform: rotate(90deg);
+}
+
+/* 子菜单 */
+.nav-submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+.nav-submenu.expanded {
+    max-height: 300px;
+}
+
+.nav-subitem {
+    display: block;
+    padding: 8px 24px 8px 56px;
+    color: rgba(255, 255, 255, 0.85);
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.nav-subitem:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+.nav-subitem.active {
+    background: #1890ff;
+    color: #fff;
+    position: relative;
+}
+
+.nav-subitem.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: #fff;
+}
+
+/* 头部样式 */
+.header-left {
+    display: flex;
+    align-items: center;
+}
+
+.mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 18px;
+    margin-right: 16px;
+    cursor: pointer;
+}
+
+.breadcrumb {
+    display: flex;
+    align-items: center;
+    font-size: 14px;
+    color: #666;
+}
+
+.breadcrumb-item {
+    color: #666;
+}
+
+.breadcrumb-separator {
+    margin: 0 8px;
+    color: #ccc;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 12px;
+    color: #ccc;
+}
+
+.search-input {
+    padding: 8px 12px 8px 36px;
+    border: 1px solid #d9d9d9;
+    border-radius: 6px;
+    width: 200px;
+    outline: none;
+}
+
+.search-input:focus {
+    border-color: #1890ff;
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+.notification-btn {
+    position: relative;
+    background: none;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.notification-badge {
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    background: #ff4d4f;
+    color: #fff;
+    font-size: 10px;
+    padding: 1px 4px;
+    border-radius: 8px;
+    min-width: 14px;
+    text-align: center;
+}
+
+.user-menu {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: background 0.3s;
+}
+
+.user-menu:hover {
+    background: #f5f5f5;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    background: #1890ff;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 8px;
+    font-weight: 500;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .app-layout {
+        grid-template-columns: 1fr;
+        grid-template-areas: 
+            "header"
+            "main"
+            "footer";
+    }
+    
+    .app-sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 240px;
+        height: 100vh;
+        z-index: 1000;
+        transform: translateX(-100%);
+    }
+    
+    .app-sidebar.mobile-open {
+        transform: translateX(0);
+    }
+    
+    .mobile-menu-toggle {
+        display: block !important;
+    }
+    
+    .search-box {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .app-main {
+        padding: 16px;
+    }
+    
+    .breadcrumb {
+        display: none;
+    }
+    
+    .header-actions {
+        gap: 8px;
+    }
+    
+    .user-menu span {
+        display: none;
+    }
+} 

@@ -80,29 +80,29 @@ const navigationData = {
             ]
         },
         {
-            id: 'support',
+            id: 'service',
             icon: '🎧',
             label: '客服中心',
             type: 'group',
             expanded: false,
             children: [
-                { id: 'ticket-dashboard', label: '工单工作台', url: 'support/ticket-dashboard.html' },
-                { id: 'ticket-list', label: '工单管理', url: 'support/ticket-list.html' },
-                { id: 'ticket-detail', label: '工单详情', url: 'support/ticket-detail.html' },
-                { id: 'knowledge-base', label: '知识库', url: 'support/knowledge-base.html' }
+                { id: 'service-dashboard', label: '客服工作台', url: 'service/service-dashboard.html' },
+                { id: 'ticket-list', label: '工单管理', url: 'service/ticket-list.html' },
+                { id: 'ticket-detail', label: '工单详情', url: 'service/ticket-detail.html' },
+                { id: 'knowledge-base', label: '知识库', url: 'service/knowledge-base.html' }
             ]
         },
         {
-            id: 'ops',
+            id: 'operations',
             icon: '⚙️',
             label: '运维管理',
             type: 'group',
             expanded: false,
             children: [
-                { id: 'task-board', label: '任务看板', url: 'ops/task-board.html' },
-                { id: 'schedule-calendar', label: '日程日历', url: 'ops/schedule-calendar.html' },
-                { id: 'work-log', label: '工作日志', url: 'ops/work-log.html' },
-                { id: 'report-center', label: '报表中心', url: 'ops/report-center.html' }
+                { id: 'task-board', label: '任务看板', url: 'operations/task-board.html' },
+                { id: 'schedule-calendar', label: '日程日历', url: 'operations/schedule-calendar.html' },
+                { id: 'work-log', label: '工作日志', url: 'operations/work-log.html' },
+                { id: 'report-center', label: '报表中心', url: 'operations/report-center.html' }
             ]
         }
     ]

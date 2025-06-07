@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>跟进记录 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .follow-layout {
+            display: flex;
+            gap: 24px;
+            height: calc(100vh - var(--header-height) - 48px);
+        }
+        
+        .customer-panel {
+            flex: 0 0 350px;
+            min-width: 300px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .follow-panel {
+            flex: 1;
+            min-width: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .panel-body {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .customer-search {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .customer-list {
+            padding: 12px 0;
+        }
+        
+        .customer-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border-left: 3px solid transparent;
+        }
+        
+        .customer-item:hover {
+            background: #f9f9f9;
+        }
+        
+        .customer-item.active {
+            background: #e6f7ff;
+            border-left-color: var(--primary-color);
+        }
+        
+        .customer-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+        
+        .customer-company {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+        
+        .customer-meta {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .customer-status {
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+        
+        .status-potential { background: #e6f7ff; color: #1890ff; }
+        .status-trial { background: #fff2e8; color: #fa8c16; }
+        .status-formal { background: #f6ffed; color: #52c41a; }
+        
+        .follow-timeline {
+            padding: 20px;
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 40px;
+            margin-bottom: 24px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 15px;
+            top: 0;
+            bottom: -24px;
+            width: 2px;
+            background: #f0f0f0;
+        }
+        
+        .timeline-item:last-child::before {
+            bottom: 0;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: 8px;
+            top: 8px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #1890ff;
+            z-index: 1;
+        }
+        
+        .timeline-dot.call { border-color: #52c41a; }
+        .timeline-dot.visit { border-color: #fa8c16; }
+        .timeline-dot.email { border-color: #722ed1; }
+        .timeline-dot.meeting { border-color: #f5222d; }
+        
+        .timeline-content {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 16px;
+            border-left: 4px solid #1890ff;
+        }
+        
+        .timeline-content.call { border-left-color: #52c41a; }
+        .timeline-content.visit { border-left-color: #fa8c16; }
+        .timeline-content.email { border-left-color: #722ed1; }
+        .timeline-content.meeting { border-left-color: #f5222d; }
+        
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .timeline-type {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        .timeline-type i {
+            width: 16px;
+        }
+        
+        .timeline-time {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .timeline-text {
+            color: #333;
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+        
+        .timeline-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .follow-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .action-btn:hover {
+            opacity: 0.8;
+        }
+        
+        .action-btn.edit {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+        
+        .action-btn.delete {
+            background: #fff1f0;
+            color: #f5222d;
+        }
+        
+        .add-follow-form {
+            border-top: 1px solid #f0f0f0;
+            padding: 20px;
+            background: #fafafa;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .form-item {
+            flex: 1;
+        }
+        
+        .form-item.full {
+            flex: none;
+            width: 100%;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 40px;
+            color: #999;
+        }
+        
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+        
+        .customer-stats {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .stats-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .stats-value {
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        
+        .follow-filters {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .filter-tag {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid #d9d9d9;
+            background: white;
+        }
+        
+        .filter-tag.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <div class="portal-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Portal 3.0</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-title">组织架构</div>
+                    <a href="../organization/department-tree.html" class="nav-link">
+                        <i class="fas fa-sitemap"></i> 部门管理
+                    </a>
+                    <a href="../organization/employee-list.html" class="nav-link">
+                        <i class="fas fa-users"></i> 员工管理
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-title">客户管理</div>
+                    <a href="customer-dashboard.html" class="nav-link">
+                        <i class="fas fa-chart-pie"></i> CRM工作台
+                    </a>
+                    <a href="customer-list.html" class="nav-link">
+                        <i class="fas fa-address-book"></i> 客户列表
+                    </a>
+                    <a href="customer-detail.html" class="nav-link">
+                        <i class="fas fa-user-circle"></i> 客户详情
+                    </a>
+                    <a href="follow-record.html" class="nav-link active">
+                        <i class="fas fa-clipboard-list"></i> 跟进记录
+                    </a>
+                    <a href="customer-transfer.html" class="nav-link">
+                        <i class="fas fa-exchange-alt"></i> 客户交接
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 -->
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="breadcrumb">
+                        <span>客户管理</span>
+                        <i class="fas fa-chevron-right"></i>
+                        <span>跟进记录</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="搜索跟进记录...">
+                    </div>
+                    <div class="user-menu">
+                        <img src="https://via.placeholder.com/32" alt="用户头像" class="user-avatar">
+                        <span>管理员</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 页面内容 -->
+            <div class="page-content">
+                <div class="page-header">
+                    <h1>跟进记录</h1>
+                    <p>管理客户跟进记录，追踪客户交互历史</p>
+                </div>
+
+                <div class="follow-layout">
+                    <!-- 客户列表面板 -->
+                    <div class="customer-panel">
+                        <div class="panel-header">
+                            <h3>客户列表</h3>
+                        </div>
+                        
+                        <div class="customer-search">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" placeholder="搜索客户..." onkeyup="searchCustomers()" id="customerSearch">
+                            </div>
+                        </div>
+                        
+                        <div class="panel-body">
+                            <div class="customer-list" id="customerList">
+                                <!-- 客户列表将通过JavaScript渲染 -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 跟进记录面板 -->
+                    <div class="follow-panel">
+                        <div class="panel-header">
+                            <h3 id="currentCustomerName">请选择客户</h3>
+                            <button class="btn btn-primary" onclick="showAddForm()" id="addFollowBtn" style="display: none;">
+                                <i class="fas fa-plus"></i> 新增跟进
+                            </button>
+                        </div>
+                        
+                        <div id="customerStatsPanel" style="display: none;">
+                            <div class="customer-stats">
+                                <div class="stats-item">
+                                    <span>跟进次数:</span>
+                                    <span class="stats-value" id="followCount">0</span>
+                                </div>
+                                <div class="stats-item">
+                                    <span>最后跟进:</span>
+                                    <span class="stats-value" id="lastFollowTime">-</span>
+                                </div>
+                                <div class="stats-item">
+                                    <span>客户状态:</span>
+                                    <span class="stats-value" id="customerStatusText">-</span>
+                                </div>
+                            </div>
+                            
+                            <div class="follow-filters">
+                                <div class="filter-tag active" onclick="filterFollows('all')">全部</div>
+                                <div class="filter-tag" onclick="filterFollows('call')">电话</div>
+                                <div class="filter-tag" onclick="filterFollows('visit')">拜访</div>
+                                <div class="filter-tag" onclick="filterFollows('email')">邮件</div>
+                                <div class="filter-tag" onclick="filterFollows('meeting')">会议</div>
+                            </div>
+                        </div>
+                        
+                        <div class="panel-body">
+                            <div id="followTimeline" class="follow-timeline">
+                                <div class="empty-state">
+                                    <i class="fas fa-users"></i>
+                                    <p>请从左侧选择客户查看跟进记录</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 添加跟进表单 -->
+                        <div class="add-follow-form" id="addFollowForm" style="display: none;">
+                            <h4>新增跟进记录</h4>
+                            <div class="form-row">
+                                <div class="form-item">
+                                    <label>跟进方式 <span style="color: red;">*</span></label>
+                                    <select class="form-input" id="followType">
+                                        <option value="call">电话沟通</option>
+                                        <option value="visit">客户拜访</option>
+                                        <option value="email">邮件联系</option>
+                                        <option value="meeting">会议交流</option>
+                                    </select>
+                                </div>
+                                <div class="form-item">
+                                    <label>跟进时间 <span style="color: red;">*</span></label>
+                                    <input type="datetime-local" class="form-input" id="followTime">
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-item full">
+                                    <label>跟进内容 <span style="color: red;">*</span></label>
+                                    <textarea class="form-input" rows="4" placeholder="请详细记录本次跟进的内容、客户反馈、下一步计划等" id="followContent"></textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-item">
+                                    <label>客户反馈</label>
+                                    <select class="form-input" id="customerFeedback">
+                                        <option value="">请选择</option>
+                                        <option value="positive">积极</option>
+                                        <option value="neutral">中性</option>
+                                        <option value="negative">消极</option>
+                                        <option value="interested">感兴趣</option>
+                                        <option value="considering">考虑中</option>
+                                    </select>
+                                </div>
+                                <div class="form-item">
+                                    <label>下次跟进时间</label>
+                                    <input type="date" class="form-input" id="nextFollowTime">
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                                <button class="btn btn-default" onclick="hideAddForm()">取消</button>
+                                <button class="btn btn-primary" onclick="saveFollow()">保存跟进</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/common.js"></script>
+    <script src="../assets/js/mock-data.js"></script>
+    <script>
+        let currentCustomer = null;
+        let currentFilter = 'all';
+        let followRecords = [];
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+            loadCustomers();
+            initializeFollowData();
+            
+            // 设置默认跟进时间为当前时间
+            const now = new Date();
+            now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+            document.getElementById('followTime').value = now.toISOString().slice(0, 16);
+        });
+
+        function loadCustomers() {
+            const customerList = document.getElementById('customerList');
+            const customers = window.mockData.customers;
+            
+            customerList.innerHTML = customers.map(customer => `
+                <div class="customer-item" onclick="selectCustomer(${customer.id})">
+                    <div class="customer-name">${customer.name}</div>
+                    <div class="customer-company">${customer.company}</div>
+                    <div class="customer-meta">
+                        <span class="customer-status status-${customer.status}">
+                            ${getStatusText(customer.status)}
+                        </span>
+                        <span>•</span>
+                        <span>${customer.salesPerson}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function initializeFollowData() {
+            // 模拟跟进记录数据
+            followRecords = [
+                {
+                    id: 1,
+                    customerId: 1,
+                    type: 'call',
+                    time: '2024-01-15 14:30:00',
+                    content: '与客户电话沟通产品需求，客户对我们的CRM系统表现出浓厚兴趣，特别是客户管理和销售流程自动化功能。客户提到目前使用的系统存在数据分散、报表不够直观等问题。',
+                    feedback: 'interested',
+                    nextFollowTime: '2024-01-18',
+                    createBy: '张三'
+                },
+                {
+                    id: 2,
+                    customerId: 1,
+                    type: 'visit',
+                    time: '2024-01-18 10:00:00',
+                    content: '上门拜访客户，现场演示了我们的Portal 3.0系统。客户对界面设计和功能完整性非常满意，当场表示希望进行试用。已安排下周进行详细的技术对接和试用环境搭建。',
+                    feedback: 'positive',
+                    nextFollowTime: '2024-01-22',
+                    createBy: '张三'
+                },
+                {
+                    id: 3,
+                    customerId: 1,
+                    type: 'email',
+                    time: '2024-01-22 16:45:00',
+                    content: '发送试用账号和使用指南邮件给客户。邮件包含了系统登录信息、基础功能介绍视频和操作手册。客户回复表示已收到，将安排团队成员进行试用测试。',
+                    feedback: 'positive',
+                    nextFollowTime: '2024-01-25',
+                    createBy: '张三'
+                }
+            ];
+        }
+
+        function selectCustomer(customerId) {
+            // 移除之前的选中状态
+            document.querySelectorAll('.customer-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // 设置新的选中状态
+            event.target.closest('.customer-item').classList.add('active');
+            
+            // 获取客户信息
+            const customer = window.mockData.customers.find(c => c.id === customerId);
+            if (!customer) return;
+            
+            currentCustomer = customer;
+            
+            // 更新页面显示
+            document.getElementById('currentCustomerName').textContent = `${customer.name} (${customer.company})`;
+            document.getElementById('addFollowBtn').style.display = 'block';
+            document.getElementById('customerStatsPanel').style.display = 'block';
+            
+            // 更新统计信息
+            const customerFollows = followRecords.filter(f => f.customerId === customerId);
+            document.getElementById('followCount').textContent = customerFollows.length;
+            document.getElementById('lastFollowTime').textContent = 
+                customerFollows.length > 0 ? formatDate(customerFollows[0].time) : '-';
+            document.getElementById('customerStatusText').textContent = getStatusText(customer.status);
+            
+            // 渲染跟进记录
+            renderFollowRecords(customerId);
+        }
+
+        function renderFollowRecords(customerId) {
+            const timeline = document.getElementById('followTimeline');
+            let records = followRecords.filter(f => f.customerId === customerId);
+            
+            // 按过滤条件筛选
+            if (currentFilter !== 'all') {
+                records = records.filter(f => f.type === currentFilter);
+            }
+            
+            // 按时间倒序排列
+            records.sort((a, b) => new Date(b.time) - new Date(a.time));
+            
+            if (records.length === 0) {
+                timeline.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>暂无跟进记录</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            timeline.innerHTML = records.map(record => `
+                <div class="timeline-item">
+                    <div class="timeline-dot ${record.type}"></div>
+                    <div class="timeline-content ${record.type}">
+                        <div class="timeline-header">
+                            <div class="timeline-type">
+                                <i class="fas ${getTypeIcon(record.type)}"></i>
+                                ${getTypeText(record.type)}
+                            </div>
+                            <div class="timeline-time">${formatDateTime(record.time)}</div>
+                        </div>
+                        <div class="timeline-text">${record.content}</div>
+                        <div class="timeline-footer">
+                            <span>创建人: ${record.createBy}</span>
+                            <div class="follow-actions">
+                                <button class="action-btn edit" onclick="editFollow(${record.id})">
+                                    <i class="fas fa-edit"></i> 编辑
+                                </button>
+                                <button class="action-btn delete" onclick="deleteFollow(${record.id})">
+                                    <i class="fas fa-trash"></i> 删除
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getTypeIcon(type) {
+            const icons = {
+                'call': 'fa-phone',
+                'visit': 'fa-handshake',
+                'email': 'fa-envelope',
+                'meeting': 'fa-users'
+            };
+            return icons[type] || 'fa-comment';
+        }
+
+        function getTypeText(type) {
+            const texts = {
+                'call': '电话沟通',
+                'visit': '客户拜访',
+                'email': '邮件联系',
+                'meeting': '会议交流'
+            };
+            return texts[type] || '其他';
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                'potential': '潜在客户',
+                'trial': '试用客户',
+                'formal': '正式客户',
+                'lost': '流失客户'
+            };
+            return texts[status] || status;
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('zh-CN');
+        }
+
+        function formatDateTime(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN');
+        }
+
+        function filterFollows(type) {
+            currentFilter = type;
+            
+            // 更新过滤标签状态
+            document.querySelectorAll('.filter-tag').forEach(tag => {
+                tag.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 重新渲染记录
+            if (currentCustomer) {
+                renderFollowRecords(currentCustomer.id);
+            }
+        }
+
+        function searchCustomers() {
+            const keyword = document.getElementById('customerSearch').value.toLowerCase();
+            const customers = window.mockData.customers.filter(customer => 
+                customer.name.toLowerCase().includes(keyword) ||
+                customer.company.toLowerCase().includes(keyword)
+            );
+            
+            const customerList = document.getElementById('customerList');
+            customerList.innerHTML = customers.map(customer => `
+                <div class="customer-item" onclick="selectCustomer(${customer.id})">
+                    <div class="customer-name">${customer.name}</div>
+                    <div class="customer-company">${customer.company}</div>
+                    <div class="customer-meta">
+                        <span class="customer-status status-${customer.status}">
+                            ${getStatusText(customer.status)}
+                        </span>
+                        <span>•</span>
+                        <span>${customer.salesPerson}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showAddForm() {
+            document.getElementById('addFollowForm').style.display = 'block';
+            document.getElementById('followContent').focus();
+        }
+
+        function hideAddForm() {
+            document.getElementById('addFollowForm').style.display = 'none';
+            // 清空表单
+            document.getElementById('followContent').value = '';
+            document.getElementById('customerFeedback').selectedIndex = 0;
+            document.getElementById('nextFollowTime').value = '';
+        }
+
+        function saveFollow() {
+            const type = document.getElementById('followType').value;
+            const time = document.getElementById('followTime').value;
+            const content = document.getElementById('followContent').value.trim();
+            const feedback = document.getElementById('customerFeedback').value;
+            const nextFollowTime = document.getElementById('nextFollowTime').value;
+            
+            if (!content) {
+                showMessage('请填写跟进内容', 'error');
+                return;
+            }
+            
+            // 创建新记录
+            const newRecord = {
+                id: Date.now(),
+                customerId: currentCustomer.id,
+                type: type,
+                time: time,
+                content: content,
+                feedback: feedback,
+                nextFollowTime: nextFollowTime,
+                createBy: '当前用户'
+            };
+            
+            // 添加到记录列表
+            followRecords.unshift(newRecord);
+            
+            // 重新渲染
+            renderFollowRecords(currentCustomer.id);
+            
+            // 更新统计
+            const customerFollows = followRecords.filter(f => f.customerId === currentCustomer.id);
+            document.getElementById('followCount').textContent = customerFollows.length;
+            document.getElementById('lastFollowTime').textContent = formatDate(newRecord.time);
+            
+            // 隐藏表单
+            hideAddForm();
+            
+            showMessage('跟进记录保存成功', 'success');
+        }
+
+        function editFollow(id) {
+            showMessage('编辑功能开发中...', 'info');
+        }
+
+        function deleteFollow(id) {
+            if (confirm('确定要删除这条跟进记录吗？')) {
+                const index = followRecords.findIndex(r => r.id === id);
+                if (index !== -1) {
+                    followRecords.splice(index, 1);
+                    renderFollowRecords(currentCustomer.id);
+                    
+                    // 更新统计
+                    const customerFollows = followRecords.filter(f => f.customerId === currentCustomer.id);
+                    document.getElementById('followCount').textContent = customerFollows.length;
+                    
+                    showMessage('跟进记录删除成功', 'success');
+                }
+            }
+        }
+    </script>
+</body>
+</html> 

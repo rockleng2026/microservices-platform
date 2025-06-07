@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作台配置 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <style>
+        .workspace-container {
+            display: flex;
+            min-height: 100vh;
+            background: var(--bg-color);
+        }
+
+        .sidebar {
+            width: 240px;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-color);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: var(--text-color-secondary);
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover {
+            background: var(--bg-color-light);
+            color: var(--text-color);
+        }
+
+        .nav-link.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: var(--primary-color);
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--primary-color);
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            min-height: 100vh;
+        }
+
+        .header {
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            color: var(--text-color-secondary);
+        }
+
+        .breadcrumb-item {
+            margin-right: 8px;
+        }
+
+        .breadcrumb-separator {
+            margin: 0 8px;
+            color: var(--border-color);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            width: 200px;
+            height: 32px;
+            padding: 0 12px 0 36px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--bg-color-light);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-color-secondary);
+        }
+
+        .notification-btn {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-color-secondary);
+            transition: all 0.3s ease;
+        }
+
+        .notification-btn:hover {
+            background: var(--bg-color-light);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
+            background: var(--error-color);
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .user-menu:hover {
+            background: var(--bg-color-light);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .config-content {
+            padding: 24px;
+        }
+
+        .config-header {
+            margin-bottom: 32px;
+        }
+
+        .config-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+
+        .config-subtitle {
+            color: var(--text-color-secondary);
+            font-size: 14px;
+        }
+
+        .config-tabs {
+            display: flex;
+            margin-bottom: 32px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .config-tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: var(--text-color-secondary);
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .config-tab.active {
+            color: var(--primary-color);
+            border-bottom-color: var(--primary-color);
+        }
+
+        .config-tab:hover {
+            color: var(--text-color);
+        }
+
+        .config-panel {
+            display: none;
+        }
+
+        .config-panel.active {
+            display: block;
+        }
+
+        .config-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .section-icon {
+            margin-right: 8px;
+            font-size: 20px;
+        }
+
+        .section-description {
+            color: var(--text-color-secondary);
+            font-size: 14px;
+            margin-bottom: 20px;
+        }
+
+        /* 模块管理 */
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .module-item {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .module-item.enabled {
+            border-color: var(--primary-color);
+            background: rgba(24, 144, 255, 0.05);
+        }
+
+        .module-item:hover {
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 12px;
+        }
+
+        .module-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--bg-color-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            margin-right: 12px;
+        }
+
+        .module-info {
+            flex: 1;
+        }
+
+        .module-name {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-color);
+            margin-bottom: 4px;
+        }
+
+        .module-description {
+            font-size: 12px;
+            color: var(--text-color-secondary);
+        }
+
+        .module-toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .module-toggle.enabled {
+            background: var(--primary-color);
+        }
+
+        .module-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .module-toggle.enabled::after {
+            transform: translateX(20px);
+        }
+
+        /* 布局设置 */
+        .layout-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .layout-option {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .layout-option.selected {
+            border-color: var(--primary-color);
+            background: rgba(24, 144, 255, 0.05);
+        }
+
+        .layout-preview {
+            width: 100%;
+            height: 80px;
+            background: var(--bg-color-light);
+            border-radius: 4px;
+            margin-bottom: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .layout-preview::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: 2px dashed var(--border-color);
+            border-radius: 4px;
+        }
+
+        .layout-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        /* 主题设置 */
+        .theme-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+        }
+
+        .theme-option {
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .theme-option.selected {
+            border-color: var(--primary-color);
+            background: rgba(24, 144, 255, 0.05);
+        }
+
+        .theme-preview {
+            width: 100%;
+            height: 60px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .theme-preview.light {
+            background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
+        }
+
+        .theme-preview.dark {
+            background: linear-gradient(135deg, #2f3349 0%, #1f1f1f 100%);
+        }
+
+        .theme-preview.blue {
+            background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+        }
+
+        .theme-preview.green {
+            background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
+        }
+
+        .theme-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+
+        /* 权限设置 */
+        .permission-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .permission-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color-light);
+        }
+
+        .permission-item:last-child {
+            border-bottom: none;
+        }
+
+        .permission-info {
+            flex: 1;
+        }
+
+        .permission-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-color);
+            margin-bottom: 4px;
+        }
+
+        .permission-description {
+            font-size: 12px;
+            color: var(--text-color-secondary);
+        }
+
+        .permission-toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .permission-toggle.enabled {
+            background: var(--primary-color);
+        }
+
+        .permission-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .permission-toggle.enabled::after {
+            transform: translateX(20px);
+        }
+
+        /* 操作按钮 */
+        .config-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .btn-secondary {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: white;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-primary {
+            padding: 8px 16px;
+            border: 1px solid var(--primary-color);
+            border-radius: 6px;
+            background: var(--primary-color);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-color-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-240px);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .config-content {
+                padding: 16px;
+            }
+
+            .module-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .layout-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .theme-options {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="workspace-container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">P3</div>
+                <div class="brand-name">Portal 3.0</div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="oa-workspace.html" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        <span>OA工作台</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="crm-workspace.html" class="nav-link">
+                        <span class="nav-icon">👥</span>
+                        <span>CRM工作台</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="sales-workspace.html" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        <span>销售工作台</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="../organization/department-tree.html" class="nav-link">
+                        <span class="nav-icon">🏢</span>
+                        <span>组织架构</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="../crm/customer-list.html" class="nav-link">
+                        <span class="nav-icon">👤</span>
+                        <span>客户管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">📦</span>
+                        <span>商品管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">📋</span>
+                        <span>订单管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">🎧</span>
+                        <span>客服中心</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link active">
+                        <span class="nav-icon">⚙️</span>
+                        <span>工作台配置</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 顶部导航 -->
+            <div class="header">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">工作台</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">工作台配置</span>
+                </div>
+                
+                <div class="header-actions">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="搜索配置项...">
+                    </div>
+                    
+                    <button class="notification-btn">
+                        <span>🔔</span>
+                        <span class="notification-badge">2</span>
+                    </button>
+                    
+                    <div class="user-menu">
+                        <div class="user-avatar">张</div>
+                        <span>张三</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 配置内容 -->
+            <div class="config-content">
+                <div class="config-header">
+                    <h1 class="config-title">工作台配置</h1>
+                    <p class="config-subtitle">个性化定制您的工作台，提升工作效率</p>
+                </div>
+
+                <!-- 配置选项卡 -->
+                <div class="config-tabs">
+                    <div class="config-tab active" onclick="switchTab('modules')">模块管理</div>
+                    <div class="config-tab" onclick="switchTab('layout')">布局设置</div>
+                    <div class="config-tab" onclick="switchTab('theme')">主题设置</div>
+                    <div class="config-tab" onclick="switchTab('permissions')">权限设置</div>
+                </div>
+
+                <!-- 模块管理面板 -->
+                <div class="config-panel active" id="modules-panel">
+                    <div class="config-section">
+                        <h2 class="section-title">
+                            <span class="section-icon">🧩</span>
+                            可用模块
+                        </h2>
+                        <p class="section-description">选择要在工作台显示的功能模块，拖拽调整顺序</p>
+                        
+                        <div class="module-grid">
+                            <div class="module-item enabled" data-module="task-stats">
+                                <div class="module-header">
+                                    <div class="module-icon">📝</div>
+                                    <div class="module-info">
+                                        <div class="module-name">任务统计</div>
+                                        <div class="module-description">显示待办、进行中和已完成的任务统计</div>
+                                    </div>
+                                    <div class="module-toggle enabled" onclick="toggleModule(this)"></div>
+                                </div>
+                            </div>
+
+                            <div class="module-item enabled" data-module="todo-list">
+                                <div class="module-header">
+                                    <div class="module-icon">✅</div>
+                                    <div class="module-info">
+                                        <div class="module-name">待办事项</div>
+                                        <div class="module-description">显示个人待办任务列表</div>
+                                    </div>
+                                    <div class="module-toggle enabled" onclick="toggleModule(this)"></div>
+                                </div>
+                            </div>
+
+                            <div class="module-item enabled" data-module="schedule">
+                                <div class="module-header">
+                                    <div class="module-icon">📅</div>
+                                    <div class="module-info">
+                                        <div class="module-name">日程安排</div>
+                                        <div class="module-description">显示日历和今日日程安排</div>
+                                    </div>
+                                    <div class="module-toggle enabled" onclick="toggleModule(this)"></div>
+                                </div>
+                            </div>
+
+                            <div class="module-item enabled" data-module="approval">
+                                <div class="module-header">
+                                    <div class="module-icon">📋</div>
+                                    <div class="module-info">
+                                        <div class="module-name">待办审批</div>
+                                        <div class="module-description">显示需要处理的审批事项</div>
+                                    </div>
+                                    <div class="module-toggle enabled" onclick="toggleModule(this)"></div>
+                                </div>
+                            </div>
+
+                            <div class="module-item enabled" data-module="announcements">
+                                <div class="module-header">
+                                    <div class="module-icon">📢</div>
+                                    <div class="module-info">
+                                        <div class="module-name">公司公告</div>
+                                        <div class="module-description">显示最新的公司通知和公告</div>
+                                    </div>
+                                    <div class="module-toggle enabled" onclick="toggleModule(this)"></div>
+                                </div>
+                            </div>
+
+                            <div class="module-item" data-module="work-log">
+                                <div class="module-header">
+                                    <div class="module-icon">📔</div>
+                                    <div class="module-info">
+                                        <div class="module-name">工作日志</div>
+                                        <div class="module-description">工作日志编写和查看功能</div>
+                                    </div>
+                                    <div class="module-toggle" onclick="toggleModule(this)"></div>
+                                </div>
+                            </div>
+
+                            <div class="module-item" data-module="weather">
+                                <div class="module-header">
+                                    <div class="module-icon">🌤️</div>
+                                    <div class="module-info">
+                                        <div class="module-name">天气信息</div>
+                                        <div class="module-description">显示当前城市的天气情况</div>
+                                    </div>
+                                    <div class="module-toggle" onclick="toggleModule(this)"></div>
+                                </div>
+                            </div>
+
+                            <div class="module-item" data-module="quick-apps">
+                                <div class="module-header">
+                                    <div class="module-icon">🚀</div>
+                                    <div class="module-info">
+                                        <div class="module-name">快捷应用</div>
+                                        <div class="module-description">常用应用和功能的快速入口</div>
+                                    </div>
+                                    <div class="module-toggle" onclick="toggleModule(this)"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 布局设置面板 -->
+                <div class="config-panel" id="layout-panel">
+                    <div class="config-section">
+                        <h2 class="section-title">
+                            <span class="section-icon">📐</span>
+                            布局样式
+                        </h2>
+                        <p class="section-description">选择工作台的布局方式和网格设置</p>
+                        
+                        <div class="layout-options">
+                            <div class="layout-option selected" data-layout="grid">
+                                <div class="layout-preview"></div>
+                                <div class="layout-name">网格布局</div>
+                            </div>
+                            <div class="layout-option" data-layout="masonry">
+                                <div class="layout-preview"></div>
+                                <div class="layout-name">瀑布流布局</div>
+                            </div>
+                            <div class="layout-option" data-layout="list">
+                                <div class="layout-preview"></div>
+                                <div class="layout-name">列表布局</div>
+                            </div>
+                            <div class="layout-option" data-layout="custom">
+                                <div class="layout-preview"></div>
+                                <div class="layout-name">自定义布局</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h2 class="section-title">
+                            <span class="section-icon">📏</span>
+                            尺寸设置
+                        </h2>
+                        <p class="section-description">调整卡片大小和间距</p>
+                        
+                        <div class="form-group">
+                            <label class="form-label">卡片大小</label>
+                            <select class="form-select">
+                                <option value="small">小</option>
+                                <option value="medium" selected>中</option>
+                                <option value="large">大</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">卡片间距</label>
+                            <input type="range" class="form-range" min="8" max="32" value="24" id="cardSpacing">
+                            <div class="range-value">24px</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">每行列数</label>
+                            <select class="form-select">
+                                <option value="2">2 列</option>
+                                <option value="3" selected>3 列</option>
+                                <option value="4">4 列</option>
+                                <option value="auto">自适应</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 主题设置面板 -->
+                <div class="config-panel" id="theme-panel">
+                    <div class="config-section">
+                        <h2 class="section-title">
+                            <span class="section-icon">🎨</span>
+                            主题色彩
+                        </h2>
+                        <p class="section-description">选择您喜欢的主题色彩方案</p>
+                        
+                        <div class="theme-options">
+                            <div class="theme-option selected" data-theme="light">
+                                <div class="theme-preview light"></div>
+                                <div class="theme-name">明亮主题</div>
+                            </div>
+                            <div class="theme-option" data-theme="dark">
+                                <div class="theme-preview dark"></div>
+                                <div class="theme-name">深色主题</div>
+                            </div>
+                            <div class="theme-option" data-theme="blue">
+                                <div class="theme-preview blue"></div>
+                                <div class="theme-name">蓝色主题</div>
+                            </div>
+                            <div class="theme-option" data-theme="green">
+                                <div class="theme-preview green"></div>
+                                <div class="theme-name">绿色主题</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h2 class="section-title">
+                            <span class="section-icon">🖼️</span>
+                            界面设置
+                        </h2>
+                        <p class="section-description">调整界面显示效果</p>
+                        
+                        <div class="form-group">
+                            <label class="form-label">字体大小</label>
+                            <select class="form-select">
+                                <option value="small">小</option>
+                                <option value="medium" selected>中</option>
+                                <option value="large">大</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">圆角大小</label>
+                            <input type="range" class="form-range" min="0" max="16" value="8" id="borderRadius">
+                            <div class="range-value">8px</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">动画效果</label>
+                            <div class="toggle-switch">
+                                <input type="checkbox" id="animations" checked>
+                                <label for="animations">启用动画效果</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 权限设置面板 -->
+                <div class="config-panel" id="permissions-panel">
+                    <div class="config-section">
+                        <h2 class="section-title">
+                            <span class="section-icon">🔐</span>
+                            功能权限
+                        </h2>
+                        <p class="section-description">控制用户可以使用的功能模块</p>
+                        
+                        <div class="permission-list">
+                            <div class="permission-item">
+                                <div class="permission-info">
+                                    <div class="permission-name">工作台配置</div>
+                                    <div class="permission-description">允许用户自定义工作台布局和模块</div>
+                                </div>
+                                <div class="permission-toggle enabled" onclick="togglePermission(this)"></div>
+                            </div>
+
+                            <div class="permission-item">
+                                <div class="permission-info">
+                                    <div class="permission-name">数据导出</div>
+                                    <div class="permission-description">允许用户导出工作台数据</div>
+                                </div>
+                                <div class="permission-toggle enabled" onclick="togglePermission(this)"></div>
+                            </div>
+
+                            <div class="permission-item">
+                                <div class="permission-info">
+                                    <div class="permission-name">高级筛选</div>
+                                    <div class="permission-description">允许使用高级筛选和搜索功能</div>
+                                </div>
+                                <div class="permission-toggle enabled" onclick="togglePermission(this)"></div>
+                            </div>
+
+                            <div class="permission-item">
+                                <div class="permission-info">
+                                    <div class="permission-name">批量操作</div>
+                                    <div class="permission-description">允许进行批量编辑和删除操作</div>
+                                </div>
+                                <div class="permission-toggle" onclick="togglePermission(this)"></div>
+                            </div>
+
+                            <div class="permission-item">
+                                <div class="permission-info">
+                                    <div class="permission-name">管理员功能</div>
+                                    <div class="permission-description">访问系统管理和用户管理功能</div>
+                                </div>
+                                <div class="permission-toggle" onclick="togglePermission(this)"></div>
+                            </div>
+
+                            <div class="permission-item">
+                                <div class="permission-info">
+                                    <div class="permission-name">API访问</div>
+                                    <div class="permission-description">允许通过API接口访问数据</div>
+                                </div>
+                                <div class="permission-toggle" onclick="togglePermission(this)"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作按钮 -->
+                <div class="config-actions">
+                    <button class="btn-secondary" onclick="resetConfig()">重置默认</button>
+                    <button class="btn-secondary" onclick="previewConfig()">预览效果</button>
+                    <button class="btn-primary" onclick="saveConfig()">保存配置</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/common.js"></script>
+    <script>
+        // 切换配置选项卡
+        function switchTab(tabName) {
+            // 更新选项卡状态
+            document.querySelectorAll('.config-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // 显示对应面板
+            document.querySelectorAll('.config-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            document.getElementById(tabName + '-panel').classList.add('active');
+        }
+
+        // 切换模块开关
+        function toggleModule(toggle) {
+            const moduleItem = toggle.closest('.module-item');
+            
+            if (toggle.classList.contains('enabled')) {
+                toggle.classList.remove('enabled');
+                moduleItem.classList.remove('enabled');
+            } else {
+                toggle.classList.add('enabled');
+                moduleItem.classList.add('enabled');
+            }
+        }
+
+        // 切换权限开关
+        function togglePermission(toggle) {
+            if (toggle.classList.contains('enabled')) {
+                toggle.classList.remove('enabled');
+            } else {
+                toggle.classList.add('enabled');
+            }
+        }
+
+        // 选择布局
+        document.querySelectorAll('.layout-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.layout-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                this.classList.add('selected');
+            });
+        });
+
+        // 选择主题
+        document.querySelectorAll('.theme-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.theme-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                this.classList.add('selected');
+            });
+        });
+
+        // 范围滑块值更新
+        document.getElementById('cardSpacing').addEventListener('input', function() {
+            const value = this.value + 'px';
+            this.nextElementSibling.textContent = value;
+        });
+
+        document.getElementById('borderRadius').addEventListener('input', function() {
+            const value = this.value + 'px';
+            this.nextElementSibling.textContent = value;
+        });
+
+        // 保存配置
+        function saveConfig() {
+            const config = {
+                modules: [],
+                layout: document.querySelector('.layout-option.selected').dataset.layout,
+                theme: document.querySelector('.theme-option.selected').dataset.theme,
+                permissions: []
+            };
+
+            // 收集启用的模块
+            document.querySelectorAll('.module-item.enabled').forEach(item => {
+                config.modules.push(item.dataset.module);
+            });
+
+            // 收集启用的权限
+            document.querySelectorAll('.permission-toggle.enabled').forEach(toggle => {
+                const item = toggle.closest('.permission-item');
+                const name = item.querySelector('.permission-name').textContent;
+                config.permissions.push(name);
+            });
+
+            // 保存到本地存储
+            localStorage.setItem('workspace-config', JSON.stringify(config));
+            
+            showMessage('配置保存成功！', 'success');
+            
+            // 模拟保存到服务器
+            setTimeout(() => {
+                showMessage('配置已同步到云端', 'info');
+            }, 1000);
+        }
+
+        // 重置配置
+        function resetConfig() {
+            if (confirm('确定要重置为默认配置吗？这将清除所有个性化设置。')) {
+                // 重置模块状态
+                document.querySelectorAll('.module-item').forEach(item => {
+                    const toggle = item.querySelector('.module-toggle');
+                    const defaultModules = ['task-stats', 'todo-list', 'schedule', 'approval', 'announcements'];
+                    
+                    if (defaultModules.includes(item.dataset.module)) {
+                        item.classList.add('enabled');
+                        toggle.classList.add('enabled');
+                    } else {
+                        item.classList.remove('enabled');
+                        toggle.classList.remove('enabled');
+                    }
+                });
+
+                // 重置布局选择
+                document.querySelectorAll('.layout-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                document.querySelector('[data-layout="grid"]').classList.add('selected');
+
+                // 重置主题选择
+                document.querySelectorAll('.theme-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                document.querySelector('[data-theme="light"]').classList.add('selected');
+
+                // 重置权限
+                document.querySelectorAll('.permission-toggle').forEach(toggle => {
+                    toggle.classList.remove('enabled');
+                });
+                // 默认启用前三个权限
+                document.querySelectorAll('.permission-toggle').forEach((toggle, index) => {
+                    if (index < 3) {
+                        toggle.classList.add('enabled');
+                    }
+                });
+
+                showMessage('配置已重置为默认设置', 'success');
+            }
+        }
+
+        // 预览配置
+        function previewConfig() {
+            showMessage('正在打开预览窗口...', 'info');
+            
+            // 这里可以打开一个新窗口显示预览效果
+            setTimeout(() => {
+                const previewWindow = window.open('oa-workspace.html', '_blank', 'width=1200,height=800');
+                if (previewWindow) {
+                    showMessage('预览窗口已打开', 'success');
+                } else {
+                    showMessage('请允许弹出窗口以查看预览', 'warning');
+                }
+            }, 500);
+        }
+
+        // 页面加载时恢复配置
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedConfig = localStorage.getItem('workspace-config');
+            
+            if (savedConfig) {
+                try {
+                    const config = JSON.parse(savedConfig);
+                    
+                    // 恢复模块配置
+                    if (config.modules) {
+                        document.querySelectorAll('.module-item').forEach(item => {
+                            const toggle = item.querySelector('.module-toggle');
+                            if (config.modules.includes(item.dataset.module)) {
+                                item.classList.add('enabled');
+                                toggle.classList.add('enabled');
+                            } else {
+                                item.classList.remove('enabled');
+                                toggle.classList.remove('enabled');
+                            }
+                        });
+                    }
+
+                    // 恢复布局配置
+                    if (config.layout) {
+                        document.querySelectorAll('.layout-option').forEach(opt => {
+                            opt.classList.remove('selected');
+                        });
+                        document.querySelector(`[data-layout="${config.layout}"]`)?.classList.add('selected');
+                    }
+
+                    // 恢复主题配置
+                    if (config.theme) {
+                        document.querySelectorAll('.theme-option').forEach(opt => {
+                            opt.classList.remove('selected');
+                        });
+                        document.querySelector(`[data-theme="${config.theme}"]`)?.classList.add('selected');
+                    }
+
+                    showMessage('已加载保存的配置', 'info');
+                } catch (e) {
+                    console.error('配置加载失败:', e);
+                }
+            }
+        });
+
+        // 添加模块拖拽功能
+        document.querySelectorAll('.module-item').forEach(item => {
+            item.draggable = true;
+            
+            item.addEventListener('dragstart', function(e) {
+                e.dataTransfer.setData('text/plain', this.dataset.module);
+                this.style.opacity = '0.5';
+            });
+
+            item.addEventListener('dragend', function(e) {
+                this.style.opacity = '1';
+            });
+
+            item.addEventListener('dragover', function(e) {
+                e.preventDefault();
+            });
+
+            item.addEventListener('drop', function(e) {
+                e.preventDefault();
+                const draggedModule = e.dataTransfer.getData('text/plain');
+                const draggedElement = document.querySelector(`[data-module="${draggedModule}"]`);
+                
+                if (draggedElement && draggedElement !== this) {
+                    const container = this.parentNode;
+                    const afterElement = getDragAfterElement(container, e.clientY);
+                    
+                    if (afterElement == null) {
+                        container.appendChild(draggedElement);
+                    } else {
+                        container.insertBefore(draggedElement, afterElement);
+                    }
+                    
+                    showMessage('模块顺序已调整', 'success');
+                }
+            });
+        });
+
+        function getDragAfterElement(container, y) {
+            const draggableElements = [...container.querySelectorAll('.module-item:not(.dragging)')];
+            
+            return draggableElements.reduce((closest, child) => {
+                const box = child.getBoundingClientRect();
+                const offset = y - box.top - box.height / 2;
+                
+                if (offset < 0 && offset > closest.offset) {
+                    return { offset: offset, element: child };
+                } else {
+                    return closest;
+                }
+            }, { offset: Number.NEGATIVE_INFINITY }).element;
+        }
+    </script>
+</body>
+</html>

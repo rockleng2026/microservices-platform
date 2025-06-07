@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM工作台 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 24px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary-color);
+        }
+        
+        .stat-card.success::before { background: var(--success-color); }
+        .stat-card.warning::before { background: var(--warning-color); }
+        .stat-card.error::before { background: var(--error-color); }
+        
+        .stat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .stat-title {
+            font-size: 14px;
+            color: var(--text-color-secondary);
+            margin: 0;
+        }
+        
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: white;
+            background: var(--primary-color);
+        }
+        
+        .stat-icon.success { background: var(--success-color); }
+        .stat-icon.warning { background: var(--warning-color); }
+        .stat-icon.error { background: var(--error-color); }
+        
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+        
+        .stat-change {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .stat-change.positive {
+            color: var(--success-color);
+        }
+        
+        .stat-change.negative {
+            color: var(--error-color);
+        }
+        
+        .chart-container {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+        
+        .chart-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin: 0;
+        }
+        
+        .chart-filters {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .filter-btn {
+            padding: 4px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: white;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+        
+        .todo-list {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .todo-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .todo-item {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: background 0.3s;
+        }
+        
+        .todo-item:hover {
+            background: var(--background-color);
+        }
+        
+        .todo-item:last-child {
+            border-bottom: none;
+        }
+        
+        .todo-checkbox {
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--border-color);
+            border-radius: 3px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .todo-checkbox.checked {
+            background: var(--success-color);
+            border-color: var(--success-color);
+            color: white;
+        }
+        
+        .todo-content {
+            flex: 1;
+        }
+        
+        .todo-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .todo-meta {
+            font-size: 12px;
+            color: var(--text-color-secondary);
+        }
+        
+        .todo-priority {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .priority-high {
+            background: #fff2f0;
+            color: var(--error-color);
+        }
+        
+        .priority-medium {
+            background: #fffbe6;
+            color: var(--warning-color);
+        }
+        
+        .priority-low {
+            background: #f6ffed;
+            color: var(--success-color);
+        }
+        
+        .recent-customers {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+        
+        .customer-item {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .customer-item:last-child {
+            border-bottom: none;
+        }
+        
+        .customer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        .customer-info {
+            flex: 1;
+        }
+        
+        .customer-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .customer-status {
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 10px;
+        }
+        
+        .status-formal {
+            background: #f6ffed;
+            color: var(--success-color);
+        }
+        
+        .status-trial {
+            background: #e6f7ff;
+            color: var(--primary-color);
+        }
+        
+        .status-intention {
+            background: #fffbe6;
+            color: var(--warning-color);
+        }
+        
+        .status-pending {
+            background: #fff2f0;
+            color: var(--error-color);
+        }
+        
+        @media (max-width: 1200px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .chart-filters {
+                flex-wrap: wrap;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout-container">
+        <!-- 侧边栏 -->
+        <div class="layout-sidebar">
+            <div class="logo">
+                <span>Portal 3.0</span>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html" class="nav-link">
+                        <i>🏠</i> 首页总览
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="../organization/department-tree.html" class="nav-link">
+                        <i>📋</i> 组织架构
+                    </a>
+                </li>
+                <li class="nav-item has-submenu active">
+                    <a href="#" class="nav-link">
+                        <i>🤝</i> 客户管理
+                    </a>
+                    <ul class="submenu open">
+                        <li><a href="customer-dashboard.html" class="nav-link active">CRM工作台</a></li>
+                        <li><a href="customer-list.html" class="nav-link">客户列表</a></li>
+                        <li><a href="customer-detail.html" class="nav-link">客户详情</a></li>
+                        <li><a href="follow-record.html" class="nav-link">跟进记录</a></li>
+                        <li><a href="customer-transfer.html" class="nav-link">客户交接</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a href="../product/category-manage.html" class="nav-link">
+                        <i>📦</i> 商品管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="../order/order-dashboard.html" class="nav-link">
+                        <i>📋</i> 订单管理
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="../support/ticket-dashboard.html" class="nav-link">
+                        <i>🎧</i> 客服中心
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="../ops/task-board.html" class="nav-link">
+                        <i>⚙️</i> 运维管理
+                    </a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 头部 -->
+        <div class="layout-header">
+            <div class="breadcrumb">
+                <span class="breadcrumb-item">客户管理</span>
+                <span class="breadcrumb-item active">CRM工作台</span>
+            </div>
+            <div class="header-actions">
+                <div class="search-box">
+                    <input type="text" class="search-input" placeholder="搜索客户...">
+                    <i class="search-icon">🔍</i>
+                </div>
+                <div class="user-info">
+                    <div class="avatar">张</div>
+                    <span>张总</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="layout-content">
+            <!-- 页面标题 -->
+            <div class="page-header">
+                <h1 class="page-title">CRM工作台</h1>
+                <p class="page-description">客户关系管理数据概览，跟进任务提醒，销售业绩分析</p>
+            </div>
+
+            <!-- 关键指标卡片 -->
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <h3 class="stat-title">总客户数</h3>
+                        <div class="stat-icon">👥</div>
+                    </div>
+                    <div class="stat-value">5</div>
+                    <div class="stat-change positive">
+                        <span>↗</span>
+                        <span>+2 本月</span>
+                    </div>
+                </div>
+
+                <div class="stat-card success">
+                    <div class="stat-header">
+                        <h3 class="stat-title">正式客户</h3>
+                        <div class="stat-icon success">✓</div>
+                    </div>
+                    <div class="stat-value">2</div>
+                    <div class="stat-change positive">
+                        <span>↗</span>
+                        <span>+1 本月</span>
+                    </div>
+                </div>
+
+                <div class="stat-card warning">
+                    <div class="stat-header">
+                        <h3 class="stat-title">试用客户</h3>
+                        <div class="stat-icon warning">⏱</div>
+                    </div>
+                    <div class="stat-value">1</div>
+                    <div class="stat-change">
+                        <span>→</span>
+                        <span>无变化</span>
+                    </div>
+                </div>
+
+                <div class="stat-card error">
+                    <div class="stat-header">
+                        <h3 class="stat-title">待跟进</h3>
+                        <div class="stat-icon error">⚠</div>
+                    </div>
+                    <div class="stat-value">3</div>
+                    <div class="stat-change negative">
+                        <span>↘</span>
+                        <span>-1 今日</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <h3 class="chart-title">客户转化趋势</h3>
+                    <div class="chart-filters">
+                        <button class="filter-btn active" onclick="changeTimeRange('week')">本周</button>
+                        <button class="filter-btn" onclick="changeTimeRange('month')">本月</button>
+                        <button class="filter-btn" onclick="changeTimeRange('quarter')">本季度</button>
+                        <button class="filter-btn" onclick="changeTimeRange('year')">本年</button>
+                    </div>
+                </div>
+                <canvas id="customerChart" width="400" height="200"></canvas>
+            </div>
+
+            <!-- 内容网格 -->
+            <div class="content-grid">
+                <!-- 待办任务 -->
+                <div class="todo-list">
+                    <div class="todo-header">
+                        <h3 class="panel-title">今日待办</h3>
+                        <span class="status-tag warning">3个任务</span>
+                    </div>
+                    <div class="todo-item">
+                        <div class="todo-checkbox" onclick="toggleTodo(this)"></div>
+                        <div class="todo-content">
+                            <div class="todo-title">回访北京科技有限公司</div>
+                            <div class="todo-meta">客户反馈 | 预计15分钟</div>
+                        </div>
+                        <div class="todo-priority priority-high">高</div>
+                    </div>
+                    <div class="todo-item">
+                        <div class="todo-checkbox" onclick="toggleTodo(this)"></div>
+                        <div class="todo-content">
+                            <div class="todo-title">上海商贸集团方案演示</div>
+                            <div class="todo-meta">产品演示 | 预计60分钟</div>
+                        </div>
+                        <div class="todo-priority priority-high">高</div>
+                    </div>
+                    <div class="todo-item">
+                        <div class="todo-checkbox" onclick="toggleTodo(this)"></div>
+                        <div class="todo-content">
+                            <div class="todo-title">广州制造企业需求调研</div>
+                            <div class="todo-meta">需求分析 | 预计30分钟</div>
+                        </div>
+                        <div class="todo-priority priority-medium">中</div>
+                    </div>
+                    <div class="todo-item">
+                        <div class="todo-checkbox checked" onclick="toggleTodo(this)">✓</div>
+                        <div class="todo-content">
+                            <div class="todo-title">整理本周销售报告</div>
+                            <div class="todo-meta">已完成 | 用时45分钟</div>
+                        </div>
+                        <div class="todo-priority priority-low">低</div>
+                    </div>
+                </div>
+
+                <!-- 最近客户 -->
+                <div class="recent-customers">
+                    <div class="todo-header">
+                        <h3 class="panel-title">最近客户</h3>
+                        <a href="customer-list.html" class="btn btn-sm">查看全部</a>
+                    </div>
+                    <div class="customer-item">
+                        <div class="customer-avatar">北</div>
+                        <div class="customer-info">
+                            <div class="customer-name">北京科技有限公司</div>
+                            <div class="customer-meta">
+                                <span class="customer-status status-formal">正式客户</span>
+                                <span style="margin-left: 8px; font-size: 12px; color: #999;">2天前</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="customer-item">
+                        <div class="customer-avatar">上</div>
+                        <div class="customer-info">
+                            <div class="customer-name">上海商贸集团</div>
+                            <div class="customer-meta">
+                                <span class="customer-status status-trial">试用客户</span>
+                                <span style="margin-left: 8px; font-size: 12px; color: #999;">3天前</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="customer-item">
+                        <div class="customer-avatar">广</div>
+                        <div class="customer-info">
+                            <div class="customer-name">广州制造企业</div>
+                            <div class="customer-meta">
+                                <span class="customer-status status-intention">意向客户</span>
+                                <span style="margin-left: 8px; font-size: 12px; color: #999;">5天前</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="customer-item">
+                        <div class="customer-avatar">深</div>
+                        <div class="customer-info">
+                            <div class="customer-name">深圳互联网公司</div>
+                            <div class="customer-meta">
+                                <span class="customer-status status-pending">审核中</span>
+                                <span style="margin-left: 8px; font-size: 12px; color: #999;">1周前</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="customer-item">
+                        <div class="customer-avatar">杭</div>
+                        <div class="customer-info">
+                            <div class="customer-name">杭州电商平台</div>
+                            <div class="customer-meta">
+                                <span class="customer-status status-formal">正式客户</span>
+                                <span style="margin-left: 8px; font-size: 12px; color: #999;">2周前</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/common.js"></script>
+    <script src="../assets/js/mock-data.js"></script>
+    <script>
+        let customerChart;
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeChart();
+            loadDashboardData();
+        });
+
+        // 初始化图表
+        function initializeChart() {
+            const ctx = document.getElementById('customerChart').getContext('2d');
+            
+            customerChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
+                    datasets: [
+                        {
+                            label: '新增客户',
+                            data: [2, 1, 0, 3, 1, 0, 1],
+                            borderColor: '#1890ff',
+                            backgroundColor: 'rgba(24, 144, 255, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: '客户转化',
+                            data: [0, 1, 0, 1, 2, 0, 0],
+                            borderColor: '#52c41a',
+                            backgroundColor: 'rgba(82, 196, 26, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    }
+                }
+            });
+        }
+
+        // 加载工作台数据
+        function loadDashboardData() {
+            const dashboardData = MockData.dashboard.crm;
+            
+            // 更新统计卡片
+            updateStatCard(0, dashboardData.totalCustomers);
+            updateStatCard(1, dashboardData.formalCustomers);
+            updateStatCard(2, dashboardData.trialCustomers);
+            updateStatCard(3, dashboardData.pendingCustomers + dashboardData.intentionCustomers);
+            
+            console.log('CRM Dashboard data loaded:', dashboardData);
+        }
+
+        // 更新统计卡片
+        function updateStatCard(index, value) {
+            const cards = document.querySelectorAll('.stat-card');
+            if (cards[index]) {
+                const valueEl = cards[index].querySelector('.stat-value');
+                if (valueEl) {
+                    valueEl.textContent = value;
+                }
+            }
+        }
+
+        // 切换时间范围
+        function changeTimeRange(range) {
+            // 更新按钮状态
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // 更新图表数据
+            let labels, newCustomers, conversions;
+            
+            switch(range) {
+                case 'week':
+                    labels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+                    newCustomers = [2, 1, 0, 3, 1, 0, 1];
+                    conversions = [0, 1, 0, 1, 2, 0, 0];
+                    break;
+                case 'month':
+                    labels = ['第1周', '第2周', '第3周', '第4周'];
+                    newCustomers = [8, 6, 10, 5];
+                    conversions = [4, 3, 6, 2];
+                    break;
+                case 'quarter':
+                    labels = ['1月', '2月', '3月'];
+                    newCustomers = [29, 22, 15];
+                    conversions = [15, 12, 8];
+                    break;
+                case 'year':
+                    labels = ['Q1', 'Q2', 'Q3', 'Q4'];
+                    newCustomers = [66, 58, 72, 45];
+                    conversions = [35, 28, 38, 22];
+                    break;
+            }
+            
+            customerChart.data.labels = labels;
+            customerChart.data.datasets[0].data = newCustomers;
+            customerChart.data.datasets[1].data = conversions;
+            customerChart.update();
+            
+            Portal.Message.success(`已切换到${getTimeRangeLabel(range)}视图`);
+        }
+
+        // 获取时间范围标签
+        function getTimeRangeLabel(range) {
+            const labels = {
+                'week': '本周',
+                'month': '本月', 
+                'quarter': '本季度',
+                'year': '本年'
+            };
+            return labels[range] || '本周';
+        }
+
+        // 切换待办任务状态
+        function toggleTodo(checkbox) {
+            const isChecked = checkbox.classList.contains('checked');
+            
+            if (isChecked) {
+                checkbox.classList.remove('checked');
+                checkbox.textContent = '';
+            } else {
+                checkbox.classList.add('checked');
+                checkbox.textContent = '✓';
+            }
+            
+            // 更新待办任务计数
+            updateTodoCount();
+        }
+
+        // 更新待办任务计数
+        function updateTodoCount() {
+            const uncheckedTodos = document.querySelectorAll('.todo-checkbox:not(.checked)').length;
+            const todoHeader = document.querySelector('.todo-header .status-tag');
+            if (todoHeader) {
+                todoHeader.textContent = `${uncheckedTodos}个任务`;
+                todoHeader.className = uncheckedTodos > 0 ? 'status-tag warning' : 'status-tag success';
+            }
+        }
+
+        // 快捷操作
+        function quickAddCustomer() {
+            Portal.Message.info('跳转到新增客户页面');
+        }
+
+        function quickAddTask() {
+            Portal.Modal.confirm({
+                title: '新增待办任务',
+                content: `
+                    <form id="taskForm">
+                        <div class="form-group">
+                            <label class="form-label">任务标题 *</label>
+                            <input type="text" name="title" class="form-control" data-validate="required" placeholder="请输入任务标题">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-col">
+                                <label class="form-label">优先级</label>
+                                <select name="priority" class="form-control">
+                                    <option value="low">低</option>
+                                    <option value="medium" selected>中</option>
+                                    <option value="high">高</option>
+                                </select>
+                            </div>
+                            <div class="form-col">
+                                <label class="form-label">预计时长(分钟)</label>
+                                <input type="number" name="duration" class="form-control" value="30">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">任务描述</label>
+                            <textarea name="description" class="form-control" rows="3" placeholder="请输入任务描述"></textarea>
+                        </div>
+                    </form>
+                `,
+                onConfirm: () => {
+                    const form = document.getElementById('taskForm');
+                    const validation = Portal.Validator.validate(form);
+                    
+                    if (validation.isValid) {
+                        Portal.Message.success('任务添加成功');
+                        // 这里可以添加实际的任务添加逻辑
+                    }
+                }
+            });
+        }
+
+        // 添加快捷按钮事件监听
+        document.addEventListener('keydown', function(e) {
+            // Ctrl + N 新增客户
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                quickAddCustomer();
+            }
+            // Ctrl + T 新增任务
+            if (e.ctrlKey && e.key === 't') {
+                e.preventDefault();
+                quickAddTask();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal 3.0 - 企业管理平台登录</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <style>
+        .login-container {
+            display: flex;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .login-left {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-left::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            animation: float 20s infinite linear;
+            z-index: -1;
+        }
+
+        @keyframes float {
+            0% { transform: translateX(-50px) translateY(-50px); }
+            100% { transform: translateX(50px) translateY(50px); }
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            width: 120px;
+            height: 120px;
+            background: var(--primary-color);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: white;
+            margin: 0 auto 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .brand-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 12px;
+        }
+
+        .brand-subtitle {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 40px;
+        }
+
+        .feature-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            color: white;
+            margin-bottom: 16px;
+            font-size: 16px;
+        }
+
+        .feature-item::before {
+            content: '✓';
+            background: var(--success-color);
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-weight: bold;
+        }
+
+        .login-right {
+            width: 480px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px;
+            position: relative;
+        }
+
+        .login-form-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-form-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: var(--text-color);
+            margin-bottom: 8px;
+        }
+
+        .login-form-subtitle {
+            font-size: 14px;
+            color: var(--text-color-secondary);
+        }
+
+        .login-tabs {
+            display: flex;
+            margin-bottom: 32px;
+            background: var(--bg-color-light);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .login-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            color: var(--text-color-secondary);
+        }
+
+        .login-tab.active {
+            background: white;
+            color: var(--primary-color);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-form {
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 48px;
+            padding: 0 16px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+        }
+
+        .form-input-group {
+            position: relative;
+        }
+
+        .form-input-prefix {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-color-secondary);
+            font-size: 16px;
+        }
+
+        .form-input.has-prefix {
+            padding-left: 48px;
+        }
+
+        .captcha-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .captcha-input {
+            flex: 1;
+        }
+
+        .captcha-image {
+            width: 120px;
+            height: 48px;
+            background: var(--bg-color-light);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+            letter-spacing: 4px;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox {
+            margin-right: 8px;
+        }
+
+        .form-link {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .form-link:hover {
+            text-decoration: underline;
+        }
+
+        .login-button {
+            width: 100%;
+            height: 48px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .login-button:hover {
+            background: var(--primary-color-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .other-login {
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        .other-login-title {
+            color: var(--text-color-secondary);
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .other-login-title::before,
+        .other-login-title::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 80px;
+            height: 1px;
+            background: var(--border-color);
+        }
+
+        .other-login-title::before {
+            left: 0;
+        }
+
+        .other-login-title::after {
+            right: 0;
+        }
+
+        .other-login-methods {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .login-method {
+            width: 48px;
+            height: 48px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 20px;
+        }
+
+        .login-method:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .phone-login {
+            display: none;
+        }
+
+        .phone-login.active {
+            display: block;
+        }
+
+        .sms-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .sms-button {
+            width: 120px;
+            height: 48px;
+            background: var(--bg-color-light);
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-color-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .sms-button:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        @media (max-width: 768px) {
+            .login-container {
+                flex-direction: column;
+            }
+
+            .login-left {
+                padding: 40px 20px;
+                min-height: 300px;
+            }
+
+            .login-right {
+                width: 100%;
+                padding: 40px 20px;
+            }
+
+            .brand-title {
+                font-size: 24px;
+            }
+
+            .feature-list {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-left">
+            <div class="logo-section">
+                <div class="logo">P3</div>
+                <h1 class="brand-title">Portal 3.0</h1>
+                <p class="brand-subtitle">企业数字化管理平台</p>
+            </div>
+            
+            <ul class="feature-list">
+                <li class="feature-item">OA办公自动化系统</li>
+                <li class="feature-item">CRM客户关系管理</li>
+                <li class="feature-item">商品进销存管理</li>
+                <li class="feature-item">工单客服系统</li>
+                <li class="feature-item">运维任务管理</li>
+                <li class="feature-item">数据统计分析</li>
+            </ul>
+        </div>
+
+        <div class="login-right">
+            <div class="login-form-header">
+                <h2 class="login-form-title">欢迎登录</h2>
+                <p class="login-form-subtitle">请输入您的登录凭据</p>
+            </div>
+
+            <div class="login-tabs">
+                <div class="login-tab active" onclick="switchLoginType('password')">密码登录</div>
+                <div class="login-tab" onclick="switchLoginType('phone')">短信登录</div>
+            </div>
+
+            <!-- 密码登录表单 -->
+            <form class="login-form password-login" id="passwordLogin">
+                <div class="form-group">
+                    <div class="form-input-group">
+                        <span class="form-input-prefix">👤</span>
+                        <input type="text" class="form-input has-prefix" placeholder="用户名/工号/手机号" id="username" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="form-input-group">
+                        <span class="form-input-prefix">🔒</span>
+                        <input type="password" class="form-input has-prefix" placeholder="密码" id="password" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="captcha-group">
+                        <input type="text" class="form-input captcha-input" placeholder="验证码" id="captcha" required>
+                        <div class="captcha-image" onclick="refreshCaptcha()" id="captchaCode">A8K9</div>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="checkbox-group">
+                        <input type="checkbox" class="checkbox" id="remember">
+                        <span>记住登录状态</span>
+                    </label>
+                    <a href="#" class="form-link">忘记密码？</a>
+                </div>
+
+                <button type="submit" class="login-button">登录</button>
+            </form>
+
+            <!-- 短信登录表单 -->
+            <form class="login-form phone-login" id="phoneLogin">
+                <div class="form-group">
+                    <div class="form-input-group">
+                        <span class="form-input-prefix">📱</span>
+                        <input type="tel" class="form-input has-prefix" placeholder="手机号码" id="phone" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="sms-group">
+                        <input type="text" class="form-input" placeholder="短信验证码" id="smsCode" required>
+                        <button type="button" class="sms-button" onclick="sendSMS()">获取验证码</button>
+                    </div>
+                </div>
+
+                <button type="submit" class="login-button">登录</button>
+            </form>
+
+            <div class="other-login">
+                <p class="other-login-title">其他登录方式</p>
+                <div class="other-login-methods">
+                    <div class="login-method" title="企业微信登录">💬</div>
+                    <div class="login-method" title="钉钉登录">📧</div>
+                    <div class="login-method" title="扫码登录">📷</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/common.js"></script>
+    <script>
+        // 切换登录方式
+        function switchLoginType(type) {
+            const tabs = document.querySelectorAll('.login-tab');
+            const forms = document.querySelectorAll('.login-form');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            forms.forEach(form => form.classList.remove('active'));
+            
+            if (type === 'password') {
+                tabs[0].classList.add('active');
+                document.getElementById('passwordLogin').classList.add('active');
+                document.querySelector('.password-login').style.display = 'block';
+                document.querySelector('.phone-login').style.display = 'none';
+            } else {
+                tabs[1].classList.add('active');
+                document.getElementById('phoneLogin').classList.add('active');
+                document.querySelector('.password-login').style.display = 'none';
+                document.querySelector('.phone-login').style.display = 'block';
+            }
+        }
+
+        // 刷新验证码
+        function refreshCaptcha() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let captcha = '';
+            for (let i = 0; i < 4; i++) {
+                captcha += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('captchaCode').textContent = captcha;
+        }
+
+        // 发送短信验证码
+        let smsCountdown = 0;
+        function sendSMS() {
+            const button = event.target;
+            const phone = document.getElementById('phone').value;
+            
+            if (!phone) {
+                showMessage('请输入手机号码', 'warning');
+                return;
+            }
+            
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                showMessage('请输入正确的手机号码', 'error');
+                return;
+            }
+            
+            if (smsCountdown > 0) {
+                return;
+            }
+            
+            // 模拟发送验证码
+            smsCountdown = 60;
+            button.disabled = true;
+            button.textContent = `${smsCountdown}s 后重试`;
+            
+            const timer = setInterval(() => {
+                smsCountdown--;
+                button.textContent = `${smsCountdown}s 后重试`;
+                
+                if (smsCountdown <= 0) {
+                    clearInterval(timer);
+                    button.disabled = false;
+                    button.textContent = '获取验证码';
+                }
+            }, 1000);
+            
+            showMessage('验证码已发送', 'success');
+        }
+
+        // 表单提交处理
+        document.getElementById('passwordLogin').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const captcha = document.getElementById('captcha').value;
+            
+            if (!username || !password || !captcha) {
+                showMessage('请填写完整信息', 'warning');
+                return;
+            }
+            
+            // 模拟登录验证
+            if (captcha.toUpperCase() !== document.getElementById('captchaCode').textContent) {
+                showMessage('验证码错误', 'error');
+                refreshCaptcha();
+                return;
+            }
+            
+            // 模拟登录成功，根据用户角色跳转
+            showMessage('登录成功，正在跳转...', 'success');
+            
+            setTimeout(() => {
+                // 根据用户名判断角色类型
+                if (username.includes('admin') || username.includes('manager')) {
+                    window.location.href = '../dashboard/oa-workspace.html';
+                } else if (username.includes('sales')) {
+                    window.location.href = '../dashboard/sales-workspace.html';
+                } else if (username.includes('service') || username.includes('crm')) {
+                    window.location.href = '../dashboard/crm-workspace.html';
+                } else {
+                    window.location.href = '../dashboard/oa-workspace.html';
+                }
+            }, 1500);
+        });
+
+        document.getElementById('phoneLogin').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const phone = document.getElementById('phone').value;
+            const smsCode = document.getElementById('smsCode').value;
+            
+            if (!phone || !smsCode) {
+                showMessage('请填写完整信息', 'warning');
+                return;
+            }
+            
+            if (!/^1[3-9]\d{9}$/.test(phone)) {
+                showMessage('请输入正确的手机号码', 'error');
+                return;
+            }
+            
+            // 模拟短信验证码验证
+            showMessage('登录成功，正在跳转...', 'success');
+            
+            setTimeout(() => {
+                window.location.href = '../dashboard/oa-workspace.html';
+            }, 1500);
+        });
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 模拟加载动画
+            document.body.style.opacity = '0';
+            document.body.style.transition = 'opacity 0.5s ease';
+            
+            setTimeout(() => {
+                document.body.style.opacity = '1';
+            }, 100);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客户列表 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .customer-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .stat-potential .stat-number { color: #1890ff; }
+        .stat-trial .stat-number { color: #fa8c16; }
+        .stat-formal .stat-number { color: #52c41a; }
+        .stat-lost .stat-number { color: #f5222d; }
+        
+        .customer-filters {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .filter-row {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 180px;
+        }
+        
+        .customer-table-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .table-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .batch-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .customer-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .customer-table th,
+        .customer-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .customer-table th {
+            background: #fafafa;
+            font-weight: 500;
+            color: #666;
+        }
+        
+        .customer-table tr:hover {
+            background: #f9f9f9;
+        }
+        
+        .customer-status {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-potential { background: #e6f7ff; color: #1890ff; }
+        .status-trial { background: #fff2e8; color: #fa8c16; }
+        .status-formal { background: #f6ffed; color: #52c41a; }
+        .status-lost { background: #fff1f0; color: #f5222d; }
+        .status-review { background: #f9f0ff; color: #722ed1; }
+        
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .action-btn.view {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+        
+        .action-btn.edit {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+        
+        .action-btn.delete {
+            background: #fff1f0;
+            color: #f5222d;
+        }
+        
+        .action-btn:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="portal-container">
+        <!-- 侧边栏 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Portal 3.0</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-title">组织架构</div>
+                    <a href="../organization/department-tree.html" class="nav-link">
+                        <i class="fas fa-sitemap"></i> 部门管理
+                    </a>
+                    <a href="../organization/employee-list.html" class="nav-link">
+                        <i class="fas fa-users"></i> 员工管理
+                    </a>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-title">客户管理</div>
+                    <a href="customer-dashboard.html" class="nav-link">
+                        <i class="fas fa-chart-pie"></i> CRM工作台
+                    </a>
+                    <a href="customer-list.html" class="nav-link active">
+                        <i class="fas fa-address-book"></i> 客户列表
+                    </a>
+                    <a href="customer-detail.html" class="nav-link">
+                        <i class="fas fa-user-circle"></i> 客户详情
+                    </a>
+                    <a href="follow-record.html" class="nav-link">
+                        <i class="fas fa-clipboard-list"></i> 跟进记录
+                    </a>
+                    <a href="customer-transfer.html" class="nav-link">
+                        <i class="fas fa-exchange-alt"></i> 客户交接
+                    </a>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 -->
+            <header class="main-header">
+                <div class="header-left">
+                    <button class="sidebar-toggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <div class="breadcrumb">
+                        <span>客户管理</span>
+                        <i class="fas fa-chevron-right"></i>
+                        <span>客户列表</span>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="搜索客户...">
+                    </div>
+                    <div class="user-menu">
+                        <img src="https://via.placeholder.com/32" alt="用户头像" class="user-avatar">
+                        <span>管理员</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- 页面内容 -->
+            <div class="page-content">
+                <div class="page-header">
+                    <h1>客户列表</h1>
+                    <p>管理和维护客户信息，跟踪客户状态和联系记录</p>
+                </div>
+
+                <!-- 统计卡片 -->
+                <div class="customer-stats">
+                    <div class="stat-card stat-potential">
+                        <div class="stat-number" id="potentialCount">0</div>
+                        <div class="stat-label">潜在客户</div>
+                    </div>
+                    <div class="stat-card stat-trial">
+                        <div class="stat-number" id="trialCount">0</div>
+                        <div class="stat-label">试用客户</div>
+                    </div>
+                    <div class="stat-card stat-formal">
+                        <div class="stat-number" id="formalCount">0</div>
+                        <div class="stat-label">正式客户</div>
+                    </div>
+                    <div class="stat-card stat-lost">
+                        <div class="stat-number" id="lostCount">0</div>
+                        <div class="stat-label">流失客户</div>
+                    </div>
+                </div>
+
+                <!-- 筛选器 -->
+                <div class="customer-filters">
+                    <div class="filter-row">
+                        <div class="filter-item">
+                            <label>客户状态</label>
+                            <select id="statusFilter" class="form-input">
+                                <option value="">全部状态</option>
+                                <option value="potential">潜在客户</option>
+                                <option value="trial">试用客户</option>
+                                <option value="formal">正式客户</option>
+                                <option value="lost">流失客户</option>
+                                <option value="review">审核中</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>客户来源</label>
+                            <select id="sourceFilter" class="form-input">
+                                <option value="">全部来源</option>
+                                <option value="网站注册">网站注册</option>
+                                <option value="电话咨询">电话咨询</option>
+                                <option value="朋友推荐">朋友推荐</option>
+                                <option value="展会">展会</option>
+                                <option value="其他">其他</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>所属销售</label>
+                            <select id="salesFilter" class="form-input">
+                                <option value="">全部销售</option>
+                                <option value="张三">张三</option>
+                                <option value="李四">李四</option>
+                                <option value="王五">王五</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>创建时间</label>
+                            <select id="timeFilter" class="form-input">
+                                <option value="">全部时间</option>
+                                <option value="today">今天</option>
+                                <option value="week">本周</option>
+                                <option value="month">本月</option>
+                                <option value="quarter">本季度</option>
+                            </select>
+                        </div>
+                        <div class="filter-item">
+                            <label>&nbsp;</label>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-primary" onclick="filterCustomers()">
+                                    <i class="fas fa-search"></i> 查询
+                                </button>
+                                <button class="btn btn-default" onclick="resetFilters()">
+                                    <i class="fas fa-undo"></i> 重置
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 客户表格 -->
+                <div class="customer-table-container">
+                    <div class="table-header">
+                        <div class="batch-actions">
+                            <button class="btn btn-primary" onclick="showAddModal()">
+                                <i class="fas fa-plus"></i> 新增客户
+                            </button>
+                            <button class="btn btn-success" onclick="exportCustomers()">
+                                <i class="fas fa-download"></i> 导出
+                            </button>
+                            <button class="btn btn-default" onclick="importCustomers()">
+                                <i class="fas fa-upload"></i> 导入
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <table class="customer-table">
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" onclick="toggleSelectAll()"></th>
+                                <th>客户名称</th>
+                                <th>公司名称</th>
+                                <th>联系电话</th>
+                                <th>客户状态</th>
+                                <th>所属销售</th>
+                                <th>创建时间</th>
+                                <th>最后跟进</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTableBody">
+                            <!-- 客户数据将通过JavaScript渲染 -->
+                        </tbody>
+                    </table>
+                    
+                    <!-- 分页器 -->
+                    <div class="pagination-container">
+                        <div class="pagination-info">
+                            共 <span id="totalCount">0</span> 条记录，每页显示 
+                            <select id="pageSize" onchange="changePageSize()" class="form-input" style="width: auto; display: inline-block; margin: 0 8px;">
+                                <option value="10" selected>10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                            </select> 
+                            条
+                        </div>
+                        <div class="pagination" id="pagination">
+                            <!-- 分页按钮将通过JavaScript渲染 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/common.js"></script>
+    <script src="../assets/js/mock-data.js"></script>
+    <script>
+        let currentCustomers = [];
+        let currentPage = 1;
+        let pageSize = 10;
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializePage();
+            loadCustomers();
+            updateStats();
+        });
+
+        function loadCustomers() {
+            currentCustomers = window.mockData.customers;
+            renderCustomers();
+            updatePagination();
+        }
+
+        function updateStats() {
+            const customers = window.mockData.customers;
+            
+            const stats = customers.reduce((acc, customer) => {
+                acc[customer.status] = (acc[customer.status] || 0) + 1;
+                return acc;
+            }, {});
+            
+            document.getElementById('potentialCount').textContent = stats.potential || 0;
+            document.getElementById('trialCount').textContent = stats.trial || 0;
+            document.getElementById('formalCount').textContent = stats.formal || 0;
+            document.getElementById('lostCount').textContent = stats.lost || 0;
+        }
+
+        function renderCustomers() {
+            const tbody = document.getElementById('customerTableBody');
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageCustomers = currentCustomers.slice(startIndex, endIndex);
+            
+            if (pageCustomers.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 40px; color: #999;">
+                            <i class="fas fa-users" style="font-size: 32px; margin-bottom: 16px; opacity: 0.5;"></i>
+                            <p>暂无客户数据</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = pageCustomers.map(customer => {
+                const statusText = {
+                    'potential': '潜在客户',
+                    'trial': '试用客户',
+                    'formal': '正式客户',
+                    'lost': '流失客户',
+                    'review': '审核中'
+                }[customer.status];
+                
+                return `
+                    <tr>
+                        <td><input type="checkbox" value="${customer.id}"></td>
+                        <td>${customer.name}</td>
+                        <td>${customer.company}</td>
+                        <td>${customer.phone}</td>
+                        <td><span class="customer-status status-${customer.status}">${statusText}</span></td>
+                        <td>${customer.salesPerson}</td>
+                        <td>${formatDate(customer.createTime)}</td>
+                        <td>${customer.lastFollowTime ? formatDate(customer.lastFollowTime) : '-'}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="action-btn view" onclick="viewCustomer(${customer.id})" title="查看">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button class="action-btn edit" onclick="editCustomer(${customer.id})" title="编辑">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="action-btn delete" onclick="deleteCustomer(${customer.id})" title="删除">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            document.getElementById('totalCount').textContent = currentCustomers.length;
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(currentCustomers.length / pageSize);
+            const pagination = document.getElementById('pagination');
+            
+            let paginationHTML = '';
+            
+            if (currentCustomers.length === 0) {
+                pagination.innerHTML = '';
+                return;
+            }
+            
+            // 上一页
+            if (currentPage > 1) {
+                paginationHTML += `<button class="page-btn" onclick="changePage(${currentPage - 1})">上一页</button>`;
+            }
+            
+            // 页码
+            for (let i = 1; i <= totalPages; i++) {
+                if (i === currentPage) {
+                    paginationHTML += `<button class="page-btn active">${i}</button>`;
+                } else {
+                    paginationHTML += `<button class="page-btn" onclick="changePage(${i})">${i}</button>`;
+                }
+            }
+            
+            // 下一页
+            if (currentPage < totalPages) {
+                paginationHTML += `<button class="page-btn" onclick="changePage(${currentPage + 1})">下一页</button>`;
+            }
+            
+            pagination.innerHTML = paginationHTML;
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            renderCustomers();
+            updatePagination();
+        }
+
+        function changePageSize() {
+            pageSize = parseInt(document.getElementById('pageSize').value);
+            currentPage = 1;
+            renderCustomers();
+            updatePagination();
+        }
+
+        function filterCustomers() {
+            const statusFilter = document.getElementById('statusFilter').value;
+            const sourceFilter = document.getElementById('sourceFilter').value;
+            const salesFilter = document.getElementById('salesFilter').value;
+            const timeFilter = document.getElementById('timeFilter').value;
+            
+            currentCustomers = window.mockData.customers.filter(customer => {
+                let passFilter = true;
+                
+                if (statusFilter && customer.status !== statusFilter) passFilter = false;
+                if (sourceFilter && customer.source !== sourceFilter) passFilter = false;
+                if (salesFilter && customer.salesPerson !== salesFilter) passFilter = false;
+                
+                if (timeFilter) {
+                    const customerDate = new Date(customer.createTime);
+                    const now = new Date();
+                    
+                    switch(timeFilter) {
+                        case 'today':
+                            if (customerDate.toDateString() !== now.toDateString()) passFilter = false;
+                            break;
+                        case 'week':
+                            const weekStart = new Date();
+                            weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+                            if (customerDate < weekStart) passFilter = false;
+                            break;
+                        case 'month':
+                            if (customerDate.getMonth() !== now.getMonth() || 
+                                customerDate.getFullYear() !== now.getFullYear()) passFilter = false;
+                            break;
+                        case 'quarter':
+                            const quarter = Math.floor(now.getMonth() / 3);
+                            const customerQuarter = Math.floor(customerDate.getMonth() / 3);
+                            if (customerQuarter !== quarter || 
+                                customerDate.getFullYear() !== now.getFullYear()) passFilter = false;
+                            break;
+                    }
+                }
+                
+                return passFilter;
+            });
+            
+            currentPage = 1;
+            renderCustomers();
+            updatePagination();
+        }
+
+        function resetFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('sourceFilter').value = '';
+            document.getElementById('salesFilter').value = '';
+            document.getElementById('timeFilter').value = '';
+            
+            currentCustomers = window.mockData.customers;
+            currentPage = 1;
+            renderCustomers();
+            updatePagination();
+        }
+
+        function viewCustomer(id) {
+            window.location.href = `customer-detail.html?id=${id}`;
+        }
+
+        function editCustomer(id) {
+            showMessage('编辑客户功能开发中...', 'info');
+        }
+
+        function deleteCustomer(id) {
+            if (confirm('确定要删除这个客户吗？')) {
+                const index = window.mockData.customers.findIndex(c => c.id === id);
+                if (index !== -1) {
+                    window.mockData.customers.splice(index, 1);
+                    showMessage('客户删除成功', 'success');
+                    loadCustomers();
+                    updateStats();
+                }
+            }
+        }
+
+        function showAddModal() {
+            showMessage('新增客户功能开发中...', 'info');
+        }
+
+        function exportCustomers() {
+            showMessage('正在导出客户数据...', 'info');
+        }
+
+        function importCustomers() {
+            showMessage('导入客户功能开发中...', 'info');
+        }
+
+        function toggleSelectAll() {
+            const selectAll = event.target.checked;
+            const checkboxes = document.querySelectorAll('#customerTableBody input[type="checkbox"]');
+            checkboxes.forEach(checkbox => checkbox.checked = selectAll);
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('zh-CN');
+        }
+    </script>
+</body>
+</html> 

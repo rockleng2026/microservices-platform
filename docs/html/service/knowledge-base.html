@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识库 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #52c41a 0%, #95de64 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .knowledge-content {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+        }
+
+        .knowledge-sidebar {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            height: fit-content;
+        }
+
+        .knowledge-main {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .search-section {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .search-box {
+            position: relative;
+            margin-bottom: 16px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 40px 12px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .quick-filters {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .filter-tag {
+            padding: 4px 12px;
+            background: #f0f0f0;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-tag.active {
+            background: #1890ff;
+            color: white;
+        }
+
+        .category-tree {
+            margin-bottom: 20px;
+        }
+
+        .category-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tree-item {
+            padding: 8px 0;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s;
+        }
+
+        .tree-item:hover {
+            background: #f0f0f0;
+        }
+
+        .tree-item.active {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .tree-item-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 8px;
+        }
+
+        .tree-icon {
+            width: 16px;
+            text-align: center;
+        }
+
+        .tree-label {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .tree-count {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .tree-children {
+            margin-left: 20px;
+            margin-top: 4px;
+        }
+
+        .content-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+
+        .content-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .content-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .btn-primary { background: #1890ff; border-color: #1890ff; color: white; }
+        .btn-success { background: #52c41a; border-color: #52c41a; color: white; }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .article-list {
+            padding: 20px;
+        }
+
+        .article-item {
+            padding: 20px;
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .article-item:hover {
+            border-color: #1890ff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .article-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .article-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .article-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .article-summary {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .article-tags {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .article-tag {
+            padding: 2px 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .tag-faq { background: #e6f7ff; color: #1890ff; }
+        .tag-guide { background: #f6ffed; color: #52c41a; }
+        .tag-troubleshoot { background: #fff2f0; color: #ff4d4f; }
+        .tag-api { background: #f9f0ff; color: #722ed1; }
+
+        .article-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .article-stats {
+            display: flex;
+            gap: 16px;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .article-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-edit { background: #e6f7ff; color: #1890ff; }
+        .btn-delete { background: #fff2f0; color: #ff4d4f; }
+
+        .popular-section {
+            border-top: 1px solid #f0f0f0;
+            padding: 16px 0;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .popular-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .popular-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .popular-item:hover {
+            background: #f0f0f0;
+        }
+
+        .popular-rank {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            background: #f0f0f0;
+            color: #666;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .popular-rank.top { background: #fa8c16; color: white; }
+
+        .popular-title {
+            flex: 1;
+            font-size: 13px;
+            color: #333;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .popular-views {
+            font-size: 11px;
+            color: #999;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .empty-desc {
+            font-size: 14px;
+            color: #999;
+        }
+
+        @media (max-width: 768px) {
+            .knowledge-content {
+                grid-template-columns: 1fr;
+            }
+
+            .knowledge-sidebar {
+                order: 2;
+            }
+
+            .knowledge-main {
+                order: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="app-sidebar"></aside>
+
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">客服中心</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">知识库</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索知识库...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">8</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">客</div>
+                    <span>客服专员</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <span>📚</span>
+                    知识库管理
+                </h1>
+                <p class="page-subtitle">统一管理客服知识文档，提升问题解决效率和服务质量</p>
+            </div>
+
+            <div class="knowledge-content">
+                <div class="knowledge-sidebar">
+                    <div class="search-section">
+                        <div class="search-box">
+                            <input type="text" class="search-input" placeholder="搜索知识库..." id="knowledgeSearch">
+                            <button class="search-btn" onclick="searchKnowledge()">🔍</button>
+                        </div>
+                        <div class="quick-filters">
+                            <span class="filter-tag active" onclick="filterByType('all')">全部</span>
+                            <span class="filter-tag" onclick="filterByType('faq')">FAQ</span>
+                            <span class="filter-tag" onclick="filterByType('guide')">指南</span>
+                            <span class="filter-tag" onclick="filterByType('troubleshoot')">故障</span>
+                        </div>
+                    </div>
+
+                    <div class="category-tree">
+                        <div class="category-title">
+                            <span>📁</span>
+                            知识分类
+                        </div>
+                        
+                        <div class="tree-item active" onclick="selectCategory('all')">
+                            <div class="tree-item-content">
+                                <span class="tree-icon">📄</span>
+                                <span class="tree-label">全部文档</span>
+                                <span class="tree-count">(156)</span>
+                            </div>
+                        </div>
+
+                        <div class="tree-item" onclick="selectCategory('system')">
+                            <div class="tree-item-content">
+                                <span class="tree-icon">⚙️</span>
+                                <span class="tree-label">系统使用</span>
+                                <span class="tree-count">(45)</span>
+                            </div>
+                            <div class="tree-children">
+                                <div class="tree-item" onclick="selectCategory('login')">
+                                    <div class="tree-item-content">
+                                        <span class="tree-icon">🔐</span>
+                                        <span class="tree-label">登录问题</span>
+                                        <span class="tree-count">(12)</span>
+                                    </div>
+                                </div>
+                                <div class="tree-item" onclick="selectCategory('permission')">
+                                    <div class="tree-item-content">
+                                        <span class="tree-icon">👥</span>
+                                        <span class="tree-label">权限配置</span>
+                                        <span class="tree-count">(18)</span>
+                                    </div>
+                                </div>
+                                <div class="tree-item" onclick="selectCategory('performance')">
+                                    <div class="tree-item-content">
+                                        <span class="tree-icon">⚡</span>
+                                        <span class="tree-label">性能优化</span>
+                                        <span class="tree-count">(15)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tree-item" onclick="selectCategory('business')">
+                            <div class="tree-item-content">
+                                <span class="tree-icon">💼</span>
+                                <span class="tree-label">业务功能</span>
+                                <span class="tree-count">(68)</span>
+                            </div>
+                            <div class="tree-children">
+                                <div class="tree-item" onclick="selectCategory('order')">
+                                    <div class="tree-item-content">
+                                        <span class="tree-icon">📋</span>
+                                        <span class="tree-label">订单管理</span>
+                                        <span class="tree-count">(25)</span>
+                                    </div>
+                                </div>
+                                <div class="tree-item" onclick="selectCategory('customer')">
+                                    <div class="tree-item-content">
+                                        <span class="tree-icon">👤</span>
+                                        <span class="tree-label">客户管理</span>
+                                        <span class="tree-count">(22)</span>
+                                    </div>
+                                </div>
+                                <div class="tree-item" onclick="selectCategory('product')">
+                                    <div class="tree-item-content">
+                                        <span class="tree-icon">📦</span>
+                                        <span class="tree-label">商品管理</span>
+                                        <span class="tree-count">(21)</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tree-item" onclick="selectCategory('api')">
+                            <div class="tree-item-content">
+                                <span class="tree-icon">🔌</span>
+                                <span class="tree-label">API接口</span>
+                                <span class="tree-count">(28)</span>
+                            </div>
+                        </div>
+
+                        <div class="tree-item" onclick="selectCategory('troubleshoot')">
+                            <div class="tree-item-content">
+                                <span class="tree-icon">🔧</span>
+                                <span class="tree-label">故障排除</span>
+                                <span class="tree-count">(15)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="popular-section">
+                        <div class="section-title">🔥 热门文档</div>
+                        <div class="popular-list">
+                            <div class="popular-item" onclick="openArticle('kb001')">
+                                <div class="popular-rank top">1</div>
+                                <div class="popular-title">系统登录常见问题解决方案</div>
+                                <div class="popular-views">2.3k</div>
+                            </div>
+                            <div class="popular-item" onclick="openArticle('kb002')">
+                                <div class="popular-rank top">2</div>
+                                <div class="popular-title">订单管理功能使用指南</div>
+                                <div class="popular-views">1.8k</div>
+                            </div>
+                            <div class="popular-item" onclick="openArticle('kb003')">
+                                <div class="popular-rank top">3</div>
+                                <div class="popular-title">权限配置详细教程</div>
+                                <div class="popular-views">1.5k</div>
+                            </div>
+                            <div class="popular-item" onclick="openArticle('kb004')">
+                                <div class="popular-rank">4</div>
+                                <div class="popular-title">支付模块故障排除</div>
+                                <div class="popular-views">1.2k</div>
+                            </div>
+                            <div class="popular-item" onclick="openArticle('kb005')">
+                                <div class="popular-rank">5</div>
+                                <div class="popular-title">API接口调用规范</div>
+                                <div class="popular-views">980</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="knowledge-main">
+                    <div class="content-header">
+                        <div class="content-title">全部文档</div>
+                        <div class="content-actions">
+                            <button class="btn btn-success" onclick="createArticle()">
+                                <span>➕</span>
+                                新建文档
+                            </button>
+                            <button class="btn btn-primary" onclick="importArticles()">
+                                <span>📥</span>
+                                批量导入
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="article-list">
+                        <div class="article-item" onclick="openArticle('kb001')">
+                            <div class="article-header">
+                                <div>
+                                    <div class="article-title">系统登录常见问题解决方案</div>
+                                    <div class="article-meta">
+                                        <span>👤 张小明</span>
+                                        <span>📅 2024-03-10</span>
+                                        <span>🔄 2024-03-15 更新</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="article-summary">
+                                本文档详细介绍了系统登录过程中可能遇到的各种问题及其解决方案，包括密码错误、账户锁定、权限不足、网络异常等常见情况的处理方法...
+                            </div>
+                            <div class="article-tags">
+                                <span class="article-tag tag-faq">FAQ</span>
+                                <span class="article-tag tag-troubleshoot">故障排除</span>
+                            </div>
+                            <div class="article-footer">
+                                <div class="article-stats">
+                                    <div class="stat-item">
+                                        <span>👁️</span>
+                                        <span>2,345 次查看</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span>👍</span>
+                                        <span>89% 有用</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span>💬</span>
+                                        <span>12 条评论</span>
+                                    </div>
+                                </div>
+                                <div class="article-actions">
+                                    <button class="action-btn btn-edit" onclick="editArticle('kb001', event)">编辑</button>
+                                    <button class="action-btn btn-delete" onclick="deleteArticle('kb001', event)">删除</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="article-item" onclick="openArticle('kb002')">
+                            <div class="article-header">
+                                <div>
+                                    <div class="article-title">订单管理功能使用指南</div>
+                                    <div class="article-meta">
+                                        <span>👤 李晓红</span>
+                                        <span>📅 2024-03-08</span>
+                                        <span>🔄 2024-03-12 更新</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="article-summary">
+                                全面介绍订单管理模块的各项功能，包括订单创建、状态管理、支付处理、物流跟踪等核心业务流程的操作方法和注意事项...
+                            </div>
+                            <div class="article-tags">
+                                <span class="article-tag tag-guide">使用指南</span>
+                            </div>
+                            <div class="article-footer">
+                                <div class="article-stats">
+                                    <div class="stat-item">
+                                        <span>👁️</span>
+                                        <span>1,876 次查看</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span>👍</span>
+                                        <span>92% 有用</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span>💬</span>
+                                        <span>8 条评论</span>
+                                    </div>
+                                </div>
+                                <div class="article-actions">
+                                    <button class="action-btn btn-edit" onclick="editArticle('kb002', event)">编辑</button>
+                                    <button class="action-btn btn-delete" onclick="deleteArticle('kb002', event)">删除</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="article-item" onclick="openArticle('kb003')">
+                            <div class="article-header">
+                                <div>
+                                    <div class="article-title">权限配置详细教程</div>
+                                    <div class="article-meta">
+                                        <span>👤 王大伟</span>
+                                        <span>📅 2024-03-05</span>
+                                        <span>🔄 2024-03-10 更新</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="article-summary">
+                                详细说明系统权限体系的设计原理和配置方法，包括角色管理、权限分配、数据权限控制等高级功能的使用技巧...
+                            </div>
+                            <div class="article-tags">
+                                <span class="article-tag tag-guide">使用指南</span>
+                                <span class="article-tag">权限管理</span>
+                            </div>
+                            <div class="article-footer">
+                                <div class="article-stats">
+                                    <div class="stat-item">
+                                        <span>👁️</span>
+                                        <span>1,523 次查看</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span>👍</span>
+                                        <span>85% 有用</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span>💬</span>
+                                        <span>15 条评论</span>
+                                    </div>
+                                </div>
+                                <div class="article-actions">
+                                    <button class="action-btn btn-edit" onclick="editArticle('kb003', event)">编辑</button>
+                                    <button class="action-btn btn-delete" onclick="deleteArticle('kb003', event)">删除</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="article-item" onclick="openArticle('kb004')">
+                            <div class="article-header">
+                                <div>
+                                    <div class="article-title">支付模块故障排除手册</div>
+                                    <div class="article-meta">
+                                        <span>👤 陈美玲</span>
+                                        <span>📅 2024-03-03</span>
+                                        <span>🔄 2024-03-08 更新</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="article-summary">
+                                针对支付模块常见故障的诊断和解决方案，涵盖支付宝、微信支付、银行卡支付等多种支付方式的问题处理流程...
+                            </div>
+                            <div class="article-tags">
+                                <span class="article-tag tag-troubleshoot">故障排除</span>
+                                <span class="article-tag">支付问题</span>
+                            </div>
+                            <div class="article-footer">
+                                <div class="article-stats">
+                                    <div class="stat-item">
+                                        <span>👁️</span>
+                                        <span>1,234 次查看</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span>👍</span>
+                                        <span>88% 有用</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span>💬</span>
+                                        <span>6 条评论</span>
+                                    </div>
+                                </div>
+                                <div class="article-actions">
+                                    <button class="action-btn btn-edit" onclick="editArticle('kb004', event)">编辑</button>
+                                    <button class="action-btn btn-delete" onclick="deleteArticle('kb004', event)">删除</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="article-item" onclick="openArticle('kb005')">
+                            <div class="article-header">
+                                <div>
+                                    <div class="article-title">API接口调用规范和示例</div>
+                                    <div class="article-meta">
+                                        <span>👤 张小明</span>
+                                        <span>📅 2024-03-01</span>
+                                        <span>🔄 2024-03-05 更新</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="article-summary">
+                                完整的API接口文档，包括认证方式、请求格式、响应结构、错误码说明以及各个接口的详细使用示例和最佳实践...
+                            </div>
+                            <div class="article-tags">
+                                <span class="article-tag tag-api">API文档</span>
+                                <span class="article-tag tag-guide">开发指南</span>
+                            </div>
+                            <div class="article-footer">
+                                <div class="article-stats">
+                                    <div class="stat-item">
+                                        <span>👁️</span>
+                                        <span>987 次查看</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span>👍</span>
+                                        <span>94% 有用</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <span>💬</span>
+                                        <span>10 条评论</span>
+                                    </div>
+                                </div>
+                                <div class="article-actions">
+                                    <button class="action-btn btn-edit" onclick="editArticle('kb005', event)">编辑</button>
+                                    <button class="action-btn btn-delete" onclick="deleteArticle('kb005', event)">删除</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('知识库页面已加载');
+            loadKnowledgeBase();
+        });
+
+        function loadKnowledgeBase() {
+            console.log('加载知识库数据');
+        }
+
+        function searchKnowledge() {
+            const keyword = document.getElementById('knowledgeSearch').value;
+            console.log('搜索知识库:', keyword);
+            showMessage('搜索功能开发中...', 'info');
+        }
+
+        function filterByType(type) {
+            console.log('按类型筛选:', type);
+            
+            // 更新筛选标签状态
+            document.querySelectorAll('.filter-tag').forEach(tag => {
+                tag.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            showMessage('类型筛选功能开发中...', 'info');
+        }
+
+        function selectCategory(category) {
+            console.log('选择分类:', category);
+            
+            // 更新分类树状态
+            document.querySelectorAll('.tree-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            showMessage('分类筛选功能开发中...', 'info');
+        }
+
+        function openArticle(articleId) {
+            console.log('打开文档:', articleId);
+            showMessage('文档查看功能开发中...', 'info');
+        }
+
+        function createArticle() {
+            console.log('创建新文档');
+            showMessage('文档编辑器开发中...', 'info');
+        }
+
+        function importArticles() {
+            console.log('批量导入文档');
+            showMessage('批量导入功能开发中...', 'info');
+        }
+
+        function editArticle(articleId, event) {
+            event.stopPropagation();
+            console.log('编辑文档:', articleId);
+            showMessage('文档编辑功能开发中...', 'info');
+        }
+
+        function deleteArticle(articleId, event) {
+            event.stopPropagation();
+            if (confirm('确定要删除这篇文档吗？')) {
+                console.log('删除文档:', articleId);
+                showMessage('文档删除成功！', 'success');
+            }
+        }
+
+        function showMessage(message, type) {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            alert(message);
+        }
+
+        // 搜索框回车事件
+        document.getElementById('knowledgeSearch').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchKnowledge();
+            }
+        });
+    </script>
+    
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html> 

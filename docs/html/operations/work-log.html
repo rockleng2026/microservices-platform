@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作日志 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #13c2c2 0%, #36cfc9 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .log-content {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 24px;
+        }
+
+        .log-sidebar {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            height: fit-content;
+        }
+
+        .log-main {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .sidebar-section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quick-stats {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .date-filter {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            width: 100%;
+            justify-content: center;
+        }
+
+        .btn-primary { background: #1890ff; border-color: #1890ff; color: white; }
+        .btn-success { background: #52c41a; border-color: #52c41a; color: white; }
+
+        .log-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .log-list {
+            padding: 0;
+        }
+
+        .log-entry {
+            border-bottom: 1px solid #f0f0f0;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+
+        .log-entry:hover {
+            background: #f8f9fa;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .entry-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .entry-date {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .entry-author {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .author-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .entry-type {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .type-maintenance { background: #f6ffed; color: #52c41a; }
+        .type-incident { background: #fff2f0; color: #ff4d4f; }
+        .type-deployment { background: #e6f7ff; color: #1890ff; }
+        .type-routine { background: #f0f0f0; color: #666; }
+
+        .entry-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-edit { background: #e6f7ff; color: #1890ff; }
+        .btn-delete { background: #fff2f0; color: #ff4d4f; }
+
+        .entry-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .entry-content {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .entry-tags {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .entry-tag {
+            padding: 2px 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .log-form {
+            padding: 20px;
+            border-top: 1px solid #f0f0f0;
+            background: #fafafa;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            padding: 10px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .pagination {
+            padding: 16px 20px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pagination-info {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .page-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .page-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .page-btn.active {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .log-content {
+                grid-template-columns: 1fr;
+            }
+
+            .log-sidebar {
+                order: 2;
+            }
+
+            .log-main {
+                order: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="app-sidebar"></aside>
+
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">运维管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">工作日志</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索日志...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">2</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">运</div>
+                    <span>运维工程师</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <span>📝</span>
+                    工作日志管理
+                </h1>
+                <p class="page-subtitle">记录运维工作过程，积累经验和知识，便于问题追溯和团队协作</p>
+            </div>
+
+            <div class="log-content">
+                <div class="log-sidebar">
+                    <div class="sidebar-section">
+                        <div class="section-title">
+                            <span>📊</span>
+                            统计概览
+                        </div>
+                        <div class="quick-stats">
+                            <div class="stat-item">
+                                <span class="stat-label">今日日志</span>
+                                <span class="stat-value">5</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">本周日志</span>
+                                <span class="stat-value">23</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">本月日志</span>
+                                <span class="stat-value">89</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">故障记录</span>
+                                <span class="stat-value">12</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <div class="section-title">
+                            <span>📅</span>
+                            日期筛选
+                        </div>
+                        <div class="date-filter">
+                            <input type="date" class="filter-input" id="startDate">
+                            <input type="date" class="filter-input" id="endDate">
+                            <button class="btn btn-primary" onclick="filterByDate()">筛选</button>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <div class="section-title">
+                            <span>🏷️</span>
+                            快速筛选
+                        </div>
+                        <div class="quick-filters">
+                            <button class="btn" onclick="filterByType('all')">全部日志</button>
+                            <button class="btn" onclick="filterByType('maintenance')">系统维护</button>
+                            <button class="btn" onclick="filterByType('incident')">故障处理</button>
+                            <button class="btn" onclick="filterByType('deployment')">系统部署</button>
+                            <button class="btn" onclick="filterByType('routine')">日常运维</button>
+                        </div>
+                    </div>
+
+                    <div class="sidebar-section">
+                        <button class="btn btn-success" onclick="showLogForm()">
+                            <span>➕</span>
+                            新建日志
+                        </button>
+                    </div>
+                </div>
+
+                <div class="log-main">
+                    <div class="log-header">
+                        <div class="header-title">工作日志</div>
+                        <div class="header-actions">
+                            <button class="btn" onclick="exportLogs()">
+                                <span>📤</span>
+                                导出
+                            </button>
+                            <button class="btn" onclick="refreshLogs()">
+                                <span>🔄</span>
+                                刷新
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="log-list">
+                        <div class="log-entry">
+                            <div class="entry-header">
+                                <div class="entry-meta">
+                                    <div class="entry-date">2024-03-15 16:30</div>
+                                    <div class="entry-author">
+                                        <div class="author-avatar">张</div>
+                                        <span>张工程师</span>
+                                    </div>
+                                    <div class="entry-type type-incident">故障处理</div>
+                                </div>
+                                <div class="entry-actions">
+                                    <button class="action-btn btn-edit" onclick="editLog('log001')">编辑</button>
+                                    <button class="action-btn btn-delete" onclick="deleteLog('log001')">删除</button>
+                                </div>
+                            </div>
+                            <div class="entry-title">数据库连接池异常故障处理</div>
+                            <div class="entry-content">
+                                下午14:30收到监控告警，数据库连接池出现异常，连接数激增。经排查发现是订单查询接口存在慢SQL导致连接未及时释放。
+                                <br><br>
+                                处理步骤：<br>
+                                1. 立即重启应用服务释放连接池<br>
+                                2. 分析慢SQL日志，定位问题查询<br>
+                                3. 优化SQL语句，添加必要索引<br>
+                                4. 调整连接池参数配置<br>
+                                5. 部署修复版本并验证<br><br>
+                                故障影响：约15分钟，部分用户访问缓慢<br>
+                                根本原因：订单表缺少复合索引
+                            </div>
+                            <div class="entry-tags">
+                                <span class="entry-tag">数据库</span>
+                                <span class="entry-tag">连接池</span>
+                                <span class="entry-tag">性能优化</span>
+                                <span class="entry-tag">故障处理</span>
+                            </div>
+                        </div>
+
+                        <div class="log-entry">
+                            <div class="entry-header">
+                                <div class="entry-meta">
+                                    <div class="entry-date">2024-03-15 09:00</div>
+                                    <div class="entry-author">
+                                        <div class="author-avatar">李</div>
+                                        <span>李工程师</span>
+                                    </div>
+                                    <div class="entry-type type-maintenance">系统维护</div>
+                                </div>
+                                <div class="entry-actions">
+                                    <button class="action-btn btn-edit" onclick="editLog('log002')">编辑</button>
+                                    <button class="action-btn btn-delete" onclick="deleteLog('log002')">删除</button>
+                                </div>
+                            </div>
+                            <div class="entry-title">Redis集群维护窗口执行</div>
+                            <div class="entry-content">
+                                按计划在维护窗口(09:00-10:00)对Redis集群进行维护升级。
+                                <br><br>
+                                执行内容：<br>
+                                1. 备份现有Redis数据<br>
+                                2. 升级Redis版本从6.2.1到6.2.7<br>
+                                3. 优化内存配置参数<br>
+                                4. 测试集群功能正常<br>
+                                5. 验证应用连接正常<br><br>
+                                维护结果：升级成功，性能提升约15%
+                            </div>
+                            <div class="entry-tags">
+                                <span class="entry-tag">Redis</span>
+                                <span class="entry-tag">集群</span>
+                                <span class="entry-tag">升级</span>
+                                <span class="entry-tag">维护窗口</span>
+                            </div>
+                        </div>
+
+                        <div class="log-entry">
+                            <div class="entry-header">
+                                <div class="entry-meta">
+                                    <div class="entry-date">2024-03-14 20:30</div>
+                                    <div class="entry-author">
+                                        <div class="author-avatar">王</div>
+                                        <span>王工程师</span>
+                                    </div>
+                                    <div class="entry-type type-deployment">系统部署</div>
+                                </div>
+                                <div class="entry-actions">
+                                    <button class="action-btn btn-edit" onclick="editLog('log003')">编辑</button>
+                                    <button class="action-btn btn-delete" onclick="deleteLog('log003')">删除</button>
+                                </div>
+                            </div>
+                            <div class="entry-title">Portal 3.0 v2.1.5版本部署</div>
+                            <div class="entry-content">
+                                部署Portal 3.0新版本，包含订单管理模块优化和客服系统改进。
+                                <br><br>
+                                部署步骤：<br>
+                                1. 备份当前版本和数据库<br>
+                                2. 停止应用服务<br>
+                                3. 更新应用代码<br>
+                                4. 执行数据库迁移脚本<br>
+                                5. 启动服务并验证功能<br>
+                                6. 执行自动化测试<br><br>
+                                部署结果：成功，所有功能正常
+                            </div>
+                            <div class="entry-tags">
+                                <span class="entry-tag">Portal 3.0</span>
+                                <span class="entry-tag">版本发布</span>
+                                <span class="entry-tag">部署</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="log-form" id="logForm" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">日志类型</label>
+                            <select class="form-select" id="logType">
+                                <option value="routine">日常运维</option>
+                                <option value="maintenance">系统维护</option>
+                                <option value="incident">故障处理</option>
+                                <option value="deployment">系统部署</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">日志标题</label>
+                            <input type="text" class="form-input" id="logTitle" placeholder="请输入日志标题">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">日志内容</label>
+                            <textarea class="form-textarea" id="logContent" placeholder="请详细描述工作内容、处理步骤、结果等"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">标签</label>
+                            <input type="text" class="form-input" id="logTags" placeholder="用逗号分隔多个标签">
+                        </div>
+                        <div class="form-actions">
+                            <button class="btn" onclick="hideLogForm()">取消</button>
+                            <button class="btn btn-primary" onclick="saveLog()">保存日志</button>
+                        </div>
+                    </div>
+
+                    <div class="pagination">
+                        <div class="pagination-info">显示 1-10 条，共 89 条记录</div>
+                        <div class="page-controls">
+                            <button class="page-btn" onclick="changePage('prev')">上一页</button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn" onclick="changePage(2)">2</button>
+                            <button class="page-btn" onclick="changePage(3)">3</button>
+                            <button class="page-btn" onclick="changePage('next')">下一页</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('工作日志页面已加载');
+            loadWorkLogs();
+        });
+
+        function loadWorkLogs() {
+            console.log('加载工作日志数据');
+        }
+
+        function filterByDate() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            console.log('按日期筛选:', startDate, 'to', endDate);
+            showMessage('日期筛选功能开发中...', 'info');
+        }
+
+        function filterByType(type) {
+            console.log('按类型筛选:', type);
+            showMessage('类型筛选功能开发中...', 'info');
+        }
+
+        function showLogForm() {
+            document.getElementById('logForm').style.display = 'block';
+            document.getElementById('logForm').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function hideLogForm() {
+            document.getElementById('logForm').style.display = 'none';
+            clearLogForm();
+        }
+
+        function clearLogForm() {
+            document.getElementById('logType').value = 'routine';
+            document.getElementById('logTitle').value = '';
+            document.getElementById('logContent').value = '';
+            document.getElementById('logTags').value = '';
+        }
+
+        function saveLog() {
+            const title = document.getElementById('logTitle').value;
+            if (!title.trim()) {
+                showMessage('请输入日志标题！', 'warning');
+                return;
+            }
+
+            const content = document.getElementById('logContent').value;
+            if (!content.trim()) {
+                showMessage('请输入日志内容！', 'warning');
+                return;
+            }
+
+            const logData = {
+                type: document.getElementById('logType').value,
+                title: title,
+                content: content,
+                tags: document.getElementById('logTags').value
+            };
+
+            console.log('保存日志:', logData);
+            showMessage('工作日志保存成功！', 'success');
+            hideLogForm();
+            loadWorkLogs(); // 重新加载日志列表
+        }
+
+        function editLog(logId) {
+            console.log('编辑日志:', logId);
+            showMessage('日志编辑功能开发中...', 'info');
+        }
+
+        function deleteLog(logId) {
+            if (confirm('确定要删除这条日志吗？')) {
+                console.log('删除日志:', logId);
+                showMessage('日志删除成功！', 'success');
+            }
+        }
+
+        function exportLogs() {
+            console.log('导出日志');
+            showMessage('正在导出日志数据...', 'info');
+            setTimeout(() => {
+                showMessage('日志数据导出成功！', 'success');
+            }, 2000);
+        }
+
+        function refreshLogs() {
+            console.log('刷新日志');
+            showMessage('正在刷新数据...', 'info');
+            setTimeout(() => {
+                loadWorkLogs();
+                showMessage('数据刷新成功！', 'success');
+            }, 1000);
+        }
+
+        function changePage(page) {
+            console.log('切换页面:', page);
+            showMessage('分页功能开发中...', 'info');
+        }
+
+        function showMessage(message, type) {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            alert(message);
+        }
+
+        // 设置默认日期范围
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const lastWeek = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+            
+            document.getElementById('startDate').value = lastWeek.toISOString().split('T')[0];
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+        });
+    </script>
+    
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html> 

@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单列表 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        /* 页面特定样式 */
+        .page-header {
+            background: linear-gradient(135deg, #1890ff 0%, #36cfc9 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .page-subtitle {
+            opacity: 0.9;
+            margin: 0;
+        }
+
+        /* 统计概览 */
+        .stats-overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+        }
+
+        .stat-item.pending::before { background: #fa8c16; }
+        .stat-item.processing::before { background: #1890ff; }
+        .stat-item.shipped::before { background: #52c41a; }
+        .stat-item.completed::before { background: #722ed1; }
+        .stat-item.cancelled::before { background: #ff4d4f; }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* 筛选工具栏 */
+        .filter-toolbar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .filter-label {
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .filter-select, .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        .btn-success {
+            background: #52c41a;
+            border-color: #52c41a;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 订单表格 */
+        .order-table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .table-header {
+            background: #fafafa;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .order-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .order-table th,
+        .order-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .order-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #333;
+            position: sticky;
+            top: 0;
+        }
+
+        .order-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* 订单信息 */
+        .order-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .order-number {
+            font-weight: 600;
+            color: #1890ff;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .order-number:hover {
+            text-decoration: underline;
+        }
+
+        .order-date {
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* 客户信息 */
+        .customer-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .customer-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .customer-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .customer-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .customer-contact {
+            color: #666;
+            font-size: 12px;
+        }
+
+        /* 商品信息 */
+        .product-summary {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .product-count {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .product-preview {
+            color: #666;
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 200px;
+        }
+
+        /* 订单状态 */
+        .order-status {
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+            min-width: 80px;
+        }
+
+        .status-pending {
+            background: #fff7e6;
+            color: #fa8c16;
+        }
+
+        .status-paid {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .status-processing {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .status-shipped {
+            background: #f9f0ff;
+            color: #722ed1;
+        }
+
+        .status-completed {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .status-cancelled {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+
+        .status-refunded {
+            background: #fff2e6;
+            color: #fa541c;
+        }
+
+        /* 金额显示 */
+        .order-amount {
+            font-weight: 600;
+            color: #333;
+            font-size: 16px;
+        }
+
+        .amount-detail {
+            color: #666;
+            font-size: 12px;
+            margin-top: 2px;
+        }
+
+        /* 支付信息 */
+        .payment-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .payment-method {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .payment-status {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .payment-success {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .payment-pending {
+            background: #fff7e6;
+            color: #fa8c16;
+        }
+
+        .payment-failed {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+
+        /* 操作按钮 */
+        .action-btns {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-view {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .btn-edit {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .btn-ship {
+            background: #f9f0ff;
+            color: #722ed1;
+        }
+
+        .btn-cancel {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+
+        /* 批量操作栏 */
+        .bulk-actions {
+            background: #e6f7ff;
+            border: 1px solid #91d5ff;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin: 16px 20px;
+            display: none;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .bulk-actions.show {
+            display: flex;
+        }
+
+        .bulk-text {
+            color: #1890ff;
+            font-size: 14px;
+        }
+
+        /* 分页 */
+        .pagination-container {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            padding: 16px 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .pagination-info {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .pagination {
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .page-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .page-btn.active {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .stats-overview {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .order-table-container {
+                overflow-x: auto;
+            }
+
+            .order-table {
+                min-width: 1000px;
+            }
+
+            .action-btns {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 左侧导航 -->
+        <aside class="app-sidebar">
+            <!-- 导航内容将由navigation.js动态生成 -->
+        </aside>
+
+        <!-- 头部区域 -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">订单管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">订单列表</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索订单...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">5</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">管</div>
+                    <span>管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <h1 class="page-title">
+                    <span>📋</span>
+                    订单列表管理
+                </h1>
+                <p class="page-subtitle">查看和管理所有订单信息，跟踪订单处理状态和物流进度</p>
+            </div>
+
+            <!-- 统计概览 -->
+            <div class="stats-overview">
+                <div class="stat-item pending">
+                    <div class="stat-number">24</div>
+                    <div class="stat-label">待支付</div>
+                </div>
+                <div class="stat-item processing">
+                    <div class="stat-number">156</div>
+                    <div class="stat-label">处理中</div>
+                </div>
+                <div class="stat-item shipped">
+                    <div class="stat-number">89</div>
+                    <div class="stat-label">已发货</div>
+                </div>
+                <div class="stat-item completed">
+                    <div class="stat-number">342</div>
+                    <div class="stat-label">已完成</div>
+                </div>
+                <div class="stat-item cancelled">
+                    <div class="stat-number">12</div>
+                    <div class="stat-label">已取消</div>
+                </div>
+            </div>
+
+            <!-- 筛选工具栏 -->
+            <div class="filter-toolbar">
+                <div class="filter-grid">
+                    <div class="filter-group">
+                        <label class="filter-label">订单状态</label>
+                        <select class="filter-select" id="statusFilter">
+                            <option value="">全部状态</option>
+                            <option value="pending">待支付</option>
+                            <option value="paid">已支付</option>
+                            <option value="processing">处理中</option>
+                            <option value="shipped">已发货</option>
+                            <option value="completed">已完成</option>
+                            <option value="cancelled">已取消</option>
+                            <option value="refunded">已退款</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">支付方式</label>
+                        <select class="filter-select" id="paymentFilter">
+                            <option value="">全部方式</option>
+                            <option value="alipay">支付宝</option>
+                            <option value="wechat">微信支付</option>
+                            <option value="bank">银行转账</option>
+                            <option value="cash">现金</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">时间范围</label>
+                        <select class="filter-select" id="timeFilter">
+                            <option value="">全部时间</option>
+                            <option value="today">今天</option>
+                            <option value="week">本周</option>
+                            <option value="month">本月</option>
+                            <option value="quarter">本季度</option>
+                        </select>
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">客户搜索</label>
+                        <input type="text" class="filter-input" placeholder="客户名称或联系方式" id="customerSearch">
+                    </div>
+
+                    <div class="filter-group">
+                        <label class="filter-label">订单号搜索</label>
+                        <input type="text" class="filter-input" placeholder="订单号" id="orderSearch">
+                    </div>
+                </div>
+
+                <div class="filter-actions">
+                    <button class="btn btn-primary" onclick="filterOrders()">
+                        <span>🔍</span>
+                        筛选
+                    </button>
+                    <button class="btn" onclick="resetFilters()">
+                        <span>🔄</span>
+                        重置
+                    </button>
+                    <a href="order-create.html" class="btn btn-success">
+                        <span>➕</span>
+                        新建订单
+                    </a>
+                    <button class="btn" onclick="exportOrders()">
+                        <span>📤</span>
+                        导出
+                    </button>
+                </div>
+            </div>
+
+            <!-- 订单表格 -->
+            <div class="order-table-container">
+                <div class="table-header">
+                    <div class="table-title">订单列表</div>
+                    <div class="table-actions">
+                        <button class="btn" onclick="refreshTable()">
+                            <span>🔄</span>
+                            刷新
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 批量操作栏 -->
+                <div class="bulk-actions" id="bulkActions">
+                    <span class="bulk-text">已选择 <strong id="selectedCount">0</strong> 个订单</span>
+                    <button class="btn" onclick="bulkExport()">批量导出</button>
+                    <button class="btn" onclick="bulkUpdateStatus()">批量更新状态</button>
+                    <button class="btn" onclick="bulkCancel()">批量取消</button>
+                </div>
+
+                <table class="order-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                            </th>
+                            <th>订单信息</th>
+                            <th>客户信息</th>
+                            <th>商品信息</th>
+                            <th>订单金额</th>
+                            <th>支付信息</th>
+                            <th>订单状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="checkbox" class="order-checkbox" value="ORDER2024031501"></td>
+                            <td>
+                                <div class="order-info">
+                                    <a href="order-detail.html?id=ORDER2024031501" class="order-number">#ORDER2024031501</a>
+                                    <div class="order-date">2024-03-15 14:30</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="customer-info">
+                                    <div class="customer-avatar">李</div>
+                                    <div class="customer-details">
+                                        <div class="customer-name">李明科技有限公司</div>
+                                        <div class="customer-contact">李总 • 138****8888</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="product-summary">
+                                    <div class="product-count">3件商品</div>
+                                    <div class="product-preview">iPhone 15 Pro Max、MacBook Pro等</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="order-amount">¥28,997.00</div>
+                                <div class="amount-detail">含运费 ¥15</div>
+                            </td>
+                            <td>
+                                <div class="payment-info">
+                                    <div class="payment-method">支付宝</div>
+                                    <span class="payment-status payment-pending">待支付</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="order-status status-pending">待支付</span>
+                            </td>
+                            <td>2024-03-15 14:30</td>
+                            <td>
+                                <div class="action-btns">
+                                    <a href="order-detail.html?id=ORDER2024031501" class="action-btn btn-view">查看</a>
+                                    <button class="action-btn btn-edit" onclick="editOrder('ORDER2024031501')">编辑</button>
+                                    <button class="action-btn btn-cancel" onclick="cancelOrder('ORDER2024031501')">取消</button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><input type="checkbox" class="order-checkbox" value="ORDER2024031502"></td>
+                            <td>
+                                <div class="order-info">
+                                    <a href="order-detail.html?id=ORDER2024031502" class="order-number">#ORDER2024031502</a>
+                                    <div class="order-date">2024-03-15 13:15</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="customer-info">
+                                    <div class="customer-avatar">华</div>
+                                    <div class="customer-details">
+                                        <div class="customer-name">华润商贸集团</div>
+                                        <div class="customer-contact">王经理 • 139****9999</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="product-summary">
+                                    <div class="product-count">5件商品</div>
+                                    <div class="product-preview">办公用品、电子设备等</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="order-amount">¥45,680.00</div>
+                                <div class="amount-detail">含运费 ¥20</div>
+                            </td>
+                            <td>
+                                <div class="payment-info">
+                                    <div class="payment-method">银行转账</div>
+                                    <span class="payment-status payment-success">已支付</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="order-status status-processing">处理中</span>
+                            </td>
+                            <td>2024-03-15 13:15</td>
+                            <td>
+                                <div class="action-btns">
+                                    <a href="order-detail.html?id=ORDER2024031502" class="action-btn btn-view">查看</a>
+                                    <button class="action-btn btn-ship" onclick="shipOrder('ORDER2024031502')">发货</button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><input type="checkbox" class="order-checkbox" value="ORDER2024031503"></td>
+                            <td>
+                                <div class="order-info">
+                                    <a href="order-detail.html?id=ORDER2024031503" class="order-number">#ORDER2024031503</a>
+                                    <div class="order-date">2024-03-15 12:45</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="customer-info">
+                                    <div class="customer-avatar">创</div>
+                                    <div class="customer-details">
+                                        <div class="customer-name">创新科技公司</div>
+                                        <div class="customer-contact">张总 • 137****7777</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="product-summary">
+                                    <div class="product-count">2件商品</div>
+                                    <div class="product-preview">软件授权、服务器等</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="order-amount">¥15,600.00</div>
+                                <div class="amount-detail">含运费 ¥0</div>
+                            </td>
+                            <td>
+                                <div class="payment-info">
+                                    <div class="payment-method">微信支付</div>
+                                    <span class="payment-status payment-success">已支付</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="order-status status-shipped">已发货</span>
+                            </td>
+                            <td>2024-03-15 12:45</td>
+                            <td>
+                                <div class="action-btns">
+                                    <a href="order-detail.html?id=ORDER2024031503" class="action-btn btn-view">查看</a>
+                                    <button class="action-btn btn-edit" onclick="trackOrder('ORDER2024031503')">物流</button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><input type="checkbox" class="order-checkbox" value="ORDER2024031504"></td>
+                            <td>
+                                <div class="order-info">
+                                    <a href="order-detail.html?id=ORDER2024031504" class="order-number">#ORDER2024031504</a>
+                                    <div class="order-date">2024-03-15 11:20</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="customer-info">
+                                    <div class="customer-avatar">万</div>
+                                    <div class="customer-details">
+                                        <div class="customer-name">万达商业广场</div>
+                                        <div class="customer-contact">刘主管 • 135****5555</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="product-summary">
+                                    <div class="product-count">8件商品</div>
+                                    <div class="product-preview">收银设备、打印机等</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="order-amount">¥32,800.00</div>
+                                <div class="amount-detail">含运费 ¥50</div>
+                            </td>
+                            <td>
+                                <div class="payment-info">
+                                    <div class="payment-method">支付宝</div>
+                                    <span class="payment-status payment-success">已支付</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="order-status status-completed">已完成</span>
+                            </td>
+                            <td>2024-03-15 11:20</td>
+                            <td>
+                                <div class="action-btns">
+                                    <a href="order-detail.html?id=ORDER2024031504" class="action-btn btn-view">查看</a>
+                                    <button class="action-btn btn-edit" onclick="reviewOrder('ORDER2024031504')">评价</button>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td><input type="checkbox" class="order-checkbox" value="ORDER2024031505"></td>
+                            <td>
+                                <div class="order-info">
+                                    <a href="order-detail.html?id=ORDER2024031505" class="order-number">#ORDER2024031505</a>
+                                    <div class="order-date">2024-03-15 10:30</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="customer-info">
+                                    <div class="customer-avatar">中</div>
+                                    <div class="customer-details">
+                                        <div class="customer-name">中信建设集团</div>
+                                        <div class="customer-contact">陈总 • 136****6666</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="product-summary">
+                                    <div class="product-count">1件商品</div>
+                                    <div class="product-preview">工程管理软件</div>
+                                </div>
+                            </td>
+                            <td>
+                                <div class="order-amount">¥89,000.00</div>
+                                <div class="amount-detail">含运费 ¥0</div>
+                            </td>
+                            <td>
+                                <div class="payment-info">
+                                    <div class="payment-method">银行转账</div>
+                                    <span class="payment-status payment-failed">支付失败</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="order-status status-cancelled">已取消</span>
+                            </td>
+                            <td>2024-03-15 10:30</td>
+                            <td>
+                                <div class="action-btns">
+                                    <a href="order-detail.html?id=ORDER2024031505" class="action-btn btn-view">查看</a>
+                                    <button class="action-btn btn-edit" onclick="retryPayment('ORDER2024031505')">重试</button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- 分页 -->
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        显示 1-10 条，共 245 条记录
+                    </div>
+                    <div class="pagination">
+                        <button class="page-btn" onclick="changePage('prev')">上一页</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn" onclick="changePage(2)">2</button>
+                        <button class="page-btn" onclick="changePage(3)">3</button>
+                        <button class="page-btn" onclick="changePage(4)">4</button>
+                        <button class="page-btn" onclick="changePage(5)">5</button>
+                        <button class="page-btn" onclick="changePage('next')">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('订单列表页面已加载');
+            bindEvents();
+            loadOrderStats();
+        });
+
+        // 绑定事件
+        function bindEvents() {
+            // 筛选表单事件
+            document.getElementById('statusFilter').addEventListener('change', filterOrders);
+            document.getElementById('paymentFilter').addEventListener('change', filterOrders);
+            document.getElementById('timeFilter').addEventListener('change', filterOrders);
+            
+            // 搜索输入事件
+            document.getElementById('customerSearch').addEventListener('input', debounce(filterOrders, 500));
+            document.getElementById('orderSearch').addEventListener('input', debounce(filterOrders, 500));
+        }
+
+        // 防抖函数
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // 加载订单统计
+        function loadOrderStats() {
+            console.log('加载订单统计数据');
+            // 这里可以调用API获取实时统计数据
+        }
+
+        // 筛选订单
+        function filterOrders() {
+            const filters = {
+                status: document.getElementById('statusFilter').value,
+                payment: document.getElementById('paymentFilter').value,
+                time: document.getElementById('timeFilter').value,
+                customer: document.getElementById('customerSearch').value,
+                order: document.getElementById('orderSearch').value
+            };
+            
+            console.log('筛选订单:', filters);
+            showMessage('筛选功能开发中...', 'info');
+        }
+
+        // 重置筛选
+        function resetFilters() {
+            document.getElementById('statusFilter').value = '';
+            document.getElementById('paymentFilter').value = '';
+            document.getElementById('timeFilter').value = '';
+            document.getElementById('customerSearch').value = '';
+            document.getElementById('orderSearch').value = '';
+            filterOrders();
+        }
+
+        // 刷新表格
+        function refreshTable() {
+            console.log('刷新订单表格');
+            showMessage('正在刷新数据...', 'info');
+            setTimeout(() => {
+                showMessage('数据刷新成功！', 'success');
+                loadOrderStats();
+            }, 1000);
+        }
+
+        // 全选切换
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.order-checkbox');
+            const bulkActions = document.getElementById('bulkActions');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+            });
+            
+            updateBulkActions();
+        }
+
+        // 更新批量操作栏
+        function updateBulkActions() {
+            const checkedBoxes = document.querySelectorAll('.order-checkbox:checked');
+            const bulkActions = document.getElementById('bulkActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            if (checkedBoxes.length > 0) {
+                bulkActions.classList.add('show');
+                selectedCount.textContent = checkedBoxes.length;
+            } else {
+                bulkActions.classList.remove('show');
+            }
+        }
+
+        // 绑定复选框事件
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('order-checkbox')) {
+                updateBulkActions();
+            }
+        });
+
+        // 订单操作
+        function editOrder(orderId) {
+            console.log('编辑订单:', orderId);
+            window.location.href = `order-create.html?id=${orderId}&mode=edit`;
+        }
+
+        function cancelOrder(orderId) {
+            if (confirm('确定要取消这个订单吗？')) {
+                console.log('取消订单:', orderId);
+                showMessage('订单取消成功！', 'success');
+            }
+        }
+
+        function shipOrder(orderId) {
+            console.log('发货订单:', orderId);
+            showMessage('发货功能开发中...', 'info');
+        }
+
+        function trackOrder(orderId) {
+            console.log('追踪订单:', orderId);
+            showMessage('物流追踪功能开发中...', 'info');
+        }
+
+        function reviewOrder(orderId) {
+            console.log('评价订单:', orderId);
+            showMessage('订单评价功能开发中...', 'info');
+        }
+
+        function retryPayment(orderId) {
+            console.log('重试支付:', orderId);
+            showMessage('重试支付功能开发中...', 'info');
+        }
+
+        // 批量操作
+        function bulkExport() {
+            const selectedOrders = getSelectedOrders();
+            console.log('批量导出订单:', selectedOrders);
+            showMessage('正在导出选中订单...', 'info');
+        }
+
+        function bulkUpdateStatus() {
+            const selectedOrders = getSelectedOrders();
+            console.log('批量更新状态:', selectedOrders);
+            showMessage('批量状态更新功能开发中...', 'info');
+        }
+
+        function bulkCancel() {
+            const selectedOrders = getSelectedOrders();
+            if (confirm(`确定要取消这 ${selectedOrders.length} 个订单吗？`)) {
+                console.log('批量取消订单:', selectedOrders);
+                showMessage('订单批量取消成功！', 'success');
+            }
+        }
+
+        // 获取选中的订单
+        function getSelectedOrders() {
+            const checkboxes = document.querySelectorAll('.order-checkbox:checked');
+            return Array.from(checkboxes).map(checkbox => checkbox.value);
+        }
+
+        // 导出订单
+        function exportOrders() {
+            console.log('导出订单数据');
+            showMessage('正在导出订单数据...', 'info');
+            setTimeout(() => {
+                showMessage('订单数据导出成功！', 'success');
+            }, 2000);
+        }
+
+        // 分页
+        function changePage(page) {
+            console.log('切换到页面:', page);
+            showMessage('分页功能开发中...', 'info');
+        }
+
+        // 消息提示函数
+        function showMessage(message, type) {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            alert(message);
+        }
+
+        // 实时更新订单状态
+        setInterval(() => {
+            console.log('检查订单状态更新...');
+            loadOrderStats();
+        }, 30000); // 每30秒检查一次
+    </script>
+    
+    <!-- 引入统一导航系统 -->
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html> 

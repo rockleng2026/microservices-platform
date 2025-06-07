@@ -1,0 +1,796 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工单详情 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #1890ff 0%, #69c0ff 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .ticket-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .side-content {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: #fafafa;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        .ticket-header {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .header-top {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .ticket-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .meta-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .meta-label {
+            color: #666;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .meta-value {
+            color: #333;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .priority-urgent { color: #722ed1; }
+        .priority-high { color: #ff4d4f; }
+        .priority-medium { color: #fa8c16; }
+        .priority-low { color: #52c41a; }
+
+        .status-processing { color: #1890ff; }
+        .status-resolved { color: #52c41a; }
+        .status-closed { color: #722ed1; }
+
+        .ticket-actions {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .btn-primary { background: #1890ff; border-color: #1890ff; color: white; }
+        .btn-success { background: #52c41a; border-color: #52c41a; color: white; }
+        .btn-warning { background: #fa8c16; border-color: #fa8c16; color: white; }
+        .btn-danger { background: #ff4d4f; border-color: #ff4d4f; color: white; }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 24px;
+        }
+
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -22px;
+            top: 8px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid #d9d9d9;
+            background: white;
+        }
+
+        .timeline-item.completed::before {
+            border-color: #52c41a;
+            background: #52c41a;
+        }
+
+        .timeline-item.active::before {
+            border-color: #1890ff;
+            background: #1890ff;
+        }
+
+        .timeline-item::after {
+            content: '';
+            position: absolute;
+            left: -17px;
+            top: 20px;
+            width: 2px;
+            height: calc(100% - 12px);
+            background: #f0f0f0;
+        }
+
+        .timeline-item:last-child::after {
+            display: none;
+        }
+
+        .timeline-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .timeline-desc {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .timeline-time {
+            color: #999;
+            font-size: 12px;
+        }
+
+        .comment-form {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-textarea {
+            padding: 10px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .file-upload {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .upload-btn {
+            padding: 6px 12px;
+            border: 1px dashed #d9d9d9;
+            background: #fafafa;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .info-section {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .customer-info {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .customer-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .customer-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .customer-details {
+            flex: 1;
+        }
+
+        .customer-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .customer-contact {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .operation-log {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .log-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: #fafafa;
+            border-radius: 6px;
+        }
+
+        .log-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .log-content {
+            flex: 1;
+        }
+
+        .log-action {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .log-time {
+            color: #666;
+            font-size: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .ticket-content {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="app-sidebar"></aside>
+
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">客服中心</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">工单详情</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索工单...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">8</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">客</div>
+                    <span>客服专员</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <span>🔍</span>
+                    工单详情查看
+                </h1>
+                <p class="page-subtitle">查看工单完整信息，跟踪处理进度和客户沟通记录</p>
+            </div>
+
+            <div class="ticket-header">
+                <div class="header-top">
+                    <div class="ticket-meta">
+                        <div class="meta-item">
+                            <span class="meta-label">工单编号</span>
+                            <span class="meta-value">#TK2024031501</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">工单标题</span>
+                            <span class="meta-value">系统登录异常，无法正常使用</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">优先级</span>
+                            <span class="meta-value priority-high">高</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">状态</span>
+                            <span class="meta-value status-processing">处理中</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">创建时间</span>
+                            <span class="meta-value">2024-03-15 14:30:25</span>
+                        </div>
+                        <div class="meta-item">
+                            <span class="meta-label">最后更新</span>
+                            <span class="meta-value">2024-03-15 16:15:30</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="ticket-actions">
+                    <div class="action-group">
+                        <a href="ticket-list.html" class="btn">
+                            <span>👈</span>
+                            返回列表
+                        </a>
+                        <button class="btn" onclick="printTicket()">
+                            <span>🖨️</span>
+                            打印
+                        </button>
+                        <button class="btn" onclick="exportTicket()">
+                            <span>📤</span>
+                            导出
+                        </button>
+                    </div>
+                    <div class="action-group">
+                        <button class="btn btn-primary" onclick="assignTicket()">
+                            <span>👥</span>
+                            分配处理人
+                        </button>
+                        <button class="btn btn-success" onclick="resolveTicket()">
+                            <span>✅</span>
+                            标记解决
+                        </button>
+                        <button class="btn btn-warning" onclick="escalateTicket()">
+                            <span>⬆️</span>
+                            升级工单
+                        </button>
+                        <button class="btn btn-danger" onclick="closeTicket()">
+                            <span>❌</span>
+                            关闭工单
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ticket-content">
+                <div class="main-content">
+                    <div class="info-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <span>📝</span>
+                                工单描述
+                            </h3>
+                        </div>
+                        <div class="card-content">
+                            <p style="color: #333; line-height: 1.6; margin: 0;">
+                                用户反映在使用系统时频繁出现登录异常，具体表现为：<br><br>
+                                1. 输入正确的用户名和密码后，系统提示"登录失败，请检查用户名密码"<br>
+                                2. 有时能够成功登录，但在操作过程中会自动退出登录<br>
+                                3. 清除浏览器缓存后暂时能够正常使用，但问题会反复出现<br>
+                                4. 影响了正常的业务操作，希望尽快解决<br><br>
+                                用户环境信息：<br>
+                                - 操作系统：Windows 10<br>
+                                - 浏览器：Chrome 最新版本<br>
+                                - 网络环境：公司内网<br>
+                                - 发生频率：每天多次
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-header">
+                            <h3 class="card-title">
+                                <span>💬</span>
+                                沟通记录
+                            </h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="timeline">
+                                <div class="timeline-item completed">
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">客户提交工单</div>
+                                        <div class="timeline-desc">客户描述了登录异常的具体情况，包括环境信息和错误现象</div>
+                                        <div class="timeline-time">2024-03-15 14:30:25 - 李明科技有限公司</div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item completed">
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">工单分配</div>
+                                        <div class="timeline-desc">系统自动将工单分配给技术支持专员张小明处理</div>
+                                        <div class="timeline-time">2024-03-15 14:35:00 - 系统自动分配</div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item completed">
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">初步响应</div>
+                                        <div class="timeline-desc">
+                                            技术支持专员确认收到工单，初步分析可能是会话管理问题。已要求客户提供更详细的错误截图和日志信息。
+                                            同时建议客户先尝试更换浏览器测试。
+                                        </div>
+                                        <div class="timeline-time">2024-03-15 14:45:12 - 张小明</div>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item active">
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">问题分析中</div>
+                                        <div class="timeline-desc">
+                                            客户已提供错误截图，技术团队正在分析日志。初步发现可能与Redis会话存储有关，
+                                            正在与开发团队沟通确认修复方案。
+                                        </div>
+                                        <div class="timeline-time">2024-03-15 16:15:30 - 张小明</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="comment-form">
+                                <div class="form-group">
+                                    <label class="form-label">添加回复</label>
+                                    <textarea class="form-textarea" placeholder="请输入回复内容..." id="replyContent"></textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">附件上传</label>
+                                    <div class="file-upload">
+                                        <input type="file" id="fileInput" style="display: none;" multiple>
+                                        <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                                            📎 选择文件
+                                        </button>
+                                        <span id="fileList"></span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 12px;">
+                                    <button class="btn btn-primary" onclick="submitReply()">
+                                        <span>💬</span>
+                                        提交回复
+                                    </button>
+                                    <button class="btn" onclick="saveDraft()">
+                                        <span>💾</span>
+                                        保存草稿
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="side-content">
+                    <div class="info-card">
+                        <div class="card-header">
+                            <h4 class="card-title">
+                                <span>ℹ️</span>
+                                工单信息
+                            </h4>
+                        </div>
+                        <div class="card-content">
+                            <div class="info-section">
+                                <div class="info-item">
+                                    <span class="info-label">工单分类</span>
+                                    <span class="info-value">技术支持</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">处理人</span>
+                                    <span class="info-value">张小明</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">预计解决时间</span>
+                                    <span class="info-value">2024-03-16 18:00</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">SLA状态</span>
+                                    <span class="info-value" style="color: #52c41a;">正常</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">已用时间</span>
+                                    <span class="info-value">1小时45分钟</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">剩余时间</span>
+                                    <span class="info-value">22小时15分钟</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-header">
+                            <h4 class="card-title">
+                                <span>👤</span>
+                                客户信息
+                            </h4>
+                        </div>
+                        <div class="card-content">
+                            <div class="customer-info">
+                                <div class="customer-header">
+                                    <div class="customer-avatar">李</div>
+                                    <div class="customer-details">
+                                        <div class="customer-name">李明科技有限公司</div>
+                                        <div class="customer-contact">李总 • 138****8888</div>
+                                    </div>
+                                </div>
+                                <div class="info-section">
+                                    <div class="info-item">
+                                        <span class="info-label">邮箱地址</span>
+                                        <span class="info-value">li@company.com</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">客户等级</span>
+                                        <span class="info-value" style="color: #fa8c16;">VIP客户</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">历史工单</span>
+                                        <span class="info-value">12个</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">满意度</span>
+                                        <span class="info-value" style="color: #52c41a;">95%</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-header">
+                            <h4 class="card-title">
+                                <span>📋</span>
+                                操作记录
+                            </h4>
+                        </div>
+                        <div class="card-content">
+                            <div class="operation-log">
+                                <div class="log-item">
+                                    <div class="log-avatar">张</div>
+                                    <div class="log-content">
+                                        <div class="log-action">更新工单状态为"处理中"</div>
+                                        <div class="log-time">2024-03-15 16:15:30</div>
+                                    </div>
+                                </div>
+
+                                <div class="log-item">
+                                    <div class="log-avatar">张</div>
+                                    <div class="log-content">
+                                        <div class="log-action">添加技术分析回复</div>
+                                        <div class="log-time">2024-03-15 16:15:20</div>
+                                    </div>
+                                </div>
+
+                                <div class="log-item">
+                                    <div class="log-avatar">系</div>
+                                    <div class="log-content">
+                                        <div class="log-action">自动分配给张小明处理</div>
+                                        <div class="log-time">2024-03-15 14:35:00</div>
+                                    </div>
+                                </div>
+
+                                <div class="log-item">
+                                    <div class="log-avatar">李</div>
+                                    <div class="log-content">
+                                        <div class="log-action">客户创建工单</div>
+                                        <div class="log-time">2024-03-15 14:30:25</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('工单详情页面已加载');
+            loadTicketDetails();
+        });
+
+        function loadTicketDetails() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const ticketId = urlParams.get('id');
+            
+            if (ticketId) {
+                console.log('加载工单详情:', ticketId);
+            }
+        }
+
+        function assignTicket() {
+            console.log('分配工单');
+            showMessage('工单分配功能开发中...', 'info');
+        }
+
+        function resolveTicket() {
+            if (confirm('确定要标记此工单为已解决吗？')) {
+                console.log('解决工单');
+                showMessage('工单已标记为解决！', 'success');
+            }
+        }
+
+        function escalateTicket() {
+            console.log('升级工单');
+            showMessage('工单升级功能开发中...', 'info');
+        }
+
+        function closeTicket() {
+            if (confirm('确定要关闭此工单吗？')) {
+                console.log('关闭工单');
+                showMessage('工单已关闭！', 'success');
+            }
+        }
+
+        function submitReply() {
+            const content = document.getElementById('replyContent').value;
+            if (!content.trim()) {
+                showMessage('请输入回复内容！', 'warning');
+                return;
+            }
+            
+            console.log('提交回复:', content);
+            showMessage('回复提交成功！', 'success');
+            document.getElementById('replyContent').value = '';
+        }
+
+        function saveDraft() {
+            const content = document.getElementById('replyContent').value;
+            console.log('保存草稿:', content);
+            showMessage('草稿已保存！', 'info');
+        }
+
+        function printTicket() {
+            console.log('打印工单');
+            window.print();
+        }
+
+        function exportTicket() {
+            console.log('导出工单');
+            showMessage('正在导出工单...', 'info');
+        }
+
+        function showMessage(message, type) {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            alert(message);
+        }
+    </script>
+    
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html> 

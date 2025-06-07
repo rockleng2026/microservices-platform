@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>日程日历 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #fa8c16 0%, #ffc53d 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .calendar-toolbar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .toolbar-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .btn-primary { background: #1890ff; border-color: #1890ff; color: white; }
+        .btn-success { background: #52c41a; border-color: #52c41a; color: white; }
+
+        .current-date {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .view-switch {
+            display: flex;
+            gap: 4px;
+            background: #f0f0f0;
+            border-radius: 6px;
+            padding: 4px;
+        }
+
+        .view-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .view-btn.active {
+            background: white;
+            color: #1890ff;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .calendar-header {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            background: #fafafa;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .calendar-day-header {
+            padding: 16px;
+            text-align: center;
+            font-weight: 600;
+            color: #333;
+            border-right: 1px solid #f0f0f0;
+        }
+
+        .calendar-body {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            min-height: 600px;
+        }
+
+        .calendar-cell {
+            border-right: 1px solid #f0f0f0;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .calendar-cell:hover {
+            background: #f8f9fa;
+        }
+
+        .calendar-cell.other-month {
+            color: #ccc;
+            background: #fafafa;
+        }
+
+        .calendar-cell.today {
+            background: #e6f7ff;
+            border-color: #1890ff;
+        }
+
+        .calendar-cell.selected {
+            background: #1890ff;
+            color: white;
+        }
+
+        .cell-date {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .cell-events {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .event-item {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        .event-maintenance { background: #f6ffed; color: #52c41a; }
+        .event-deployment { background: #e6f7ff; color: #1890ff; }
+        .event-meeting { background: #fff7e6; color: #fa8c16; }
+        .event-urgent { background: #fff2f0; color: #ff4d4f; }
+
+        .sidebar {
+            position: fixed;
+            right: 0;
+            top: 0;
+            width: 300px;
+            height: 100vh;
+            background: white;
+            box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+            transform: translateX(100%);
+            transition: transform 0.3s;
+            z-index: 1000;
+        }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-content {
+            padding: 20px;
+            overflow-y: auto;
+            height: calc(100vh - 80px);
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            padding: 10px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .event-list {
+            margin-top: 20px;
+        }
+
+        .event-list-item {
+            padding: 12px;
+            border: 1px solid #f0f0f0;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+
+        .event-time {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .event-title {
+            font-weight: 500;
+            color: #333;
+        }
+
+        @media (max-width: 768px) {
+            .calendar-toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .sidebar {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="app-sidebar"></aside>
+
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">运维管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">日程日历</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索日程...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">3</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">运</div>
+                    <span>运维工程师</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <span>📅</span>
+                    日程日历管理
+                </h1>
+                <p class="page-subtitle">统一管理运维计划和重要事件，确保工作有序进行</p>
+            </div>
+
+            <div class="calendar-toolbar">
+                <div class="toolbar-left">
+                    <button class="btn" onclick="previousMonth()">
+                        <span>◀</span>
+                        上月
+                    </button>
+                    <button class="btn" onclick="nextMonth()">
+                        下月
+                        <span>▶</span>
+                    </button>
+                    <button class="btn" onclick="goToToday()">今天</button>
+                    <div class="current-date" id="currentDate">2024年3月</div>
+                </div>
+                <div class="toolbar-right">
+                    <div class="view-switch">
+                        <button class="view-btn active" onclick="switchView('month')">月</button>
+                        <button class="view-btn" onclick="switchView('week')">周</button>
+                        <button class="view-btn" onclick="switchView('day')">日</button>
+                    </div>
+                    <button class="btn btn-success" onclick="createEvent()">
+                        <span>➕</span>
+                        新建日程
+                    </button>
+                </div>
+            </div>
+
+            <div class="calendar-container">
+                <div class="calendar-header">
+                    <div class="calendar-day-header">日</div>
+                    <div class="calendar-day-header">一</div>
+                    <div class="calendar-day-header">二</div>
+                    <div class="calendar-day-header">三</div>
+                    <div class="calendar-day-header">四</div>
+                    <div class="calendar-day-header">五</div>
+                    <div class="calendar-day-header">六</div>
+                </div>
+                <div class="calendar-body" id="calendarBody">
+                    <!-- 日历格子将通过JavaScript生成 -->
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台
+            </div>
+        </footer>
+    </div>
+
+    <!-- 侧边栏 -->
+    <div class="sidebar" id="eventSidebar">
+        <div class="sidebar-header">
+            <h3>新建日程</h3>
+            <button class="btn" onclick="closeSidebar()">×</button>
+        </div>
+        <div class="sidebar-content">
+            <div class="form-group">
+                <label class="form-label">事件标题</label>
+                <input type="text" class="form-input" id="eventTitle" placeholder="请输入事件标题">
+            </div>
+            <div class="form-group">
+                <label class="form-label">事件类型</label>
+                <select class="form-select" id="eventType">
+                    <option value="maintenance">系统维护</option>
+                    <option value="deployment">系统部署</option>
+                    <option value="meeting">会议</option>
+                    <option value="urgent">紧急事件</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">开始时间</label>
+                <input type="datetime-local" class="form-input" id="eventStart">
+            </div>
+            <div class="form-group">
+                <label class="form-label">结束时间</label>
+                <input type="datetime-local" class="form-input" id="eventEnd">
+            </div>
+            <div class="form-group">
+                <label class="form-label">事件描述</label>
+                <textarea class="form-textarea" id="eventDescription" placeholder="请输入事件描述"></textarea>
+            </div>
+            <div style="display: flex; gap: 12px; margin-top: 20px;">
+                <button class="btn btn-primary" onclick="saveEvent()">保存</button>
+                <button class="btn" onclick="closeSidebar()">取消</button>
+            </div>
+
+            <div class="event-list">
+                <h4>今日日程</h4>
+                <div class="event-list-item" onclick="viewEvent('event1')">
+                    <div class="event-time">09:00 - 10:00</div>
+                    <div class="event-title">数据库维护窗口</div>
+                </div>
+                <div class="event-list-item" onclick="viewEvent('event2')">
+                    <div class="event-time">14:00 - 15:00</div>
+                    <div class="event-title">系统部署会议</div>
+                </div>
+                <div class="event-list-item" onclick="viewEvent('event3')">
+                    <div class="event-time">16:30 - 17:30</div>
+                    <div class="event-title">安全补丁更新</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentMonth = new Date().getMonth();
+        let currentYear = new Date().getFullYear();
+
+        const events = {
+            '2024-03-15': [
+                {title: '数据库维护', type: 'maintenance', time: '09:00'},
+                {title: '系统部署', type: 'deployment', time: '14:00'}
+            ],
+            '2024-03-16': [
+                {title: '团队会议', type: 'meeting', time: '10:00'}
+            ],
+            '2024-03-18': [
+                {title: '紧急维护', type: 'urgent', time: '20:00'}
+            ]
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('日程日历页面已加载');
+            generateCalendar();
+        });
+
+        function generateCalendar() {
+            const calendarBody = document.getElementById('calendarBody');
+            const currentDate = document.getElementById('currentDate');
+            
+            currentDate.textContent = `${currentYear}年${currentMonth + 1}月`;
+            
+            // 获取当月第一天和最后一天
+            const firstDay = new Date(currentYear, currentMonth, 1);
+            const lastDay = new Date(currentYear, currentMonth + 1, 0);
+            const startDate = new Date(firstDay);
+            startDate.setDate(startDate.getDate() - firstDay.getDay());
+
+            calendarBody.innerHTML = '';
+
+            // 生成6周的日历
+            for (let week = 0; week < 6; week++) {
+                for (let day = 0; day < 7; day++) {
+                    const cellDate = new Date(startDate);
+                    cellDate.setDate(startDate.getDate() + week * 7 + day);
+                    
+                    const cell = createCalendarCell(cellDate);
+                    calendarBody.appendChild(cell);
+                }
+            }
+        }
+
+        function createCalendarCell(date) {
+            const cell = document.createElement('div');
+            cell.className = 'calendar-cell';
+            
+            const isOtherMonth = date.getMonth() !== currentMonth;
+            const isToday = isDateToday(date);
+            
+            if (isOtherMonth) cell.classList.add('other-month');
+            if (isToday) cell.classList.add('today');
+            
+            const dateString = formatDate(date);
+            const dayEvents = events[dateString] || [];
+            
+            cell.innerHTML = `
+                <div class="cell-date">${date.getDate()}</div>
+                <div class="cell-events">
+                    ${dayEvents.map(event => `
+                        <div class="event-item event-${event.type}" onclick="viewEvent('${event.title}')">
+                            ${event.time} ${event.title}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            cell.onclick = () => selectDate(date);
+            
+            return cell;
+        }
+
+        function isDateToday(date) {
+            const today = new Date();
+            return date.toDateString() === today.toDateString();
+        }
+
+        function formatDate(date) {
+            return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+        }
+
+        function selectDate(date) {
+            // 移除之前的选中状态
+            document.querySelectorAll('.calendar-cell.selected').forEach(cell => {
+                cell.classList.remove('selected');
+            });
+            
+            // 添加选中状态
+            event.currentTarget.classList.add('selected');
+            
+            console.log('选择日期:', formatDate(date));
+        }
+
+        function previousMonth() {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            generateCalendar();
+        }
+
+        function nextMonth() {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            generateCalendar();
+        }
+
+        function goToToday() {
+            const today = new Date();
+            currentMonth = today.getMonth();
+            currentYear = today.getFullYear();
+            generateCalendar();
+        }
+
+        function switchView(view) {
+            document.querySelectorAll('.view-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            console.log('切换视图:', view);
+            showMessage(`${view}视图功能开发中...`, 'info');
+        }
+
+        function createEvent() {
+            document.getElementById('eventSidebar').classList.add('open');
+        }
+
+        function closeSidebar() {
+            document.getElementById('eventSidebar').classList.remove('open');
+        }
+
+        function saveEvent() {
+            const title = document.getElementById('eventTitle').value;
+            if (!title.trim()) {
+                showMessage('请输入事件标题！', 'warning');
+                return;
+            }
+
+            const eventData = {
+                title: title,
+                type: document.getElementById('eventType').value,
+                start: document.getElementById('eventStart').value,
+                end: document.getElementById('eventEnd').value,
+                description: document.getElementById('eventDescription').value
+            };
+
+            console.log('保存事件:', eventData);
+            showMessage('日程创建成功！', 'success');
+            closeSidebar();
+            generateCalendar(); // 重新生成日历
+        }
+
+        function viewEvent(eventId) {
+            console.log('查看事件:', eventId);
+            showMessage('事件详情功能开发中...', 'info');
+        }
+
+        function showMessage(message, type) {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            alert(message);
+        }
+    </script>
+    
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html> 

@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务看板 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #722ed1 0%, #b37feb 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .kanban-toolbar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .toolbar-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .btn-primary { background: #1890ff; border-color: #1890ff; color: white; }
+        .btn-success { background: #52c41a; border-color: #52c41a; color: white; }
+
+        .kanban-board {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 20px;
+        }
+
+        .kanban-column {
+            min-width: 300px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            flex-shrink: 0;
+        }
+
+        .column-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .column-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .column-count {
+            background: #1890ff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .todo-column .column-count { background: #fa8c16; }
+        .progress-column .column-count { background: #1890ff; }
+        .review-column .column-count { background: #722ed1; }
+        .done-column .column-count { background: #52c41a; }
+
+        .column-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .column-btn {
+            padding: 4px 8px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .column-btn:hover {
+            background: #e9ecef;
+        }
+
+        .task-list {
+            padding: 16px;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .task-card {
+            background: white;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-card:hover {
+            border-color: #1890ff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+        }
+
+        .task-card.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg);
+        }
+
+        .task-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .task-priority {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .priority-low { background: #f6ffed; color: #52c41a; }
+        .priority-medium { background: #fff7e6; color: #fa8c16; }
+        .priority-high { background: #fff2f0; color: #ff4d4f; }
+        .priority-urgent { background: #f9f0ff; color: #722ed1; }
+
+        .task-description {
+            color: #666;
+            font-size: 12px;
+            line-height: 1.4;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .task-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .task-assignee {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .assignee-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .task-due {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .due-overdue { color: #ff4d4f; }
+        .due-today { color: #fa8c16; }
+        .due-upcoming { color: #52c41a; }
+
+        .task-labels {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+
+        .task-label {
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 10px;
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .label-bug { background: #fff2f0; color: #ff4d4f; }
+        .label-feature { background: #e6f7ff; color: #1890ff; }
+        .label-urgent { background: #f9f0ff; color: #722ed1; }
+        .label-maintenance { background: #f6ffed; color: #52c41a; }
+
+        .task-progress {
+            margin-bottom: 8px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #f0f0f0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #1890ff;
+            transition: width 0.3s;
+        }
+
+        .progress-text {
+            font-size: 10px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .drop-zone {
+            min-height: 100px;
+            border: 2px dashed #d9d9d9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .drop-zone.drag-over {
+            border-color: #1890ff;
+            background: #f0f9ff;
+            color: #1890ff;
+        }
+
+        .add-task-btn {
+            width: 100%;
+            padding: 12px;
+            border: 1px dashed #d9d9d9;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            color: #666;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .add-task-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+            background: #f0f9ff;
+        }
+
+        /* 任务创建弹窗 */
+        .task-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .modal-body {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            padding: 10px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-footer {
+            padding: 16px 20px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        @media (max-width: 768px) {
+            .kanban-board {
+                flex-direction: column;
+            }
+
+            .kanban-column {
+                min-width: auto;
+            }
+
+            .toolbar-left, .toolbar-right {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="app-sidebar"></aside>
+
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">运维管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">任务看板</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索任务...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">5</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">运</div>
+                    <span>运维工程师</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <span>📋</span>
+                    任务看板管理
+                </h1>
+                <p class="page-subtitle">可视化任务管理，拖拽式工作流，提升团队协作效率</p>
+            </div>
+
+            <div class="kanban-toolbar">
+                <div class="toolbar-left">
+                    <select class="filter-select" id="projectFilter">
+                        <option value="">全部项目</option>
+                        <option value="portal">Portal 3.0</option>
+                        <option value="mobile">移动端应用</option>
+                        <option value="api">API服务</option>
+                    </select>
+                    <select class="filter-select" id="assigneeFilter">
+                        <option value="">全部成员</option>
+                        <option value="zhang">张工程师</option>
+                        <option value="li">李工程师</option>
+                        <option value="wang">王工程师</option>
+                    </select>
+                    <select class="filter-select" id="priorityFilter">
+                        <option value="">全部优先级</option>
+                        <option value="urgent">紧急</option>
+                        <option value="high">高</option>
+                        <option value="medium">中</option>
+                        <option value="low">低</option>
+                    </select>
+                </div>
+                <div class="toolbar-right">
+                    <button class="btn" onclick="refreshBoard()">
+                        <span>🔄</span>
+                        刷新
+                    </button>
+                    <button class="btn btn-success" onclick="createTask()">
+                        <span>➕</span>
+                        新建任务
+                    </button>
+                    <button class="btn btn-primary" onclick="exportTasks()">
+                        <span>📤</span>
+                        导出
+                    </button>
+                </div>
+            </div>
+
+            <div class="kanban-board">
+                <!-- 待办列 -->
+                <div class="kanban-column todo-column">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <span>📝</span>
+                            待办事项
+                            <span class="column-count">6</span>
+                        </div>
+                        <div class="column-actions">
+                            <button class="column-btn" onclick="addTaskToColumn('todo')">➕</button>
+                            <button class="column-btn" onclick="sortColumn('todo')">🔄</button>
+                        </div>
+                    </div>
+                    <div class="task-list" id="todo-list">
+                        <div class="task-card" draggable="true" onclick="openTask('task001')">
+                            <div class="task-header">
+                                <div class="task-title">数据库性能优化</div>
+                                <div class="task-priority priority-high">高</div>
+                            </div>
+                            <div class="task-labels">
+                                <span class="task-label label-maintenance">维护</span>
+                                <span class="task-label">数据库</span>
+                            </div>
+                            <div class="task-description">
+                                优化订单查询SQL，添加索引，提升查询性能至2秒内
+                            </div>
+                            <div class="task-meta">
+                                <div class="task-assignee">
+                                    <div class="assignee-avatar">张</div>
+                                    <span>张工程师</span>
+                                </div>
+                                <div class="task-due due-today">
+                                    <span>📅</span>
+                                    <span>今天</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="task-card" draggable="true" onclick="openTask('task002')">
+                            <div class="task-header">
+                                <div class="task-title">系统监控告警配置</div>
+                                <div class="task-priority priority-medium">中</div>
+                            </div>
+                            <div class="task-labels">
+                                <span class="task-label label-feature">功能</span>
+                                <span class="task-label">监控</span>
+                            </div>
+                            <div class="task-description">
+                                配置系统资源监控告警，包括CPU、内存、磁盘使用率
+                            </div>
+                            <div class="task-meta">
+                                <div class="task-assignee">
+                                    <div class="assignee-avatar">李</div>
+                                    <span>李工程师</span>
+                                </div>
+                                <div class="task-due due-upcoming">
+                                    <span>📅</span>
+                                    <span>明天</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="task-card" draggable="true" onclick="openTask('task003')">
+                            <div class="task-header">
+                                <div class="task-title">API接口文档更新</div>
+                                <div class="task-priority priority-low">低</div>
+                            </div>
+                            <div class="task-labels">
+                                <span class="task-label">文档</span>
+                                <span class="task-label">API</span>
+                            </div>
+                            <div class="task-description">
+                                更新订单管理相关API接口文档，添加新增字段说明
+                            </div>
+                            <div class="task-meta">
+                                <div class="task-assignee">
+                                    <div class="assignee-avatar">王</div>
+                                    <span>王工程师</span>
+                                </div>
+                                <div class="task-due">
+                                    <span>📅</span>
+                                    <span>下周</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="add-task-btn" onclick="addTaskToColumn('todo')">
+                            ➕ 添加任务
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 进行中列 -->
+                <div class="kanban-column progress-column">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <span>⚡</span>
+                            进行中
+                            <span class="column-count">4</span>
+                        </div>
+                        <div class="column-actions">
+                            <button class="column-btn" onclick="addTaskToColumn('progress')">➕</button>
+                            <button class="column-btn" onclick="sortColumn('progress')">🔄</button>
+                        </div>
+                    </div>
+                    <div class="task-list" id="progress-list">
+                        <div class="task-card" draggable="true" onclick="openTask('task004')">
+                            <div class="task-header">
+                                <div class="task-title">Redis集群部署</div>
+                                <div class="task-priority priority-urgent">紧急</div>
+                            </div>
+                            <div class="task-labels">
+                                <span class="task-label label-urgent">紧急</span>
+                                <span class="task-label">部署</span>
+                            </div>
+                            <div class="task-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 75%"></div>
+                                </div>
+                                <div class="progress-text">75% 完成</div>
+                            </div>
+                            <div class="task-description">
+                                搭建Redis集群，配置主从复制和哨兵模式
+                            </div>
+                            <div class="task-meta">
+                                <div class="task-assignee">
+                                    <div class="assignee-avatar">张</div>
+                                    <span>张工程师</span>
+                                </div>
+                                <div class="task-due due-today">
+                                    <span>📅</span>
+                                    <span>今天</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="task-card" draggable="true" onclick="openTask('task005')">
+                            <div class="task-header">
+                                <div class="task-title">日志收集系统升级</div>
+                                <div class="task-priority priority-high">高</div>
+                            </div>
+                            <div class="task-labels">
+                                <span class="task-label label-maintenance">维护</span>
+                                <span class="task-label">日志</span>
+                            </div>
+                            <div class="task-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 40%"></div>
+                                </div>
+                                <div class="progress-text">40% 完成</div>
+                            </div>
+                            <div class="task-description">
+                                升级ELK版本，优化日志收集性能和存储策略
+                            </div>
+                            <div class="task-meta">
+                                <div class="task-assignee">
+                                    <div class="assignee-avatar">李</div>
+                                    <span>李工程师</span>
+                                </div>
+                                <div class="task-due">
+                                    <span>📅</span>
+                                    <span>3天后</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="add-task-btn" onclick="addTaskToColumn('progress')">
+                            ➕ 添加任务
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 待审核列 -->
+                <div class="kanban-column review-column">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <span>👀</span>
+                            待审核
+                            <span class="column-count">2</span>
+                        </div>
+                        <div class="column-actions">
+                            <button class="column-btn" onclick="addTaskToColumn('review')">➕</button>
+                            <button class="column-btn" onclick="sortColumn('review')">🔄</button>
+                        </div>
+                    </div>
+                    <div class="task-list" id="review-list">
+                        <div class="task-card" draggable="true" onclick="openTask('task006')">
+                            <div class="task-header">
+                                <div class="task-title">备份策略调整</div>
+                                <div class="task-priority priority-medium">中</div>
+                            </div>
+                            <div class="task-labels">
+                                <span class="task-label label-maintenance">维护</span>
+                                <span class="task-label">备份</span>
+                            </div>
+                            <div class="task-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 100%"></div>
+                                </div>
+                                <div class="progress-text">已完成，待审核</div>
+                            </div>
+                            <div class="task-description">
+                                调整数据库备份频率，从每日备份改为每6小时备份
+                            </div>
+                            <div class="task-meta">
+                                <div class="task-assignee">
+                                    <div class="assignee-avatar">王</div>
+                                    <span>王工程师</span>
+                                </div>
+                                <div class="task-due">
+                                    <span>📅</span>
+                                    <span>昨天完成</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="add-task-btn" onclick="addTaskToColumn('review')">
+                            ➕ 添加任务
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 已完成列 -->
+                <div class="kanban-column done-column">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <span>✅</span>
+                            已完成
+                            <span class="column-count">8</span>
+                        </div>
+                        <div class="column-actions">
+                            <button class="column-btn" onclick="addTaskToColumn('done')">➕</button>
+                            <button class="column-btn" onclick="sortColumn('done')">🔄</button>
+                        </div>
+                    </div>
+                    <div class="task-list" id="done-list">
+                        <div class="task-card" draggable="true" onclick="openTask('task007')">
+                            <div class="task-header">
+                                <div class="task-title">SSL证书更新</div>
+                                <div class="task-priority priority-high">高</div>
+                            </div>
+                            <div class="task-labels">
+                                <span class="task-label label-maintenance">维护</span>
+                                <span class="task-label">安全</span>
+                            </div>
+                            <div class="task-description">
+                                更新所有域名的SSL证书，确保HTTPS访问正常
+                            </div>
+                            <div class="task-meta">
+                                <div class="task-assignee">
+                                    <div class="assignee-avatar">张</div>
+                                    <span>张工程师</span>
+                                </div>
+                                <div class="task-due">
+                                    <span>✅</span>
+                                    <span>2天前完成</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="task-card" draggable="true" onclick="openTask('task008')">
+                            <div class="task-header">
+                                <div class="task-title">服务器磁盘扩容</div>
+                                <div class="task-priority priority-urgent">紧急</div>
+                            </div>
+                            <div class="task-labels">
+                                <span class="task-label label-urgent">紧急</span>
+                                <span class="task-label">硬件</span>
+                            </div>
+                            <div class="task-description">
+                                数据库服务器磁盘使用率达到90%，紧急扩容至2TB
+                            </div>
+                            <div class="task-meta">
+                                <div class="task-assignee">
+                                    <div class="assignee-avatar">李</div>
+                                    <span>李工程师</span>
+                                </div>
+                                <div class="task-due">
+                                    <span>✅</span>
+                                    <span>3天前完成</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button class="add-task-btn" onclick="addTaskToColumn('done')">
+                            ➕ 添加任务
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台
+            </div>
+        </footer>
+    </div>
+
+    <!-- 任务创建/编辑弹窗 -->
+    <div class="task-modal" id="taskModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">创建任务</h3>
+                <button class="close-btn" onclick="closeTaskModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">任务标题</label>
+                    <input type="text" class="form-input" id="taskTitle" placeholder="请输入任务标题">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">任务描述</label>
+                    <textarea class="form-textarea" id="taskDescription" placeholder="请输入任务描述"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">优先级</label>
+                    <select class="form-select" id="taskPriority">
+                        <option value="low">低</option>
+                        <option value="medium">中</option>
+                        <option value="high">高</option>
+                        <option value="urgent">紧急</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">负责人</label>
+                    <select class="form-select" id="taskAssignee">
+                        <option value="">请选择负责人</option>
+                        <option value="zhang">张工程师</option>
+                        <option value="li">李工程师</option>
+                        <option value="wang">王工程师</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">截止时间</label>
+                    <input type="date" class="form-input" id="taskDueDate">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">标签</label>
+                    <input type="text" class="form-input" id="taskLabels" placeholder="用逗号分隔多个标签">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeTaskModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveTask()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('任务看板页面已加载');
+            initKanbanBoard();
+        });
+
+        function initKanbanBoard() {
+            console.log('初始化看板');
+            setupDragAndDrop();
+            loadTasks();
+        }
+
+        function setupDragAndDrop() {
+            const taskCards = document.querySelectorAll('.task-card');
+            const taskLists = document.querySelectorAll('.task-list');
+
+            taskCards.forEach(card => {
+                card.addEventListener('dragstart', handleDragStart);
+                card.addEventListener('dragend', handleDragEnd);
+            });
+
+            taskLists.forEach(list => {
+                list.addEventListener('dragover', handleDragOver);
+                list.addEventListener('drop', handleDrop);
+            });
+        }
+
+        function handleDragStart(e) {
+            e.dataTransfer.setData('text/plain', e.target.id || 'task-' + Date.now());
+            e.target.classList.add('dragging');
+        }
+
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            
+            const draggedElement = document.querySelector('.dragging');
+            if (draggedElement && e.currentTarget.classList.contains('task-list')) {
+                // 找到添加按钮前的位置
+                const addButton = e.currentTarget.querySelector('.add-task-btn');
+                if (addButton) {
+                    e.currentTarget.insertBefore(draggedElement, addButton);
+                } else {
+                    e.currentTarget.appendChild(draggedElement);
+                }
+                
+                updateTaskStatus(draggedElement, e.currentTarget.id);
+                showMessage('任务状态已更新！', 'success');
+            }
+        }
+
+        function updateTaskStatus(taskElement, newListId) {
+            const taskId = taskElement.id || 'unknown';
+            const status = newListId.replace('-list', '');
+            console.log(`更新任务 ${taskId} 状态为: ${status}`);
+            
+            // 这里可以调用API更新任务状态
+        }
+
+        function loadTasks() {
+            console.log('加载任务数据');
+            // 这里可以调用API加载任务
+        }
+
+        function refreshBoard() {
+            console.log('刷新看板');
+            showMessage('正在刷新任务数据...', 'info');
+            setTimeout(() => {
+                loadTasks();
+                showMessage('看板数据刷新成功！', 'success');
+            }, 1000);
+        }
+
+        function createTask() {
+            document.getElementById('taskModal').style.display = 'flex';
+        }
+
+        function closeTaskModal() {
+            document.getElementById('taskModal').style.display = 'none';
+            clearTaskForm();
+        }
+
+        function clearTaskForm() {
+            document.getElementById('taskTitle').value = '';
+            document.getElementById('taskDescription').value = '';
+            document.getElementById('taskPriority').value = 'medium';
+            document.getElementById('taskAssignee').value = '';
+            document.getElementById('taskDueDate').value = '';
+            document.getElementById('taskLabels').value = '';
+        }
+
+        function saveTask() {
+            const title = document.getElementById('taskTitle').value;
+            if (!title.trim()) {
+                showMessage('请输入任务标题！', 'warning');
+                return;
+            }
+
+            const taskData = {
+                title: title,
+                description: document.getElementById('taskDescription').value,
+                priority: document.getElementById('taskPriority').value,
+                assignee: document.getElementById('taskAssignee').value,
+                dueDate: document.getElementById('taskDueDate').value,
+                labels: document.getElementById('taskLabels').value
+            };
+
+            console.log('保存任务:', taskData);
+            showMessage('任务创建成功！', 'success');
+            closeTaskModal();
+        }
+
+        function addTaskToColumn(column) {
+            console.log('在列中添加任务:', column);
+            createTask();
+        }
+
+        function sortColumn(column) {
+            console.log('排序列:', column);
+            showMessage('列排序功能开发中...', 'info');
+        }
+
+        function openTask(taskId) {
+            console.log('打开任务详情:', taskId);
+            showMessage('任务详情功能开发中...', 'info');
+        }
+
+        function exportTasks() {
+            console.log('导出任务');
+            showMessage('正在导出任务数据...', 'info');
+            setTimeout(() => {
+                showMessage('任务数据导出成功！', 'success');
+            }, 2000);
+        }
+
+        function showMessage(message, type) {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            alert(message);
+        }
+
+        // 筛选功能
+        document.getElementById('projectFilter').addEventListener('change', function() {
+            console.log('项目筛选:', this.value);
+            filterTasks();
+        });
+
+        document.getElementById('assigneeFilter').addEventListener('change', function() {
+            console.log('负责人筛选:', this.value);
+            filterTasks();
+        });
+
+        document.getElementById('priorityFilter').addEventListener('change', function() {
+            console.log('优先级筛选:', this.value);
+            filterTasks();
+        });
+
+        function filterTasks() {
+            console.log('执行任务筛选');
+            showMessage('筛选功能开发中...', 'info');
+        }
+
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                createTask();
+            }
+        });
+    </script>
+    
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html> 

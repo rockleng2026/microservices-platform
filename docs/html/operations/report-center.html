@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>报表中心 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        .page-header {
+            background: linear-gradient(135deg, #eb2f96 0%, #f759ab 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .report-toolbar {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .toolbar-left {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .toolbar-right {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .filter-select {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+        }
+
+        .btn-primary { background: #1890ff; border-color: #1890ff; color: white; }
+        .btn-success { background: #52c41a; border-color: #52c41a; color: white; }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .report-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .report-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-type {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .type-system { background: #e6f7ff; color: #1890ff; }
+        .type-performance { background: #f6ffed; color: #52c41a; }
+        .type-security { background: #fff2f0; color: #ff4d4f; }
+        .type-business { background: #f9f0ff; color: #722ed1; }
+
+        .card-content {
+            padding: 20px;
+        }
+
+        .card-description {
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .card-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 4px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-view { border-color: #1890ff; color: #1890ff; }
+        .btn-export { border-color: #52c41a; color: #52c41a; }
+        .btn-schedule { border-color: #fa8c16; color: #fa8c16; }
+
+        .quick-reports {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .quick-stat {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .stat-text {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .trend-up { color: #52c41a; }
+        .trend-down { color: #ff4d4f; }
+        .trend-stable { color: #1890ff; }
+
+        .chart-placeholder {
+            height: 200px;
+            background: #f8f9fa;
+            border: 1px dashed #d9d9d9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .report-list {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .list-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .report-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .report-item:hover {
+            background: #f8f9fa;
+        }
+
+        .report-item:last-child {
+            border-bottom: none;
+        }
+
+        .item-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .item-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 6px;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .item-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .item-title {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .item-meta {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .report-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .quick-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .toolbar-left, .toolbar-right {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="app-sidebar"></aside>
+
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">运维管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">报表中心</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索报表...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">4</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">运</div>
+                    <span>运维工程师</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <span>📊</span>
+                    报表中心
+                </h1>
+                <p class="page-subtitle">统一管理运维数据报表，实现数据可视化和决策支持</p>
+            </div>
+
+            <div class="report-toolbar">
+                <div class="toolbar-left">
+                    <select class="filter-select" id="timeRange">
+                        <option value="today">今天</option>
+                        <option value="week">本周</option>
+                        <option value="month" selected>本月</option>
+                        <option value="quarter">本季度</option>
+                        <option value="year">本年</option>
+                    </select>
+                    <select class="filter-select" id="reportType">
+                        <option value="">全部类型</option>
+                        <option value="system">系统监控</option>
+                        <option value="performance">性能报告</option>
+                        <option value="security">安全报告</option>
+                        <option value="business">业务报告</option>
+                    </select>
+                </div>
+                <div class="toolbar-right">
+                    <button class="btn" onclick="refreshReports()">
+                        <span>🔄</span>
+                        刷新
+                    </button>
+                    <button class="btn btn-success" onclick="createReport()">
+                        <span>➕</span>
+                        新建报表
+                    </button>
+                    <button class="btn btn-primary" onclick="exportAll()">
+                        <span>📤</span>
+                        批量导出
+                    </button>
+                </div>
+            </div>
+
+            <!-- 快速概览 -->
+            <div class="quick-reports">
+                <div class="section-title">
+                    <span>⚡</span>
+                    实时概览
+                </div>
+                <div class="quick-stats">
+                    <div class="quick-stat">
+                        <div class="stat-number trend-up">99.8%</div>
+                        <div class="stat-text">系统可用性</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="stat-number trend-stable">2.3s</div>
+                        <div class="stat-text">平均响应时间</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="stat-number trend-down">3</div>
+                        <div class="stat-text">今日故障次数</div>
+                    </div>
+                    <div class="quick-stat">
+                        <div class="stat-number trend-up">89%</div>
+                        <div class="stat-text">资源利用率</div>
+                    </div>
+                </div>
+                <div class="chart-placeholder">
+                    📈 系统性能趋势图 (图表组件开发中...)
+                </div>
+            </div>
+
+            <!-- 报表卡片 -->
+            <div class="report-grid">
+                <div class="report-card" onclick="viewReport('system-monitor')">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span>🖥️</span>
+                            系统监控报告
+                        </div>
+                        <div class="card-type type-system">系统监控</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-description">
+                            服务器资源使用情况、系统负载、网络状态等核心指标的综合监控报告
+                        </div>
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">8</div>
+                                <div class="stat-label">服务器</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">99.9%</div>
+                                <div class="stat-label">可用性</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">72%</div>
+                                <div class="stat-label">平均负载</div>
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn btn-view" onclick="viewReport('system-monitor', event)">查看</button>
+                            <button class="action-btn btn-export" onclick="exportReport('system-monitor', event)">导出</button>
+                            <button class="action-btn btn-schedule" onclick="scheduleReport('system-monitor', event)">定时</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-card" onclick="viewReport('performance')">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span>⚡</span>
+                            性能分析报告
+                        </div>
+                        <div class="card-type type-performance">性能报告</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-description">
+                            应用响应时间、数据库性能、缓存命中率等性能指标的深度分析
+                        </div>
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">2.1s</div>
+                                <div class="stat-label">响应时间</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">95%</div>
+                                <div class="stat-label">缓存命中</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">1.2k</div>
+                                <div class="stat-label">QPS</div>
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn btn-view" onclick="viewReport('performance', event)">查看</button>
+                            <button class="action-btn btn-export" onclick="exportReport('performance', event)">导出</button>
+                            <button class="action-btn btn-schedule" onclick="scheduleReport('performance', event)">定时</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-card" onclick="viewReport('security')">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span>🔒</span>
+                            安全监控报告
+                        </div>
+                        <div class="card-type type-security">安全报告</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-description">
+                            安全事件、入侵检测、漏洞扫描结果等安全相关数据的汇总分析
+                        </div>
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">0</div>
+                                <div class="stat-label">安全事件</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">156</div>
+                                <div class="stat-label">防护次数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">99.8%</div>
+                                <div class="stat-label">安全指数</div>
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn btn-view" onclick="viewReport('security', event)">查看</button>
+                            <button class="action-btn btn-export" onclick="exportReport('security', event)">导出</button>
+                            <button class="action-btn btn-schedule" onclick="scheduleReport('security', event)">定时</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-card" onclick="viewReport('business')">
+                    <div class="card-header">
+                        <div class="card-title">
+                            <span>💼</span>
+                            业务运营报告
+                        </div>
+                        <div class="card-type type-business">业务报告</div>
+                    </div>
+                    <div class="card-content">
+                        <div class="card-description">
+                            用户访问量、业务交易量、功能使用情况等业务相关数据的统计报告
+                        </div>
+                        <div class="card-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">2.8k</div>
+                                <div class="stat-label">日活用户</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">567</div>
+                                <div class="stat-label">交易笔数</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">98.5%</div>
+                                <div class="stat-label">成功率</div>
+                            </div>
+                        </div>
+                        <div class="card-actions">
+                            <button class="action-btn btn-view" onclick="viewReport('business', event)">查看</button>
+                            <button class="action-btn btn-export" onclick="exportReport('business', event)">导出</button>
+                            <button class="action-btn btn-schedule" onclick="scheduleReport('business', event)">定时</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 报表列表 -->
+            <div class="report-list">
+                <div class="list-header">
+                    <div class="section-title">
+                        <span>📋</span>
+                        最近报表
+                    </div>
+                    <button class="btn" onclick="viewAllReports()">查看全部</button>
+                </div>
+
+                <div class="report-item" onclick="openReport('rpt001')">
+                    <div class="item-info">
+                        <div class="item-icon" style="background: #1890ff;">📊</div>
+                        <div class="item-details">
+                            <div class="item-title">2024年3月系统性能月报</div>
+                            <div class="item-meta">2024-03-15 生成 • 系统监控 • 已导出</div>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn btn-view" onclick="viewReport('rpt001', event)">查看</button>
+                        <button class="action-btn btn-export" onclick="downloadReport('rpt001', event)">下载</button>
+                    </div>
+                </div>
+
+                <div class="report-item" onclick="openReport('rpt002')">
+                    <div class="item-info">
+                        <div class="item-icon" style="background: #52c41a;">⚡</div>
+                        <div class="item-details">
+                            <div class="item-title">数据库性能优化分析报告</div>
+                            <div class="item-meta">2024-03-14 生成 • 性能报告 • 待审核</div>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn btn-view" onclick="viewReport('rpt002', event)">查看</button>
+                        <button class="action-btn btn-export" onclick="downloadReport('rpt002', event)">下载</button>
+                    </div>
+                </div>
+
+                <div class="report-item" onclick="openReport('rpt003')">
+                    <div class="item-info">
+                        <div class="item-icon" style="background: #ff4d4f;">🔒</div>
+                        <div class="item-details">
+                            <div class="item-title">安全漏洞扫描周报</div>
+                            <div class="item-meta">2024-03-13 生成 • 安全报告 • 已处理</div>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn btn-view" onclick="viewReport('rpt003', event)">查看</button>
+                        <button class="action-btn btn-export" onclick="downloadReport('rpt003', event)">下载</button>
+                    </div>
+                </div>
+
+                <div class="report-item" onclick="openReport('rpt004')">
+                    <div class="item-info">
+                        <div class="item-icon" style="background: #722ed1;">💼</div>
+                        <div class="item-details">
+                            <div class="item-title">用户行为分析报告</div>
+                            <div class="item-meta">2024-03-12 生成 • 业务报告 • 已分享</div>
+                        </div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="action-btn btn-view" onclick="viewReport('rpt004', event)">查看</button>
+                        <button class="action-btn btn-export" onclick="downloadReport('rpt004', event)">下载</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('报表中心页面已加载');
+            loadReportData();
+        });
+
+        function loadReportData() {
+            console.log('加载报表数据');
+            // 这里可以调用API加载报表数据
+        }
+
+        function refreshReports() {
+            console.log('刷新报表');
+            showMessage('正在刷新报表数据...', 'info');
+            setTimeout(() => {
+                loadReportData();
+                showMessage('报表数据刷新成功！', 'success');
+            }, 1000);
+        }
+
+        function createReport() {
+            console.log('创建新报表');
+            showMessage('报表创建功能开发中...', 'info');
+        }
+
+        function exportAll() {
+            console.log('批量导出报表');
+            showMessage('正在批量导出报表...', 'info');
+            setTimeout(() => {
+                showMessage('报表批量导出成功！', 'success');
+            }, 2000);
+        }
+
+        function viewReport(reportId, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            console.log('查看报表:', reportId);
+            showMessage('报表详情功能开发中...', 'info');
+        }
+
+        function exportReport(reportId, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            console.log('导出报表:', reportId);
+            showMessage('正在导出报表...', 'info');
+            setTimeout(() => {
+                showMessage('报表导出成功！', 'success');
+            }, 1500);
+        }
+
+        function scheduleReport(reportId, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            console.log('设置定时报表:', reportId);
+            showMessage('定时报表功能开发中...', 'info');
+        }
+
+        function openReport(reportId) {
+            console.log('打开报表:', reportId);
+            showMessage('正在打开报表...', 'info');
+        }
+
+        function downloadReport(reportId, event) {
+            if (event) {
+                event.stopPropagation();
+            }
+            console.log('下载报表:', reportId);
+            showMessage('正在下载报表...', 'info');
+            setTimeout(() => {
+                showMessage('报表下载成功！', 'success');
+            }, 1000);
+        }
+
+        function viewAllReports() {
+            console.log('查看全部报表');
+            showMessage('报表列表功能开发中...', 'info');
+        }
+
+        function showMessage(message, type) {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            alert(message);
+        }
+
+        // 筛选功能
+        document.getElementById('timeRange').addEventListener('change', function() {
+            console.log('时间范围筛选:', this.value);
+            filterReports();
+        });
+
+        document.getElementById('reportType').addEventListener('change', function() {
+            console.log('报表类型筛选:', this.value);
+            filterReports();
+        });
+
+        function filterReports() {
+            console.log('执行报表筛选');
+            showMessage('筛选功能开发中...', 'info');
+        }
+
+        // 实时更新数据
+        setInterval(() => {
+            console.log('更新实时数据...');
+            // 这里可以调用API更新实时统计数据
+        }, 30000); // 每30秒更新一次
+    </script>
+    
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html> 

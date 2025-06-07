@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>岗位管理 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <style>
+        /* 框架布局结构 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        /* 头部区域 */
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        /* 左侧导航区域 */
+        .app-sidebar {
+            grid-area: sidebar;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        /* 主内容区域 */
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* 底部页脚区域 */
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 侧边栏头部 */
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666 !important;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            width: 100%;
+            overflow: visible;
+        }
+
+        .nav-link:hover {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+        }
+
+        .nav-link.active {
+            background: rgba(24, 144, 255, 0.1) !important;
+            color: #1890ff !important;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        /* 二级菜单样式 */
+        .nav-group {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-group:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-group.expanded {
+            background: rgba(24, 144, 255, 0.05);
+            color: #1890ff;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #fafafa;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 10px 20px 10px 52px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-subitem:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .nav-subitem.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: #1890ff;
+        }
+
+        .nav-subitem.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        /* 头部样式 */
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+        }
+
+        .user-info:hover {
+            background: #f5f5f5;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .user-name {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .app-layout {
+                grid-template-areas: 
+                    "header"
+                    "main"
+                    "footer";
+                grid-template-columns: 1fr;
+                grid-template-rows: 60px 1fr auto;
+            }
+
+            .app-sidebar {
+                position: fixed;
+                left: -240px;
+                top: 0;
+                width: 240px;
+                height: 100vh;
+                transition: left 0.3s ease;
+                z-index: 1000;
+            }
+
+            .app-sidebar.open {
+                left: 0;
+            }
+        }
+
+        /* 页面内容样式 */
+        .page-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin: 0 0 8px 0;
+        }
+
+        .page-description {
+            color: #666;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+
+        .btn-default {
+            background: white;
+            color: #333;
+            border-color: #d9d9d9;
+        }
+
+        .btn-default:hover {
+            background: #f5f5f5;
+            border-color: #b5b5b5;
+        }
+
+        .btn-danger {
+            background: #ff4d4f;
+            color: white;
+            border-color: #ff4d4f;
+        }
+
+        .btn-danger:hover {
+            background: #ff7875;
+            border-color: #ff7875;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        /* 双栏布局样式 */
+        .position-page {
+            display: flex;
+            gap: 16px;
+            height: calc(100vh - 140px);
+        }
+
+        .position-list-panel {
+            width: 400px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .position-detail-panel {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            background: #fafafa;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 8px;
+        }
+
+        .panel-subtitle {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .panel-body {
+            padding: 24px;
+            overflow-y: auto;
+            height: calc(100% - 80px);
+        }
+
+        .position-search {
+            margin-bottom: 16px;
+        }
+
+        .position-item {
+            padding: 16px;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .position-item:hover {
+            border-color: #1890ff;
+            background: #f0f9ff;
+        }
+
+        .position-item.active {
+            border-color: #1890ff;
+            background: #e6f7ff;
+        }
+
+        .position-name {
+            font-weight: 500;
+            color: #262626;
+            margin-bottom: 4px;
+        }
+
+        .position-meta {
+            font-size: 12px;
+            color: #999;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .position-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-label {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            width: 100%;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 24px;
+        }
+
+        /* 权限树样式 */
+        .permission-tree {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            padding: 12px;
+        }
+
+        .permission-node {
+            margin: 8px 0;
+        }
+
+        .permission-item {
+            display: flex;
+            align-items: center;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+
+        .permission-item:hover {
+            background: #f5f5f5;
+        }
+
+        .permission-checkbox {
+            margin-right: 8px;
+        }
+
+        .permission-icon {
+            margin-right: 8px;
+            font-size: 14px;
+        }
+
+        .permission-children {
+            margin-left: 24px;
+            border-left: 1px dashed #d9d9d9;
+            padding-left: 12px;
+        }
+
+        /* 员工列表样式 */
+        .employee-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .employee-avatar {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-weight: 500;
+        }
+
+        .badge {
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+
+        .badge-default {
+            background: #fafafa;
+            color: #666;
+            border: 1px solid #d9d9d9;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 左侧导航栏 -->
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">P</div>
+                <div class="brand-name">Portal 3.0</div>
+            </div>
+            
+            <nav class="nav-menu">
+                <!-- 首页总览 -->
+                <div class="nav-item">
+                    <a href="../index.html" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        <span>首页总览</span>
+                    </a>
+                </div>
+
+                <!-- 工作台 -->
+                <div class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">🎯</span>
+                        <span>工作台</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../dashboard/oa-workspace.html" class="nav-subitem">
+                            <span>OA工作台</span>
+                        </a>
+                        <a href="../dashboard/crm-workspace.html" class="nav-subitem">
+                            <span>CRM工作台</span>
+                        </a>
+                        <a href="../dashboard/sales-workspace.html" class="nav-subitem">
+                            <span>销售工作台</span>
+                        </a>
+                        <a href="../dashboard/workspace-config.html" class="nav-subitem">
+                            <span>工作台配置</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 组织架构 -->
+                <div class="nav-item">
+                    <button class="nav-group expanded" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">🏢</span>
+                        <span>组织架构</span>
+                        <span class="nav-arrow rotated">▶</span>
+                    </button>
+                    <div class="nav-submenu expanded">
+                        <a href="department-tree.html" class="nav-subitem">
+                            <span>部门管理</span>
+                        </a>
+                        <a href="employee-list.html" class="nav-subitem">
+                            <span>员工管理</span>
+                        </a>
+                        <a href="position-manage.html" class="nav-subitem active">
+                            <span>岗位管理</span>
+                        </a>
+                        <a href="role-permission.html" class="nav-subitem">
+                            <span>角色权限</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 客户管理 -->
+                <div class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">👤</span>
+                        <span>客户管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../crm/customer-list.html" class="nav-subitem">
+                            <span>客户列表</span>
+                        </a>
+                        <a href="../crm/customer-detail.html" class="nav-subitem">
+                            <span>客户详情</span>
+                        </a>
+                        <a href="../crm/follow-record.html" class="nav-subitem">
+                            <span>跟进记录</span>
+                        </a>
+                        <a href="../crm/customer-transfer.html" class="nav-subitem">
+                            <span>客户转移</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 商品管理 -->
+                <div class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">📦</span>
+                        <span>商品管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../product/product-list.html" class="nav-subitem">
+                            <span>商品列表</span>
+                        </a>
+                        <a href="../product/product-category.html" class="nav-subitem">
+                            <span>商品分类</span>
+                        </a>
+                        <a href="../product/inventory-manage.html" class="nav-subitem">
+                            <span>库存管理</span>
+                        </a>
+                        <a href="../product/price-strategy.html" class="nav-subitem">
+                            <span>价格策略</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 订单管理 -->
+                <div class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">📋</span>
+                        <span>订单管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../order/order-list.html" class="nav-subitem">
+                            <span>订单列表</span>
+                        </a>
+                        <a href="../order/order-detail.html" class="nav-subitem">
+                            <span>订单详情</span>
+                        </a>
+                        <a href="../order/order-statistics.html" class="nav-subitem">
+                            <span>订单统计</span>
+                        </a>
+                        <a href="../order/return-manage.html" class="nav-subitem">
+                            <span>退货管理</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 头部导航栏 -->
+        <header class="app-header">
+            <div class="header-title">岗位管理</div>
+            <div class="header-actions">
+                <button class="btn btn-icon" onclick="location.reload()" title="刷新">
+                    🔄
+                </button>
+                <div class="user-info">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=1890ff&color=fff" 
+                         alt="用户头像" class="user-avatar">
+                    <span class="user-name">管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <div class="page-header">
+                <h1 class="page-title">岗位管理</h1>
+                <p class="page-description">管理岗位信息，配置岗位权限和员工分配</p>
+            </div>
+
+            <div class="position-page">
+                <!-- 岗位列表 -->
+                <div class="position-list-panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">岗位列表</h3>
+                        <p class="panel-subtitle">选择岗位查看详情和配置权限</p>
+                    </div>
+                    <div class="panel-body">
+                        <div class="position-search">
+                            <input type="text" class="form-control" placeholder="搜索岗位..." id="positionSearch" oninput="searchPositions()">
+                        </div>
+                        <div class="position-actions" style="margin-bottom: 16px;">
+                            <button class="btn btn-primary btn-sm" onclick="addPosition()">
+                                ➕ 新增岗位
+                            </button>
+                        </div>
+                        <div id="positionList">
+                            <!-- 岗位列表将通过JS动态生成 -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 岗位详情 -->
+                <div class="position-detail-panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">岗位详情</h3>
+                        <p class="panel-subtitle">查看和编辑岗位信息</p>
+                    </div>
+                    <div class="panel-body" id="positionDetail">
+                        <div class="empty-state" style="text-align: center; padding: 48px; color: #999;">
+                            <i style="font-size: 48px;">💼</i><br>
+                            <p style="margin-top: 16px;">请选择左侧岗位查看详情</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            © 2024 Portal 3.0 企业管理平台. All rights reserved.
+        </footer>
+    </div>
+
+    <script src="../assets/js/common.js"></script>
+    <script src="../assets/js/mock-data.js"></script>
+    <script>
+        let positions = [];
+        let filteredPositions = [];
+        let currentPosition = null;
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPositionData();
+        });
+        
+        // 切换导航组展开/收起
+        function toggleNavGroup(element) {
+            const submenu = element.nextElementSibling;
+            const arrow = element.querySelector('.nav-arrow');
+            
+            if (submenu && submenu.classList.contains('nav-submenu')) {
+                submenu.classList.toggle('expanded');
+                element.classList.toggle('expanded');
+                
+                if (submenu.classList.contains('expanded')) {
+                    arrow.style.transform = 'rotate(90deg)';
+                } else {
+                    arrow.style.transform = 'rotate(0deg)';
+                }
+            }
+        }
+        
+        // 加载岗位数据
+        function loadPositionData() {
+            positions = window.MockData.positions.map(pos => {
+                const dept = window.MockData.departments.find(d => d.id == pos.deptId);
+                const employeeCount = window.MockData.employees.filter(e => e.workposition == pos.id).length;
+                
+                return {
+                    ...pos,
+                    deptName: dept ? dept.name : '未分配',
+                    employeeCount: employeeCount
+                };
+            });
+            
+            filteredPositions = [...positions];
+            renderPositionList();
+        }
+        
+        // 渲染岗位列表
+        function renderPositionList() {
+            const listContainer = document.getElementById('positionList');
+            
+            if (filteredPositions.length === 0) {
+                listContainer.innerHTML = `
+                    <div style="text-align: center; padding: 24px; color: #999;">
+                        <i style="font-size: 32px;">💼</i><br>
+                        暂无岗位数据
+                    </div>
+                `;
+                return;
+            }
+            
+            listContainer.innerHTML = filteredPositions.map(pos => `
+                <div class="position-item ${currentPosition === pos.id ? 'active' : ''}" onclick="selectPosition(${pos.id})">
+                    <div class="position-name">${pos.name}</div>
+                    <div class="position-meta">
+                        <span>${pos.deptName}</span>
+                        <span>${pos.employeeCount}人</span>
+                    </div>
+                    <div class="position-actions" onclick="event.stopPropagation()">
+                        <button class="btn btn-default btn-sm" onclick="editPosition(${pos.id})" title="编辑">
+                            ✏️
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="deletePosition(${pos.id})" title="删除">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // 搜索岗位
+        function searchPositions() {
+            const keyword = document.getElementById('positionSearch').value.trim();
+            
+            if (keyword) {
+                filteredPositions = positions.filter(pos => 
+                    pos.name.includes(keyword) || pos.description?.includes(keyword)
+                );
+            } else {
+                filteredPositions = [...positions];
+            }
+            
+            renderPositionList();
+        }
+        
+        // 选择岗位
+        function selectPosition(posId) {
+            currentPosition = posId;
+            renderPositionList();
+            loadPositionDetail(posId);
+        }
+        
+        // 加载岗位详情
+        function loadPositionDetail(posId) {
+            const position = positions.find(p => p.id === posId);
+            if (!position) return;
+            
+            const employees = window.MockData.employees.filter(e => e.workposition == posId);
+            
+            const detailHTML = `
+                <form class="form" id="positionDetailForm">
+                    <div class="form-section">
+                        <h4 class="section-title">基本信息</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">岗位名称</label>
+                                <input type="text" name="name" class="form-control" value="${position.name}" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">所属部门</label>
+                                <input type="text" class="form-control" value="${position.deptName}" readonly>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">岗位描述</label>
+                            <textarea name="description" class="form-control" rows="3" readonly>${position.description || ''}</textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">岗位级别</label>
+                                <input type="text" name="level" class="form-control" value="${position.level || '普通岗位'}" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">岗位人数</label>
+                                <input type="text" class="form-control" value="${position.employeeCount}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h4 class="section-title">权限配置</h4>
+                        <div class="permission-tree" id="permissionTree">
+                            ${renderPermissionTree()}
+                        </div>
+                    </div>
+                    
+                    <div class="form-section">
+                        <h4 class="section-title">在职员工</h4>
+                        <div style="max-height: 200px; overflow-y: auto;">
+                            ${employees.length > 0 ? employees.map(emp => `
+                                <div class="employee-item">
+                                    <div class="employee-avatar">
+                                        ${emp.name.charAt(0)}
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 500;">${emp.name}</div>
+                                        <div style="font-size: 12px; color: #666;">${emp.empNo}</div>
+                                    </div>
+                                    <span class="badge ${emp.isLeave ? 'badge-default' : 'badge-success'}">
+                                        ${emp.isLeave ? '离职' : '在职'}
+                                    </span>
+                                </div>
+                            `).join('') : '<div style="text-align: center; color: #999; padding: 24px;">暂无员工</div>'}
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-primary" onclick="editPosition(${posId})">
+                            ✏️ 编辑岗位
+                        </button>
+                        <button type="button" class="btn btn-default" onclick="assignEmployees(${posId})">
+                            👥 分配员工
+                        </button>
+                        <button type="button" class="btn btn-danger" onclick="deletePosition(${posId})">
+                            🗑️ 删除岗位
+                        </button>
+                    </div>
+                </form>
+            `;
+            
+            document.getElementById('positionDetail').innerHTML = detailHTML;
+        }
+        
+        // 渲染权限树
+        function renderPermissionTree() {
+            const permissions = [
+                {
+                    id: 'organization',
+                    name: '组织架构管理',
+                    icon: '🏢',
+                    children: [
+                        { id: 'dept_view', name: '查看部门', icon: '👁️' },
+                        { id: 'dept_edit', name: '编辑部门', icon: '✏️' },
+                        { id: 'emp_view', name: '查看员工', icon: '👁️' },
+                        { id: 'emp_edit', name: '编辑员工', icon: '✏️' }
+                    ]
+                },
+                {
+                    id: 'crm',
+                    name: '客户管理',
+                    icon: '👤',
+                    children: [
+                        { id: 'customer_view', name: '查看客户', icon: '👁️' },
+                        { id: 'customer_edit', name: '编辑客户', icon: '✏️' },
+                        { id: 'follow_view', name: '查看跟进', icon: '👁️' },
+                        { id: 'follow_edit', name: '添加跟进', icon: '✏️' }
+                    ]
+                },
+                {
+                    id: 'product',
+                    name: '商品管理',
+                    icon: '📦',
+                    children: [
+                        { id: 'product_view', name: '查看商品', icon: '👁️' },
+                        { id: 'product_edit', name: '编辑商品', icon: '✏️' },
+                        { id: 'inventory_view', name: '查看库存', icon: '👁️' },
+                        { id: 'inventory_edit', name: '调整库存', icon: '✏️' }
+                    ]
+                }
+            ];
+            
+            function renderNode(node, level = 0) {
+                const hasChildren = node.children && node.children.length > 0;
+                const indent = level * 16;
+                
+                let html = `
+                    <div class="permission-node" style="margin-left: ${indent}px;">
+                        <div class="permission-item">
+                            <input type="checkbox" class="permission-checkbox" 
+                                   value="${node.id}" onchange="togglePermission('${node.id}')">
+                            <i class="permission-icon">${node.icon}</i>
+                            <span>${node.name}</span>
+                        </div>
+                `;
+                
+                if (hasChildren) {
+                    html += '<div class="permission-children">';
+                    node.children.forEach(child => {
+                        html += renderNode(child, level + 1);
+                    });
+                    html += '</div>';
+                }
+                
+                html += '</div>';
+                return html;
+            }
+            
+            return permissions.map(perm => renderNode(perm)).join('');
+        }
+        
+        // 切换权限
+        function togglePermission(permId) {
+            console.log('Toggle permission:', permId);
+            // 这里添加权限切换逻辑
+        }
+        
+        // 新增岗位
+        function addPosition() {
+            alert('新增岗位功能开发中...');
+        }
+        
+        // 编辑岗位
+        function editPosition(posId) {
+            alert(`编辑岗位 ID: ${posId} 功能开发中...`);
+        }
+        
+        // 删除岗位
+        function deletePosition(posId) {
+            const position = positions.find(p => p.id === posId);
+            if (!position) return;
+            
+            // 检查是否有员工
+            const hasEmployees = window.MockData.employees.some(e => e.workposition == posId);
+            if (hasEmployees) {
+                alert('该岗位下还有员工，无法删除');
+                return;
+            }
+            
+            if (confirm(`确定要删除岗位"${position.name}"吗？`)) {
+                positions = positions.filter(p => p.id !== posId);
+                filteredPositions = filteredPositions.filter(p => p.id !== posId);
+                
+                if (currentPosition === posId) {
+                    currentPosition = null;
+                    document.getElementById('positionDetail').innerHTML = `
+                        <div class="empty-state" style="text-align: center; padding: 48px; color: #999;">
+                            <i style="font-size: 48px;">💼</i><br>
+                            <p style="margin-top: 16px;">请选择左侧岗位查看详情</p>
+                        </div>
+                    `;
+                }
+                
+                renderPositionList();
+                alert('岗位删除成功！');
+            }
+        }
+        
+        // 分配员工
+        function assignEmployees(posId) {
+            const position = positions.find(p => p.id === posId);
+            if (!position) return;
+            
+            alert(`分配员工到岗位"${position.name}"功能开发中...`);
+        }
+    </script>
+</body>
+</html> 

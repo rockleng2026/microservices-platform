@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>部门管理 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <style>
+        /* 框架布局结构 - 复制标准布局 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .app-sidebar {
+            grid-area: sidebar;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+            min-height: calc(100vh - 120px);
+        }
+
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 导航样式 - 复制标准样式 */
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666 !important;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            width: 100%;
+            overflow: visible;
+        }
+
+        .nav-link:hover {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        .nav-group {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-group:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-group.expanded {
+            background: rgba(24, 144, 255, 0.05);
+            color: #1890ff;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #fafafa;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 10px 20px 10px 52px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-subitem:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .nav-subitem.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: #1890ff;
+        }
+
+        .nav-subitem.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        /* 头部操作区 */
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            width: 200px;
+            height: 32px;
+            padding: 0 12px 0 36px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .notification-btn {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .notification-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
+            background: #ff4d4f;
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .user-menu:hover {
+            background: #f5f5f5;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #1890ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            color: #666;
+        }
+
+        .breadcrumb-item {
+            margin-right: 8px;
+        }
+
+        .breadcrumb-separator {
+            margin: 0 8px;
+            color: #d9d9d9;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+        }
+
+        /* 部门管理特有样式 */
+        .page-header {
+            background: white;
+            padding: 24px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .page-desc {
+            color: #666;
+            margin-bottom: 16px;
+        }
+
+        .page-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+        }
+
+        .btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 24px;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-icon {
+            margin-right: 8px;
+            font-size: 18px;
+        }
+
+        /* 部门树样式 */
+        .department-tree {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .tree-node {
+            margin-bottom: 4px;
+        }
+
+        .tree-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tree-item:hover {
+            background: #f5f5f5;
+        }
+
+        .tree-item.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: #1890ff;
+        }
+
+        .tree-expand {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .tree-expand.expanded {
+            transform: rotate(90deg);
+        }
+
+        .tree-icon {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .tree-children {
+            margin-left: 24px;
+            display: none;
+        }
+
+        .tree-children.expanded {
+            display: block;
+        }
+
+        /* 部门详情样式 */
+        .dept-info {
+            display: none;
+        }
+
+        .dept-info.active {
+            display: block;
+        }
+
+        .info-group {
+            margin-bottom: 24px;
+        }
+
+        .info-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            width: 100px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            flex: 1;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .status-badge {
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+        }
+
+        .status-active {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .status-inactive {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+
+        /* 员工列表样式 */
+        .employee-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .employee-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .employee-item:last-child {
+            border-bottom: none;
+        }
+
+        .employee-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #1890ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .employee-info {
+            flex: 1;
+        }
+
+        .employee-name {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .employee-position {
+            font-size: 12px;
+            color: #999;
+        }
+
+        @media (max-width: 768px) {
+            .app-layout {
+                grid-template-areas: 
+                    "header"
+                    "main"
+                    "footer";
+                grid-template-columns: 1fr;
+                grid-template-rows: 60px 1fr auto;
+            }
+
+            .app-sidebar {
+                position: fixed;
+                left: -240px;
+                height: 100vh;
+                transition: left 0.3s ease;
+                z-index: 200;
+            }
+
+            .app-sidebar.mobile-open {
+                left: 0;
+            }
+
+            .app-main {
+                padding: 16px;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                font-size: 18px;
+                cursor: pointer;
+                padding: 8px;
+                color: #666;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 左侧导航 -->
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">P3</div>
+                <div class="brand-name">Portal 3.0</div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        <span>首页总览</span>
+                    </a>
+                </li>
+                
+                <!-- 工作台模块 -->
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">💼</span>
+                        <span>工作台</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../dashboard/oa-workspace.html" class="nav-subitem">OA工作台</a>
+                        <a href="../dashboard/crm-workspace.html" class="nav-subitem">CRM工作台</a>
+                        <a href="../dashboard/sales-workspace.html" class="nav-subitem">销售工作台</a>
+                        <a href="../dashboard/workspace-config.html" class="nav-subitem">工作台配置</a>
+                    </div>
+                </li>
+                
+                <!-- 组织架构模块 -->
+                <li class="nav-item">
+                    <button class="nav-group expanded" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">🏢</span>
+                        <span>组织架构</span>
+                        <span class="nav-arrow rotated">▶</span>
+                    </button>
+                    <div class="nav-submenu expanded">
+                        <a href="department-tree.html" class="nav-subitem active">部门管理</a>
+                        <a href="employee-list.html" class="nav-subitem">员工管理</a>
+                        <a href="position-manage.html" class="nav-subitem">岗位管理</a>
+                        <a href="role-permission.html" class="nav-subitem">角色权限</a>
+                    </div>
+                </li>
+                
+                <!-- 客户管理模块 -->
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">👥</span>
+                        <span>客户管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../crm/customer-list.html" class="nav-subitem">客户列表</a>
+                        <a href="#" class="nav-subitem">客户详情</a>
+                        <a href="#" class="nav-subitem">跟进记录</a>
+                        <a href="#" class="nav-subitem">客户转移</a>
+                    </div>
+                </li>
+                
+                <!-- 商品管理模块 -->
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">📦</span>
+                        <span>商品管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="#" class="nav-subitem">商品列表</a>
+                        <a href="#" class="nav-subitem">商品分类</a>
+                        <a href="#" class="nav-subitem">库存管理</a>
+                        <a href="#" class="nav-subitem">价格策略</a>
+                    </div>
+                </li>
+                
+                <!-- 订单管理模块 -->
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">📋</span>
+                        <span>订单管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="#" class="nav-subitem">订单列表</a>
+                        <a href="#" class="nav-subitem">订单详情</a>
+                        <a href="#" class="nav-subitem">订单统计</a>
+                        <a href="#" class="nav-subitem">退货管理</a>
+                    </div>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- 头部区域 -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">组织架构</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">部门管理</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索部门...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">2</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">管</div>
+                    <span>管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <h1 class="page-title">🏢 部门管理</h1>
+                <p class="page-desc">管理公司组织架构，维护部门信息和人员关系</p>
+                <div class="page-actions">
+                    <button class="btn btn-primary">新增部门</button>
+                    <button class="btn">批量导入</button>
+                    <button class="btn">导出数据</button>
+                </div>
+            </div>
+
+            <!-- 内容网格 -->
+            <div class="content-grid">
+                <!-- 部门树 -->
+                <div class="content-card">
+                    <h3 class="card-title">
+                        <span class="card-icon">🌳</span>
+                        部门架构
+                    </h3>
+                    <div class="department-tree">
+                        <div class="tree-node">
+                            <div class="tree-item active" onclick="selectDepartment('001')">
+                                <span class="tree-expand expanded" onclick="toggleTreeNode(event)">▶</span>
+                                <span class="tree-icon">🏢</span>
+                                <span>Portal科技有限公司</span>
+                            </div>
+                            <div class="tree-children expanded">
+                                <div class="tree-node">
+                                    <div class="tree-item" onclick="selectDepartment('002')">
+                                        <span class="tree-expand expanded" onclick="toggleTreeNode(event)">▶</span>
+                                        <span class="tree-icon">🔧</span>
+                                        <span>技术部</span>
+                                    </div>
+                                    <div class="tree-children expanded">
+                                        <div class="tree-node">
+                                            <div class="tree-item" onclick="selectDepartment('003')">
+                                                <span class="tree-expand"></span>
+                                                <span class="tree-icon">💻</span>
+                                                <span>前端开发组</span>
+                                            </div>
+                                        </div>
+                                        <div class="tree-node">
+                                            <div class="tree-item" onclick="selectDepartment('004')">
+                                                <span class="tree-expand"></span>
+                                                <span class="tree-icon">⚙️</span>
+                                                <span>后端开发组</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tree-node">
+                                    <div class="tree-item" onclick="selectDepartment('005')">
+                                        <span class="tree-expand expanded" onclick="toggleTreeNode(event)">▶</span>
+                                        <span class="tree-icon">📊</span>
+                                        <span>销售部</span>
+                                    </div>
+                                    <div class="tree-children expanded">
+                                        <div class="tree-node">
+                                            <div class="tree-item" onclick="selectDepartment('006')">
+                                                <span class="tree-expand"></span>
+                                                <span class="tree-icon">🎯</span>
+                                                <span>销售一组</span>
+                                            </div>
+                                        </div>
+                                        <div class="tree-node">
+                                            <div class="tree-item" onclick="selectDepartment('007')">
+                                                <span class="tree-expand"></span>
+                                                <span class="tree-icon">🎯</span>
+                                                <span>销售二组</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tree-node">
+                                    <div class="tree-item" onclick="selectDepartment('008')">
+                                        <span class="tree-expand"></span>
+                                        <span class="tree-icon">👥</span>
+                                        <span>人事行政部</span>
+                                    </div>
+                                </div>
+                                <div class="tree-node">
+                                    <div class="tree-item" onclick="selectDepartment('009')">
+                                        <span class="tree-expand"></span>
+                                        <span class="tree-icon">💰</span>
+                                        <span>财务部</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 部门详情 -->
+                <div class="content-card">
+                    <h3 class="card-title">
+                        <span class="card-icon">📋</span>
+                        部门详情
+                    </h3>
+                    
+                    <!-- 公司详情 -->
+                    <div class="dept-info active" id="dept-001">
+                        <div class="info-group">
+                            <div class="info-title">基本信息</div>
+                            <div class="info-item">
+                                <span class="info-label">部门名称</span>
+                                <span class="info-value">Portal科技有限公司</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">部门类型</span>
+                                <span class="info-value">总公司</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">负责人</span>
+                                <span class="info-value">张总</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">状态</span>
+                                <span class="info-value">
+                                    <span class="status-badge status-active">正常</span>
+                                </span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">创建时间</span>
+                                <span class="info-value">2020-01-01</span>
+                            </div>
+                        </div>
+
+                        <div class="info-group">
+                            <div class="info-title">部门员工 (156人)</div>
+                            <div class="employee-list">
+                                <div class="employee-item">
+                                    <div class="employee-avatar">张</div>
+                                    <div class="employee-info">
+                                        <div class="employee-name">张总</div>
+                                        <div class="employee-position">董事长</div>
+                                    </div>
+                                </div>
+                                <div class="employee-item">
+                                    <div class="employee-avatar">李</div>
+                                    <div class="employee-info">
+                                        <div class="employee-name">李副总</div>
+                                        <div class="employee-position">副总经理</div>
+                                    </div>
+                                </div>
+                                <div class="employee-item">
+                                    <div class="employee-avatar">王</div>
+                                    <div class="employee-info">
+                                        <div class="employee-name">王助理</div>
+                                        <div class="employee-position">总经理助理</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 技术部详情 -->
+                    <div class="dept-info" id="dept-002">
+                        <div class="info-group">
+                            <div class="info-title">基本信息</div>
+                            <div class="info-item">
+                                <span class="info-label">部门名称</span>
+                                <span class="info-value">技术部</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">上级部门</span>
+                                <span class="info-value">Portal科技有限公司</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">负责人</span>
+                                <span class="info-value">技术总监</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">状态</span>
+                                <span class="info-value">
+                                    <span class="status-badge status-active">正常</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="info-group">
+                            <div class="info-title">部门员工 (45人)</div>
+                            <div class="employee-list">
+                                <div class="employee-item">
+                                    <div class="employee-avatar">赵</div>
+                                    <div class="employee-info">
+                                        <div class="employee-name">赵技术总监</div>
+                                        <div class="employee-position">技术总监</div>
+                                    </div>
+                                </div>
+                                <div class="employee-item">
+                                    <div class="employee-avatar">孙</div>
+                                    <div class="employee-info">
+                                        <div class="employee-name">孙架构师</div>
+                                        <div class="employee-position">系统架构师</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台 | 
+                <a href="#" style="color: #1890ff; text-decoration: none;">技术支持</a> | 
+                <a href="#" style="color: #1890ff; text-decoration: none;">帮助文档</a> | 
+                <span style="color: #999;">版本 v3.0.1</span>
+            </div>
+        </footer>
+    </div>
+
+    <script src="../assets/js/common.js"></script>
+    <script>
+        // 二级菜单控制
+        function toggleNavGroup(button) {
+            const submenu = button.nextElementSibling;
+            const arrow = button.querySelector('.nav-arrow');
+            const isExpanded = submenu.classList.contains('expanded');
+            
+            // 关闭所有其他展开的菜单
+            document.querySelectorAll('.nav-submenu.expanded').forEach(menu => {
+                if (menu !== submenu) {
+                    menu.classList.remove('expanded');
+                    menu.previousElementSibling.classList.remove('expanded');
+                    menu.previousElementSibling.querySelector('.nav-arrow').classList.remove('rotated');
+                }
+            });
+            
+            // 切换当前菜单状态
+            if (isExpanded) {
+                submenu.classList.remove('expanded');
+                button.classList.remove('expanded');
+                arrow.classList.remove('rotated');
+            } else {
+                submenu.classList.add('expanded');
+                button.classList.add('expanded');
+                arrow.classList.add('rotated');
+            }
+        }
+
+        // 移动端菜单切换
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.app-sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // 部门树节点切换
+        function toggleTreeNode(event) {
+            event.stopPropagation();
+            const expand = event.target;
+            const treeItem = expand.closest('.tree-item');
+            const children = treeItem.parentNode.querySelector('.tree-children');
+            
+            if (children) {
+                const isExpanded = children.classList.contains('expanded');
+                if (isExpanded) {
+                    children.classList.remove('expanded');
+                    expand.classList.remove('expanded');
+                } else {
+                    children.classList.add('expanded');
+                    expand.classList.add('expanded');
+                }
+            }
+        }
+
+        // 选择部门
+        function selectDepartment(deptId) {
+            // 更新树选中状态
+            document.querySelectorAll('.tree-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.currentTarget.classList.add('active');
+            
+            // 显示对应部门详情
+            document.querySelectorAll('.dept-info').forEach(info => {
+                info.classList.remove('active');
+            });
+            const targetInfo = document.getElementById(`dept-${deptId}`);
+            if (targetInfo) {
+                targetInfo.classList.add('active');
+            }
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('部门管理页面已加载');
+            showMessage('欢迎使用部门管理！', 'success');
+        });
+    </script>
+</body>
+</html> 

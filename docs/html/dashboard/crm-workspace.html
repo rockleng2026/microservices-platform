@@ -7,33 +7,79 @@
     <link rel="stylesheet" href="../assets/css/common.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .workspace-container {
-            display: flex;
+        /* 框架布局结构 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
             min-height: 100vh;
-            background: var(--bg-color);
+            background: #f5f5f5;
         }
 
-        .sidebar {
-            width: 240px;
+        /* 头部区域 */
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        /* 左侧导航区域 */
+        .app-sidebar {
+            grid-area: sidebar;
             background: white;
             box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-            position: fixed;
+            position: sticky;
+            top: 0;
             height: 100vh;
+            overflow-y: auto;
             z-index: 100;
         }
 
+        /* 主内容区域 */
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* 底部页脚区域 */
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 侧边栏头部 */
         .sidebar-header {
             height: 60px;
             display: flex;
             align-items: center;
             padding: 0 20px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
         }
 
         .logo {
             width: 32px;
             height: 32px;
-            background: var(--primary-color);
+            background: #1890ff;
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -46,7 +92,7 @@
         .brand-name {
             font-size: 18px;
             font-weight: 600;
-            color: var(--text-color);
+            color: #333;
         }
 
         .nav-menu {
@@ -106,29 +152,89 @@
             min-width: 20px;
         }
 
-        .main-content {
-            flex: 1;
-            margin-left: 240px;
-            min-height: 100vh;
-        }
-
-        .header {
-            height: 60px;
-            background: white;
-            border-bottom: 1px solid var(--border-color);
+        /* 二级菜单样式 */
+        .nav-group {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
-            position: sticky;
-            top: 0;
-            z-index: 50;
+            padding: 12px 20px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
         }
 
+        .nav-group:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-group.expanded {
+            background: rgba(24, 144, 255, 0.05);
+            color: #1890ff;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #fafafa;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 10px 20px 10px 52px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-subitem:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .nav-subitem.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: #1890ff;
+        }
+
+        .nav-subitem.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        /* 面包屑导航 */
         .breadcrumb {
             display: flex;
             align-items: center;
-            color: var(--text-color-secondary);
+            color: #666;
         }
 
         .breadcrumb-item {
@@ -137,9 +243,10 @@
 
         .breadcrumb-separator {
             margin: 0 8px;
-            color: var(--border-color);
+            color: #d9d9d9;
         }
 
+        /* 头部操作区 */
         .header-actions {
             display: flex;
             align-items: center;
@@ -154,9 +261,9 @@
             width: 200px;
             height: 32px;
             padding: 0 12px 0 36px;
-            border: 1px solid var(--border-color);
+            border: 1px solid #d9d9d9;
             border-radius: 6px;
-            background: var(--bg-color-light);
+            background: #fafafa;
         }
 
         .search-icon {
@@ -164,7 +271,7 @@
             left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--text-color-secondary);
+            color: #999;
         }
 
         .notification-btn {
@@ -178,12 +285,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--text-color-secondary);
+            color: #666;
             transition: all 0.3s ease;
         }
 
         .notification-btn:hover {
-            background: var(--bg-color-light);
+            background: #f5f5f5;
         }
 
         .notification-badge {
@@ -192,7 +299,7 @@
             right: -2px;
             width: 16px;
             height: 16px;
-            background: var(--error-color);
+            background: #ff4d4f;
             color: white;
             border-radius: 50%;
             font-size: 10px;
@@ -211,14 +318,14 @@
         }
 
         .user-menu:hover {
-            background: var(--bg-color-light);
+            background: #f5f5f5;
         }
 
         .user-avatar {
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background: var(--primary-color);
+            background: #1890ff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -227,11 +334,26 @@
             margin-right: 8px;
         }
 
-        .workspace-content {
-            padding: 24px;
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
 
-        .crm-header {
+        .footer-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+        }
+
+        /* CRM工作台特有样式 */
+        .workspace-header {
             background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
             color: white;
             padding: 24px;
@@ -239,63 +361,68 @@
             margin-bottom: 24px;
         }
 
-        .crm-title {
+        .workspace-title {
             font-size: 24px;
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 8px;
         }
 
-        .crm-subtitle {
-            font-size: 14px;
+        .workspace-desc {
             opacity: 0.9;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
-        .quick-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 20px;
+        .workspace-stats {
+            display: flex;
+            gap: 24px;
         }
 
-        .quick-stat {
+        .workspace-stat {
             text-align: center;
         }
 
-        .stat-number {
-            font-size: 28px;
+        .workspace-stat-value {
+            font-size: 20px;
             font-weight: 700;
             margin-bottom: 4px;
         }
 
-        .stat-label {
+        .workspace-stat-label {
             font-size: 12px;
             opacity: 0.8;
         }
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 24px;
+            margin-bottom: 24px;
         }
 
         .dashboard-card {
             background: white;
             border-radius: 12px;
+            padding: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
         }
 
         .card-header {
-            padding: 20px 20px 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-bottom: 16px;
         }
 
         .card-title {
             font-size: 16px;
             font-weight: 600;
-            color: var(--text-color);
+            color: #333;
             display: flex;
             align-items: center;
         }
@@ -305,149 +432,82 @@
             font-size: 18px;
         }
 
-        .card-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .card-action-btn {
-            width: 24px;
-            height: 24px;
-            border: none;
-            background: none;
+        .card-more {
+            color: #999;
             cursor: pointer;
-            border-radius: 4px;
+            font-size: 20px;
+        }
+
+        .stat-item {
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            color: var(--text-color-secondary);
-            transition: all 0.3s ease;
-        }
-
-        .card-action-btn:hover {
-            background: var(--bg-color-light);
-        }
-
-        .card-content {
-            padding: 20px;
-        }
-
-        /* 客户统计卡片 */
-        .customer-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-        }
-
-        .customer-stat {
-            text-align: center;
-            padding: 20px;
-            background: var(--bg-color-light);
-            border-radius: 8px;
-            position: relative;
-        }
-
-        .customer-stat.intent {
-            background: linear-gradient(135deg, #faad14 0%, #ffc53d 100%);
-            color: white;
-        }
-
-        .customer-stat.trial {
-            background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
-            color: white;
-        }
-
-        .customer-stat.formal {
-            background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
-            color: white;
-        }
-
-        .customer-stat.review {
-            background: linear-gradient(135deg, #f5222d 0%, #ff4d4f 100%);
-            color: white;
-        }
-
-        .customer-number {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .customer-label {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        /* 跟进记录 */
-        .follow-list {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .follow-item {
-            display: flex;
-            align-items: flex-start;
             padding: 12px 0;
-            border-bottom: 1px solid var(--border-color-light);
+            border-bottom: 1px solid #f0f0f0;
         }
 
-        .follow-item:last-child {
+        .stat-item:last-child {
             border-bottom: none;
         }
 
-        .follow-status {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 12px;
-            margin-top: 4px;
-            flex-shrink: 0;
-        }
-
-        .follow-status.pending {
-            background: var(--warning-color);
-        }
-
-        .follow-status.completed {
-            background: var(--success-color);
-        }
-
-        .follow-status.overdue {
-            background: var(--error-color);
-        }
-
-        .follow-content {
-            flex: 1;
-        }
-
-        .follow-customer {
+        .stat-label {
+            color: #666;
             font-size: 14px;
-            font-weight: 500;
-            color: var(--text-color);
-            margin-bottom: 4px;
         }
 
-        .follow-note {
-            font-size: 12px;
-            color: var(--text-color-secondary);
-            margin-bottom: 4px;
+        .stat-value {
+            font-weight: 600;
+            color: #333;
         }
 
-        .follow-time {
-            font-size: 12px;
-            color: var(--text-color-secondary);
+        .stat-value.important {
+            color: #ff4d4f;
         }
 
-        /* 图表容器 */
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin-top: 16px;
+        .stat-value.success {
+            color: #52c41a;
         }
 
-        /* 最近客户 */
+        .stat-value.warning {
+            color: #fa8c16;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .action-btn:hover {
+            border-color: #52c41a;
+            color: #52c41a;
+        }
+
+        .action-btn.primary {
+            background: #52c41a;
+            border-color: #52c41a;
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: #73d13d;
+        }
+
         .customer-list {
-            max-height: 320px;
+            max-height: 300px;
             overflow-y: auto;
         }
 
@@ -455,16 +515,7 @@
             display: flex;
             align-items: center;
             padding: 12px 0;
-            border-bottom: 1px solid var(--border-color-light);
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .customer-item:hover {
-            background: var(--bg-color-light);
-            border-radius: 8px;
-            margin: 0 -8px;
-            padding: 12px 8px;
+            border-bottom: 1px solid #f0f0f0;
         }
 
         .customer-item:last-child {
@@ -475,14 +526,13 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: var(--primary-color);
+            background: #52c41a;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-weight: bold;
             margin-right: 12px;
-            font-size: 14px;
         }
 
         .customer-info {
@@ -491,128 +541,86 @@
 
         .customer-name {
             font-size: 14px;
-            font-weight: 500;
-            color: var(--text-color);
+            color: #333;
             margin-bottom: 4px;
         }
 
         .customer-company {
             font-size: 12px;
-            color: var(--text-color-secondary);
+            color: #999;
         }
 
         .customer-status {
             padding: 2px 8px;
             border-radius: 10px;
-            font-size: 10px;
-            font-weight: 500;
+            font-size: 12px;
+            margin-left: 8px;
         }
 
-        .customer-status.intent {
+        .customer-status.potential {
+            background: #fff1f0;
+            color: #ff4d4f;
+        }
+
+        .customer-status.negotiating {
             background: #fff7e6;
-            color: #faad14;
+            color: #fa8c16;
         }
 
-        .customer-status.trial {
-            background: #e6f7ff;
-            color: #1890ff;
-        }
-
-        .customer-status.formal {
+        .customer-status.closed {
             background: #f6ffed;
             color: #52c41a;
         }
 
-        .customer-status.review {
-            background: #fff2f0;
-            color: #f5222d;
+        .chart-container {
+            position: relative;
+            height: 200px;
+            margin-bottom: 16px;
         }
 
-        /* 部门排名 */
-        .department-ranking {
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .ranking-item {
+        .chart-legend {
             display: flex;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-color-light);
-        }
-
-        .ranking-item:last-child {
-            border-bottom: none;
-        }
-
-        .ranking-number {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
             justify-content: center;
+            gap: 16px;
             font-size: 12px;
-            font-weight: bold;
-            margin-right: 12px;
-            color: white;
         }
 
-        .ranking-number.first {
-            background: #faad14;
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
 
-        .ranking-number.second {
-            background: #d9d9d9;
-        }
-
-        .ranking-number.third {
-            background: #cd7f32;
-        }
-
-        .ranking-number.other {
-            background: var(--text-color-secondary);
-        }
-
-        .department-info {
-            flex: 1;
-        }
-
-        .department-name {
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-color);
-            margin-bottom: 4px;
-        }
-
-        .department-performance {
-            font-size: 12px;
-            color: var(--text-color-secondary);
-        }
-
-        .department-score {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--primary-color);
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 2px;
         }
 
         /* 响应式设计 */
-        @media (max-width: 1200px) {
-            .dashboard-grid {
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            }
-        }
-
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-240px);
+            .app-layout {
+                grid-template-areas: 
+                    "header"
+                    "main"
+                    "footer";
+                grid-template-columns: 1fr;
+                grid-template-rows: 60px 1fr auto;
             }
 
-            .main-content {
-                margin-left: 0;
+            .app-sidebar {
+                position: fixed;
+                left: -240px;
+                height: 100vh;
+                transition: left 0.3s ease;
+                z-index: 200;
             }
 
-            .workspace-content {
+            .app-sidebar.mobile-open {
+                left: 0;
+            }
+
+            .app-main {
                 padding: 16px;
             }
 
@@ -621,20 +629,32 @@
                 gap: 16px;
             }
 
-            .quick-stats {
-                grid-template-columns: repeat(2, 1fr);
+            .workspace-stats {
+                flex-direction: column;
+                gap: 12px;
             }
 
-            .customer-stats {
-                grid-template-columns: 1fr;
+            .quick-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                font-size: 18px;
+                cursor: pointer;
+                padding: 8px;
+                color: #666;
             }
         }
     </style>
 </head>
 <body>
-    <div class="workspace-container">
-        <!-- 侧边栏 -->
-        <div class="sidebar">
+    <div class="app-layout">
+        <!-- 左侧导航 -->
+        <aside class="app-sidebar">
             <div class="sidebar-header">
                 <div class="logo">P3</div>
                 <div class="brand-name">Portal 3.0</div>
@@ -642,66 +662,93 @@
             
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="oa-workspace.html" class="nav-link">
+                    <a href="../index.html" class="nav-link">
                         <span class="nav-icon">🏠</span>
-                        <span>OA工作台</span>
+                        <span>首页总览</span>
                     </a>
                 </li>
+                
+                <!-- 工作台模块 -->
                 <li class="nav-item">
-                    <a href="#" class="nav-link active">
-                        <span class="nav-icon">👥</span>
-                        <span>CRM工作台</span>
-                    </a>
+                    <button class="nav-group expanded" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">💼</span>
+                        <span>工作台</span>
+                        <span class="nav-arrow rotated">▶</span>
+                    </button>
+                    <div class="nav-submenu expanded">
+                        <a href="oa-workspace.html" class="nav-subitem">OA工作台</a>
+                        <a href="crm-workspace.html" class="nav-subitem active">CRM工作台</a>
+                        <a href="sales-workspace.html" class="nav-subitem">销售工作台</a>
+                        <a href="workspace-config.html" class="nav-subitem">工作台配置</a>
+                    </div>
                 </li>
+                
+                <!-- 组织架构模块 -->
                 <li class="nav-item">
-                    <a href="sales-workspace.html" class="nav-link">
-                        <span class="nav-icon">📊</span>
-                        <span>销售工作台</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../organization/department-tree.html" class="nav-link">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
                         <span class="nav-icon">🏢</span>
                         <span>组织架构</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../organization/department-tree.html" class="nav-subitem">部门管理</a>
+                        <a href="../organization/employee-list.html" class="nav-subitem">员工管理</a>
+                        <a href="../organization/position-manage.html" class="nav-subitem">岗位管理</a>
+                        <a href="../organization/role-permission.html" class="nav-subitem">角色权限</a>
+                    </div>
                 </li>
+                
+                <!-- 客户管理模块 -->
                 <li class="nav-item">
-                    <a href="../crm/customer-list.html" class="nav-link">
-                        <span class="nav-icon">👤</span>
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">👥</span>
                         <span>客户管理</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../crm/customer-list.html" class="nav-subitem">客户列表</a>
+                        <a href="#" class="nav-subitem">客户详情</a>
+                        <a href="#" class="nav-subitem">跟进记录</a>
+                        <a href="#" class="nav-subitem">客户转移</a>
+                    </div>
                 </li>
+                
+                <!-- 商品管理模块 -->
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
                         <span class="nav-icon">📦</span>
                         <span>商品管理</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="#" class="nav-subitem">商品列表</a>
+                        <a href="#" class="nav-subitem">商品分类</a>
+                        <a href="#" class="nav-subitem">库存管理</a>
+                        <a href="#" class="nav-subitem">价格策略</a>
+                    </div>
                 </li>
+                
+                <!-- 订单管理模块 -->
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
                         <span class="nav-icon">📋</span>
                         <span>订单管理</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">🎧</span>
-                        <span>客服中心</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">⚙️</span>
-                        <span>运维管理</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="#" class="nav-subitem">订单列表</a>
+                        <a href="#" class="nav-subitem">订单详情</a>
+                        <a href="#" class="nav-subitem">订单统计</a>
+                        <a href="#" class="nav-subitem">退货管理</a>
+                    </div>
                 </li>
             </ul>
-        </div>
+        </aside>
 
-        <!-- 主内容区 -->
-        <div class="main-content">
-            <!-- 顶部导航 -->
-            <div class="header">
+        <!-- 头部区域 -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
                 <div class="breadcrumb">
                     <span class="breadcrumb-item">Portal 3.0</span>
                     <span class="breadcrumb-separator">/</span>
@@ -709,450 +756,380 @@
                     <span class="breadcrumb-separator">/</span>
                     <span class="breadcrumb-item">CRM工作台</span>
                 </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索客户...">
+                </div>
                 
-                <div class="header-actions">
-                    <div class="search-box">
-                        <span class="search-icon">🔍</span>
-                        <input type="text" class="search-input" placeholder="搜索客户或公司...">
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">3</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">管</div>
+                    <span>管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <!-- 工作台头部 -->
+            <div class="workspace-header">
+                <h1 class="workspace-title">👥 CRM工作台</h1>
+                <p class="workspace-desc">客户关系管理工作台，管理客户信息、销售跟进和业绩分析</p>
+                <div class="workspace-stats">
+                    <div class="workspace-stat">
+                        <div class="workspace-stat-value">2,847</div>
+                        <div class="workspace-stat-label">总客户数</div>
                     </div>
-                    
-                    <button class="notification-btn">
-                        <span>🔔</span>
-                        <span class="notification-badge">3</span>
-                    </button>
-                    
-                    <div class="user-menu">
-                        <div class="user-avatar">李</div>
-                        <span>李明</span>
+                    <div class="workspace-stat">
+                        <div class="workspace-stat-value">426</div>
+                        <div class="workspace-stat-label">潜在客户</div>
+                    </div>
+                    <div class="workspace-stat">
+                        <div class="workspace-stat-value">89</div>
+                        <div class="workspace-stat-label">成交客户</div>
+                    </div>
+                    <div class="workspace-stat">
+                        <div class="workspace-stat-value">12</div>
+                        <div class="workspace-stat-label">今日新增</div>
                     </div>
                 </div>
             </div>
 
-            <!-- 工作台内容 -->
-            <div class="workspace-content">
-                <!-- CRM概览区域 -->
-                <div class="crm-header">
-                    <h1 class="crm-title">CRM数据概览</h1>
-                    <p class="crm-subtitle">实时掌握客户动态，提升转化效率</p>
-                    <div class="quick-stats">
-                        <div class="quick-stat">
-                            <div class="stat-number">1,286</div>
-                            <div class="stat-label">总客户数</div>
+            <!-- 仪表板网格 -->
+            <div class="dashboard-grid">
+                <!-- 客户概览卡片 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">👥</span>
+                            客户概览
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">总客户数</span>
+                        <span class="stat-value">2,847</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">潜在客户</span>
+                        <span class="stat-value warning">426</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">成交客户</span>
+                        <span class="stat-value success">89</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">流失客户</span>
+                        <span class="stat-value important">23</span>
+                    </div>
+                    <div class="quick-actions" style="margin-top: 16px;">
+                        <button class="action-btn primary">新增客户</button>
+                        <button class="action-btn">客户分析</button>
+                    </div>
+                </div>
+
+                <!-- 销售漏斗 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">📊</span>
+                            销售漏斗
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="salesFunnelChart"></canvas>
+                    </div>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #52c41a;"></div>
+                            <span>潜在客户</span>
                         </div>
-                        <div class="quick-stat">
-                            <div class="stat-number">89</div>
-                            <div class="stat-label">今日新增</div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #fa8c16;"></div>
+                            <span>意向客户</span>
                         </div>
-                        <div class="quick-stat">
-                            <div class="stat-number">67.8%</div>
-                            <div class="stat-label">转化率</div>
-                        </div>
-                        <div class="quick-stat">
-                            <div class="stat-number">156</div>
-                            <div class="stat-label">待跟进</div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #1890ff;"></div>
+                            <span>成交客户</span>
                         </div>
                     </div>
                 </div>
 
-                <!-- 仪表板网格 -->
-                <div class="dashboard-grid">
-                    <!-- 客户转化统计 -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">📈</span>
-                                客户转化统计
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="刷新">🔄</button>
-                                <button class="card-action-btn" title="详情">📊</button>
+                <!-- 近期客户 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">🆕</span>
+                            近期客户
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="customer-list">
+                        <div class="customer-item">
+                            <div class="customer-avatar">张</div>
+                            <div class="customer-info">
+                                <div class="customer-name">张三</div>
+                                <div class="customer-company">阿里巴巴集团</div>
                             </div>
+                            <div class="customer-status potential">潜在客户</div>
                         </div>
-                        <div class="card-content">
-                            <div class="customer-stats">
-                                <div class="customer-stat intent">
-                                    <div class="customer-number">456</div>
-                                    <div class="customer-label">意向客户</div>
-                                </div>
-                                <div class="customer-stat trial">
-                                    <div class="customer-number">189</div>
-                                    <div class="customer-label">试用客户</div>
-                                </div>
-                                <div class="customer-stat formal">
-                                    <div class="customer-number">623</div>
-                                    <div class="customer-label">正式客户</div>
-                                </div>
-                                <div class="customer-stat review">
-                                    <div class="customer-number">18</div>
-                                    <div class="customer-label">审核中</div>
-                                </div>
+                        <div class="customer-item">
+                            <div class="customer-avatar">李</div>
+                            <div class="customer-info">
+                                <div class="customer-name">李四</div>
+                                <div class="customer-company">腾讯科技</div>
                             </div>
+                            <div class="customer-status negotiating">洽谈中</div>
+                        </div>
+                        <div class="customer-item">
+                            <div class="customer-avatar">王</div>
+                            <div class="customer-info">
+                                <div class="customer-name">王五</div>
+                                <div class="customer-company">百度公司</div>
+                            </div>
+                            <div class="customer-status closed">已成交</div>
+                        </div>
+                        <div class="customer-item">
+                            <div class="customer-avatar">赵</div>
+                            <div class="customer-info">
+                                <div class="customer-name">赵六</div>
+                                <div class="customer-company">字节跳动</div>
+                            </div>
+                            <div class="customer-status potential">潜在客户</div>
                         </div>
                     </div>
+                    <div class="quick-actions" style="margin-top: 16px;">
+                        <button class="action-btn primary">跟进客户</button>
+                        <button class="action-btn">查看全部</button>
+                    </div>
+                </div>
 
-                    <!-- 跟进记录 -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">📝</span>
-                                今日跟进任务
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="新增">➕</button>
-                                <button class="card-action-btn" title="刷新">🔄</button>
+                <!-- 销售业绩 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">💰</span>
+                            销售业绩
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">本月销售额</span>
+                        <span class="stat-value success">¥285.6万</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">目标完成率</span>
+                        <span class="stat-value">85.2%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">成交订单</span>
+                        <span class="stat-value">156</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">客单价</span>
+                        <span class="stat-value">¥18,308</span>
+                    </div>
+                    <div class="quick-actions" style="margin-top: 16px;">
+                        <button class="action-btn">详细报表</button>
+                        <button class="action-btn">导出数据</button>
+                    </div>
+                </div>
+
+                <!-- 跟进提醒 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">⏰</span>
+                            跟进提醒
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="customer-list">
+                        <div class="customer-item">
+                            <div class="customer-info">
+                                <div class="customer-name">回访张三 - 阿里巴巴</div>
+                                <div class="customer-company">今天 14:00</div>
                             </div>
+                            <div class="customer-status important" style="background: #fff1f0; color: #ff4d4f;">紧急</div>
                         </div>
-                        <div class="card-content">
-                            <div class="follow-list">
-                                <div class="follow-item">
-                                    <div class="follow-status pending"></div>
-                                    <div class="follow-content">
-                                        <div class="follow-customer">张三 - 阿里巴巴</div>
-                                        <div class="follow-note">需要进一步了解产品功能需求</div>
-                                        <div class="follow-time">预定时间：今天 14:00</div>
-                                    </div>
-                                </div>
-                                <div class="follow-item">
-                                    <div class="follow-status completed"></div>
-                                    <div class="follow-content">
-                                        <div class="follow-customer">李四 - 腾讯科技</div>
-                                        <div class="follow-note">已完成产品演示，客户表示满意</div>
-                                        <div class="follow-time">完成时间：今天 10:30</div>
-                                    </div>
-                                </div>
-                                <div class="follow-item">
-                                    <div class="follow-status overdue"></div>
-                                    <div class="follow-content">
-                                        <div class="follow-customer">王五 - 百度网络</div>
-                                        <div class="follow-note">逾期未联系，需要重新安排</div>
-                                        <div class="follow-time">原定时间：昨天 16:00</div>
-                                    </div>
-                                </div>
-                                <div class="follow-item">
-                                    <div class="follow-status pending"></div>
-                                    <div class="follow-content">
-                                        <div class="follow-customer">赵六 - 京东商城</div>
-                                        <div class="follow-note">发送合同条款供客户审核</div>
-                                        <div class="follow-time">预定时间：今天 16:30</div>
-                                    </div>
-                                </div>
-                                <div class="follow-item">
-                                    <div class="follow-status pending"></div>
-                                    <div class="follow-content">
-                                        <div class="follow-customer">孙七 - 美团点评</div>
-                                        <div class="follow-note">回访客户使用反馈</div>
-                                        <div class="follow-time">预定时间：明天 09:00</div>
-                                    </div>
-                                </div>
+                        <div class="customer-item">
+                            <div class="customer-info">
+                                <div class="customer-name">方案演示 - 腾讯科技</div>
+                                <div class="customer-company">明天 10:00</div>
                             </div>
+                            <div class="customer-status" style="background: #fff7e6; color: #fa8c16;">重要</div>
+                        </div>
+                        <div class="customer-item">
+                            <div class="customer-info">
+                                <div class="customer-name">合同签约 - 百度公司</div>
+                                <div class="customer-company">后天 15:30</div>
+                            </div>
+                            <div class="customer-status" style="background: #f6ffed; color: #52c41a;">普通</div>
                         </div>
                     </div>
-
-                    <!-- 转化漏斗图 -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">📊</span>
-                                转化漏斗分析
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="设置">⚙️</button>
-                                <button class="card-action-btn" title="导出">📤</button>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="chart-container">
-                                <canvas id="conversionChart"></canvas>
-                            </div>
-                        </div>
+                    <div class="quick-actions" style="margin-top: 16px;">
+                        <button class="action-btn primary">添加提醒</button>
+                        <button class="action-btn">查看全部</button>
                     </div>
+                </div>
 
-                    <!-- 最近客户 -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">👥</span>
-                                最近客户
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="查看全部">👁️</button>
-                                <button class="card-action-btn" title="刷新">🔄</button>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="customer-list">
-                                <div class="customer-item" onclick="openCustomerDetail('1001')">
-                                    <div class="customer-avatar">张</div>
-                                    <div class="customer-info">
-                                        <div class="customer-name">张伟</div>
-                                        <div class="customer-company">阿里巴巴集团</div>
-                                    </div>
-                                    <div class="customer-status intent">意向</div>
-                                </div>
-                                <div class="customer-item" onclick="openCustomerDetail('1002')">
-                                    <div class="customer-avatar">李</div>
-                                    <div class="customer-info">
-                                        <div class="customer-name">李娜</div>
-                                        <div class="customer-company">腾讯科技</div>
-                                    </div>
-                                    <div class="customer-status trial">试用</div>
-                                </div>
-                                <div class="customer-item" onclick="openCustomerDetail('1003')">
-                                    <div class="customer-avatar">王</div>
-                                    <div class="customer-info">
-                                        <div class="customer-name">王强</div>
-                                        <div class="customer-company">百度网络</div>
-                                    </div>
-                                    <div class="customer-status formal">正式</div>
-                                </div>
-                                <div class="customer-item" onclick="openCustomerDetail('1004')">
-                                    <div class="customer-avatar">刘</div>
-                                    <div class="customer-info">
-                                        <div class="customer-name">刘敏</div>
-                                        <div class="customer-company">京东商城</div>
-                                    </div>
-                                    <div class="customer-status review">审核</div>
-                                </div>
-                                <div class="customer-item" onclick="openCustomerDetail('1005')">
-                                    <div class="customer-avatar">陈</div>
-                                    <div class="customer-info">
-                                        <div class="customer-name">陈浩</div>
-                                        <div class="customer-company">美团点评</div>
-                                    </div>
-                                    <div class="customer-status formal">正式</div>
-                                </div>
-                            </div>
-                        </div>
+                <!-- 客户来源统计 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">📈</span>
+                            客户来源
+                        </h3>
+                        <span class="card-more">⋯</span>
                     </div>
-
-                    <!-- 部门业绩排名 -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">🏆</span>
-                                部门业绩排名
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="详细报表">📋</button>
-                                <button class="card-action-btn" title="刷新">🔄</button>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="department-ranking">
-                                <div class="ranking-item">
-                                    <div class="ranking-number first">1</div>
-                                    <div class="department-info">
-                                        <div class="department-name">销售一部</div>
-                                        <div class="department-performance">本月新增客户 89 个</div>
-                                    </div>
-                                    <div class="department-score">95分</div>
-                                </div>
-                                <div class="ranking-item">
-                                    <div class="ranking-number second">2</div>
-                                    <div class="department-info">
-                                        <div class="department-name">销售二部</div>
-                                        <div class="department-performance">本月新增客户 76 个</div>
-                                    </div>
-                                    <div class="department-score">88分</div>
-                                </div>
-                                <div class="ranking-item">
-                                    <div class="ranking-number third">3</div>
-                                    <div class="department-info">
-                                        <div class="department-name">销售三部</div>
-                                        <div class="department-performance">本月新增客户 65 个</div>
-                                    </div>
-                                    <div class="department-score">82分</div>
-                                </div>
-                                <div class="ranking-item">
-                                    <div class="ranking-number other">4</div>
-                                    <div class="department-info">
-                                        <div class="department-name">大客户部</div>
-                                        <div class="department-performance">本月新增客户 45 个</div>
-                                    </div>
-                                    <div class="department-score">75分</div>
-                                </div>
-                                <div class="ranking-item">
-                                    <div class="ranking-number other">5</div>
-                                    <div class="department-info">
-                                        <div class="department-name">电商部</div>
-                                        <div class="department-performance">本月新增客户 38 个</div>
-                                    </div>
-                                    <div class="department-score">68分</div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="chart-container">
+                        <canvas id="customerSourceChart"></canvas>
                     </div>
-
-                    <!-- 客户趋势图 -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">📈</span>
-                                客户增长趋势
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="设置">⚙️</button>
-                                <button class="card-action-btn" title="全屏">🔍</button>
-                            </div>
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #1890ff;"></div>
+                            <span>线上推广</span>
                         </div>
-                        <div class="card-content">
-                            <div class="chart-container">
-                                <canvas id="trendChart"></canvas>
-                            </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #52c41a;"></div>
+                            <span>客户介绍</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #fa8c16;"></div>
+                            <span>展会活动</span>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台 | 
+                <a href="#" style="color: #1890ff; text-decoration: none;">技术支持</a> | 
+                <a href="#" style="color: #1890ff; text-decoration: none;">帮助文档</a> | 
+                <span style="color: #999;">版本 v3.0.1</span>
+            </div>
+        </footer>
     </div>
 
     <script src="../assets/js/common.js"></script>
+    <script src="../assets/js/mock-data.js"></script>
     <script>
-        // 初始化图表
-        document.addEventListener('DOMContentLoaded', function() {
-            initConversionChart();
-            initTrendChart();
+        // 二级菜单控制
+        function toggleNavGroup(button) {
+            const submenu = button.nextElementSibling;
+            const arrow = button.querySelector('.nav-arrow');
+            const isExpanded = submenu.classList.contains('expanded');
             
-            // 模拟实时数据更新
-            setInterval(updateDashboard, 30000); // 30秒更新一次
-        });
-
-        // 转化漏斗图
-        function initConversionChart() {
-            const ctx = document.getElementById('conversionChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['意向客户', '试用客户', '正式客户', '审核中'],
-                    datasets: [{
-                        data: [456, 189, 623, 18],
-                        backgroundColor: [
-                            '#faad14',
-                            '#1890ff',
-                            '#52c41a',
-                            '#f5222d'
-                        ],
-                        borderWidth: 2,
-                        borderColor: '#fff'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true
-                            }
-                        }
-                    }
+            // 关闭所有其他展开的菜单
+            document.querySelectorAll('.nav-submenu.expanded').forEach(menu => {
+                if (menu !== submenu) {
+                    menu.classList.remove('expanded');
+                    menu.previousElementSibling.classList.remove('expanded');
+                    menu.previousElementSibling.querySelector('.nav-arrow').classList.remove('rotated');
                 }
             });
+            
+            // 切换当前菜单状态
+            if (isExpanded) {
+                submenu.classList.remove('expanded');
+                button.classList.remove('expanded');
+                arrow.classList.remove('rotated');
+            } else {
+                submenu.classList.add('expanded');
+                button.classList.add('expanded');
+                arrow.classList.add('rotated');
+            }
         }
 
-        // 客户趋势图
-        function initTrendChart() {
-            const ctx = document.getElementById('trendChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
-                    datasets: [{
-                        label: '新增客户',
-                        data: [65, 89, 123, 156, 198, 234],
-                        borderColor: '#1890ff',
-                        backgroundColor: 'rgba(24, 144, 255, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }, {
-                        label: '正式客户',
-                        data: [28, 48, 67, 89, 115, 142],
-                        borderColor: '#52c41a',
-                        backgroundColor: 'rgba(82, 196, 26, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
+        // 移动端菜单切换
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.app-sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // 点击主内容区域时关闭移动端菜单
+        document.addEventListener('click', function(e) {
+            const sidebar = document.querySelector('.app-sidebar');
+            const toggleBtn = document.querySelector('.mobile-menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !toggleBtn.contains(e.target)) {
+                sidebar.classList.remove('mobile-open');
+            }
+        });
+
+        // 初始化图表
+        function initCharts() {
+            // 销售漏斗图
+            const funnelCtx = document.getElementById('salesFunnelChart');
+            if (funnelCtx) {
+                new Chart(funnelCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['潜在客户', '意向客户', '成交客户'],
+                        datasets: [{
+                            data: [426, 125, 89],
+                            backgroundColor: ['#52c41a', '#fa8c16', '#1890ff'],
+                            borderWidth: 0
+                        }]
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.1)'
-                            }
-                        },
-                        x: {
-                            grid: {
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
                                 display: false
                             }
                         }
                     }
-                }
-            });
-        }
-
-        // 打开客户详情
-        function openCustomerDetail(customerId) {
-            showMessage('正在打开客户详情...', 'info');
-            // 这里可以跳转到客户详情页面
-            setTimeout(() => {
-                window.open(`../crm/customer-detail.html?id=${customerId}`, '_blank');
-            }, 500);
-        }
-
-        // 更新仪表板数据
-        function updateDashboard() {
-            // 模拟数据更新
-            console.log('更新CRM仪表板数据...');
-            
-            // 这里可以添加实际的数据更新逻辑
-            // 比如更新客户统计数字、跟进记录等
-        }
-
-        // 刷新特定卡片
-        function refreshCard(cardType) {
-            showMessage('正在刷新数据...', 'info');
-            
-            setTimeout(() => {
-                showMessage('数据刷新完成', 'success');
-                // 这里可以添加具体的数据刷新逻辑
-            }, 1000);
-        }
-
-        // 添加卡片操作事件监听
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.card-action-btn')) {
-                const btn = e.target.closest('.card-action-btn');
-                const card = btn.closest('.dashboard-card');
-                
-                if (btn.title === '刷新') {
-                    refreshCard('general');
-                } else if (btn.title === '新增') {
-                    showMessage('正在打开新增表单...', 'info');
-                } else if (btn.title === '查看全部') {
-                    window.open('../crm/customer-list.html', '_blank');
-                }
+                });
             }
-        });
 
-        // 客户项点击事件
-        document.querySelectorAll('.customer-item').forEach(item => {
-            item.addEventListener('click', function() {
-                this.style.background = 'var(--bg-color-light)';
-                setTimeout(() => {
-                    this.style.background = '';
-                }, 200);
-            });
+            // 客户来源图
+            const sourceCtx = document.getElementById('customerSourceChart');
+            if (sourceCtx) {
+                new Chart(sourceCtx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['线上推广', '客户介绍', '展会活动', '其他'],
+                        datasets: [{
+                            data: [45, 35, 15, 5],
+                            backgroundColor: ['#1890ff', '#52c41a', '#fa8c16', '#d9d9d9'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('CRM工作台页面已加载');
+            showMessage('欢迎使用CRM工作台！', 'success');
+            
+            // 初始化图表
+            setTimeout(initCharts, 100);
         });
     </script>
 </body>

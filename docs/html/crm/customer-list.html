@@ -1,0 +1,1170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客户列表 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <style>
+        /* 框架布局结构 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        /* 头部区域 */
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        /* 左侧导航区域 */
+        .app-sidebar {
+            grid-area: sidebar;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        /* 主内容区域 */
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* 底部页脚区域 */
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 侧边栏头部 */
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666 !important;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            width: 100%;
+            overflow: visible;
+        }
+
+        .nav-link span {
+            display: inline-block;
+            color: inherit;
+            white-space: nowrap;
+            overflow: visible;
+        }
+
+        .nav-link:hover {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+        }
+
+        .nav-link.active {
+            background: rgba(24, 144, 255, 0.1) !important;
+            color: #1890ff !important;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        /* 二级菜单样式 */
+        .nav-group {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-group:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-group.expanded {
+            background: rgba(24, 144, 255, 0.05);
+            color: #1890ff;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #fafafa;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 10px 20px 10px 52px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-subitem:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .nav-subitem.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: #1890ff;
+        }
+
+        .nav-subitem.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        /* 头部样式 */
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+        }
+
+        .user-info:hover {
+            background: #f5f5f5;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .user-name {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .app-layout {
+                grid-template-areas: 
+                    "header"
+                    "main"
+                    "footer";
+                grid-template-columns: 1fr;
+                grid-template-rows: 60px 1fr auto;
+            }
+
+            .app-sidebar {
+                position: fixed;
+                left: -240px;
+                top: 0;
+                width: 240px;
+                height: 100vh;
+                transition: left 0.3s ease;
+                z-index: 1000;
+            }
+
+            .app-sidebar.open {
+                left: 0;
+            }
+
+            .mobile-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+                display: none;
+            }
+
+            .mobile-overlay.active {
+                display: block;
+            }
+        }
+
+        /* 页面内容样式 */
+        .page-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin: 0 0 8px 0;
+        }
+
+        .page-description {
+            color: #666;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 16px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* 搜索表单样式 */
+        .search-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+
+        .btn-default {
+            background: white;
+            color: #333;
+            border-color: #d9d9d9;
+        }
+
+        .btn-default:hover {
+            background: #f5f5f5;
+            border-color: #b5b5b5;
+        }
+
+        .btn-danger {
+            background: #ff4d4f;
+            color: white;
+            border-color: #ff4d4f;
+        }
+
+        .btn-danger:hover {
+            background: #ff7875;
+            border-color: #ff7875;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        /* 表格样式 */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .table th,
+        .table td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .table tbody tr:hover {
+            background: #f5f5f5;
+        }
+
+        /* 批量操作栏 */
+        .batch-actions {
+            padding: 16px 24px;
+            background: #e6f7ff;
+            border-bottom: 1px solid #91d5ff;
+            display: none;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .batch-actions.active {
+            display: flex;
+        }
+
+        /* 状态标签 */
+        .status-tag {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-tag.potential {
+            background: #fff7e6;
+            color: #fa8c16;
+        }
+
+        .status-tag.interested {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .status-tag.signed {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .status-tag.lost {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .pagination-info {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 左侧导航栏 -->
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">P</div>
+                <div class="brand-name">Portal 3.0</div>
+            </div>
+            
+            <nav class="nav-menu">
+                <!-- 首页总览 -->
+                <div class="nav-item">
+                    <a href="../index.html" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        <span>首页总览</span>
+                    </a>
+                </div>
+
+                <!-- 工作台 -->
+                <div class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">🎯</span>
+                        <span>工作台</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../dashboard/oa-workspace.html" class="nav-subitem">
+                            <span>OA工作台</span>
+                        </a>
+                        <a href="../dashboard/crm-workspace.html" class="nav-subitem">
+                            <span>CRM工作台</span>
+                        </a>
+                        <a href="../dashboard/sales-workspace.html" class="nav-subitem">
+                            <span>销售工作台</span>
+                        </a>
+                        <a href="../dashboard/workspace-config.html" class="nav-subitem">
+                            <span>工作台配置</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 组织架构 -->
+                <div class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">🏢</span>
+                        <span>组织架构</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../organization/department-tree.html" class="nav-subitem">
+                            <span>部门管理</span>
+                        </a>
+                        <a href="../organization/employee-list.html" class="nav-subitem">
+                            <span>员工管理</span>
+                        </a>
+                        <a href="../organization/position-manage.html" class="nav-subitem">
+                            <span>岗位管理</span>
+                        </a>
+                        <a href="../organization/role-permission.html" class="nav-subitem">
+                            <span>角色权限</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 客户管理 -->
+                <div class="nav-item">
+                    <button class="nav-group expanded" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">👤</span>
+                        <span>客户管理</span>
+                        <span class="nav-arrow rotated">▶</span>
+                    </button>
+                    <div class="nav-submenu expanded">
+                        <a href="customer-list.html" class="nav-subitem active">
+                            <span>客户列表</span>
+                        </a>
+                        <a href="customer-detail.html" class="nav-subitem">
+                            <span>客户详情</span>
+                        </a>
+                        <a href="follow-record.html" class="nav-subitem">
+                            <span>跟进记录</span>
+                        </a>
+                        <a href="customer-transfer.html" class="nav-subitem">
+                            <span>客户转移</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 商品管理 -->
+                <div class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">📦</span>
+                        <span>商品管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../product/product-list.html" class="nav-subitem">
+                            <span>商品列表</span>
+                        </a>
+                        <a href="../product/product-category.html" class="nav-subitem">
+                            <span>商品分类</span>
+                        </a>
+                        <a href="../product/inventory-manage.html" class="nav-subitem">
+                            <span>库存管理</span>
+                        </a>
+                        <a href="../product/price-strategy.html" class="nav-subitem">
+                            <span>价格策略</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 订单管理 -->
+                <div class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">📋</span>
+                        <span>订单管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../order/order-list.html" class="nav-subitem">
+                            <span>订单列表</span>
+                        </a>
+                        <a href="../order/order-detail.html" class="nav-subitem">
+                            <span>订单详情</span>
+                        </a>
+                        <a href="../order/order-statistics.html" class="nav-subitem">
+                            <span>订单统计</span>
+                        </a>
+                        <a href="../order/return-manage.html" class="nav-subitem">
+                            <span>退货管理</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 头部导航栏 -->
+        <header class="app-header">
+            <div class="header-title">客户列表</div>
+            <div class="header-actions">
+                <button class="btn btn-icon" onclick="location.reload()" title="刷新">
+                    🔄
+                </button>
+                <div class="user-info">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=1890ff&color=fff" 
+                         alt="用户头像" class="user-avatar">
+                    <span class="user-name">管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <div class="page-header">
+                <h1 class="page-title">客户列表</h1>
+                <p class="page-description">管理客户信息，跟踪客户状态和业务机会</p>
+            </div>
+
+            <!-- 搜索面板 -->
+            <div class="card">
+                <div class="card-body">
+                    <form class="search-form" id="searchForm">
+                        <div class="form-group">
+                            <label class="form-label">客户名称</label>
+                            <input type="text" name="customerName" class="form-control" placeholder="请输入客户名称">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">客户类型</label>
+                            <select name="customerType" class="form-control">
+                                <option value="">全部类型</option>
+                                <option value="1">个人客户</option>
+                                <option value="2">企业客户</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">客户状态</label>
+                            <select name="status" class="form-control">
+                                <option value="">全部状态</option>
+                                <option value="1">潜在客户</option>
+                                <option value="2">意向客户</option>
+                                <option value="3">签约客户</option>
+                                <option value="4">流失客户</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">负责人</label>
+                            <select name="owner" class="form-control">
+                                <option value="">全部负责人</option>
+                                <!-- 负责人选项将通过JS动态生成 -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" class="btn btn-primary" onclick="searchCustomers()">
+                                🔍 搜索
+                            </button>
+                            <button type="button" class="btn btn-default" onclick="resetSearch()">
+                                🔄 重置
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- 表格面板 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">客户列表</h3>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-primary" onclick="addCustomer()">
+                            ➕ 新增客户
+                        </button>
+                        <button class="btn btn-default" onclick="importCustomers()">
+                            📤 批量导入
+                        </button>
+                        <button class="btn btn-default" onclick="exportCustomers()">
+                            📥 导出Excel
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 批量操作栏 -->
+                <div class="batch-actions" id="batchActions">
+                    <span>已选择 <strong id="selectedCount">0</strong> 项</span>
+                    <div>
+                        <button class="btn btn-default btn-sm" onclick="batchTransfer()">
+                            🔄 批量转移
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="batchDelete()">
+                            🗑️ 批量删除
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 客户表格 -->
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th width="40">
+                                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                </th>
+                                <th width="200">客户信息</th>
+                                <th width="100">客户类型</th>
+                                <th width="100">客户状态</th>
+                                <th width="120">负责人</th>
+                                <th width="100">创建时间</th>
+                                <th width="100">最后跟进</th>
+                                <th width="150">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTableBody">
+                            <!-- 客户数据将通过JS动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 -->
+                <div class="pagination">
+                    <div class="pagination-info">
+                        共 <span id="totalRecords">0</span> 条记录，显示第 <span id="currentPage">1</span> 页，共 <span id="totalPages">0</span> 页
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="btn btn-default btn-sm" onclick="prevPage()" id="prevBtn">上一页</button>
+                        <input type="number" class="form-control page-input" id="pageInput" value="1" min="1" onchange="gotoPage()" style="width: 60px; text-align: center;">
+                        <button class="btn btn-default btn-sm" onclick="nextPage()" id="nextBtn">下一页</button>
+                        <select class="form-control" style="width: auto; margin-left: 8px;" onchange="changePageSize()" id="pageSizeSelect">
+                            <option value="10">10条/页</option>
+                            <option value="20" selected>20条/页</option>
+                            <option value="50">50条/页</option>
+                            <option value="100">100条/页</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            © 2024 Portal 3.0 企业管理平台. All rights reserved.
+        </footer>
+    </div>
+
+    <script src="../assets/js/common.js"></script>
+    <script src="../assets/js/mock-data.js"></script>
+    <script>
+        // 页面变量
+        let customers = [];
+        let filteredCustomers = [];
+        let currentPage = 1;
+        let pageSize = 20;
+        let selectedCustomers = new Set();
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            loadCustomerData();
+            initializeSearchOptions();
+        });
+        
+        // 切换导航组展开/收起
+        function toggleNavGroup(element) {
+            const submenu = element.nextElementSibling;
+            const arrow = element.querySelector('.nav-arrow');
+            
+            if (submenu && submenu.classList.contains('nav-submenu')) {
+                submenu.classList.toggle('expanded');
+                element.classList.toggle('expanded');
+                
+                if (submenu.classList.contains('expanded')) {
+                    arrow.style.transform = 'rotate(90deg)';
+                } else {
+                    arrow.style.transform = 'rotate(0deg)';
+                }
+            }
+        }
+        
+        // 生成模拟客户数据
+        function generateCustomerData() {
+            const customerNames = ['张三科技', '李四贸易', '王五实业', '赵六集团', '孙七公司', '周八企业', '吴九商贸', '郑十有限公司'];
+            const contactNames = ['张三', '李四', '王五', '赵六', '孙七', '周八', '吴九', '郑十'];
+            const employees = window.MockData.employees;
+            
+            return Array.from({length: 50}, (_, i) => ({
+                id: i + 1,
+                customerName: customerNames[i % customerNames.length] + (i > 7 ? (i - 7) : ''),
+                contactName: contactNames[i % contactNames.length],
+                customerType: Math.random() > 0.3 ? 2 : 1,
+                status: Math.ceil(Math.random() * 4),
+                phone: '138' + String(Math.floor(Math.random() * 100000000)).padStart(8, '0'),
+                email: `customer${i + 1}@example.com`,
+                owner: employees[Math.floor(Math.random() * employees.length)].id,
+                createTime: new Date(Date.now() - Math.random() * 365 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+                lastFollowTime: Math.random() > 0.5 ? new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toLocaleDateString() : null
+            }));
+        }
+        
+        // 加载客户数据
+        function loadCustomerData() {
+            customers = generateCustomerData().map(customer => {
+                const owner = window.MockData.employees.find(e => e.id === customer.owner);
+                const statusMap = {1: '潜在客户', 2: '意向客户', 3: '签约客户', 4: '流失客户'};
+                const typeMap = {1: '个人客户', 2: '企业客户'};
+                
+                return {
+                    ...customer,
+                    ownerName: owner ? owner.name : '未分配',
+                    statusText: statusMap[customer.status],
+                    typeText: typeMap[customer.customerType]
+                };
+            });
+            
+            filteredCustomers = [...customers];
+            renderCustomerTable();
+        }
+        
+        // 初始化搜索选项
+        function initializeSearchOptions() {
+            const ownerSelect = document.querySelector('select[name="owner"]');
+            const employees = window.MockData.employees;
+            
+            employees.forEach(employee => {
+                const option = document.createElement('option');
+                option.value = employee.id;
+                option.textContent = employee.name;
+                ownerSelect.appendChild(option);
+            });
+        }
+        
+        // 渲染客户表格
+        function renderCustomerTable() {
+            const tbody = document.getElementById('customerTableBody');
+            const startIndex = (currentPage - 1) * pageSize;
+            const endIndex = startIndex + pageSize;
+            const pageData = filteredCustomers.slice(startIndex, endIndex);
+            
+            tbody.innerHTML = pageData.map(customer => {
+                const statusClass = ['', 'potential', 'interested', 'signed', 'lost'][customer.status];
+                const isSelected = selectedCustomers.has(customer.id);
+                
+                return `
+                    <tr onclick="selectCustomer(event, ${customer.id})">
+                        <td>
+                            <input type="checkbox" ${isSelected ? 'checked' : ''} 
+                                   onchange="toggleCustomerSelection(${customer.id})">
+                        </td>
+                        <td>
+                            <div style="display: flex; flex-direction: column;">
+                                <strong style="color: #333; margin-bottom: 4px;">${customer.customerName}</strong>
+                                <div style="font-size: 12px; color: #666;">
+                                    联系人：${customer.contactName} | 电话：${customer.phone}
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <span style="color: #666;">${customer.typeText}</span>
+                        </td>
+                        <td>
+                            <span class="status-tag ${statusClass}">${customer.statusText}</span>
+                        </td>
+                        <td>
+                            <span style="color: #333;">${customer.ownerName}</span>
+                        </td>
+                        <td>
+                            <span style="color: #666; font-size: 13px;">${customer.createTime}</span>
+                        </td>
+                        <td>
+                            <span style="color: #666; font-size: 13px;">${customer.lastFollowTime || '暂无'}</span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-default btn-sm" onclick="viewCustomer(${customer.id})" title="查看">
+                                    👁️
+                                </button>
+                                <button class="btn btn-default btn-sm" onclick="editCustomer(${customer.id})" title="编辑">
+                                    ✏️
+                                </button>
+                                <button class="btn btn-default btn-sm" onclick="followCustomer(${customer.id})" title="跟进">
+                                    📝
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteCustomer(${customer.id})" title="删除">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            updatePagination();
+            updateBatchActions();
+        }
+        
+        // 更新分页信息
+        function updatePagination() {
+            const totalRecords = filteredCustomers.length;
+            const totalPages = Math.ceil(totalRecords / pageSize);
+            
+            document.getElementById('totalRecords').textContent = totalRecords;
+            document.getElementById('currentPage').textContent = currentPage;
+            document.getElementById('totalPages').textContent = totalPages;
+            document.getElementById('pageInput').value = currentPage;
+            
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        }
+        
+        // 更新批量操作栏
+        function updateBatchActions() {
+            const batchActions = document.getElementById('batchActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            selectedCount.textContent = selectedCustomers.size;
+            
+            if (selectedCustomers.size > 0) {
+                batchActions.classList.add('active');
+            } else {
+                batchActions.classList.remove('active');
+            }
+        }
+        
+        // 切换全选
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('#customerTableBody input[type="checkbox"]');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+                const customerId = parseInt(checkbox.getAttribute('onchange').match(/\d+/)[0]);
+                
+                if (selectAll.checked) {
+                    selectedCustomers.add(customerId);
+                } else {
+                    selectedCustomers.delete(customerId);
+                }
+            });
+            
+            updateBatchActions();
+        }
+        
+        // 切换客户选择状态
+        function toggleCustomerSelection(customerId) {
+            if (selectedCustomers.has(customerId)) {
+                selectedCustomers.delete(customerId);
+            } else {
+                selectedCustomers.add(customerId);
+            }
+            
+            updateBatchActions();
+            
+            // 更新全选状态
+            const allCheckboxes = document.querySelectorAll('#customerTableBody input[type="checkbox"]');
+            const checkedCheckboxes = document.querySelectorAll('#customerTableBody input[type="checkbox"]:checked');
+            const selectAll = document.getElementById('selectAll');
+            
+            selectAll.checked = allCheckboxes.length === checkedCheckboxes.length && allCheckboxes.length > 0;
+            selectAll.indeterminate = checkedCheckboxes.length > 0 && checkedCheckboxes.length < allCheckboxes.length;
+        }
+        
+        // 点击行选择客户
+        function selectCustomer(event, customerId) {
+            if (event.target.type !== 'checkbox' && event.target.tagName !== 'BUTTON') {
+                const checkbox = event.currentTarget.querySelector('input[type="checkbox"]');
+                checkbox.checked = !checkbox.checked;
+                toggleCustomerSelection(customerId);
+            }
+        }
+        
+        // 搜索客户
+        function searchCustomers() {
+            const formData = new FormData(document.getElementById('searchForm'));
+            const filters = {
+                customerName: formData.get('customerName'),
+                customerType: formData.get('customerType'),
+                status: formData.get('status'),
+                owner: formData.get('owner')
+            };
+            
+            filteredCustomers = customers.filter(customer => {
+                return (!filters.customerName || customer.customerName.includes(filters.customerName)) &&
+                       (!filters.customerType || customer.customerType == filters.customerType) &&
+                       (!filters.status || customer.status == filters.status) &&
+                       (!filters.owner || customer.owner == filters.owner);
+            });
+            
+            currentPage = 1;
+            selectedCustomers.clear();
+            renderCustomerTable();
+        }
+        
+        // 重置搜索
+        function resetSearch() {
+            document.getElementById('searchForm').reset();
+            filteredCustomers = [...customers];
+            currentPage = 1;
+            selectedCustomers.clear();
+            renderCustomerTable();
+        }
+        
+        // 分页功能
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderCustomerTable();
+            }
+        }
+        
+        function nextPage() {
+            const totalPages = Math.ceil(filteredCustomers.length / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderCustomerTable();
+            }
+        }
+        
+        function gotoPage() {
+            const pageInput = document.getElementById('pageInput');
+            const targetPage = parseInt(pageInput.value);
+            const totalPages = Math.ceil(filteredCustomers.length / pageSize);
+            
+            if (targetPage >= 1 && targetPage <= totalPages) {
+                currentPage = targetPage;
+                renderCustomerTable();
+            } else {
+                pageInput.value = currentPage;
+            }
+        }
+        
+        function changePageSize() {
+            const select = document.getElementById('pageSizeSelect');
+            pageSize = parseInt(select.value);
+            currentPage = 1;
+            renderCustomerTable();
+        }
+        
+        // 客户操作功能
+        function addCustomer() {
+            alert('新增客户功能开发中...');
+        }
+        
+        function viewCustomer(customerId) {
+            const customer = customers.find(c => c.id === customerId);
+            if (customer) {
+                alert(`查看客户：${customer.customerName}\n联系人：${customer.contactName}\n电话：${customer.phone}`);
+            }
+        }
+        
+        function editCustomer(customerId) {
+            alert(`编辑客户 ID: ${customerId} 功能开发中...`);
+        }
+        
+        function followCustomer(customerId) {
+            alert(`跟进客户 ID: ${customerId} 功能开发中...`);
+        }
+        
+        function deleteCustomer(customerId) {
+            if (confirm('确定要删除该客户吗？')) {
+                customers = customers.filter(c => c.id !== customerId);
+                filteredCustomers = filteredCustomers.filter(c => c.id !== customerId);
+                selectedCustomers.delete(customerId);
+                renderCustomerTable();
+                alert('客户删除成功！');
+            }
+        }
+        
+        // 批量操作功能
+        function batchTransfer() {
+            if (selectedCustomers.size === 0) {
+                alert('请先选择要转移的客户');
+                return;
+            }
+            alert(`批量转移 ${selectedCustomers.size} 个客户功能开发中...`);
+        }
+        
+        function batchDelete() {
+            if (selectedCustomers.size === 0) {
+                alert('请先选择要删除的客户');
+                return;
+            }
+            
+            if (confirm(`确定要删除选中的 ${selectedCustomers.size} 个客户吗？`)) {
+                customers = customers.filter(c => !selectedCustomers.has(c.id));
+                filteredCustomers = filteredCustomers.filter(c => !selectedCustomers.has(c.id));
+                selectedCustomers.clear();
+                renderCustomerTable();
+                alert('批量删除成功！');
+            }
+        }
+        
+        function importCustomers() {
+            alert('批量导入功能开发中...');
+        }
+        
+        function exportCustomers() {
+            alert('导出Excel功能开发中...');
+        }
+    </script>
+</body>
+</html> 

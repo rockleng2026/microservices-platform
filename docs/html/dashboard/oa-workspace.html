@@ -6,33 +6,79 @@
     <title>OA工作台 - Portal 3.0</title>
     <link rel="stylesheet" href="../assets/css/common.css">
     <style>
-        .workspace-container {
-            display: flex;
+        /* 框架布局结构 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
             min-height: 100vh;
-            background: var(--bg-color);
+            background: #f5f5f5;
         }
 
-        .sidebar {
-            width: 240px;
+        /* 头部区域 */
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        /* 左侧导航区域 */
+        .app-sidebar {
+            grid-area: sidebar;
             background: white;
             box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-            position: fixed;
+            position: sticky;
+            top: 0;
             height: 100vh;
+            overflow-y: auto;
             z-index: 100;
         }
 
+        /* 主内容区域 */
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* 底部页脚区域 */
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 侧边栏头部 */
         .sidebar-header {
             height: 60px;
             display: flex;
             align-items: center;
             padding: 0 20px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
         }
 
         .logo {
             width: 32px;
             height: 32px;
-            background: var(--primary-color);
+            background: #1890ff;
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -45,7 +91,7 @@
         .brand-name {
             font-size: 18px;
             font-weight: 600;
-            color: var(--text-color);
+            color: #333;
         }
 
         .nav-menu {
@@ -105,29 +151,89 @@
             min-width: 20px;
         }
 
-        .main-content {
-            flex: 1;
-            margin-left: 240px;
-            min-height: 100vh;
-        }
-
-        .header {
-            height: 60px;
-            background: white;
-            border-bottom: 1px solid var(--border-color);
+        /* 二级菜单样式 */
+        .nav-group {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
-            position: sticky;
-            top: 0;
-            z-index: 50;
+            padding: 12px 20px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
         }
 
+        .nav-group:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-group.expanded {
+            background: rgba(24, 144, 255, 0.05);
+            color: #1890ff;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #fafafa;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 10px 20px 10px 52px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-subitem:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .nav-subitem.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: #1890ff;
+        }
+
+        .nav-subitem.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        /* 面包屑导航 */
         .breadcrumb {
             display: flex;
             align-items: center;
-            color: var(--text-color-secondary);
+            color: #666;
         }
 
         .breadcrumb-item {
@@ -136,9 +242,10 @@
 
         .breadcrumb-separator {
             margin: 0 8px;
-            color: var(--border-color);
+            color: #d9d9d9;
         }
 
+        /* 头部操作区 */
         .header-actions {
             display: flex;
             align-items: center;
@@ -153,9 +260,9 @@
             width: 200px;
             height: 32px;
             padding: 0 12px 0 36px;
-            border: 1px solid var(--border-color);
+            border: 1px solid #d9d9d9;
             border-radius: 6px;
-            background: var(--bg-color-light);
+            background: #fafafa;
         }
 
         .search-icon {
@@ -163,7 +270,7 @@
             left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--text-color-secondary);
+            color: #999;
         }
 
         .notification-btn {
@@ -177,12 +284,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--text-color-secondary);
+            color: #666;
             transition: all 0.3s ease;
         }
 
         .notification-btn:hover {
-            background: var(--bg-color-light);
+            background: #f5f5f5;
         }
 
         .notification-badge {
@@ -191,7 +298,7 @@
             right: -2px;
             width: 16px;
             height: 16px;
-            background: var(--error-color);
+            background: #ff4d4f;
             color: white;
             border-radius: 50%;
             font-size: 10px;
@@ -210,14 +317,14 @@
         }
 
         .user-menu:hover {
-            background: var(--bg-color-light);
+            background: #f5f5f5;
         }
 
         .user-avatar {
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background: var(--primary-color);
+            background: #1890ff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -226,93 +333,95 @@
             margin-right: 8px;
         }
 
-        .workspace-content {
-            padding: 24px;
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
 
+        .footer-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+        }
+
+        /* OA工作台特有样式 */
         .workspace-header {
-            margin-bottom: 24px;
-        }
-
-        .welcome-section {
-            background: linear-gradient(135deg, var(--primary-color) 0%, #40a9ff 100%);
+            background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
             color: white;
             padding: 24px;
             border-radius: 12px;
             margin-bottom: 24px;
         }
 
-        .welcome-title {
+        .workspace-title {
             font-size: 24px;
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 8px;
         }
 
-        .welcome-subtitle {
-            font-size: 14px;
+        .workspace-desc {
             opacity: 0.9;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
-        .quick-actions {
+        .workspace-stats {
             display: flex;
-            gap: 12px;
+            gap: 24px;
         }
 
-        .quick-action-btn {
-            padding: 8px 16px;
-            background: rgba(255, 255, 255, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            border-radius: 6px;
-            color: white;
-            text-decoration: none;
-            font-size: 14px;
-            transition: all 0.3s ease;
+        .workspace-stat {
+            text-align: center;
         }
 
-        .quick-action-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: translateY(-1px);
+        .workspace-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .workspace-stat-label {
+            font-size: 12px;
+            opacity: 0.8;
         }
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 24px;
-            min-height: 400px;
+            margin-bottom: 24px;
         }
 
         .dashboard-card {
             background: white;
             border-radius: 12px;
+            padding: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
             transition: all 0.3s ease;
-            cursor: move;
-            position: relative;
         }
 
         .dashboard-card:hover {
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
             transform: translateY(-2px);
-        }
-
-        .dashboard-card.dragging {
-            opacity: 0.5;
-            transform: rotate(5deg);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
         }
 
         .card-header {
-            padding: 20px 20px 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-bottom: 16px;
         }
 
         .card-title {
             font-size: 16px;
             font-weight: 600;
-            color: var(--text-color);
+            color: #333;
             display: flex;
             align-items: center;
         }
@@ -322,133 +431,147 @@
             font-size: 18px;
         }
 
-        .card-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .card-action-btn {
-            width: 24px;
-            height: 24px;
-            border: none;
-            background: none;
+        .card-more {
+            color: #999;
             cursor: pointer;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-color-secondary);
-            transition: all 0.3s ease;
-        }
-
-        .card-action-btn:hover {
-            background: var(--bg-color-light);
-        }
-
-        .card-content {
-            padding: 20px;
-        }
-
-        /* 任务统计卡片 */
-        .task-stats {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
+            font-size: 20px;
         }
 
         .stat-item {
-            text-align: center;
-            padding: 16px;
-            background: var(--bg-color-light);
-            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
         }
 
-        .stat-number {
-            font-size: 24px;
-            font-weight: 700;
-            color: var(--primary-color);
-            margin-bottom: 4px;
+        .stat-item:last-child {
+            border-bottom: none;
         }
 
         .stat-label {
-            font-size: 12px;
-            color: var(--text-color-secondary);
+            color: #666;
+            font-size: 14px;
         }
 
-        /* 待办列表 */
-        .todo-list {
+        .stat-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .stat-value.important {
+            color: #ff4d4f;
+        }
+
+        .stat-value.success {
+            color: #52c41a;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .action-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .action-btn.primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            background: #40a9ff;
+        }
+
+        .task-list {
             max-height: 300px;
             overflow-y: auto;
         }
 
-        .todo-item {
+        .task-item {
             display: flex;
             align-items: center;
             padding: 12px 0;
-            border-bottom: 1px solid var(--border-color-light);
+            border-bottom: 1px solid #f0f0f0;
         }
 
-        .todo-item:last-child {
+        .task-item:last-child {
             border-bottom: none;
         }
 
-        .todo-checkbox {
+        .task-checkbox {
             margin-right: 12px;
         }
 
-        .todo-content {
+        .task-content {
             flex: 1;
         }
 
-        .todo-title {
+        .task-title {
             font-size: 14px;
-            color: var(--text-color);
+            color: #333;
             margin-bottom: 4px;
         }
 
-        .todo-meta {
+        .task-meta {
             font-size: 12px;
-            color: var(--text-color-secondary);
+            color: #999;
         }
 
-        .todo-priority {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
+        .task-priority {
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
             margin-left: 8px;
         }
 
-        .todo-priority.high {
-            background: var(--error-color);
+        .task-priority.high {
+            background: #fff2e8;
+            color: #fa8c16;
         }
 
-        .todo-priority.medium {
-            background: var(--warning-color);
+        .task-priority.medium {
+            background: #f6ffed;
+            color: #52c41a;
         }
 
-        .todo-priority.low {
-            background: var(--success-color);
+        .task-priority.low {
+            background: #f0f0f0;
+            color: #666;
         }
 
-        /* 日程日历 */
-        .calendar-mini {
-            background: var(--bg-color-light);
-            border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 16px;
+        .calendar-widget {
+            width: 100%;
         }
 
         .calendar-header {
             display: flex;
             align-items: center;
-            justify-content: between;
-            margin-bottom: 12px;
+            justify-content: space-between;
+            margin-bottom: 16px;
         }
 
-        .calendar-month {
+        .calendar-title {
             font-weight: 600;
-            flex: 1;
-            text-align: center;
+            color: #333;
         }
 
         .calendar-nav {
@@ -477,12 +600,12 @@
         }
 
         .calendar-day:hover {
-            background: var(--primary-color);
+            background: #1890ff;
             color: white;
         }
 
         .calendar-day.today {
-            background: var(--primary-color);
+            background: #1890ff;
             color: white;
         }
 
@@ -498,11 +621,10 @@
             transform: translateX(-50%);
             width: 4px;
             height: 4px;
-            background: var(--warning-color);
+            background: #fa8c16;
             border-radius: 50%;
         }
 
-        /* 公告列表 */
         .announcement-list {
             max-height: 280px;
             overflow-y: auto;
@@ -510,7 +632,7 @@
 
         .announcement-item {
             padding: 12px 0;
-            border-bottom: 1px solid var(--border-color-light);
+            border-bottom: 1px solid #f0f0f0;
         }
 
         .announcement-item:last-child {
@@ -519,14 +641,14 @@
 
         .announcement-title {
             font-size: 14px;
-            color: var(--text-color);
+            color: #333;
             margin-bottom: 4px;
             display: flex;
             align-items: center;
         }
 
         .announcement-badge {
-            background: var(--error-color);
+            background: #ff4d4f;
             color: white;
             font-size: 10px;
             padding: 2px 6px;
@@ -536,26 +658,33 @@
 
         .announcement-meta {
             font-size: 12px;
-            color: var(--text-color-secondary);
+            color: #999;
         }
 
         /* 响应式设计 */
-        @media (max-width: 1200px) {
-            .dashboard-grid {
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            }
-        }
-
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-240px);
+            .app-layout {
+                grid-template-areas: 
+                    "header"
+                    "main"
+                    "footer";
+                grid-template-columns: 1fr;
+                grid-template-rows: 60px 1fr auto;
             }
 
-            .main-content {
-                margin-left: 0;
+            .app-sidebar {
+                position: fixed;
+                left: -240px;
+                height: 100vh;
+                transition: left 0.3s ease;
+                z-index: 200;
             }
 
-            .workspace-content {
+            .app-sidebar.mobile-open {
+                left: 0;
+            }
+
+            .app-main {
                 padding: 16px;
             }
 
@@ -564,17 +693,32 @@
                 gap: 16px;
             }
 
+            .workspace-stats {
+                flex-direction: column;
+                gap: 12px;
+            }
+
             .quick-actions {
                 flex-direction: column;
                 gap: 8px;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                font-size: 18px;
+                cursor: pointer;
+                padding: 8px;
+                color: #666;
             }
         }
     </style>
 </head>
 <body>
-    <div class="workspace-container">
-        <!-- 侧边栏 -->
-        <div class="sidebar">
+    <div class="app-layout">
+        <!-- 左侧导航 -->
+        <aside class="app-sidebar">
             <div class="sidebar-header">
                 <div class="logo">P3</div>
                 <div class="brand-name">Portal 3.0</div>
@@ -582,66 +726,93 @@
             
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="#" class="nav-link active">
+                    <a href="../index.html" class="nav-link">
                         <span class="nav-icon">🏠</span>
-                        <span>OA工作台</span>
+                        <span>首页总览</span>
                     </a>
                 </li>
+                
+                <!-- 工作台模块 -->
                 <li class="nav-item">
-                    <a href="crm-workspace.html" class="nav-link">
-                        <span class="nav-icon">👥</span>
-                        <span>CRM工作台</span>
-                    </a>
+                    <button class="nav-group expanded" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">💼</span>
+                        <span>工作台</span>
+                        <span class="nav-arrow rotated">▶</span>
+                    </button>
+                    <div class="nav-submenu expanded">
+                        <a href="oa-workspace.html" class="nav-subitem active">OA工作台</a>
+                        <a href="crm-workspace.html" class="nav-subitem">CRM工作台</a>
+                        <a href="sales-workspace.html" class="nav-subitem">销售工作台</a>
+                        <a href="workspace-config.html" class="nav-subitem">工作台配置</a>
+                    </div>
                 </li>
+                
+                <!-- 组织架构模块 -->
                 <li class="nav-item">
-                    <a href="sales-workspace.html" class="nav-link">
-                        <span class="nav-icon">📊</span>
-                        <span>销售工作台</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../organization/department-tree.html" class="nav-link">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
                         <span class="nav-icon">🏢</span>
                         <span>组织架构</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../organization/department-tree.html" class="nav-subitem">部门管理</a>
+                        <a href="../organization/employee-list.html" class="nav-subitem">员工管理</a>
+                        <a href="../organization/position-manage.html" class="nav-subitem">岗位管理</a>
+                        <a href="../organization/role-permission.html" class="nav-subitem">角色权限</a>
+                    </div>
                 </li>
+                
+                <!-- 客户管理模块 -->
                 <li class="nav-item">
-                    <a href="../crm/customer-list.html" class="nav-link">
-                        <span class="nav-icon">👤</span>
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">👥</span>
                         <span>客户管理</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../crm/customer-list.html" class="nav-subitem">客户列表</a>
+                        <a href="#" class="nav-subitem">客户详情</a>
+                        <a href="#" class="nav-subitem">跟进记录</a>
+                        <a href="#" class="nav-subitem">客户转移</a>
+                    </div>
                 </li>
+                
+                <!-- 商品管理模块 -->
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
                         <span class="nav-icon">📦</span>
                         <span>商品管理</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="#" class="nav-subitem">商品列表</a>
+                        <a href="#" class="nav-subitem">商品分类</a>
+                        <a href="#" class="nav-subitem">库存管理</a>
+                        <a href="#" class="nav-subitem">价格策略</a>
+                    </div>
                 </li>
+                
+                <!-- 订单管理模块 -->
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
                         <span class="nav-icon">📋</span>
                         <span>订单管理</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">🎧</span>
-                        <span>客服中心</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">⚙️</span>
-                        <span>运维管理</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="#" class="nav-subitem">订单列表</a>
+                        <a href="#" class="nav-subitem">订单详情</a>
+                        <a href="#" class="nav-subitem">订单统计</a>
+                        <a href="#" class="nav-subitem">退货管理</a>
+                    </div>
                 </li>
             </ul>
-        </div>
+        </aside>
 
-        <!-- 主内容区 -->
-        <div class="main-content">
-            <!-- 顶部导航 -->
-            <div class="header">
+        <!-- 头部区域 -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
                 <div class="breadcrumb">
                     <span class="breadcrumb-item">Portal 3.0</span>
                     <span class="breadcrumb-separator">/</span>
@@ -649,444 +820,362 @@
                     <span class="breadcrumb-separator">/</span>
                     <span class="breadcrumb-item">OA工作台</span>
                 </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索功能...">
+                </div>
                 
-                <div class="header-actions">
-                    <div class="search-box">
-                        <span class="search-icon">🔍</span>
-                        <input type="text" class="search-input" placeholder="搜索功能或内容...">
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">5</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">管</div>
+                    <span>管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <!-- 工作台头部 -->
+            <div class="workspace-header">
+                <h1 class="workspace-title">🏢 OA工作台</h1>
+                <p class="workspace-desc">办公自动化管理平台，处理日常办公事务、审批流程和任务管理</p>
+                <div class="workspace-stats">
+                    <div class="workspace-stat">
+                        <div class="workspace-stat-value">15</div>
+                        <div class="workspace-stat-label">待办任务</div>
                     </div>
-                    
-                    <button class="notification-btn">
-                        <span>🔔</span>
-                        <span class="notification-badge">5</span>
-                    </button>
-                    
-                    <div class="user-menu">
-                        <div class="user-avatar">张</div>
-                        <span>张三</span>
+                    <div class="workspace-stat">
+                        <div class="workspace-stat-value">8</div>
+                        <div class="workspace-stat-label">待审批</div>
+                    </div>
+                    <div class="workspace-stat">
+                        <div class="workspace-stat-value">23</div>
+                        <div class="workspace-stat-label">今日消息</div>
+                    </div>
+                    <div class="workspace-stat">
+                        <div class="workspace-stat-value">156</div>
+                        <div class="workspace-stat-label">在线用户</div>
                     </div>
                 </div>
             </div>
 
-            <!-- 工作台内容 -->
-            <div class="workspace-content">
-                <!-- 欢迎区域 -->
-                <div class="welcome-section">
-                    <h1 class="welcome-title">早上好，张三！</h1>
-                    <p class="welcome-subtitle">今天是2024年1月15日 星期一，祝您工作愉快！</p>
+            <!-- 仪表板网格 -->
+            <div class="dashboard-grid">
+                <!-- 待办任务卡片 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">📋</span>
+                            待办任务
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="task-list">
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox">
+                            <div class="task-content">
+                                <div class="task-title">审批张三的请假申请</div>
+                                <div class="task-meta">
+                                    2024-01-15 09:30
+                                    <span class="task-priority high">高优先级</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox">
+                            <div class="task-content">
+                                <div class="task-title">完成月度工作报告</div>
+                                <div class="task-meta">
+                                    2024-01-15 14:00
+                                    <span class="task-priority medium">中优先级</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox">
+                            <div class="task-content">
+                                <div class="task-title">参加部门例会</div>
+                                <div class="task-meta">
+                                    2024-01-16 10:00
+                                    <span class="task-priority low">低优先级</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="task-item">
+                            <input type="checkbox" class="task-checkbox">
+                            <div class="task-content">
+                                <div class="task-title">更新项目进度</div>
+                                <div class="task-meta">
+                                    2024-01-16 16:00
+                                    <span class="task-priority medium">中优先级</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="quick-actions" style="margin-top: 16px;">
+                        <button class="action-btn primary">新建任务</button>
+                        <button class="action-btn">查看全部</button>
+                    </div>
+                </div>
+
+                <!-- 审批流程卡片 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">✅</span>
+                            审批流程
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">待我审批</span>
+                        <span class="stat-value important">8</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">我发起的</span>
+                        <span class="stat-value">12</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">已完成</span>
+                        <span class="stat-value success">156</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">本月审批</span>
+                        <span class="stat-value">89</span>
+                    </div>
+                    <div class="quick-actions" style="margin-top: 16px;">
+                        <button class="action-btn primary">发起审批</button>
+                        <button class="action-btn">审批中心</button>
+                    </div>
+                </div>
+
+                <!-- 日历组件 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">📅</span>
+                            工作日历
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="calendar-widget">
+                        <div class="calendar-header">
+                            <button class="calendar-nav">◀</button>
+                            <span class="calendar-title">2024年1月</span>
+                            <button class="calendar-nav">▶</button>
+                        </div>
+                        <div class="calendar-grid">
+                            <div style="grid-column: 1/-1; display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px;">
+                                <div style="text-align: center; font-size: 12px; color: #999;">日</div>
+                                <div style="text-align: center; font-size: 12px; color: #999;">一</div>
+                                <div style="text-align: center; font-size: 12px; color: #999;">二</div>
+                                <div style="text-align: center; font-size: 12px; color: #999;">三</div>
+                                <div style="text-align: center; font-size: 12px; color: #999;">四</div>
+                                <div style="text-align: center; font-size: 12px; color: #999;">五</div>
+                                <div style="text-align: center; font-size: 12px; color: #999;">六</div>
+                            </div>
+                            <div class="calendar-day">31</div>
+                            <div class="calendar-day">1</div>
+                            <div class="calendar-day">2</div>
+                            <div class="calendar-day">3</div>
+                            <div class="calendar-day">4</div>
+                            <div class="calendar-day has-event">5</div>
+                            <div class="calendar-day">6</div>
+                            <div class="calendar-day">7</div>
+                            <div class="calendar-day">8</div>
+                            <div class="calendar-day">9</div>
+                            <div class="calendar-day">10</div>
+                            <div class="calendar-day">11</div>
+                            <div class="calendar-day">12</div>
+                            <div class="calendar-day">13</div>
+                            <div class="calendar-day">14</div>
+                            <div class="calendar-day today">15</div>
+                            <div class="calendar-day has-event">16</div>
+                            <div class="calendar-day">17</div>
+                            <div class="calendar-day">18</div>
+                            <div class="calendar-day">19</div>
+                            <div class="calendar-day">20</div>
+                            <div class="calendar-day">21</div>
+                            <div class="calendar-day">22</div>
+                            <div class="calendar-day">23</div>
+                            <div class="calendar-day">24</div>
+                            <div class="calendar-day">25</div>
+                            <div class="calendar-day">26</div>
+                            <div class="calendar-day">27</div>
+                            <div class="calendar-day">28</div>
+                            <div class="calendar-day">29</div>
+                            <div class="calendar-day">30</div>
+                            <div class="calendar-day">31</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 公告通知 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">📢</span>
+                            公告通知
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="announcement-list">
+                        <div class="announcement-item">
+                            <div class="announcement-title">
+                                <span class="announcement-badge">新</span>
+                                关于春节放假安排的通知
+                            </div>
+                            <div class="announcement-meta">人事部 • 2024-01-15 10:30</div>
+                        </div>
+                        <div class="announcement-item">
+                            <div class="announcement-title">
+                                <span class="announcement-badge">重要</span>
+                                系统升级维护公告
+                            </div>
+                            <div class="announcement-meta">技术部 • 2024-01-14 16:00</div>
+                        </div>
+                        <div class="announcement-item">
+                            <div class="announcement-title">
+                                第一季度工作计划会议通知
+                            </div>
+                            <div class="announcement-meta">办公室 • 2024-01-13 09:15</div>
+                        </div>
+                        <div class="announcement-item">
+                            <div class="announcement-title">
+                                员工培训课程安排
+                            </div>
+                            <div class="announcement-meta">人事部 • 2024-01-12 14:20</div>
+                        </div>
+                    </div>
+                    <div class="quick-actions" style="margin-top: 16px;">
+                        <button class="action-btn primary">发布公告</button>
+                        <button class="action-btn">查看更多</button>
+                    </div>
+                </div>
+
+                <!-- 统计概览 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">📊</span>
+                            办公统计
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">今日考勤率</span>
+                        <span class="stat-value success">96.8%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">在线用户</span>
+                        <span class="stat-value">156/180</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">本月请假</span>
+                        <span class="stat-value">23</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">待办工单</span>
+                        <span class="stat-value important">42</span>
+                    </div>
+                    <div class="quick-actions" style="margin-top: 16px;">
+                        <button class="action-btn">考勤管理</button>
+                        <button class="action-btn">数据报表</button>
+                    </div>
+                </div>
+
+                <!-- 快捷操作 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">⚡</span>
+                            快捷操作
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
                     <div class="quick-actions">
-                        <a href="#" class="quick-action-btn">新建任务</a>
-                        <a href="#" class="quick-action-btn">发起审批</a>
-                        <a href="#" class="quick-action-btn">写工作日志</a>
-                        <a href="workspace-config.html" class="quick-action-btn">配置工作台</a>
-                    </div>
-                </div>
-
-                <!-- 仪表板网格 -->
-                <div class="dashboard-grid" id="dashboardGrid">
-                    <!-- 任务统计卡片 -->
-                    <div class="dashboard-card" draggable="true" data-card="task-stats">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">📝</span>
-                                任务统计
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="刷新">🔄</button>
-                                <button class="card-action-btn" title="设置">⚙️</button>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="task-stats">
-                                <div class="stat-item">
-                                    <div class="stat-number">8</div>
-                                    <div class="stat-label">今日待办</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-number">15</div>
-                                    <div class="stat-label">本周任务</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-number">3</div>
-                                    <div class="stat-label">逾期任务</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 待办事项卡片 -->
-                    <div class="dashboard-card" draggable="true" data-card="todo-list">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">✅</span>
-                                待办事项
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="新增">➕</button>
-                                <button class="card-action-btn" title="刷新">🔄</button>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="todo-list">
-                                <div class="todo-item">
-                                    <input type="checkbox" class="todo-checkbox">
-                                    <div class="todo-content">
-                                        <div class="todo-title">完成项目需求分析文档</div>
-                                        <div class="todo-meta">截止时间：今天 18:00</div>
-                                    </div>
-                                    <div class="todo-priority high"></div>
-                                </div>
-                                <div class="todo-item">
-                                    <input type="checkbox" class="todo-checkbox">
-                                    <div class="todo-content">
-                                        <div class="todo-title">参加部门周会</div>
-                                        <div class="todo-meta">时间：明天 10:00</div>
-                                    </div>
-                                    <div class="todo-priority medium"></div>
-                                </div>
-                                <div class="todo-item">
-                                    <input type="checkbox" class="todo-checkbox" checked>
-                                    <div class="todo-content">
-                                        <div class="todo-title">审核员工请假申请</div>
-                                        <div class="todo-meta">已完成</div>
-                                    </div>
-                                    <div class="todo-priority low"></div>
-                                </div>
-                                <div class="todo-item">
-                                    <input type="checkbox" class="todo-checkbox">
-                                    <div class="todo-content">
-                                        <div class="todo-title">准备季度总结汇报</div>
-                                        <div class="todo-meta">截止时间：本周五</div>
-                                    </div>
-                                    <div class="todo-priority medium"></div>
-                                </div>
-                                <div class="todo-item">
-                                    <input type="checkbox" class="todo-checkbox">
-                                    <div class="todo-content">
-                                        <div class="todo-title">客户拜访计划制定</div>
-                                        <div class="todo-meta">截止时间：下周一</div>
-                                    </div>
-                                    <div class="todo-priority low"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 日程安排卡片 -->
-                    <div class="dashboard-card" draggable="true" data-card="schedule">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">📅</span>
-                                日程安排
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="新增">➕</button>
-                                <button class="card-action-btn" title="查看">👁️</button>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="calendar-mini">
-                                <div class="calendar-header">
-                                    <button class="calendar-nav">‹</button>
-                                    <div class="calendar-month">2024年1月</div>
-                                    <button class="calendar-nav">›</button>
-                                </div>
-                                <div class="calendar-grid">
-                                    <div class="calendar-day">日</div>
-                                    <div class="calendar-day">一</div>
-                                    <div class="calendar-day">二</div>
-                                    <div class="calendar-day">三</div>
-                                    <div class="calendar-day">四</div>
-                                    <div class="calendar-day">五</div>
-                                    <div class="calendar-day">六</div>
-                                    <div class="calendar-day">1</div>
-                                    <div class="calendar-day">2</div>
-                                    <div class="calendar-day has-event">3</div>
-                                    <div class="calendar-day">4</div>
-                                    <div class="calendar-day">5</div>
-                                    <div class="calendar-day">6</div>
-                                    <div class="calendar-day">7</div>
-                                    <div class="calendar-day">8</div>
-                                    <div class="calendar-day">9</div>
-                                    <div class="calendar-day">10</div>
-                                    <div class="calendar-day">11</div>
-                                    <div class="calendar-day">12</div>
-                                    <div class="calendar-day">13</div>
-                                    <div class="calendar-day">14</div>
-                                    <div class="calendar-day today">15</div>
-                                    <div class="calendar-day has-event">16</div>
-                                    <div class="calendar-day">17</div>
-                                    <div class="calendar-day has-event">18</div>
-                                    <div class="calendar-day">19</div>
-                                    <div class="calendar-day">20</div>
-                                    <div class="calendar-day">21</div>
-                                    <div class="calendar-day">22</div>
-                                    <div class="calendar-day">23</div>
-                                    <div class="calendar-day">24</div>
-                                    <div class="calendar-day">25</div>
-                                    <div class="calendar-day">26</div>
-                                    <div class="calendar-day">27</div>
-                                    <div class="calendar-day">28</div>
-                                    <div class="calendar-day">29</div>
-                                    <div class="calendar-day">30</div>
-                                    <div class="calendar-day">31</div>
-                                </div>
-                            </div>
-                            <div style="font-size: 14px; color: var(--text-color);">
-                                <div style="margin-bottom: 8px;">
-                                    <strong>今日日程：</strong>
-                                </div>
-                                <div style="margin-bottom: 4px;">10:00 部门晨会</div>
-                                <div style="margin-bottom: 4px;">14:00 客户洽谈</div>
-                                <div>16:00 项目评审</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 待办审批卡片 -->
-                    <div class="dashboard-card" draggable="true" data-card="approval">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">📋</span>
-                                待办审批
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="查看全部">👁️</button>
-                                <button class="card-action-btn" title="刷新">🔄</button>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="todo-list">
-                                <div class="todo-item">
-                                    <div class="todo-content" style="margin-left: 0;">
-                                        <div class="todo-title">李四 - 年假申请</div>
-                                        <div class="todo-meta">申请时间：2024-01-14 09:30</div>
-                                    </div>
-                                    <div class="todo-priority high"></div>
-                                </div>
-                                <div class="todo-item">
-                                    <div class="todo-content" style="margin-left: 0;">
-                                        <div class="todo-title">王五 - 差旅费报销</div>
-                                        <div class="todo-meta">申请时间：2024-01-13 16:20</div>
-                                    </div>
-                                    <div class="todo-priority medium"></div>
-                                </div>
-                                <div class="todo-item">
-                                    <div class="todo-content" style="margin-left: 0;">
-                                        <div class="todo-title">赵六 - 采购申请</div>
-                                        <div class="todo-meta">申请时间：2024-01-12 11:45</div>
-                                    </div>
-                                    <div class="todo-priority medium"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 公司公告卡片 -->
-                    <div class="dashboard-card" draggable="true" data-card="announcements">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">📢</span>
-                                公司公告
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="查看全部">👁️</button>
-                                <button class="card-action-btn" title="刷新">🔄</button>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="announcement-list">
-                                <div class="announcement-item">
-                                    <div class="announcement-title">
-                                        <span class="announcement-badge">新</span>
-                                        关于春节放假安排的通知
-                                    </div>
-                                    <div class="announcement-meta">发布时间：2024-01-15 10:00</div>
-                                </div>
-                                <div class="announcement-item">
-                                    <div class="announcement-title">
-                                        Portal 3.0系统升级维护通知
-                                    </div>
-                                    <div class="announcement-meta">发布时间：2024-01-12 14:30</div>
-                                </div>
-                                <div class="announcement-item">
-                                    <div class="announcement-title">
-                                        2024年第一季度工作会议通知
-                                    </div>
-                                    <div class="announcement-meta">发布时间：2024-01-10 09:15</div>
-                                </div>
-                                <div class="announcement-item">
-                                    <div class="announcement-title">
-                                        员工绩效考核制度更新说明
-                                    </div>
-                                    <div class="announcement-meta">发布时间：2024-01-08 16:45</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 工作日志提醒卡片 -->
-                    <div class="dashboard-card" draggable="true" data-card="work-log">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">📔</span>
-                                工作日志
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="写日志">✏️</button>
-                                <button class="card-action-btn" title="查看">👁️</button>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div style="text-align: center; padding: 20px 0;">
-                                <div style="font-size: 48px; margin-bottom: 16px;">📝</div>
-                                <div style="font-size: 16px; color: var(--text-color); margin-bottom: 8px;">今日工作日志</div>
-                                <div style="font-size: 14px; color: var(--text-color-secondary); margin-bottom: 20px;">记录您的工作内容和心得体会</div>
-                                <button class="btn btn-primary" onclick="writeWorkLog()">写今日日志</button>
-                            </div>
-                        </div>
+                        <button class="action-btn primary">请假申请</button>
+                        <button class="action-btn">出差申请</button>
+                        <button class="action-btn">报销申请</button>
+                        <button class="action-btn">加班申请</button>
+                        <button class="action-btn">会议预订</button>
+                        <button class="action-btn">设备申请</button>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台 | 
+                <a href="#" style="color: #1890ff; text-decoration: none;">技术支持</a> | 
+                <a href="#" style="color: #1890ff; text-decoration: none;">帮助文档</a> | 
+                <span style="color: #999;">版本 v3.0.1</span>
+            </div>
+        </footer>
     </div>
 
     <script src="../assets/js/common.js"></script>
+    <script src="../assets/js/mock-data.js"></script>
     <script>
-        // 拖拽功能实现
-        let draggedCard = null;
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const cards = document.querySelectorAll('.dashboard-card');
-            const grid = document.getElementById('dashboardGrid');
-
-            cards.forEach(card => {
-                card.addEventListener('dragstart', handleDragStart);
-                card.addEventListener('dragend', handleDragEnd);
-            });
-
-            grid.addEventListener('dragover', handleDragOver);
-            grid.addEventListener('drop', handleDrop);
-
-            // 加载用户个性化配置
-            loadUserConfig();
-        });
-
-        function handleDragStart(e) {
-            draggedCard = this;
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-            e.dataTransfer.setData('text/html', this.outerHTML);
-        }
-
-        function handleDragEnd(e) {
-            this.classList.remove('dragging');
-            draggedCard = null;
-        }
-
-        function handleDragOver(e) {
-            if (e.preventDefault) {
-                e.preventDefault();
-            }
-            e.dataTransfer.dropEffect = 'move';
-            return false;
-        }
-
-        function handleDrop(e) {
-            if (e.stopPropagation) {
-                e.stopPropagation();
-            }
-
-            if (draggedCard !== this) {
-                const allCards = [...document.querySelectorAll('.dashboard-card')];
-                const draggedIndex = allCards.indexOf(draggedCard);
-                const targetIndex = allCards.indexOf(e.target.closest('.dashboard-card'));
-
-                if (targetIndex !== -1 && draggedIndex !== targetIndex) {
-                    const grid = document.getElementById('dashboardGrid');
-                    const targetCard = allCards[targetIndex];
-
-                    if (draggedIndex < targetIndex) {
-                        grid.insertBefore(draggedCard, targetCard.nextSibling);
-                    } else {
-                        grid.insertBefore(draggedCard, targetCard);
-                    }
-
-                    // 保存新的布局配置
-                    saveUserConfig();
-                    showMessage('布局已保存', 'success');
-                }
-            }
-
-            return false;
-        }
-
-        // 保存用户个性化配置
-        function saveUserConfig() {
-            const cards = document.querySelectorAll('.dashboard-card');
-            const config = Array.from(cards).map(card => card.dataset.card);
-            localStorage.setItem('oa-workspace-layout', JSON.stringify(config));
-        }
-
-        // 加载用户个性化配置
-        function loadUserConfig() {
-            const savedConfig = localStorage.getItem('oa-workspace-layout');
-            if (savedConfig) {
-                try {
-                    const config = JSON.parse(savedConfig);
-                    const grid = document.getElementById('dashboardGrid');
-                    const cards = document.querySelectorAll('.dashboard-card');
-                    
-                    // 按照保存的顺序重新排列卡片
-                    config.forEach(cardId => {
-                        const card = document.querySelector(`[data-card="${cardId}"]`);
-                        if (card) {
-                            grid.appendChild(card);
-                        }
-                    });
-                } catch (e) {
-                    console.error('加载布局配置失败:', e);
-                }
-            }
-        }
-
-        // 刷新卡片数据
-        function refreshCard(cardType) {
-            showMessage('正在刷新数据...', 'info');
-            // 模拟数据刷新
-            setTimeout(() => {
-                showMessage('数据刷新完成', 'success');
-            }, 1000);
-        }
-
-        // 写工作日志
-        function writeWorkLog() {
-            showMessage('正在打开工作日志编辑器...', 'info');
-            // 这里可以打开日志编辑页面或弹窗
-        }
-
-        // 添加卡片操作事件监听
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.card-action-btn')) {
-                const btn = e.target.closest('.card-action-btn');
-                const card = btn.closest('.dashboard-card');
-                const cardType = card.dataset.card;
-                
-                if (btn.title === '刷新') {
-                    refreshCard(cardType);
-                }
-            }
-        });
-
-        // 模拟实时数据更新
-        setInterval(() => {
-            // 更新时间显示
-            const now = new Date();
-            const timeStr = now.toLocaleTimeString('zh-CN');
+        // 二级菜单控制
+        function toggleNavGroup(button) {
+            const submenu = button.nextElementSibling;
+            const arrow = button.querySelector('.nav-arrow');
+            const isExpanded = submenu.classList.contains('expanded');
             
-            // 可以在这里添加实时数据更新逻辑
-        }, 60000); // 每分钟更新一次
+            // 关闭所有其他展开的菜单
+            document.querySelectorAll('.nav-submenu.expanded').forEach(menu => {
+                if (menu !== submenu) {
+                    menu.classList.remove('expanded');
+                    menu.previousElementSibling.classList.remove('expanded');
+                    menu.previousElementSibling.querySelector('.nav-arrow').classList.remove('rotated');
+                }
+            });
+            
+            // 切换当前菜单状态
+            if (isExpanded) {
+                submenu.classList.remove('expanded');
+                button.classList.remove('expanded');
+                arrow.classList.remove('rotated');
+            } else {
+                submenu.classList.add('expanded');
+                button.classList.add('expanded');
+                arrow.classList.add('rotated');
+            }
+        }
+
+        // 移动端菜单切换
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.app-sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // 点击主内容区域时关闭移动端菜单
+        document.addEventListener('click', function(e) {
+            const sidebar = document.querySelector('.app-sidebar');
+            const toggleBtn = document.querySelector('.mobile-menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !toggleBtn.contains(e.target)) {
+                sidebar.classList.remove('mobile-open');
+            }
+        });
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('OA工作台页面已加载');
+            showMessage('欢迎使用OA工作台！', 'success');
+        });
     </script>
 </body>
 </html>
-</rewritten_file>

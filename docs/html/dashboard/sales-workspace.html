@@ -7,33 +7,79 @@
     <link rel="stylesheet" href="../assets/css/common.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .workspace-container {
-            display: flex;
+        /* 框架布局结构 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
             min-height: 100vh;
-            background: var(--bg-color);
+            background: #f5f5f5;
         }
 
-        .sidebar {
-            width: 240px;
+        /* 头部区域 */
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        /* 左侧导航区域 */
+        .app-sidebar {
+            grid-area: sidebar;
             background: white;
             box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-            position: fixed;
+            position: sticky;
+            top: 0;
             height: 100vh;
+            overflow-y: auto;
             z-index: 100;
         }
 
+        /* 主内容区域 */
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* 底部页脚区域 */
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 侧边栏头部 */
         .sidebar-header {
             height: 60px;
             display: flex;
             align-items: center;
             padding: 0 20px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
         }
 
         .logo {
             width: 32px;
             height: 32px;
-            background: var(--primary-color);
+            background: #1890ff;
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -46,7 +92,7 @@
         .brand-name {
             font-size: 18px;
             font-weight: 600;
-            color: var(--text-color);
+            color: #333;
         }
 
         .nav-menu {
@@ -106,29 +152,89 @@
             min-width: 20px;
         }
 
-        .main-content {
-            flex: 1;
-            margin-left: 240px;
-            min-height: 100vh;
-        }
-
-        .header {
-            height: 60px;
-            background: white;
-            border-bottom: 1px solid var(--border-color);
+        /* 二级菜单样式 */
+        .nav-group {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
-            position: sticky;
-            top: 0;
-            z-index: 50;
+            padding: 12px 20px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
         }
 
+        .nav-group:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-group.expanded {
+            background: rgba(24, 144, 255, 0.05);
+            color: #1890ff;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #fafafa;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 10px 20px 10px 52px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-subitem:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .nav-subitem.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: #1890ff;
+        }
+
+        .nav-subitem.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        /* 面包屑导航 */
         .breadcrumb {
             display: flex;
             align-items: center;
-            color: var(--text-color-secondary);
+            color: #666;
         }
 
         .breadcrumb-item {
@@ -137,9 +243,10 @@
 
         .breadcrumb-separator {
             margin: 0 8px;
-            color: var(--border-color);
+            color: #d9d9d9;
         }
 
+        /* 头部操作区 */
         .header-actions {
             display: flex;
             align-items: center;
@@ -154,9 +261,9 @@
             width: 200px;
             height: 32px;
             padding: 0 12px 0 36px;
-            border: 1px solid var(--border-color);
+            border: 1px solid #d9d9d9;
             border-radius: 6px;
-            background: var(--bg-color-light);
+            background: #fafafa;
         }
 
         .search-icon {
@@ -164,7 +271,7 @@
             left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--text-color-secondary);
+            color: #999;
         }
 
         .notification-btn {
@@ -178,12 +285,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--text-color-secondary);
+            color: #666;
             transition: all 0.3s ease;
         }
 
         .notification-btn:hover {
-            background: var(--bg-color-light);
+            background: #f5f5f5;
         }
 
         .notification-badge {
@@ -192,7 +299,7 @@
             right: -2px;
             width: 16px;
             height: 16px;
-            background: var(--error-color);
+            background: #ff4d4f;
             color: white;
             border-radius: 50%;
             font-size: 10px;
@@ -211,14 +318,14 @@
         }
 
         .user-menu:hover {
-            background: var(--bg-color-light);
+            background: #f5f5f5;
         }
 
         .user-avatar {
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background: var(--primary-color);
+            background: #1890ff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -227,88 +334,95 @@
             margin-right: 8px;
         }
 
-        .workspace-content {
-            padding: 24px;
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
 
-        .sales-header {
-            background: linear-gradient(135deg, #faad14 0%, #ffc53d 100%);
+        .footer-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+        }
+
+        /* 销售工作台特有样式 */
+        .workspace-header {
+            background: linear-gradient(135deg, #fa8c16 0%, #ffc53d 100%);
             color: white;
             padding: 24px;
             border-radius: 12px;
             margin-bottom: 24px;
         }
 
-        .sales-title {
+        .workspace-title {
             font-size: 24px;
-            font-weight: 600;
+            font-weight: 700;
             margin-bottom: 8px;
         }
 
-        .sales-subtitle {
-            font-size: 14px;
+        .workspace-desc {
             opacity: 0.9;
-            margin-bottom: 20px;
+            margin-bottom: 16px;
         }
 
-        .kpi-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-            gap: 20px;
+        .workspace-stats {
+            display: flex;
+            gap: 24px;
         }
 
-        .kpi-stat {
+        .workspace-stat {
             text-align: center;
         }
 
-        .kpi-number {
-            font-size: 28px;
+        .workspace-stat-value {
+            font-size: 20px;
             font-weight: 700;
             margin-bottom: 4px;
         }
 
-        .kpi-label {
+        .workspace-stat-label {
             font-size: 12px;
             opacity: 0.8;
         }
 
-        .kpi-trend {
-            font-size: 10px;
-            margin-top: 4px;
-        }
-
-        .kpi-trend.up {
-            color: #52c41a;
-        }
-
-        .kpi-trend.down {
-            color: #f5222d;
-        }
-
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 24px;
+            margin-bottom: 24px;
         }
 
         .dashboard-card {
             background: white;
             border-radius: 12px;
+            padding: 20px;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
         }
 
         .card-header {
-            padding: 20px 20px 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-bottom: 16px;
         }
 
         .card-title {
             font-size: 16px;
             font-weight: 600;
-            color: var(--text-color);
+            color: #333;
             display: flex;
             align-items: center;
         }
@@ -318,306 +432,175 @@
             font-size: 18px;
         }
 
-        .card-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .card-action-btn {
-            width: 24px;
-            height: 24px;
-            border: none;
-            background: none;
+        .card-more {
+            color: #999;
             cursor: pointer;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-color-secondary);
-            transition: all 0.3s ease;
+            font-size: 20px;
         }
 
-        .card-action-btn:hover {
-            background: var(--bg-color-light);
-        }
-
-        .card-content {
-            padding: 20px;
-        }
-
-        /* 商品统计卡片 */
-        .product-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 16px;
-        }
-
-        .product-stat {
-            text-align: center;
-            padding: 20px;
-            border-radius: 8px;
-            position: relative;
-        }
-
-        .product-stat.total {
-            background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
-            color: white;
-        }
-
-        .product-stat.new {
-            background: linear-gradient(135deg, #52c41a 0%, #73d13d 100%);
-            color: white;
-        }
-
-        .product-stat.hot {
-            background: linear-gradient(135deg, #faad14 0%, #ffc53d 100%);
-            color: white;
-        }
-
-        .product-stat.promotion {
-            background: linear-gradient(135deg, #f5222d 0%, #ff4d4f 100%);
-            color: white;
-        }
-
-        .product-number {
-            font-size: 32px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .product-label {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        /* 图表容器 */
-        .chart-container {
-            position: relative;
-            height: 300px;
-            margin-top: 16px;
-        }
-
-        /* 销售排行 */
-        .sales-ranking {
-            max-height: 320px;
-            overflow-y: auto;
-        }
-
-        .ranking-item {
-            display: flex;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-color-light);
-        }
-
-        .ranking-item:last-child {
-            border-bottom: none;
-        }
-
-        .ranking-number {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            font-weight: bold;
-            margin-right: 12px;
-            color: white;
-        }
-
-        .ranking-number.first {
-            background: #faad14;
-        }
-
-        .ranking-number.second {
-            background: #d9d9d9;
-        }
-
-        .ranking-number.third {
-            background: #cd7f32;
-        }
-
-        .ranking-number.other {
-            background: var(--text-color-secondary);
-        }
-
-        .salesperson-info {
-            flex: 1;
-        }
-
-        .salesperson-name {
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-color);
-            margin-bottom: 4px;
-        }
-
-        .salesperson-performance {
-            font-size: 12px;
-            color: var(--text-color-secondary);
-        }
-
-        .salesperson-amount {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--primary-color);
-        }
-
-        /* 目标完成度 */
-        .goal-progress {
-            margin-bottom: 20px;
-        }
-
-        .goal-item {
-            margin-bottom: 16px;
-        }
-
-        .goal-header {
+        .stat-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 8px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
         }
 
-        .goal-name {
+        .stat-item:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: #666;
             font-size: 14px;
-            color: var(--text-color);
-            font-weight: 500;
         }
 
-        .goal-value {
+        .stat-value {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .stat-value.important {
+            color: #ff4d4f;
+        }
+
+        .stat-value.success {
+            color: #52c41a;
+        }
+
+        .stat-value.warning {
+            color: #fa8c16;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
             font-size: 14px;
-            color: var(--text-color-secondary);
         }
 
-        .goal-bar {
-            height: 8px;
-            background: var(--bg-color-light);
-            border-radius: 4px;
-            overflow: hidden;
+        .action-btn:hover {
+            border-color: #fa8c16;
+            color: #fa8c16;
         }
 
-        .goal-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.3s ease;
+        .action-btn.primary {
+            background: #fa8c16;
+            border-color: #fa8c16;
+            color: white;
         }
 
-        .goal-fill.excellent {
-            background: linear-gradient(90deg, #52c41a 0%, #73d13d 100%);
+        .action-btn.primary:hover {
+            background: #ffc53d;
         }
 
-        .goal-fill.good {
-            background: linear-gradient(90deg, #1890ff 0%, #40a9ff 100%);
+        .chart-container {
+            position: relative;
+            height: 200px;
+            margin-bottom: 16px;
         }
 
-        .goal-fill.normal {
-            background: linear-gradient(90deg, #faad14 0%, #ffc53d 100%);
-        }
-
-        .goal-fill.poor {
-            background: linear-gradient(90deg, #f5222d 0%, #ff4d4f 100%);
-        }
-
-        /* 热门商品 */
-        .hot-products {
+        .sales-list {
             max-height: 300px;
             overflow-y: auto;
         }
 
-        .product-item {
+        .sales-item {
             display: flex;
             align-items: center;
             padding: 12px 0;
-            border-bottom: 1px solid var(--border-color-light);
+            border-bottom: 1px solid #f0f0f0;
         }
 
-        .product-item:last-child {
+        .sales-item:last-child {
             border-bottom: none;
         }
 
-        .product-image {
-            width: 48px;
-            height: 48px;
-            border-radius: 8px;
-            background: var(--bg-color-light);
+        .sales-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #fa8c16;
             display: flex;
             align-items: center;
             justify-content: center;
+            color: white;
+            font-weight: bold;
             margin-right: 12px;
-            font-size: 20px;
         }
 
-        .product-info {
+        .sales-info {
             flex: 1;
         }
 
-        .product-name {
+        .sales-name {
             font-size: 14px;
-            font-weight: 500;
-            color: var(--text-color);
+            color: #333;
             margin-bottom: 4px;
         }
 
-        .product-sales {
+        .sales-performance {
             font-size: 12px;
-            color: var(--text-color-secondary);
+            color: #999;
         }
 
-        .product-amount {
-            font-size: 14px;
+        .sales-value {
             font-weight: 600;
-            color: var(--success-color);
+            color: #fa8c16;
+            margin-left: 8px;
         }
 
-        /* 时间筛选器 */
-        .time-filter {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 16px;
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 8px 0;
         }
 
-        .time-btn {
-            padding: 6px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            background: white;
-            color: var(--text-color-secondary);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 12px;
-        }
-
-        .time-btn.active {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        .time-btn:hover {
-            border-color: var(--primary-color);
-            color: var(--primary-color);
+        .progress-fill {
+            height: 100%;
+            background: #fa8c16;
+            transition: width 0.3s ease;
         }
 
         /* 响应式设计 */
-        @media (max-width: 1200px) {
-            .dashboard-grid {
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            }
-        }
-
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-240px);
+            .app-layout {
+                grid-template-areas: 
+                    "header"
+                    "main"
+                    "footer";
+                grid-template-columns: 1fr;
+                grid-template-rows: 60px 1fr auto;
             }
 
-            .main-content {
-                margin-left: 0;
+            .app-sidebar {
+                position: fixed;
+                left: -240px;
+                height: 100vh;
+                transition: left 0.3s ease;
+                z-index: 200;
             }
 
-            .workspace-content {
+            .app-sidebar.mobile-open {
+                left: 0;
+            }
+
+            .app-main {
                 padding: 16px;
             }
 
@@ -626,20 +609,32 @@
                 gap: 16px;
             }
 
-            .kpi-stats {
-                grid-template-columns: repeat(2, 1fr);
+            .workspace-stats {
+                flex-direction: column;
+                gap: 12px;
             }
 
-            .product-stats {
-                grid-template-columns: 1fr;
+            .quick-actions {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                font-size: 18px;
+                cursor: pointer;
+                padding: 8px;
+                color: #666;
             }
         }
     </style>
 </head>
 <body>
-    <div class="workspace-container">
-        <!-- 侧边栏 -->
-        <div class="sidebar">
+    <div class="app-layout">
+        <!-- 左侧导航 -->
+        <aside class="app-sidebar">
             <div class="sidebar-header">
                 <div class="logo">P3</div>
                 <div class="brand-name">Portal 3.0</div>
@@ -647,66 +642,93 @@
             
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="oa-workspace.html" class="nav-link">
+                    <a href="../index.html" class="nav-link">
                         <span class="nav-icon">🏠</span>
-                        <span>OA工作台</span>
+                        <span>首页总览</span>
                     </a>
                 </li>
+                
+                <!-- 工作台模块 -->
                 <li class="nav-item">
-                    <a href="crm-workspace.html" class="nav-link">
-                        <span class="nav-icon">👥</span>
-                        <span>CRM工作台</span>
-                    </a>
+                    <button class="nav-group expanded" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">💼</span>
+                        <span>工作台</span>
+                        <span class="nav-arrow rotated">▶</span>
+                    </button>
+                    <div class="nav-submenu expanded">
+                        <a href="oa-workspace.html" class="nav-subitem">OA工作台</a>
+                        <a href="crm-workspace.html" class="nav-subitem">CRM工作台</a>
+                        <a href="sales-workspace.html" class="nav-subitem active">销售工作台</a>
+                        <a href="workspace-config.html" class="nav-subitem">工作台配置</a>
+                    </div>
                 </li>
+                
+                <!-- 组织架构模块 -->
                 <li class="nav-item">
-                    <a href="#" class="nav-link active">
-                        <span class="nav-icon">📊</span>
-                        <span>销售工作台</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../organization/department-tree.html" class="nav-link">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
                         <span class="nav-icon">🏢</span>
                         <span>组织架构</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../organization/department-tree.html" class="nav-subitem">部门管理</a>
+                        <a href="../organization/employee-list.html" class="nav-subitem">员工管理</a>
+                        <a href="../organization/position-manage.html" class="nav-subitem">岗位管理</a>
+                        <a href="../organization/role-permission.html" class="nav-subitem">角色权限</a>
+                    </div>
                 </li>
+                
+                <!-- 客户管理模块 -->
                 <li class="nav-item">
-                    <a href="../crm/customer-list.html" class="nav-link">
-                        <span class="nav-icon">👤</span>
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">👥</span>
                         <span>客户管理</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../crm/customer-list.html" class="nav-subitem">客户列表</a>
+                        <a href="#" class="nav-subitem">客户详情</a>
+                        <a href="#" class="nav-subitem">跟进记录</a>
+                        <a href="#" class="nav-subitem">客户转移</a>
+                    </div>
                 </li>
+                
+                <!-- 商品管理模块 -->
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
                         <span class="nav-icon">📦</span>
                         <span>商品管理</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="#" class="nav-subitem">商品列表</a>
+                        <a href="#" class="nav-subitem">商品分类</a>
+                        <a href="#" class="nav-subitem">库存管理</a>
+                        <a href="#" class="nav-subitem">价格策略</a>
+                    </div>
                 </li>
+                
+                <!-- 订单管理模块 -->
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
                         <span class="nav-icon">📋</span>
                         <span>订单管理</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">🎧</span>
-                        <span>客服中心</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">⚙️</span>
-                        <span>运维管理</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="#" class="nav-subitem">订单列表</a>
+                        <a href="#" class="nav-subitem">订单详情</a>
+                        <a href="#" class="nav-subitem">订单统计</a>
+                        <a href="#" class="nav-subitem">退货管理</a>
+                    </div>
                 </li>
             </ul>
-        </div>
+        </aside>
 
-        <!-- 主内容区 -->
-        <div class="main-content">
-            <!-- 顶部导航 -->
-            <div class="header">
+        <!-- 头部区域 -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
                 <div class="breadcrumb">
                     <span class="breadcrumb-item">Portal 3.0</span>
                     <span class="breadcrumb-separator">/</span>
@@ -714,512 +736,364 @@
                     <span class="breadcrumb-separator">/</span>
                     <span class="breadcrumb-item">销售工作台</span>
                 </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索销售数据...">
+                </div>
                 
-                <div class="header-actions">
-                    <div class="search-box">
-                        <span class="search-icon">🔍</span>
-                        <input type="text" class="search-input" placeholder="搜索商品或订单...">
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">7</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">管</div>
+                    <span>管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <!-- 工作台头部 -->
+            <div class="workspace-header">
+                <h1 class="workspace-title">📊 销售工作台</h1>
+                <p class="workspace-desc">销售业绩管理工作台，跟踪销售数据、业绩分析和目标达成</p>
+                <div class="workspace-stats">
+                    <div class="workspace-stat">
+                        <div class="workspace-stat-value">¥385.2万</div>
+                        <div class="workspace-stat-label">本月销售额</div>
                     </div>
-                    
-                    <button class="notification-btn">
-                        <span>🔔</span>
-                        <span class="notification-badge">7</span>
-                    </button>
-                    
-                    <div class="user-menu">
-                        <div class="user-avatar">王</div>
-                        <span>王强</span>
+                    <div class="workspace-stat">
+                        <div class="workspace-stat-value">92.8%</div>
+                        <div class="workspace-stat-label">目标完成率</div>
+                    </div>
+                    <div class="workspace-stat">
+                        <div class="workspace-stat-value">156</div>
+                        <div class="workspace-stat-label">成交订单</div>
+                    </div>
+                    <div class="workspace-stat">
+                        <div class="workspace-stat-value">¥24,692</div>
+                        <div class="workspace-stat-label">平均客单价</div>
                     </div>
                 </div>
             </div>
 
-            <!-- 工作台内容 -->
-            <div class="workspace-content">
-                <!-- 销售概览区域 -->
-                <div class="sales-header">
-                    <h1 class="sales-title">销售业绩仪表板</h1>
-                    <p class="sales-subtitle">实时监控销售数据，提升业绩表现</p>
-                    <div class="kpi-stats">
-                        <div class="kpi-stat">
-                            <div class="kpi-number">2,486</div>
-                            <div class="kpi-label">在售商品</div>
-                            <div class="kpi-trend up">↗ +12.5%</div>
-                        </div>
-                        <div class="kpi-stat">
-                            <div class="kpi-number">156,842</div>
-                            <div class="kpi-label">总浏览量</div>
-                            <div class="kpi-trend up">↗ +8.3%</div>
-                        </div>
-                        <div class="kpi-stat">
-                            <div class="kpi-number">23,567</div>
-                            <div class="kpi-label">点击数</div>
-                            <div class="kpi-trend down">↘ -2.1%</div>
-                        </div>
-                        <div class="kpi-stat">
-                            <div class="kpi-number">3,289</div>
-                            <div class="kpi-label">转化数</div>
-                            <div class="kpi-trend up">↗ +15.7%</div>
-                        </div>
-                        <div class="kpi-stat">
-                            <div class="kpi-number">¥2.86M</div>
-                            <div class="kpi-label">成交额</div>
-                            <div class="kpi-trend up">↗ +22.4%</div>
-                        </div>
+            <!-- 仪表板网格 -->
+            <div class="dashboard-grid">
+                <!-- 销售概览 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">💰</span>
+                            销售概览
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">本月销售额</span>
+                        <span class="stat-value success">¥385.2万</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">同比增长</span>
+                        <span class="stat-value success">+23.5%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">环比增长</span>
+                        <span class="stat-value warning">+8.2%</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">目标完成率</span>
+                        <span class="stat-value">92.8%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 92.8%;"></div>
+                    </div>
+                    <div class="quick-actions" style="margin-top: 16px;">
+                        <button class="action-btn primary">销售报表</button>
+                        <button class="action-btn">目标设定</button>
                     </div>
                 </div>
 
-                <!-- 仪表板网格 -->
-                <div class="dashboard-grid">
-                    <!-- 商品统计 -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">📦</span>
-                                商品统计
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="刷新">🔄</button>
-                                <button class="card-action-btn" title="详情">📊</button>
+                <!-- 销售趋势图 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">📈</span>
+                            销售趋势
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="salesTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 销售排行榜 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">🏆</span>
+                            销售排行榜
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="sales-list">
+                        <div class="sales-item">
+                            <div class="sales-avatar">张</div>
+                            <div class="sales-info">
+                                <div class="sales-name">张三 - 销售一部</div>
+                                <div class="sales-performance">本月完成率 156%</div>
                             </div>
+                            <div class="sales-value">¥89.6万</div>
                         </div>
-                        <div class="card-content">
-                            <div class="product-stats">
-                                <div class="product-stat total">
-                                    <div class="product-number">2,486</div>
-                                    <div class="product-label">商品总数</div>
-                                </div>
-                                <div class="product-stat new">
-                                    <div class="product-number">156</div>
-                                    <div class="product-label">新品数量</div>
-                                </div>
-                                <div class="product-stat hot">
-                                    <div class="product-number">89</div>
-                                    <div class="product-label">热销商品</div>
-                                </div>
-                                <div class="product-stat promotion">
-                                    <div class="product-number">234</div>
-                                    <div class="product-label">促销商品</div>
-                                </div>
+                        <div class="sales-item">
+                            <div class="sales-avatar">李</div>
+                            <div class="sales-info">
+                                <div class="sales-name">李四 - 销售二部</div>
+                                <div class="sales-performance">本月完成率 142%</div>
                             </div>
+                            <div class="sales-value">¥76.8万</div>
+                        </div>
+                        <div class="sales-item">
+                            <div class="sales-avatar">王</div>
+                            <div class="sales-info">
+                                <div class="sales-name">王五 - 销售一部</div>
+                                <div class="sales-performance">本月完成率 128%</div>
+                            </div>
+                            <div class="sales-value">¥65.4万</div>
+                        </div>
+                        <div class="sales-item">
+                            <div class="sales-avatar">赵</div>
+                            <div class="sales-info">
+                                <div class="sales-name">赵六 - 销售三部</div>
+                                <div class="sales-performance">本月完成率 115%</div>
+                            </div>
+                            <div class="sales-value">¥58.9万</div>
                         </div>
                     </div>
+                    <div class="quick-actions" style="margin-top: 16px;">
+                        <button class="action-btn primary">激励方案</button>
+                        <button class="action-btn">详细排名</button>
+                    </div>
+                </div>
 
-                    <!-- 销售趋势 -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">📈</span>
-                                销售趋势分析
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="设置">⚙️</button>
-                                <button class="card-action-btn" title="导出">📤</button>
+                <!-- 订单统计 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">📋</span>
+                            订单统计
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">待处理订单</span>
+                        <span class="stat-value important">23</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">今日新增</span>
+                        <span class="stat-value">45</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">本月成交</span>
+                        <span class="stat-value success">1,286</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">平均客单价</span>
+                        <span class="stat-value">¥24,692</span>
+                    </div>
+                    <div class="quick-actions" style="margin-top: 16px;">
+                        <button class="action-btn">订单管理</button>
+                        <button class="action-btn">订单分析</button>
+                    </div>
+                </div>
+
+                <!-- 客户转化漏斗 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">🎯</span>
+                            转化漏斗
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="conversionChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 销售提醒 -->
+                <div class="dashboard-card">
+                    <div class="card-header">
+                        <h3 class="card-title">
+                            <span class="card-icon">⏰</span>
+                            销售提醒
+                        </h3>
+                        <span class="card-more">⋯</span>
+                    </div>
+                    <div class="sales-list">
+                        <div class="sales-item">
+                            <div class="sales-info">
+                                <div class="sales-name">客户回访 - 阿里巴巴</div>
+                                <div class="sales-performance">今天 14:00</div>
                             </div>
+                            <div class="sales-value" style="background: #fff1f0; color: #ff4d4f; padding: 2px 8px; border-radius: 10px; font-size: 12px;">紧急</div>
                         </div>
-                        <div class="card-content">
-                            <div class="time-filter">
-                                <button class="time-btn active" onclick="switchTimeRange('today')">今日</button>
-                                <button class="time-btn" onclick="switchTimeRange('week')">本周</button>
-                                <button class="time-btn" onclick="switchTimeRange('month')">本月</button>
-                                <button class="time-btn" onclick="switchTimeRange('custom')">自定义</button>
+                        <div class="sales-item">
+                            <div class="sales-info">
+                                <div class="sales-name">合同续签 - 腾讯科技</div>
+                                <div class="sales-performance">明天 10:00</div>
                             </div>
-                            <div class="chart-container">
-                                <canvas id="salesTrendChart"></canvas>
+                            <div class="sales-value" style="background: #fff7e6; color: #fa8c16; padding: 2px 8px; border-radius: 10px; font-size: 12px;">重要</div>
+                        </div>
+                        <div class="sales-item">
+                            <div class="sales-info">
+                                <div class="sales-name">方案演示 - 百度公司</div>
+                                <div class="sales-performance">后天 15:30</div>
                             </div>
+                            <div class="sales-value" style="background: #f6ffed; color: #52c41a; padding: 2px 8px; border-radius: 10px; font-size: 12px;">普通</div>
                         </div>
                     </div>
-
-                    <!-- 个人业绩排名 -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">🏆</span>
-                                销售排行榜
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="详细报表">📋</button>
-                                <button class="card-action-btn" title="刷新">🔄</button>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="sales-ranking">
-                                <div class="ranking-item">
-                                    <div class="ranking-number first">1</div>
-                                    <div class="salesperson-info">
-                                        <div class="salesperson-name">张伟</div>
-                                        <div class="salesperson-performance">本月完成业绩 125%</div>
-                                    </div>
-                                    <div class="salesperson-amount">¥456K</div>
-                                </div>
-                                <div class="ranking-item">
-                                    <div class="ranking-number second">2</div>
-                                    <div class="salesperson-info">
-                                        <div class="salesperson-name">李娜</div>
-                                        <div class="salesperson-performance">本月完成业绩 118%</div>
-                                    </div>
-                                    <div class="salesperson-amount">¥398K</div>
-                                </div>
-                                <div class="ranking-item">
-                                    <div class="ranking-number third">3</div>
-                                    <div class="salesperson-info">
-                                        <div class="salesperson-name">王强</div>
-                                        <div class="salesperson-performance">本月完成业绩 108%</div>
-                                    </div>
-                                    <div class="salesperson-amount">¥345K</div>
-                                </div>
-                                <div class="ranking-item">
-                                    <div class="ranking-number other">4</div>
-                                    <div class="salesperson-info">
-                                        <div class="salesperson-name">刘敏</div>
-                                        <div class="salesperson-performance">本月完成业绩 95%</div>
-                                    </div>
-                                    <div class="salesperson-amount">¥298K</div>
-                                </div>
-                                <div class="ranking-item">
-                                    <div class="ranking-number other">5</div>
-                                    <div class="salesperson-info">
-                                        <div class="salesperson-name">陈浩</div>
-                                        <div class="salesperson-performance">本月完成业绩 87%</div>
-                                    </div>
-                                    <div class="salesperson-amount">¥256K</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 目标完成度 -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">🎯</span>
-                                目标完成度
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="设置目标">⚙️</button>
-                                <button class="card-action-btn" title="刷新">🔄</button>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="goal-progress">
-                                <div class="goal-item">
-                                    <div class="goal-header">
-                                        <span class="goal-name">月度销售目标</span>
-                                        <span class="goal-value">125% (¥456K/¥365K)</span>
-                                    </div>
-                                    <div class="goal-bar">
-                                        <div class="goal-fill excellent" style="width: 100%"></div>
-                                    </div>
-                                </div>
-                                <div class="goal-item">
-                                    <div class="goal-header">
-                                        <span class="goal-name">客户开发目标</span>
-                                        <span class="goal-value">108% (54/50)</span>
-                                    </div>
-                                    <div class="goal-bar">
-                                        <div class="goal-fill excellent" style="width: 100%"></div>
-                                    </div>
-                                </div>
-                                <div class="goal-item">
-                                    <div class="goal-header">
-                                        <span class="goal-name">订单完成目标</span>
-                                        <span class="goal-value">92% (184/200)</span>
-                                    </div>
-                                    <div class="goal-bar">
-                                        <div class="goal-fill good" style="width: 92%"></div>
-                                    </div>
-                                </div>
-                                <div class="goal-item">
-                                    <div class="goal-header">
-                                        <span class="goal-name">回款目标</span>
-                                        <span class="goal-value">78% (¥234K/¥300K)</span>
-                                    </div>
-                                    <div class="goal-bar">
-                                        <div class="goal-fill normal" style="width: 78%"></div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 热销商品 -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">🔥</span>
-                                热销商品排行
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="查看全部">👁️</button>
-                                <button class="card-action-btn" title="刷新">🔄</button>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="hot-products">
-                                <div class="product-item">
-                                    <div class="product-image">💻</div>
-                                    <div class="product-info">
-                                        <div class="product-name">MacBook Pro 14寸</div>
-                                        <div class="product-sales">本月销量 156台</div>
-                                    </div>
-                                    <div class="product-amount">¥2.3M</div>
-                                </div>
-                                <div class="product-item">
-                                    <div class="product-image">📱</div>
-                                    <div class="product-info">
-                                        <div class="product-name">iPhone 15 Pro</div>
-                                        <div class="product-sales">本月销量 289台</div>
-                                    </div>
-                                    <div class="product-amount">¥1.8M</div>
-                                </div>
-                                <div class="product-item">
-                                    <div class="product-image">🎧</div>
-                                    <div class="product-info">
-                                        <div class="product-name">AirPods Pro</div>
-                                        <div class="product-sales">本月销量 456台</div>
-                                    </div>
-                                    <div class="product-amount">¥1.2M</div>
-                                </div>
-                                <div class="product-item">
-                                    <div class="product-image">⌚</div>
-                                    <div class="product-info">
-                                        <div class="product-name">Apple Watch</div>
-                                        <div class="product-sales">本月销量 234台</div>
-                                    </div>
-                                    <div class="product-amount">¥890K</div>
-                                </div>
-                                <div class="product-item">
-                                    <div class="product-image">📺</div>
-                                    <div class="product-info">
-                                        <div class="product-name">小米电视 65寸</div>
-                                        <div class="product-sales">本月销量 89台</div>
-                                    </div>
-                                    <div class="product-amount">¥356K</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 转化漏斗 -->
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3 class="card-title">
-                                <span class="card-icon">📊</span>
-                                销售转化漏斗
-                            </h3>
-                            <div class="card-actions">
-                                <button class="card-action-btn" title="设置">⚙️</button>
-                                <button class="card-action-btn" title="全屏">🔍</button>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="chart-container">
-                                <canvas id="conversionChart"></canvas>
-                            </div>
-                        </div>
+                    <div class="quick-actions" style="margin-top: 16px;">
+                        <button class="action-btn primary">添加提醒</button>
+                        <button class="action-btn">提醒设置</button>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台 | 
+                <a href="#" style="color: #1890ff; text-decoration: none;">技术支持</a> | 
+                <a href="#" style="color: #1890ff; text-decoration: none;">帮助文档</a> | 
+                <span style="color: #999;">版本 v3.0.1</span>
+            </div>
+        </footer>
     </div>
 
     <script src="../assets/js/common.js"></script>
+    <script src="../assets/js/mock-data.js"></script>
     <script>
-        // 初始化图表
-        document.addEventListener('DOMContentLoaded', function() {
-            initSalesTrendChart();
-            initConversionChart();
+        // 二级菜单控制
+        function toggleNavGroup(button) {
+            const submenu = button.nextElementSibling;
+            const arrow = button.querySelector('.nav-arrow');
+            const isExpanded = submenu.classList.contains('expanded');
             
-            // 模拟实时数据更新
-            setInterval(updateSalesDashboard, 60000); // 1分钟更新一次
-        });
-
-        // 销售趋势图
-        function initSalesTrendChart() {
-            const ctx = document.getElementById('salesTrendChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: ['9:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'],
-                    datasets: [{
-                        label: '销售额 (万元)',
-                        data: [12.5, 18.3, 25.7, 32.1, 28.9, 45.6, 52.3, 48.7, 56.2],
-                        borderColor: '#faad14',
-                        backgroundColor: 'rgba(250, 173, 20, 0.1)',
-                        fill: true,
-                        tension: 0.4
-                    }, {
-                        label: '订单量',
-                        data: [8, 15, 22, 28, 25, 35, 42, 38, 45],
-                        borderColor: '#1890ff',
-                        backgroundColor: 'rgba(24, 144, 255, 0.1)',
-                        fill: true,
-                        tension: 0.4,
-                        yAxisID: 'y1'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            type: 'linear',
-                            display: true,
-                            position: 'left',
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: '销售额 (万元)'
-                            }
-                        },
-                        y1: {
-                            type: 'linear',
-                            display: true,
-                            position: 'right',
-                            beginAtZero: true,
-                            title: {
-                                display: true,
-                                text: '订单量'
-                            },
-                            grid: {
-                                drawOnChartArea: false,
-                            },
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        }
-                    }
+            // 关闭所有其他展开的菜单
+            document.querySelectorAll('.nav-submenu.expanded').forEach(menu => {
+                if (menu !== submenu) {
+                    menu.classList.remove('expanded');
+                    menu.previousElementSibling.classList.remove('expanded');
+                    menu.previousElementSibling.querySelector('.nav-arrow').classList.remove('rotated');
                 }
             });
-        }
-
-        // 转化漏斗图
-        function initConversionChart() {
-            const ctx = document.getElementById('conversionChart').getContext('2d');
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ['商品浏览', '加入购物车', '下单支付', '完成交易'],
-                    datasets: [{
-                        label: '转化数量',
-                        data: [156842, 23567, 8945, 3289],
-                        backgroundColor: [
-                            '#1890ff',
-                            '#52c41a',
-                            '#faad14',
-                            '#f5222d'
-                        ],
-                        borderRadius: 4,
-                        borderSkipped: false,
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            grid: {
-                                color: 'rgba(0, 0, 0, 0.1)'
-                            }
-                        },
-                        x: {
-                            grid: {
-                                display: false
-                            }
-                        }
-                    }
-                }
-            });
-        }
-
-        // 切换时间范围
-        function switchTimeRange(range) {
-            // 更新按钮状态
-            document.querySelectorAll('.time-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-
-            // 模拟数据更新
-            showMessage(`切换到${getTimeRangeText(range)}数据`, 'info');
             
-            // 这里可以添加重新加载图表数据的逻辑
+            // 切换当前菜单状态
+            if (isExpanded) {
+                submenu.classList.remove('expanded');
+                button.classList.remove('expanded');
+                arrow.classList.remove('rotated');
+            } else {
+                submenu.classList.add('expanded');
+                button.classList.add('expanded');
+                arrow.classList.add('rotated');
+            }
         }
 
-        function getTimeRangeText(range) {
-            const rangeMap = {
-                'today': '今日',
-                'week': '本周',
-                'month': '本月',
-                'custom': '自定义'
-            };
-            return rangeMap[range] || '今日';
+        // 移动端菜单切换
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.app-sidebar');
+            sidebar.classList.toggle('mobile-open');
         }
 
-        // 更新销售仪表板数据
-        function updateSalesDashboard() {
-            // 模拟数据更新
-            console.log('更新销售仪表板数据...');
-            
-            // 这里可以添加实际的数据更新逻辑
-            // 比如更新KPI数据、销售排行等
-        }
-
-        // 刷新特定卡片
-        function refreshCard(cardType) {
-            showMessage('正在刷新数据...', 'info');
-            
-            setTimeout(() => {
-                showMessage('数据刷新完成', 'success');
-                // 这里可以添加具体的数据刷新逻辑
-            }, 1000);
-        }
-
-        // 添加卡片操作事件监听
+        // 点击主内容区域时关闭移动端菜单
         document.addEventListener('click', function(e) {
-            if (e.target.closest('.card-action-btn')) {
-                const btn = e.target.closest('.card-action-btn');
-                const card = btn.closest('.dashboard-card');
-                
-                if (btn.title === '刷新') {
-                    refreshCard('general');
-                } else if (btn.title === '详情') {
-                    showMessage('正在打开详情页面...', 'info');
-                } else if (btn.title === '查看全部') {
-                    showMessage('正在打开商品管理页面...', 'info');
-                } else if (btn.title === '设置目标') {
-                    showMessage('正在打开目标设置页面...', 'info');
-                }
+            const sidebar = document.querySelector('.app-sidebar');
+            const toggleBtn = document.querySelector('.mobile-menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !toggleBtn.contains(e.target)) {
+                sidebar.classList.remove('mobile-open');
             }
         });
 
-        // 模拟动态更新KPI数据
-        function updateKPIData() {
-            const kpiElements = document.querySelectorAll('.kpi-number');
-            kpiElements.forEach(element => {
-                // 添加数字跳动动画效果
-                element.style.transform = 'scale(1.1)';
-                setTimeout(() => {
-                    element.style.transform = 'scale(1)';
-                }, 200);
-            });
+        // 初始化图表
+        function initCharts() {
+            // 销售趋势图
+            const trendCtx = document.getElementById('salesTrendChart');
+            if (trendCtx) {
+                new Chart(trendCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                        datasets: [{
+                            label: '销售额(万)',
+                            data: [245, 278, 312, 365, 398, 385],
+                            borderColor: '#fa8c16',
+                            backgroundColor: 'rgba(250, 140, 22, 0.1)',
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // 转化漏斗图
+            const conversionCtx = document.getElementById('conversionChart');
+            if (conversionCtx) {
+                new Chart(conversionCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['初次接触', '深度沟通', '方案演示', '成交签约'],
+                        datasets: [{
+                            data: [1000, 650, 280, 156],
+                            backgroundColor: ['#fa8c16', '#ffc53d', '#ffec3d', '#52c41a'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                });
+            }
         }
 
-        // 每30秒更新一次KPI显示效果
-        setInterval(updateKPIData, 30000);
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('销售工作台页面已加载');
+            showMessage('欢迎使用销售工作台！', 'success');
+            
+            // 初始化图表
+            setTimeout(initCharts, 100);
+        });
     </script>
 </body>
 </html>

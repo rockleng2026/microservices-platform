@@ -1,0 +1,1180 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工管理 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <style>
+        /* 框架布局结构 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        /* 头部区域 */
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        /* 左侧导航区域 */
+        .app-sidebar {
+            grid-area: sidebar;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        /* 主内容区域 */
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* 底部页脚区域 */
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 侧边栏头部 */
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666 !important;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            width: 100%;
+            overflow: visible;
+        }
+
+        .nav-link:hover {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+        }
+
+        .nav-link.active {
+            background: rgba(24, 144, 255, 0.1) !important;
+            color: #1890ff !important;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        /* 二级菜单样式 */
+        .nav-group {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-group:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-group.expanded {
+            background: rgba(24, 144, 255, 0.05);
+            color: #1890ff;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #fafafa;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 10px 20px 10px 52px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-subitem:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .nav-subitem.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: #1890ff;
+        }
+
+        .nav-subitem.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        /* 头部样式 */
+        .header-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: background 0.3s ease;
+        }
+
+        .user-info:hover {
+            background: #f5f5f5;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        .user-name {
+            font-size: 14px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .app-layout {
+                grid-template-areas: 
+                    "header"
+                    "main"
+                    "footer";
+                grid-template-columns: 1fr;
+                grid-template-rows: 60px 1fr auto;
+            }
+
+            .app-sidebar {
+                position: fixed;
+                left: -240px;
+                top: 0;
+                width: 240px;
+                height: 100vh;
+                transition: left 0.3s ease;
+                z-index: 1000;
+            }
+
+            .app-sidebar.open {
+                left: 0;
+            }
+        }
+
+        /* 页面内容样式 */
+        .page-header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin: 0 0 8px 0;
+        }
+
+        .page-description {
+            color: #666;
+            margin: 0;
+            font-size: 14px;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 16px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        /* 搜索表单样式 */
+        .search-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-label {
+            font-size: 14px;
+            color: #333;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .form-control {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+
+        /* 按钮样式 */
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid transparent;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+
+        .btn-default {
+            background: white;
+            color: #333;
+            border-color: #d9d9d9;
+        }
+
+        .btn-default:hover {
+            background: #f5f5f5;
+            border-color: #b5b5b5;
+        }
+
+        .btn-danger {
+            background: #ff4d4f;
+            color: white;
+            border-color: #ff4d4f;
+        }
+
+        .btn-danger:hover {
+            background: #ff7875;
+            border-color: #ff7875;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        /* 表格样式 */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .table th,
+        .table td {
+            text-align: left;
+            padding: 12px 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .table tbody tr:hover {
+            background: #f5f5f5;
+        }
+
+        /* 员工信息样式 */
+        .employee-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .employee-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 500;
+            margin-right: 12px;
+        }
+
+        .employee-details {
+            flex: 1;
+        }
+
+        .employee-name {
+            font-weight: 500;
+            color: #262626;
+            margin-bottom: 4px;
+        }
+
+        .employee-meta {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* 状态标签 */
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+
+        .status-inactive {
+            background: #fff2e8;
+            color: #fa8c16;
+            border: 1px solid #ffd591;
+        }
+
+        .status-left {
+            background: #fff1f0;
+            color: #ff4d4f;
+            border: 1px solid #ffccc7;
+        }
+
+        /* 操作按钮 */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* 批量操作栏 */
+        .batch-actions {
+            padding: 16px 24px;
+            background: #e6f7ff;
+            border-bottom: 1px solid #91d5ff;
+            display: none;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .batch-actions.show {
+            display: flex;
+        }
+
+        /* 分页样式 */
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .pagination-info {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .page-input {
+            width: 60px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 左侧导航栏 -->
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">P</div>
+                <div class="brand-name">Portal 3.0</div>
+            </div>
+            
+            <nav class="nav-menu">
+                <!-- 首页总览 -->
+                <div class="nav-item">
+                    <a href="../index.html" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        <span>首页总览</span>
+                    </a>
+                </div>
+
+                <!-- 工作台 -->
+                <div class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">🎯</span>
+                        <span>工作台</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../dashboard/oa-workspace.html" class="nav-subitem">
+                            <span>OA工作台</span>
+                        </a>
+                        <a href="../dashboard/crm-workspace.html" class="nav-subitem">
+                            <span>CRM工作台</span>
+                        </a>
+                        <a href="../dashboard/sales-workspace.html" class="nav-subitem">
+                            <span>销售工作台</span>
+                        </a>
+                        <a href="../dashboard/workspace-config.html" class="nav-subitem">
+                            <span>工作台配置</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 组织架构 -->
+                <div class="nav-item">
+                    <button class="nav-group expanded" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">🏢</span>
+                        <span>组织架构</span>
+                        <span class="nav-arrow rotated">▶</span>
+                    </button>
+                    <div class="nav-submenu expanded">
+                        <a href="department-tree.html" class="nav-subitem">
+                            <span>部门管理</span>
+                        </a>
+                        <a href="employee-list.html" class="nav-subitem active">
+                            <span>员工管理</span>
+                        </a>
+                        <a href="position-manage.html" class="nav-subitem">
+                            <span>岗位管理</span>
+                        </a>
+                        <a href="role-permission.html" class="nav-subitem">
+                            <span>角色权限</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 客户管理 -->
+                <div class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">👤</span>
+                        <span>客户管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../crm/customer-list.html" class="nav-subitem">
+                            <span>客户列表</span>
+                        </a>
+                        <a href="../crm/customer-detail.html" class="nav-subitem">
+                            <span>客户详情</span>
+                        </a>
+                        <a href="../crm/follow-record.html" class="nav-subitem">
+                            <span>跟进记录</span>
+                        </a>
+                        <a href="../crm/customer-transfer.html" class="nav-subitem">
+                            <span>客户转移</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 商品管理 -->
+                <div class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">📦</span>
+                        <span>商品管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../product/product-list.html" class="nav-subitem">
+                            <span>商品列表</span>
+                        </a>
+                        <a href="../product/product-category.html" class="nav-subitem">
+                            <span>商品分类</span>
+                        </a>
+                        <a href="../product/inventory-manage.html" class="nav-subitem">
+                            <span>库存管理</span>
+                        </a>
+                        <a href="../product/price-strategy.html" class="nav-subitem">
+                            <span>价格策略</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 订单管理 -->
+                <div class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">📋</span>
+                        <span>订单管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../order/order-list.html" class="nav-subitem">
+                            <span>订单列表</span>
+                        </a>
+                        <a href="../order/order-detail.html" class="nav-subitem">
+                            <span>订单详情</span>
+                        </a>
+                        <a href="../order/order-statistics.html" class="nav-subitem">
+                            <span>订单统计</span>
+                        </a>
+                        <a href="../order/return-manage.html" class="nav-subitem">
+                            <span>退货管理</span>
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+
+        <!-- 头部导航栏 -->
+        <header class="app-header">
+            <div class="header-title">员工管理</div>
+            <div class="header-actions">
+                <button class="btn btn-icon" onclick="location.reload()" title="刷新">
+                    🔄
+                </button>
+                <div class="user-info">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=1890ff&color=fff" 
+                         alt="用户头像" class="user-avatar">
+                    <span class="user-name">管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <div class="page-header">
+                <h1 class="page-title">员工管理</h1>
+                <p class="page-description">管理员工信息，支持多维度筛选和批量操作</p>
+            </div>
+
+            <!-- 搜索面板 -->
+            <div class="card">
+                <div class="card-body">
+                    <form class="search-form" id="searchForm">
+                        <div class="form-group">
+                            <label class="form-label">员工姓名</label>
+                            <input type="text" name="name" class="form-control" placeholder="请输入员工姓名">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">员工编号</label>
+                            <input type="text" name="empNo" class="form-control" placeholder="请输入员工编号">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">所属部门</label>
+                            <select name="department" class="form-control">
+                                <option value="">全部部门</option>
+                                <!-- 部门选项将通过JS动态生成 -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">岗位</label>
+                            <select name="position" class="form-control">
+                                <option value="">全部岗位</option>
+                                <!-- 岗位选项将通过JS动态生成 -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">在职状态</label>
+                            <select name="status" class="form-control">
+                                <option value="">全部状态</option>
+                                <option value="1">在职</option>
+                                <option value="0">离职</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <button type="button" class="btn btn-primary" onclick="searchEmployees()">
+                                🔍 搜索
+                            </button>
+                            <button type="button" class="btn btn-default" onclick="resetSearch()">
+                                🔄 重置
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- 表格面板 -->
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">员工列表</h3>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-primary" onclick="addEmployee()">
+                            ➕ 新增员工
+                        </button>
+                        <button class="btn btn-default" onclick="importEmployees()">
+                            📤 批量导入
+                        </button>
+                        <button class="btn btn-default" onclick="exportEmployees()">
+                            📥 导出Excel
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 批量操作栏 -->
+                <div class="batch-actions" id="batchActions">
+                    <span>已选择 <strong id="selectedCount">0</strong> 项</span>
+                    <div>
+                        <button class="btn btn-default btn-sm" onclick="batchTransfer()">
+                            🔄 批量调岗
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="batchDelete()">
+                            🗑️ 批量删除
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 员工表格 -->
+                <div class="table-container">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th width="40">
+                                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                </th>
+                                <th width="200">员工信息</th>
+                                <th width="120">员工编号</th>
+                                <th width="120">所属部门</th>
+                                <th width="120">岗位</th>
+                                <th width="100">入职时间</th>
+                                <th width="80">在职状态</th>
+                                <th width="150">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="employeeTableBody">
+                            <!-- 员工数据将通过JS动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 -->
+                <div class="pagination">
+                    <div class="pagination-info">
+                        共 <span id="totalRecords">0</span> 条记录，显示第 <span id="currentPage">1</span> 页，共 <span id="totalPages">0</span> 页
+                    </div>
+                    <div class="pagination-controls">
+                        <button class="btn btn-default btn-sm" onclick="prevPage()" id="prevBtn">上一页</button>
+                        <input type="number" class="form-control page-input" id="pageInput" value="1" min="1" onchange="gotoPage()">
+                        <button class="btn btn-default btn-sm" onclick="nextPage()" id="nextBtn">下一页</button>
+                        <select class="form-control" style="width: auto; margin-left: 8px;" onchange="changePageSize()" id="pageSizeSelect">
+                            <option value="10">10条/页</option>
+                            <option value="20" selected>20条/页</option>
+                            <option value="50">50条/页</option>
+                            <option value="100">100条/页</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            © 2024 Portal 3.0 企业管理平台. All rights reserved.
+        </footer>
+    </div>
+
+    <script src="../assets/js/common.js"></script>
+    <script src="../assets/js/mock-data.js"></script>
+    <script>
+        let employees = [];
+        let filteredEmployees = [];
+        let currentPage = 1;
+        let pageSize = 20;
+        let selectedEmployees = new Set();
+        
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            loadEmployeeData();
+            initializeSearchOptions();
+        });
+        
+        // 切换导航组展开/收起
+        function toggleNavGroup(element) {
+            const submenu = element.nextElementSibling;
+            const arrow = element.querySelector('.nav-arrow');
+            
+            if (submenu && submenu.classList.contains('nav-submenu')) {
+                submenu.classList.toggle('expanded');
+                element.classList.toggle('expanded');
+                
+                if (submenu.classList.contains('expanded')) {
+                    arrow.style.transform = 'rotate(90deg)';
+                } else {
+                    arrow.style.transform = 'rotate(0deg)';
+                }
+            }
+        }
+        
+        // 加载员工数据
+        function loadEmployeeData() {
+            employees = window.MockData.employees.map(emp => {
+                const dept = window.MockData.departments.find(d => d.id == emp.department);
+                const pos = window.MockData.positions.find(p => p.id == emp.workposition);
+                
+                return {
+                    ...emp,
+                    deptName: dept ? dept.name : '未分配',
+                    positionName: pos ? pos.name : '未分配'
+                };
+            });
+            
+            filteredEmployees = [...employees];
+            renderEmployeeTable();
+            updatePagination();
+        }
+        
+        // 初始化搜索选项
+        function initializeSearchOptions() {
+            const deptSelect = document.querySelector('select[name="department"]');
+            const posSelect = document.querySelector('select[name="position"]');
+            
+            // 填充部门选项
+            window.MockData.departments.forEach(dept => {
+                const option = document.createElement('option');
+                option.value = dept.id;
+                option.textContent = dept.name;
+                deptSelect.appendChild(option);
+            });
+            
+            // 填充岗位选项
+            window.MockData.positions.forEach(pos => {
+                const option = document.createElement('option');
+                option.value = pos.id;
+                option.textContent = pos.name;
+                posSelect.appendChild(option);
+            });
+        }
+        
+        // 渲染员工表格
+        function renderEmployeeTable() {
+            const tbody = document.getElementById('employeeTableBody');
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageData = filteredEmployees.slice(start, end);
+            
+            if (pageData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" style="text-align: center; padding: 48px; color: #999;">
+                            <i style="font-size: 48px;">👥</i><br>
+                            暂无员工数据
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = pageData.map(emp => {
+                const statusClass = emp.isLeave ? 'status-left' : 'status-active';
+                const statusText = emp.isLeave ? '离职' : '在职';
+                
+                return `
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="employee-checkbox" value="${emp.id}" 
+                                   onchange="toggleEmployeeSelection(${emp.id})" 
+                                   ${selectedEmployees.has(emp.id) ? 'checked' : ''}>
+                        </td>
+                        <td>
+                            <div class="employee-info">
+                                <div class="employee-avatar">${emp.name.charAt(0)}</div>
+                                <div class="employee-details">
+                                    <div class="employee-name">${emp.name}</div>
+                                    <div class="employee-meta">${emp.email || '未设置邮箱'}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>${emp.empNo}</td>
+                        <td>${emp.deptName}</td>
+                        <td>${emp.positionName}</td>
+                        <td>${emp.entryTime || '未设置'}</td>
+                        <td>
+                            <span class="status-badge ${statusClass}">${statusText}</span>
+                        </td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn btn-default btn-sm" onclick="viewEmployee(${emp.id})" title="查看详情">
+                                    👁️
+                                </button>
+                                <button class="btn btn-default btn-sm" onclick="editEmployee(${emp.id})" title="编辑">
+                                    ✏️
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="deleteEmployee(${emp.id})" title="删除">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // 搜索员工
+        function searchEmployees() {
+            const formData = new FormData(document.getElementById('searchForm'));
+            const filters = Object.fromEntries(formData.entries());
+            
+            filteredEmployees = employees.filter(emp => {
+                if (filters.name && !emp.name.includes(filters.name)) return false;
+                if (filters.empNo && !emp.empNo.includes(filters.empNo)) return false;
+                if (filters.department && emp.department != filters.department) return false;
+                if (filters.position && emp.workposition != filters.position) return false;
+                if (filters.status !== '' && emp.isLeave != (filters.status === '0')) return false;
+                return true;
+            });
+            
+            currentPage = 1;
+            selectedEmployees.clear();
+            renderEmployeeTable();
+            updatePagination();
+            updateBatchActions();
+        }
+        
+        // 重置搜索
+        function resetSearch() {
+            document.getElementById('searchForm').reset();
+            filteredEmployees = [...employees];
+            currentPage = 1;
+            selectedEmployees.clear();
+            renderEmployeeTable();
+            updatePagination();
+            updateBatchActions();
+        }
+        
+        // 切换全选
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.employee-checkbox');
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = selectAll.checked;
+                const empId = parseInt(checkbox.value);
+                if (selectAll.checked) {
+                    selectedEmployees.add(empId);
+                } else {
+                    selectedEmployees.delete(empId);
+                }
+            });
+            
+            updateBatchActions();
+        }
+        
+        // 切换员工选择
+        function toggleEmployeeSelection(empId) {
+            if (selectedEmployees.has(empId)) {
+                selectedEmployees.delete(empId);
+            } else {
+                selectedEmployees.add(empId);
+            }
+            
+            // 更新全选状态
+            const checkboxes = document.querySelectorAll('.employee-checkbox');
+            const checkedCount = document.querySelectorAll('.employee-checkbox:checked').length;
+            const selectAll = document.getElementById('selectAll');
+            
+            selectAll.checked = checkedCount === checkboxes.length;
+            selectAll.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+            
+            updateBatchActions();
+        }
+        
+        // 更新批量操作
+        function updateBatchActions() {
+            const batchActions = document.getElementById('batchActions');
+            const selectedCount = document.getElementById('selectedCount');
+            
+            if (selectedEmployees.size > 0) {
+                batchActions.classList.add('show');
+                selectedCount.textContent = selectedEmployees.size;
+            } else {
+                batchActions.classList.remove('show');
+            }
+        }
+        
+        // 更新分页信息
+        function updatePagination() {
+            const totalRecords = filteredEmployees.length;
+            const totalPages = Math.ceil(totalRecords / pageSize);
+            
+            document.getElementById('totalRecords').textContent = totalRecords;
+            document.getElementById('currentPage').textContent = currentPage;
+            document.getElementById('totalPages').textContent = totalPages;
+            document.getElementById('pageInput').value = currentPage;
+            document.getElementById('pageInput').max = totalPages;
+            
+            document.getElementById('prevBtn').disabled = currentPage <= 1;
+            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
+        }
+        
+        // 上一页
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                renderEmployeeTable();
+                updatePagination();
+            }
+        }
+        
+        // 下一页
+        function nextPage() {
+            const totalPages = Math.ceil(filteredEmployees.length / pageSize);
+            if (currentPage < totalPages) {
+                currentPage++;
+                renderEmployeeTable();
+                updatePagination();
+            }
+        }
+        
+        // 跳转到指定页
+        function gotoPage() {
+            const pageInput = document.getElementById('pageInput');
+            const targetPage = parseInt(pageInput.value);
+            const totalPages = Math.ceil(filteredEmployees.length / pageSize);
+            
+            if (targetPage >= 1 && targetPage <= totalPages) {
+                currentPage = targetPage;
+                renderEmployeeTable();
+                updatePagination();
+            } else {
+                pageInput.value = currentPage;
+            }
+        }
+        
+        // 改变每页显示数量
+        function changePageSize() {
+            const pageSizeSelect = document.getElementById('pageSizeSelect');
+            pageSize = parseInt(pageSizeSelect.value);
+            currentPage = 1;
+            renderEmployeeTable();
+            updatePagination();
+        }
+        
+        // 员工操作功能
+        function addEmployee() {
+            alert('新增员工功能开发中...');
+        }
+        
+        function viewEmployee(empId) {
+            const employee = employees.find(emp => emp.id === empId);
+            if (employee) {
+                alert(`查看员工：${employee.name}\n编号：${employee.empNo}\n部门：${employee.deptName}\n岗位：${employee.positionName}`);
+            }
+        }
+        
+        function editEmployee(empId) {
+            alert(`编辑员工 ID: ${empId} 功能开发中...`);
+        }
+        
+        function deleteEmployee(empId) {
+            const employee = employees.find(emp => emp.id === empId);
+            if (!employee) return;
+            
+            if (confirm(`确定要删除员工"${employee.name}"吗？`)) {
+                employees = employees.filter(emp => emp.id !== empId);
+                filteredEmployees = filteredEmployees.filter(emp => emp.id !== empId);
+                selectedEmployees.delete(empId);
+                renderEmployeeTable();
+                updatePagination();
+                updateBatchActions();
+                alert('员工删除成功！');
+            }
+        }
+        
+        // 批量操作功能
+        function batchTransfer() {
+            if (selectedEmployees.size === 0) {
+                alert('请先选择要调岗的员工');
+                return;
+            }
+            alert(`批量调岗 ${selectedEmployees.size} 名员工功能开发中...`);
+        }
+        
+        function batchDelete() {
+            if (selectedEmployees.size === 0) {
+                alert('请先选择要删除的员工');
+                return;
+            }
+            
+            if (confirm(`确定要删除选中的 ${selectedEmployees.size} 名员工吗？`)) {
+                employees = employees.filter(emp => !selectedEmployees.has(emp.id));
+                filteredEmployees = filteredEmployees.filter(emp => !selectedEmployees.has(emp.id));
+                selectedEmployees.clear();
+                renderEmployeeTable();
+                updatePagination();
+                updateBatchActions();
+                alert('批量删除成功！');
+            }
+        }
+        
+        function importEmployees() {
+            alert('批量导入功能开发中...');
+        }
+        
+        function exportEmployees() {
+            alert('导出Excel功能开发中...');
+        }
+    </script>
+</body>
+</html> 

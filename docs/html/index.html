@@ -3,681 +3,871 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal 3.0 原型设计总览</title>
+    <title>Portal 3.0 - 企业管理平台</title>
     <link rel="stylesheet" href="assets/css/common.css">
     <style>
-        .prototype-overview {
-            padding: 24px;
-            background: var(--background-color);
+        .workspace-container {
+            display: flex;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666 !important;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            width: 100%;
+            overflow: visible;
+        }
+
+        .nav-link span {
+            display: inline-block;
+            color: inherit;
+            white-space: nowrap;
+            overflow: visible;
+        }
+
+        .nav-link:hover {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+        }
+
+        .nav-link.active {
+            background: rgba(24, 144, 255, 0.1) !important;
+            color: #1890ff !important;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
             min-height: 100vh;
         }
-        
-        .overview-header {
-            text-align: center;
-            margin-bottom: 48px;
-            padding: 48px 0;
-            background: linear-gradient(135deg, #1890ff, #096dd9);
+
+        .header {
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            color: #666;
+        }
+
+        .breadcrumb-item {
+            margin-right: 8px;
+        }
+
+        .breadcrumb-separator {
+            margin: 0 8px;
+            color: #d9d9d9;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            width: 200px;
+            height: 32px;
+            padding: 0 12px 0 36px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .notification-btn {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .notification-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
+            background: #ff4d4f;
             color: white;
-            border-radius: var(--border-radius);
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        
-        .overview-title {
-            font-size: 36px;
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .user-menu:hover {
+            background: #f5f5f5;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #1890ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
             font-weight: bold;
-            margin-bottom: 16px;
+            margin-right: 8px;
         }
-        
-        .overview-subtitle {
-            font-size: 18px;
+
+        .page-content {
+            padding: 24px;
+        }
+
+        /* 首页特有样式 */
+        .welcome-banner {
+            background: linear-gradient(135deg, #1890ff 0%, #40a9ff 100%);
+            color: white;
+            padding: 32px;
+            border-radius: 12px;
+            margin-bottom: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(50%, -50%);
+        }
+
+        .welcome-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .welcome-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin: 0 0 12px 0;
+        }
+
+        .welcome-desc {
+            font-size: 16px;
             opacity: 0.9;
-            margin-bottom: 8px;
+            margin-bottom: 24px;
         }
-        
-        .overview-version {
+
+        .welcome-stats {
+            display: flex;
+            gap: 32px;
+        }
+
+        .welcome-stat {
+            text-align: center;
+        }
+
+        .welcome-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .welcome-stat-label {
             font-size: 14px;
             opacity: 0.8;
         }
-        
-        .module-grid {
+
+        .modules-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 24px;
-            margin-bottom: 48px;
         }
-        
+
         .module-card {
             background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
             overflow: hidden;
-            transition: transform 0.3s, box-shadow 0.3s;
         }
-        
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--module-color, #1890ff);
+        }
+
         .module-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
         }
-        
+
         .module-header {
-            padding: 24px;
-            background: linear-gradient(45deg, #f0f2f5, #fafafa);
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .module-title {
-            font-size: 20px;
-            font-weight: 500;
-            margin-bottom: 8px;
-            color: var(--text-color);
-        }
-        
-        .module-description {
-            color: var(--text-color-secondary);
-            font-size: 14px;
-            margin-bottom: 16px;
-        }
-        
-        .module-stats {
-            display: flex;
-            gap: 16px;
-        }
-        
-        .stat-item {
-            flex: 1;
-            text-align: center;
-            padding: 8px;
-            background: rgba(24, 144, 255, 0.1);
-            border-radius: 4px;
-        }
-        
-        .stat-number {
-            font-size: 18px;
-            font-weight: bold;
-            color: var(--primary-color);
-        }
-        
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-color-secondary);
-        }
-        
-        .module-pages {
-            padding: 24px;
-        }
-        
-        .page-list {
-            list-style: none;
-            margin: 0;
-            padding: 0;
-        }
-        
-        .page-item {
-            margin-bottom: 8px;
-        }
-        
-        .page-link {
             display: flex;
             align-items: center;
-            padding: 12px 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            text-decoration: none;
-            color: var(--text-color);
-            transition: all 0.3s;
-            background: #fafafa;
+            margin-bottom: 16px;
         }
-        
-        .page-link:hover {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-        
-        .page-icon {
-            margin-right: 8px;
-            width: 16px;
-            height: 16px;
-            background: currentColor;
-            border-radius: 2px;
-            opacity: 0.7;
-        }
-        
-        .page-name {
-            flex: 1;
-            font-weight: 500;
-        }
-        
-        .page-status {
-            font-size: 12px;
-            padding: 2px 8px;
-            border-radius: 10px;
-            background: var(--success-color);
-            color: white;
-        }
-        
-        .quick-nav {
-            position: fixed;
-            top: 50%;
-            right: 24px;
-            transform: translateY(-50%);
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            padding: 16px 8px;
-            z-index: 1000;
-        }
-        
-        .quick-nav-item {
-            display: block;
-            width: 40px;
-            height: 40px;
-            margin-bottom: 8px;
-            background: var(--background-color);
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.3s;
-            font-size: 12px;
-            color: var(--text-color-secondary);
-        }
-        
-        .quick-nav-item:hover,
-        .quick-nav-item.active {
-            background: var(--primary-color);
-            color: white;
-        }
-        
-        .tech-info {
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            padding: 32px;
-            text-align: center;
-            margin-bottom: 24px;
-        }
-        
-        .tech-stack {
+
+        .module-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
             display: flex;
+            align-items: center;
             justify-content: center;
-            gap: 24px;
-            margin-top: 24px;
+            font-size: 24px;
+            margin-right: 16px;
+            background: var(--module-bg, rgba(24, 144, 255, 0.1));
+            color: var(--module-color, #1890ff);
         }
-        
-        .tech-item {
-            padding: 12px 24px;
-            background: var(--background-color);
-            border-radius: 4px;
+
+        .module-info {
+            flex: 1;
+        }
+
+        .module-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin: 0 0 4px 0;
+            color: #333;
+        }
+
+        .module-desc {
             font-size: 14px;
-            font-weight: 500;
+            color: #666;
+            margin: 0;
         }
-        
+
+        .module-stats {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .module-stat {
+            text-align: center;
+        }
+
+        .module-stat-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .module-stat-label {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .module-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .module-btn {
+            flex: 1;
+            padding: 8px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .module-btn:hover {
+            border-color: var(--module-color, #1890ff);
+            color: var(--module-color, #1890ff);
+        }
+
+        .module-btn.primary {
+            background: var(--module-color, #1890ff);
+            color: white;
+            border-color: var(--module-color, #1890ff);
+        }
+
+        .module-btn.primary:hover {
+            background: var(--module-hover, #40a9ff);
+            border-color: var(--module-hover, #40a9ff);
+        }
+
+        /* 模块主题色 */
+        .module-card.oa {
+            --module-color: #1890ff;
+            --module-bg: rgba(24, 144, 255, 0.1);
+            --module-hover: #40a9ff;
+        }
+
+        .module-card.crm {
+            --module-color: #52c41a;
+            --module-bg: rgba(82, 196, 26, 0.1);
+            --module-hover: #73d13d;
+        }
+
+        .module-card.sales {
+            --module-color: #fa8c16;
+            --module-bg: rgba(250, 140, 22, 0.1);
+            --module-hover: #ffa940;
+        }
+
+        .module-card.org {
+            --module-color: #722ed1;
+            --module-bg: rgba(114, 46, 209, 0.1);
+            --module-hover: #9254de;
+        }
+
+        .module-card.product {
+            --module-color: #eb2f96;
+            --module-bg: rgba(235, 47, 150, 0.1);
+            --module-hover: #f759ab;
+        }
+
+        .module-card.service {
+            --module-color: #13c2c2;
+            --module-bg: rgba(19, 194, 194, 0.1);
+            --module-hover: #36cfc9;
+        }
+
+        /* 响应式设计 */
         @media (max-width: 768px) {
-            .module-grid {
+            .sidebar {
+                transform: translateX(-240px);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .page-content {
+                padding: 16px;
+            }
+
+            .modules-grid {
                 grid-template-columns: 1fr;
             }
-            
-            .quick-nav {
-                display: none;
+
+            .welcome-banner {
+                padding: 24px 20px;
             }
-            
-            .overview-title {
-                font-size: 28px;
+
+            .welcome-title {
+                font-size: 24px;
             }
-            
-            .tech-stack {
+
+            .welcome-stats {
                 flex-direction: column;
-                gap: 8px;
+                gap: 16px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="prototype-overview">
-        <!-- 头部介绍 -->
-        <div class="overview-header">
-            <h1 class="overview-title">Portal 3.0 Web UI 原型设计</h1>
-            <p class="overview-subtitle">OA+CRM+进销存一体化企业管理平台</p>
-            <p class="overview-version">版本：v1.0 | 基于 React + TypeScript + Ant Design Pro</p>
+    <div class="workspace-container">
+        <!-- 侧边栏 -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">P3</div>
+                <div class="brand-name">Portal 3.0</div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active">
+                        <span class="nav-icon">🏠</span>
+                        <span>首页总览</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="dashboard/oa-workspace.html" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        <span>OA工作台</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="dashboard/crm-workspace.html" class="nav-link">
+                        <span class="nav-icon">👥</span>
+                        <span>CRM工作台</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="dashboard/sales-workspace.html" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        <span>销售工作台</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="organization/department-tree.html" class="nav-link">
+                        <span class="nav-icon">🏢</span>
+                        <span>组织架构</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="crm/customer-dashboard.html" class="nav-link">
+                        <span class="nav-icon">👤</span>
+                        <span>客户管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">📦</span>
+                        <span>商品管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">📋</span>
+                        <span>订单管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">🎧</span>
+                        <span>客服中心</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="dashboard/workspace-config.html" class="nav-link">
+                        <span class="nav-icon">⚙️</span>
+                        <span>工作台配置</span>
+                    </a>
+                </li>
+            </ul>
         </div>
 
-        <!-- 技术架构信息 -->
-        <div class="tech-info">
-            <h2>技术架构</h2>
-            <p>基于微服务架构重构，前后端分离，现代化企业级管理系统</p>
-            <div class="tech-stack">
-                <div class="tech-item">React 18</div>
-                <div class="tech-item">TypeScript</div>
-                <div class="tech-item">Ant Design Pro</div>
-                <div class="tech-item">Spring Cloud</div>
-                <div class="tech-item">微服务架构</div>
-            </div>
-        </div>
-
-        <!-- 功能模块展示 -->
-        <div class="module-grid">
-            <!-- 组织架构管理模块 -->
-            <div class="module-card">
-                <div class="module-header">
-                    <h3 class="module-title">📋 组织架构管理</h3>
-                    <p class="module-description">部门管理、员工管理、岗位配置、角色权限等组织架构相关功能</p>
-                    <div class="module-stats">
-                        <div class="stat-item">
-                            <div class="stat-number">9</div>
-                            <div class="stat-label">部门</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">10</div>
-                            <div class="stat-label">员工</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">4</div>
-                            <div class="stat-label">页面</div>
-                        </div>
-                    </div>
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 顶部导航 -->
+            <div class="header">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">首页总览</span>
                 </div>
-                <div class="module-pages">
-                    <ul class="page-list">
-                        <li class="page-item">
-                            <a href="organization/department-tree.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">部门树状结构管理</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="organization/employee-list.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">员工信息列表</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="organization/position-manage.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">岗位管理</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="organization/role-permission.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">角色权限配置</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                    </ul>
+                
+                <div class="header-actions">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="搜索功能...">
+                    </div>
+                    
+                    <button class="notification-btn">
+                        <span>🔔</span>
+                        <span class="notification-badge">5</span>
+                    </button>
+                    
+                    <div class="user-menu">
+                        <div class="user-avatar">管</div>
+                        <span>管理员</span>
+                    </div>
                 </div>
             </div>
 
-            <!-- 客户关系管理模块 -->
-            <div class="module-card">
-                <div class="module-header">
-                    <h3 class="module-title">🤝 客户关系管理(CRM)</h3>
-                    <p class="module-description">客户信息管理、跟进记录、客户转化、交接流程等CRM功能</p>
-                    <div class="module-stats">
-                        <div class="stat-item">
-                            <div class="stat-number">5</div>
-                            <div class="stat-label">客户</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">4</div>
-                            <div class="stat-label">跟进记录</div>
-                        </div>
-                        <div class="stat-item">
-                            <div class="stat-number">5</div>
-                            <div class="stat-label">页面</div>
+            <!-- 页面内容 -->
+            <div class="page-content">
+                <!-- 欢迎横幅 -->
+                <div class="welcome-banner">
+                    <div class="welcome-content">
+                        <h1 class="welcome-title">欢迎使用 Portal 3.0</h1>
+                        <p class="welcome-desc">企业级一体化管理平台，整合OA、CRM、库存管理等核心业务模块</p>
+                        <div class="welcome-stats">
+                            <div class="welcome-stat">
+                                <div class="welcome-stat-value">2,847</div>
+                                <div class="welcome-stat-label">总客户数</div>
+                            </div>
+                            <div class="welcome-stat">
+                                <div class="welcome-stat-value">156</div>
+                                <div class="welcome-stat-label">在线员工</div>
+                            </div>
+                            <div class="welcome-stat">
+                                <div class="welcome-stat-value">98.5%</div>
+                                <div class="welcome-stat-label">系统稳定性</div>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="module-pages">
-                    <ul class="page-list">
-                        <li class="page-item">
-                            <a href="crm/customer-dashboard.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">CRM工作台</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="crm/customer-list.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">客户列表</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="crm/customer-detail.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">客户详情</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="crm/follow-record.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">跟进记录</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="crm/customer-transfer.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">客户交接</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
 
-            <!-- 商品管理模块 -->
-            <div class="module-card">
-                <div class="module-header">
-                    <h3 class="module-title">📦 商品管理</h3>
-                    <p class="module-description">商品类目管理、商品信息维护、库存监控、供应商管理等功能</p>
-                    <div class="module-stats">
-                        <div class="stat-item">
-                            <div class="stat-number">5</div>
-                            <div class="stat-label">商品</div>
+                <!-- 功能模块 -->
+                <div class="modules-grid">
+                    <!-- OA办公模块 -->
+                    <div class="module-card oa" onclick="navigateToModule('oa')">
+                        <div class="module-header">
+                            <div class="module-icon">🏢</div>
+                            <div class="module-info">
+                                <h3 class="module-title">OA办公系统</h3>
+                                <p class="module-desc">日常办公、审批流程、任务管理</p>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-number">7</div>
-                            <div class="stat-label">类目</div>
+                        <div class="module-stats">
+                            <div class="module-stat">
+                                <div class="module-stat-value">15</div>
+                                <div class="module-stat-label">待办任务</div>
+                            </div>
+                            <div class="module-stat">
+                                <div class="module-stat-value">8</div>
+                                <div class="module-stat-label">待审批</div>
+                            </div>
+                            <div class="module-stat">
+                                <div class="module-stat-value">23</div>
+                                <div class="module-stat-label">今日消息</div>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-number">4</div>
-                            <div class="stat-label">页面</div>
+                        <div class="module-actions">
+                            <button class="module-btn">查看详情</button>
+                            <button class="module-btn primary">立即使用</button>
                         </div>
                     </div>
-                </div>
-                <div class="module-pages">
-                    <ul class="page-list">
-                        <li class="page-item">
-                            <a href="product/category-manage.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">商品类目管理</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="product/product-list.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">商品列表</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="product/product-form.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">商品新增/编辑</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="product/inventory-monitor.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">库存监控</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
 
-            <!-- 订单管理模块 -->
-            <div class="module-card">
-                <div class="module-header">
-                    <h3 class="module-title">📋 订单管理</h3>
-                    <p class="module-description">订单创建、订单流程、支付管理、配送跟踪等订单相关功能</p>
-                    <div class="module-stats">
-                        <div class="stat-item">
-                            <div class="stat-number">3</div>
-                            <div class="stat-label">订单</div>
+                    <!-- CRM客户管理 -->
+                    <div class="module-card crm" onclick="navigateToModule('crm')">
+                        <div class="module-header">
+                            <div class="module-icon">👥</div>
+                            <div class="module-info">
+                                <h3 class="module-title">CRM客户管理</h3>
+                                <p class="module-desc">客户关系、销售跟进、业绩分析</p>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-number">90K</div>
-                            <div class="stat-label">销售额</div>
+                        <div class="module-stats">
+                            <div class="module-stat">
+                                <div class="module-stat-value">2,847</div>
+                                <div class="module-stat-label">总客户</div>
+                            </div>
+                            <div class="module-stat">
+                                <div class="module-stat-value">426</div>
+                                <div class="module-stat-label">潜在客户</div>
+                            </div>
+                            <div class="module-stat">
+                                <div class="module-stat-value">12</div>
+                                <div class="module-stat-label">今日新增</div>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-number">4</div>
-                            <div class="stat-label">页面</div>
+                        <div class="module-actions">
+                            <button class="module-btn">查看详情</button>
+                            <button class="module-btn primary">立即使用</button>
                         </div>
                     </div>
-                </div>
-                <div class="module-pages">
-                    <ul class="page-list">
-                        <li class="page-item">
-                            <a href="order/order-dashboard.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">订单工作台</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="order/order-list.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">订单列表</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="order/order-detail.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">订单详情</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="order/order-create.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">订单创建</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
 
-            <!-- 客服中心模块 -->
-            <div class="module-card">
-                <div class="module-header">
-                    <h3 class="module-title">🎧 客服中心</h3>
-                    <p class="module-description">工单管理、知识库、在线客服、问题跟踪等客服支持功能</p>
-                    <div class="module-stats">
-                        <div class="stat-item">
-                            <div class="stat-number">3</div>
-                            <div class="stat-label">工单</div>
+                    <!-- 销售管理 -->
+                    <div class="module-card sales" onclick="navigateToModule('sales')">
+                        <div class="module-header">
+                            <div class="module-icon">📊</div>
+                            <div class="module-info">
+                                <h3 class="module-title">销售管理</h3>
+                                <p class="module-desc">销售统计、业绩分析、目标管理</p>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-number">1</div>
-                            <div class="stat-label">待处理</div>
+                        <div class="module-stats">
+                            <div class="module-stat">
+                                <div class="module-stat-value">¥2.8M</div>
+                                <div class="module-stat-label">本月销售额</div>
+                            </div>
+                            <div class="module-stat">
+                                <div class="module-stat-value">85%</div>
+                                <div class="module-stat-label">目标完成率</div>
+                            </div>
+                            <div class="module-stat">
+                                <div class="module-stat-value">1,538</div>
+                                <div class="module-stat-label">成交订单</div>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-number">4</div>
-                            <div class="stat-label">页面</div>
+                        <div class="module-actions">
+                            <button class="module-btn">查看详情</button>
+                            <button class="module-btn primary">立即使用</button>
                         </div>
                     </div>
-                </div>
-                <div class="module-pages">
-                    <ul class="page-list">
-                        <li class="page-item">
-                            <a href="support/ticket-dashboard.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">工单工作台</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="support/ticket-list.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">工单列表</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="support/ticket-detail.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">工单详情</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="support/knowledge-base.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">知识库</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
 
-            <!-- 运维管理模块 -->
-            <div class="module-card">
-                <div class="module-header">
-                    <h3 class="module-title">⚙️ 运维管理</h3>
-                    <p class="module-description">任务看板、日程管理、工作日志、报表中心等运维管理功能</p>
-                    <div class="module-stats">
-                        <div class="stat-item">
-                            <div class="stat-number">12</div>
-                            <div class="stat-label">任务</div>
+                    <!-- 组织架构 -->
+                    <div class="module-card org" onclick="navigateToModule('organization')">
+                        <div class="module-header">
+                            <div class="module-icon">🌳</div>
+                            <div class="module-info">
+                                <h3 class="module-title">组织架构</h3>
+                                <p class="module-desc">部门管理、员工信息、权限配置</p>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-number">5</div>
-                            <div class="stat-label">进行中</div>
+                        <div class="module-stats">
+                            <div class="module-stat">
+                                <div class="module-stat-value">9</div>
+                                <div class="module-stat-label">部门数量</div>
+                            </div>
+                            <div class="module-stat">
+                                <div class="module-stat-value">156</div>
+                                <div class="module-stat-label">员工总数</div>
+                            </div>
+                            <div class="module-stat">
+                                <div class="module-stat-value">7</div>
+                                <div class="module-stat-label">层级深度</div>
+                            </div>
                         </div>
-                        <div class="stat-item">
-                            <div class="stat-number">4</div>
-                            <div class="stat-label">页面</div>
+                        <div class="module-actions">
+                            <button class="module-btn">查看详情</button>
+                            <button class="module-btn primary">立即使用</button>
                         </div>
                     </div>
-                </div>
-                <div class="module-pages">
-                    <ul class="page-list">
-                        <li class="page-item">
-                            <a href="ops/task-board.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">任务看板</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="ops/schedule-calendar.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">日程日历</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="ops/work-log.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">工作日志</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                        <li class="page-item">
-                            <a href="ops/report-center.html" class="page-link" target="_blank">
-                                <div class="page-icon"></div>
-                                <span class="page-name">报表中心</span>
-                                <span class="page-status">完成</span>
-                            </a>
-                        </li>
-                    </ul>
+
+                    <!-- 商品管理 -->
+                    <div class="module-card product" onclick="navigateToModule('product')">
+                        <div class="module-header">
+                            <div class="module-icon">📦</div>
+                            <div class="module-info">
+                                <h3 class="module-title">商品管理</h3>
+                                <p class="module-desc">库存管理、商品分类、价格策略</p>
+                            </div>
+                        </div>
+                        <div class="module-stats">
+                            <div class="module-stat">
+                                <div class="module-stat-value">2,156</div>
+                                <div class="module-stat-label">商品总数</div>
+                            </div>
+                            <div class="module-stat">
+                                <div class="module-stat-value">12</div>
+                                <div class="module-stat-label">分类数量</div>
+                            </div>
+                            <div class="module-stat">
+                                <div class="module-stat-value">86</div>
+                                <div class="module-stat-label">库存预警</div>
+                            </div>
+                        </div>
+                        <div class="module-actions">
+                            <button class="module-btn">查看详情</button>
+                            <button class="module-btn primary">立即使用</button>
+                        </div>
+                    </div>
+
+                    <!-- 客服中心 -->
+                    <div class="module-card service" onclick="navigateToModule('service')">
+                        <div class="module-header">
+                            <div class="module-icon">🎧</div>
+                            <div class="module-info">
+                                <h3 class="module-title">客服中心</h3>
+                                <p class="module-desc">工单管理、在线客服、服务质量</p>
+                            </div>
+                        </div>
+                        <div class="module-stats">
+                            <div class="module-stat">
+                                <div class="module-stat-value">45</div>
+                                <div class="module-stat-label">待处理工单</div>
+                            </div>
+                            <div class="module-stat">
+                                <div class="module-stat-value">4.8</div>
+                                <div class="module-stat-label">服务评分</div>
+                            </div>
+                            <div class="module-stat">
+                                <div class="module-stat-value">98%</div>
+                                <div class="module-stat-label">解决率</div>
+                            </div>
+                        </div>
+                        <div class="module-actions">
+                            <button class="module-btn">查看详情</button>
+                            <button class="module-btn primary">立即使用</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-
-        <!-- 项目说明 -->
-        <div class="tech-info">
-            <h2>项目说明</h2>
-            <p>本原型基于 <strong>Portal 3.0 微服务重构项目需求文档</strong> 设计，采用现代化UI/UX设计理念，</p>
-            <p>完整展示了OA办公自动化、CRM客户关系管理、进销存库存管理三大核心业务模块的界面设计。</p>
-            <p>所有页面均采用响应式设计，兼容桌面端、平板端和移动端设备。</p>
-        </div>
-    </div>
-
-    <!-- 快捷导航 -->
-    <div class="quick-nav">
-        <button class="quick-nav-item" onclick="scrollToModule(0)" title="组织架构">📋</button>
-        <button class="quick-nav-item" onclick="scrollToModule(1)" title="客户管理">🤝</button>
-        <button class="quick-nav-item" onclick="scrollToModule(2)" title="商品管理">📦</button>
-        <button class="quick-nav-item" onclick="scrollToModule(3)" title="订单管理">📋</button>
-        <button class="quick-nav-item" onclick="scrollToModule(4)" title="客服中心">🎧</button>
-        <button class="quick-nav-item" onclick="scrollToModule(5)" title="运维管理">⚙️</button>
     </div>
 
     <script src="assets/js/common.js"></script>
     <script src="assets/js/mock-data.js"></script>
     <script>
-        // 滚动到指定模块
-        function scrollToModule(index) {
-            const modules = document.querySelectorAll('.module-card');
-            if (modules[index]) {
-                modules[index].scrollIntoView({ 
-                    behavior: 'smooth',
-                    block: 'center'
-                });
-                
-                // 更新快捷导航状态
-                document.querySelectorAll('.quick-nav-item').forEach((item, i) => {
-                    item.classList.toggle('active', i === index);
-                });
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 初始化页面数据
+            initializeDashboard();
+        });
+
+        // 初始化仪表板
+        function initializeDashboard() {
+            // 可以在这里加载实时数据更新统计数字
+            console.log('Portal 3.0 首页已加载');
+            showMessage('欢迎使用 Portal 3.0 企业管理平台！', 'success');
+        }
+
+        // 模块导航
+        function navigateToModule(module) {
+            const moduleUrls = {
+                'oa': 'dashboard/oa-workspace.html',
+                'crm': 'dashboard/crm-workspace.html', 
+                'sales': 'dashboard/sales-workspace.html',
+                'organization': 'organization/department-tree.html',
+                'product': '#',
+                'service': '#'
+            };
+
+            const url = moduleUrls[module];
+            if (url && url !== '#') {
+                window.location.href = url;
+            } else {
+                showMessage(`${module}模块正在开发中...`, 'info');
             }
         }
 
-        // 页面加载完成后的初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 显示统计信息
-            updateStats();
-            
-            // 添加页面加载动画
-            const cards = document.querySelectorAll('.module-card');
-            cards.forEach((card, index) => {
-                card.style.opacity = '0';
-                card.style.transform = 'translateY(20px)';
-                
-                setTimeout(() => {
-                    card.style.transition = 'opacity 0.5s, transform 0.5s';
-                    card.style.opacity = '1';
-                    card.style.transform = 'translateY(0)';
-                }, index * 100);
-            });
-
-            // 监听滚动，更新快捷导航状态
-            window.addEventListener('scroll', Portal.Utils.throttle(() => {
-                updateQuickNavState();
-            }, 200));
+        // 搜索功能
+        document.querySelector('.search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const keyword = this.value.trim();
+                if (keyword) {
+                    searchFeatures(keyword);
+                }
+            }
         });
 
-        // 更新统计信息
-        function updateStats() {
-            const stats = MockData.dashboard;
-            
-            // 更新各模块的统计数据
-            // 这里可以根据实际数据动态更新统计信息
-            console.log('Dashboard stats:', stats);
+        // 搜索功能实现
+        function searchFeatures(keyword) {
+            const modules = {
+                'oa': ['办公', '审批', '任务', '工作台'],
+                'crm': ['客户', '销售', '跟进', '管理'],
+                'sales': ['销售', '业绩', '统计', '目标'],
+                'organization': ['组织', '架构', '部门', '员工'],
+                'product': ['商品', '库存', '分类', '价格'],
+                'service': ['客服', '工单', '服务', '支持']
+            };
+
+            let found = false;
+            for (const [module, keywords] of Object.entries(modules)) {
+                if (keywords.some(k => k.includes(keyword) || keyword.includes(k))) {
+                    navigateToModule(module);
+                    found = true;
+                    break;
+                }
+            }
+
+            if (!found) {
+                showMessage(`未找到与"${keyword}"相关的功能`, 'warning');
+            }
         }
 
-        // 更新快捷导航状态
-        function updateQuickNavState() {
-            const modules = document.querySelectorAll('.module-card');
-            const scrollPosition = window.scrollY + window.innerHeight / 2;
-            
-            let activeIndex = 0;
-            modules.forEach((module, index) => {
-                const rect = module.getBoundingClientRect();
-                const moduleTop = rect.top + window.scrollY;
-                const moduleBottom = moduleTop + rect.height;
-                
-                if (scrollPosition >= moduleTop && scrollPosition <= moduleBottom) {
-                    activeIndex = index;
-                }
-            });
-            
-            document.querySelectorAll('.quick-nav-item').forEach((item, index) => {
-                item.classList.toggle('active', index === activeIndex);
-            });
-        }
+        // 快捷键支持
+        document.addEventListener('keydown', function(e) {
+            // Ctrl + 1-6 快速导航到对应模块
+            if (e.ctrlKey && e.key >= '1' && e.key <= '6') {
+                e.preventDefault();
+                const modules = ['oa', 'crm', 'sales', 'organization', 'product', 'service'];
+                const moduleIndex = parseInt(e.key) - 1;
+                navigateToModule(modules[moduleIndex]);
+            }
+        });
     </script>
 </body>
 </html>

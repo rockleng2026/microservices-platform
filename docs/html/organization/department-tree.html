@@ -3,21 +3,245 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>部门管理 - Portal 3.0</title>
+    <title>组织架构 - Portal 3.0</title>
     <link rel="stylesheet" href="../assets/css/common.css">
     <style>
+        .workspace-container {
+            display: flex;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .sidebar {
+            width: 240px;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
+        }
+
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666 !important;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            width: 100%;
+            overflow: visible;
+        }
+
+        .nav-link span {
+            display: inline-block;
+            color: inherit;
+            white-space: nowrap;
+            overflow: visible;
+        }
+
+        .nav-link:hover {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+        }
+
+        .nav-link.active {
+            background: rgba(24, 144, 255, 0.1) !important;
+            color: #1890ff !important;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            min-height: 100vh;
+        }
+
+        .header {
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            color: #666;
+        }
+
+        .breadcrumb-item {
+            margin-right: 8px;
+        }
+
+        .breadcrumb-separator {
+            margin: 0 8px;
+            color: #d9d9d9;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            width: 200px;
+            height: 32px;
+            padding: 0 12px 0 36px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .notification-btn {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .notification-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
+            background: #ff4d4f;
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .user-menu:hover {
+            background: #f5f5f5;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #1890ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .page-content {
+            padding: 24px;
+        }
+        
         .department-layout {
             display: flex;
             gap: 24px;
-            height: calc(100vh - var(--header-height) - 48px);
+            height: calc(100vh - 60px - 48px);
         }
         
         .department-tree-panel {
             flex: 0 0 400px;
             min-width: 350px;
             background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
         }
@@ -26,15 +250,15 @@
             flex: 1;
             min-width: 0;
             background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
         }
         
         .panel-header {
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 20px 24px;
+            border-bottom: 1px solid #e8e8e8;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -42,8 +266,9 @@
         
         .panel-title {
             font-size: 16px;
-            font-weight: 500;
+            font-weight: 600;
             margin: 0;
+            color: #333;
         }
         
         .panel-body {
@@ -69,7 +294,7 @@
             display: flex;
             align-items: center;
             padding: 8px 12px;
-            border-radius: 4px;
+            border-radius: 6px;
             cursor: pointer;
             transition: all 0.3s;
             position: relative;
@@ -80,8 +305,8 @@
         }
         
         .tree-node-content.active {
-            background: #e6f7ff;
-            border: 1px solid var(--primary-color);
+            background: rgba(24, 144, 255, 0.1);
+            border: 1px solid #1890ff;
         }
         
         .tree-node-content.dragging {
@@ -103,7 +328,7 @@
         }
         
         .tree-expand:hover {
-            background: var(--border-color);
+            background: #d9d9d9;
         }
         
         .tree-expand::before {
@@ -124,7 +349,7 @@
             width: 16px;
             height: 16px;
             margin-right: 8px;
-            background: var(--primary-color);
+            background: #1890ff;
             border-radius: 2px;
             display: flex;
             align-items: center;
@@ -139,8 +364,8 @@
         }
         
         .tree-badge {
-            background: var(--background-color);
-            color: var(--text-color-secondary);
+            background: #f5f5f5;
+            color: #666;
             padding: 2px 6px;
             border-radius: 10px;
             font-size: 12px;
@@ -172,7 +397,7 @@
         }
         
         .tree-action-btn:hover {
-            background: var(--border-color);
+            background: #d9d9d9;
         }
         
         .tree-children {
@@ -192,242 +417,363 @@
         }
         
         .form-section {
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
+            border: 1px solid #e8e8e8;
+            border-radius: 8px;
             padding: 16px;
         }
         
         .section-title {
             font-size: 14px;
-            font-weight: 500;
+            font-weight: 600;
             margin-bottom: 12px;
-            color: var(--text-color);
+            color: #333;
         }
         
-        .dept-stats {
+        .form-row {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 16px;
-            margin-bottom: 24px;
+            margin-bottom: 16px;
         }
         
-        .stat-card {
-            background: var(--background-color);
-            padding: 16px;
-            border-radius: 4px;
-            text-align: center;
+        .form-group {
+            display: flex;
+            flex-direction: column;
         }
         
-        .stat-value {
-            font-size: 20px;
-            font-weight: bold;
-            color: var(--primary-color);
+        .form-label {
+            font-size: 14px;
+            color: #333;
             margin-bottom: 4px;
+            font-weight: 500;
         }
         
-        .stat-label {
-            font-size: 12px;
-            color: var(--text-color-secondary);
+        .form-input, .form-select, .form-textarea {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+        
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+            padding-top: 16px;
+            border-top: 1px solid #e8e8e8;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+        
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+        
+        .btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+        }
+        
+        .btn-secondary {
+            background: white;
+            color: #666;
+            border-color: #d9d9d9;
+        }
+        
+        .btn-secondary:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+        
+        .btn-danger {
+            background: #ff4d4f;
+            color: white;
+            border-color: #ff4d4f;
+        }
+        
+        .btn-danger:hover {
+            background: #ff7875;
+            border-color: #ff7875;
         }
         
         .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
             text-align: center;
-            padding: 40px;
-            color: var(--text-color-secondary);
+            color: #999;
         }
         
         .empty-icon {
             font-size: 48px;
             margin-bottom: 16px;
-            opacity: 0.3;
         }
         
-        .drag-indicator {
-            position: absolute;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: var(--primary-color);
-            opacity: 0;
-            transition: opacity 0.3s;
+        .empty-text {
+            font-size: 16px;
+            margin-bottom: 8px;
         }
         
-        .drag-indicator.active {
-            opacity: 1;
+        .empty-desc {
+            font-size: 14px;
+            color: #ccc;
         }
         
-        .level-indicator {
-            position: absolute;
-            left: 4px;
-            top: 4px;
-            width: 4px;
-            height: 4px;
+        .employee-list {
+            margin-top: 16px;
+        }
+        
+        .employee-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f5f5f5;
+        }
+        
+        .employee-item:last-child {
+            border-bottom: none;
+        }
+        
+        .employee-avatar {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            background: var(--success-color);
+            background: #1890ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
         }
         
-        .level-1 .level-indicator { background: #f5222d; }
-        .level-2 .level-indicator { background: #fa541c; }
-        .level-3 .level-indicator { background: #faad14; }
-        .level-4 .level-indicator { background: #52c41a; }
-        .level-5 .level-indicator { background: #13c2c2; }
-        .level-6 .level-indicator { background: #1890ff; }
-        .level-7 .level-indicator { background: #722ed1; }
+        .employee-info {
+            flex: 1;
+        }
         
+        .employee-name {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .employee-position {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .employee-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-btn {
+            padding: 4px 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .action-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+        
+        /* 响应式设计 */
         @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-240px);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .page-content {
+                padding: 16px;
+            }
+
             .department-layout {
                 flex-direction: column;
                 height: auto;
             }
             
             .department-tree-panel {
-                width: 100%;
-                margin-bottom: 16px;
+                flex: none;
+                min-width: auto;
             }
             
-            .dept-stats {
+            .form-row {
                 grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <div class="layout-container">
+    <div class="workspace-container">
         <!-- 侧边栏 -->
-        <div class="layout-sidebar">
-            <div class="logo">
-                <span>Portal 3.0</span>
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">P3</div>
+                <div class="brand-name">Portal 3.0</div>
             </div>
+            
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="../index.html" class="nav-link">
-                        <i>🏠</i> 首页总览
+                    <a href="../dashboard/oa-workspace.html" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        <span>OA工作台</span>
                     </a>
                 </li>
-                <li class="nav-item has-submenu active">
+                <li class="nav-item">
+                    <a href="../dashboard/crm-workspace.html" class="nav-link">
+                        <span class="nav-icon">👥</span>
+                        <span>CRM工作台</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="../dashboard/sales-workspace.html" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        <span>销售工作台</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link active">
+                        <span class="nav-icon">🏢</span>
+                        <span>组织架构</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="../crm/customer-list.html" class="nav-link">
+                        <span class="nav-icon">👤</span>
+                        <span>客户管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="#" class="nav-link">
-                        <i>📋</i> 组织架构
-                    </a>
-                    <ul class="submenu open">
-                        <li><a href="department-tree.html" class="nav-link active">部门管理</a></li>
-                        <li><a href="employee-list.html" class="nav-link">员工管理</a></li>
-                        <li><a href="position-manage.html" class="nav-link">岗位管理</a></li>
-                        <li><a href="role-permission.html" class="nav-link">角色权限</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a href="../crm/customer-dashboard.html" class="nav-link">
-                        <i>🤝</i> 客户管理
+                        <span class="nav-icon">📦</span>
+                        <span>商品管理</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../product/category-manage.html" class="nav-link">
-                        <i>📦</i> 商品管理
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">📋</span>
+                        <span>订单管理</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../order/order-dashboard.html" class="nav-link">
-                        <i>📋</i> 订单管理
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">🎧</span>
+                        <span>客服中心</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../support/ticket-dashboard.html" class="nav-link">
-                        <i>🎧</i> 客服中心
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../ops/task-board.html" class="nav-link">
-                        <i>⚙️</i> 运维管理
+                    <a href="../dashboard/workspace-config.html" class="nav-link">
+                        <span class="nav-icon">⚙️</span>
+                        <span>工作台配置</span>
                     </a>
                 </li>
             </ul>
         </div>
 
-        <!-- 头部 -->
-        <div class="layout-header">
-            <div class="breadcrumb">
-                <span class="breadcrumb-item">组织架构</span>
-                <span class="breadcrumb-item active">部门管理</span>
-            </div>
-            <div class="header-actions">
-                <div class="search-box">
-                    <input type="text" class="search-input" placeholder="搜索功能...">
-                    <i class="search-icon">🔍</i>
-                </div>
-                <div class="user-info">
-                    <div class="avatar">张</div>
-                    <span>张总</span>
-                </div>
-            </div>
-        </div>
-
         <!-- 主内容区 -->
-        <div class="layout-content">
-            <!-- 页面标题 -->
-            <div class="page-header">
-                <h1 class="page-title">部门管理</h1>
-                <p class="page-description">管理公司组织架构，支持7级部门层级，拖拽调整部门关系</p>
+        <div class="main-content">
+            <!-- 顶部导航 -->
+            <div class="header">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">组织管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">组织架构</span>
+                </div>
+                
+                <div class="header-actions">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="搜索部门或员工...">
+                    </div>
+                    
+                    <button class="notification-btn">
+                        <span>🔔</span>
+                        <span class="notification-badge">5</span>
+                    </button>
+                    
+                    <div class="user-menu">
+                        <div class="user-avatar">管</div>
+                        <span>管理员</span>
+                    </div>
+                </div>
             </div>
 
-            <!-- 工具栏 -->
-            <div class="toolbar">
-                <div class="toolbar-left">
-                    <button class="btn btn-primary" onclick="addDepartment()">
-                        <i>➕</i> 新增部门
-                    </button>
-                    <button class="btn" onclick="expandAll()">
-                        <i>📁</i> 展开全部
-                    </button>
-                    <button class="btn" onclick="collapseAll()">
-                        <i>📂</i> 收起全部
-                    </button>
-                </div>
-                <div class="toolbar-right">
-                    <button class="btn" onclick="exportDepartments()">
-                        <i>📤</i> 导出
-                    </button>
-                    <button class="btn" onclick="refreshDepartments()">
-                        <i>🔄</i> 刷新
-                    </button>
-                </div>
-            </div>
-
-            <!-- 主要内容 -->
-            <div class="department-layout">
-                <!-- 部门树面板 -->
-                <div class="department-tree-panel">
-                    <div class="panel-header">
-                        <h3 class="panel-title">部门树</h3>
-                        <span class="status-tag success">共9个部门</span>
-                    </div>
-                    <div class="panel-body">
-                        <div class="tree-search">
-                            <input type="text" class="form-control" placeholder="搜索部门..." onInput="searchDepartments(this.value)">
+            <!-- 页面内容 -->
+            <div class="page-content">
+                <div class="department-layout">
+                    <!-- 部门树形结构 -->
+                    <div class="department-tree-panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title">组织架构</h3>
+                            <div class="panel-actions">
+                                <button class="btn btn-primary" onclick="addDepartment()">+ 新增部门</button>
+                            </div>
                         </div>
-                        <div class="tree-container" id="departmentTree">
-                            <!-- 部门树将通过JavaScript生成 -->
+                        
+                        <div class="panel-body">
+                            <div class="tree-search">
+                                <input type="text" class="form-input" placeholder="搜索部门..." id="treeSearch">
+                            </div>
+                            
+                            <div class="tree-container" id="departmentTree">
+                                <!-- 部门树结构将通过JavaScript动态生成 -->
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- 部门信息面板 -->
-                <div class="department-info-panel">
-                    <div class="panel-header">
-                        <h3 class="panel-title">部门详情</h3>
-                        <div>
-                            <button class="btn btn-sm" onclick="editDepartment()" id="editBtn" style="display: none;">
-                                <i>✏️</i> 编辑
-                            </button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteDepartment()" id="deleteBtn" style="display: none;">
-                                <i>🗑️</i> 删除
-                            </button>
+                    
+                    <!-- 部门详情面板 -->
+                    <div class="department-info-panel">
+                        <div class="panel-header">
+                            <h3 class="panel-title" id="deptTitle">选择部门查看详情</h3>
+                            <div class="panel-actions" id="deptActions" style="display: none;">
+                                <button class="btn btn-secondary" onclick="editDepartment()">编辑</button>
+                                <button class="btn btn-danger" onclick="deleteDepartment()">删除</button>
+                            </div>
                         </div>
-                    </div>
-                    <div class="panel-body">
-                        <div id="departmentDetail">
+                        
+                        <div class="panel-body" id="deptContent">
                             <div class="empty-state">
                                 <div class="empty-icon">🏢</div>
-                                <p>请选择一个部门查看详情</p>
+                                <div class="empty-text">暂未选择部门</div>
+                                <div class="empty-desc">请在左侧选择要查看的部门</div>
                             </div>
                         </div>
                     </div>
@@ -439,533 +785,239 @@
     <script src="../assets/js/common.js"></script>
     <script src="../assets/js/mock-data.js"></script>
     <script>
-        let currentDepartment = null;
+        let selectedDepartment = null;
         let departments = [];
-        let employees = [];
 
-        // 页面初始化
+        // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
-            loadData();
+            loadDepartmentData();
             renderDepartmentTree();
+            
+            // 搜索功能
+            document.getElementById('treeSearch').addEventListener('input', function(e) {
+                const keyword = e.target.value.toLowerCase();
+                filterDepartmentTree(keyword);
+            });
         });
 
-        // 加载数据
-        function loadData() {
-            departments = Portal.Utils.deepClone(MockData.departments);
-            employees = Portal.Utils.deepClone(MockData.employees);
+        // 加载部门数据
+        function loadDepartmentData() {
+            // 使用mock数据中的部门信息
+            departments = window.mockData.departments || [];
         }
 
         // 渲染部门树
         function renderDepartmentTree() {
-            const treeContainer = document.getElementById('departmentTree');
-            const rootDepartments = departments.filter(dept => dept.parentId === 0);
+            const container = document.getElementById('departmentTree');
+            container.innerHTML = '';
             
-            treeContainer.innerHTML = '';
-            rootDepartments.forEach(dept => {
-                treeContainer.appendChild(createTreeNode(dept, 1));
+            const rootDepts = departments.filter(dept => !dept.parentId);
+            rootDepts.forEach(dept => {
+                const nodeElement = createTreeNode(dept);
+                container.appendChild(nodeElement);
             });
         }
 
         // 创建树节点
-        function createTreeNode(department, level) {
-            const children = departments.filter(dept => dept.parentId === department.id);
-            const empCount = employees.filter(emp => emp.department === department.id).length;
+        function createTreeNode(department) {
+            const hasChildren = departments.some(d => d.parentId === department.id);
+            const childrenCount = departments.filter(d => d.parentId === department.id).length;
             
             const nodeDiv = document.createElement('div');
             nodeDiv.className = 'tree-node';
             nodeDiv.setAttribute('data-dept-id', department.id);
             
-            const contentDiv = document.createElement('div');
-            contentDiv.className = `tree-node-content level-${level}`;
-            contentDiv.draggable = true;
-            contentDiv.onclick = () => selectDepartment(department);
-            
-            // 拖拽事件
-            contentDiv.ondragstart = (e) => handleDragStart(e, department);
-            contentDiv.ondragover = (e) => handleDragOver(e);
-            contentDiv.ondrop = (e) => handleDrop(e, department);
-            
-            contentDiv.innerHTML = `
-                <div class="level-indicator"></div>
-                <button class="tree-expand ${children.length === 0 ? 'empty' : ''}" 
-                        onclick="toggleExpand(event, this)">
-                </button>
-                <div class="tree-icon">${getDepIcon(department)}</div>
-                <span class="tree-label">${department.name}</span>
-                <span class="tree-badge">${empCount}人</span>
-                <div class="tree-actions">
-                    <button class="tree-action-btn" onclick="addSubDepartment(event, ${department.id})" title="添加子部门">
-                        ➕
+            nodeDiv.innerHTML = `
+                <div class="tree-node-content" onclick="selectDepartment('${department.id}')">
+                    <button class="tree-expand ${hasChildren ? '' : 'empty'}" onclick="toggleNode(event, '${department.id}')">
                     </button>
-                    <button class="tree-action-btn" onclick="editDepartment(event, ${department.id})" title="编辑">
-                        ✏️
-                    </button>
-                    <button class="tree-action-btn" onclick="deleteDepartment(event, ${department.id})" title="删除">
-                        🗑️
-                    </button>
+                    <div class="tree-icon">${department.name.charAt(0)}</div>
+                    <span class="tree-label">${department.name}</span>
+                    ${childrenCount > 0 ? `<span class="tree-badge">${childrenCount}</span>` : ''}
+                    <div class="tree-actions">
+                        <button class="tree-action-btn" onclick="addSubDepartment(event, '${department.id}')" title="添加下级">+</button>
+                        <button class="tree-action-btn" onclick="editDepartmentInline(event, '${department.id}')" title="编辑">✏</button>
+                    </div>
                 </div>
-                <div class="drag-indicator"></div>
+                <div class="tree-children" id="children-${department.id}">
+                    ${hasChildren ? renderChildren(department.id) : ''}
+                </div>
             `;
-            
-            nodeDiv.appendChild(contentDiv);
-            
-            // 添加子节点
-            if (children.length > 0) {
-                const childrenDiv = document.createElement('div');
-                childrenDiv.className = 'tree-children';
-                
-                children.forEach(child => {
-                    childrenDiv.appendChild(createTreeNode(child, level + 1));
-                });
-                
-                nodeDiv.appendChild(childrenDiv);
-            }
             
             return nodeDiv;
         }
 
-        // 获取部门图标
-        function getDepIcon(department) {
-            if (department.fiiale === '1') return '🏢'; // 分公司
-            switch (department.gradeid) {
-                case 1: return '👑'; // 总经理
-                case 2: return '🏛️'; // 部门
-                case 3: return '👥'; // 团队
-                default: return '📋'; // 其他
+        // 渲染子部门
+        function renderChildren(parentId) {
+            const children = departments.filter(d => d.parentId === parentId);
+            return children.map(child => createTreeNode(child).outerHTML).join('');
+        }
+
+        // 切换节点展开/收缩
+        function toggleNode(event, deptId) {
+            event.stopPropagation();
+            const expandBtn = event.target;
+            const childrenContainer = document.getElementById(`children-${deptId}`);
+            
+            if (expandBtn.classList.contains('expanded')) {
+                expandBtn.classList.remove('expanded');
+                childrenContainer.classList.remove('expanded');
+            } else {
+                expandBtn.classList.add('expanded');
+                childrenContainer.classList.add('expanded');
             }
         }
 
         // 选择部门
-        function selectDepartment(department) {
+        function selectDepartment(deptId) {
             // 清除之前的选中状态
-            document.querySelectorAll('.tree-node-content.active').forEach(el => {
-                el.classList.remove('active');
+            document.querySelectorAll('.tree-node-content.active').forEach(node => {
+                node.classList.remove('active');
             });
             
-            // 设置当前选中
-            event.currentTarget.classList.add('active');
-            currentDepartment = department;
+            // 设置当前选中状态
+            const currentNode = document.querySelector(`[data-dept-id="${deptId}"] .tree-node-content`);
+            if (currentNode) {
+                currentNode.classList.add('active');
+            }
             
-            // 显示部门详情
-            showDepartmentDetail(department);
+            // 更新选中的部门
+            selectedDepartment = departments.find(d => d.id === deptId);
             
-            // 显示操作按钮
-            document.getElementById('editBtn').style.display = 'inline-block';
-            document.getElementById('deleteBtn').style.display = 'inline-block';
+            if (selectedDepartment) {
+                renderDepartmentDetails(selectedDepartment);
+            }
         }
 
-        // 显示部门详情
-        function showDepartmentDetail(department) {
-            const detailContainer = document.getElementById('departmentDetail');
-            const deptEmployees = employees.filter(emp => emp.department === department.id);
-            const children = departments.filter(dept => dept.parentId === department.id);
-            const director = employees.find(emp => emp.id === department.directorId);
+        // 渲染部门详情
+        function renderDepartmentDetails(department) {
+            const titleElement = document.getElementById('deptTitle');
+            const actionsElement = document.getElementById('deptActions');
+            const contentElement = document.getElementById('deptContent');
             
-            detailContainer.innerHTML = `
-                <div class="dept-stats">
-                    <div class="stat-card">
-                        <div class="stat-value">${deptEmployees.length}</div>
-                        <div class="stat-label">员工人数</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${children.length}</div>
-                        <div class="stat-label">子部门</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${department.gradeid}</div>
-                        <div class="stat-label">部门等级</div>
-                    </div>
-                </div>
-                
+            titleElement.textContent = department.name;
+            actionsElement.style.display = 'flex';
+            
+            // 获取部门员工
+            const employees = window.mockData.employees.filter(emp => emp.departmentId === department.id);
+            
+            contentElement.innerHTML = `
                 <form class="dept-form">
                     <div class="form-section">
                         <div class="section-title">基本信息</div>
                         <div class="form-row">
-                            <div class="form-col">
+                            <div class="form-group">
                                 <label class="form-label">部门名称</label>
-                                <input type="text" class="form-control" value="${department.name}" readonly>
+                                <input type="text" class="form-input" value="${department.name}" readonly>
                             </div>
-                            <div class="form-col">
-                                <label class="form-label">部门编号</label>
-                                <input type="text" class="form-control" value="${department.depNo || ''}" readonly>
+                            <div class="form-group">
+                                <label class="form-label">部门代码</label>
+                                <input type="text" class="form-input" value="${department.code}" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">部门级别</label>
+                                <input type="text" class="form-input" value="第${department.level}级" readonly>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">排序权重</label>
+                                <input type="number" class="form-input" value="${department.sort}" readonly>
                             </div>
                         </div>
                         <div class="form-row">
-                            <div class="form-col">
-                                <label class="form-label">部门等级</label>
-                                <input type="text" class="form-control" value="第${department.gradeid}级" readonly>
+                            <div class="form-group">
+                                <label class="form-label">部门描述</label>
+                                <textarea class="form-textarea" readonly>${department.description || '暂无描述'}</textarea>
                             </div>
-                            <div class="form-col">
-                                <label class="form-label">部门类型</label>
-                                <input type="text" class="form-control" value="${department.fiiale === '1' ? '分公司' : '普通部门'}" readonly>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">部门主管</label>
-                            <input type="text" class="form-control" value="${director ? director.name : '未设置'}" readonly>
                         </div>
                     </div>
                     
                     <div class="form-section">
-                        <div class="section-title">部门员工 (${deptEmployees.length}人)</div>
-                        <div style="max-height: 200px; overflow-y: auto;">
-                            ${deptEmployees.length === 0 ? 
-                                '<p style="text-align: center; color: #999; padding: 20px;">暂无员工</p>' :
-                                deptEmployees.map(emp => `
-                                    <div style="display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
-                                        <div style="width: 32px; height: 32px; border-radius: 50%; background: #1890ff; color: white; display: flex; align-items: center; justify-content: center; margin-right: 12px; font-size: 12px;">
-                                            ${emp.name.charAt(0)}
-                                        </div>
-                                        <div style="flex: 1;">
-                                            <div style="font-weight: 500;">${emp.name}</div>
-                                            <div style="font-size: 12px; color: #999;">${emp.position} | ${emp.empNo}</div>
-                                        </div>
-                                        <div style="color: #999; font-size: 12px;">
-                                            ${emp.isLeave === 1 ? '在职' : '离职'}
-                                        </div>
+                        <div class="section-title">部门员工 (${employees.length}人)</div>
+                        <div class="employee-list">
+                            ${employees.length > 0 ? employees.map(emp => `
+                                <div class="employee-item">
+                                    <div class="employee-avatar">${emp.name.charAt(0)}</div>
+                                    <div class="employee-info">
+                                        <div class="employee-name">${emp.name}</div>
+                                        <div class="employee-position">${emp.position}</div>
                                     </div>
-                                `).join('')
-                            }
-                        </div>
-                    </div>
-                    
-                    ${children.length > 0 ? `
-                    <div class="form-section">
-                        <div class="section-title">子部门 (${children.length}个)</div>
-                        <div>
-                            ${children.map(child => `
-                                <div style="display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
-                                    <div style="margin-right: 12px;">${getDepIcon(child)}</div>
-                                    <div style="flex: 1;">
-                                        <div style="font-weight: 500;">${child.name}</div>
-                                        <div style="font-size: 12px; color: #999;">编号: ${child.depNo || '未设置'}</div>
-                                    </div>
-                                    <div style="color: #999; font-size: 12px;">
-                                        ${employees.filter(emp => emp.department === child.id).length}人
+                                    <div class="employee-actions">
+                                        <button type="button" class="action-btn" onclick="viewEmployee('${emp.id}')">查看</button>
+                                        <button type="button" class="action-btn" onclick="editEmployee('${emp.id}')">编辑</button>
                                     </div>
                                 </div>
-                            `).join('')}
+                            `).join('') : '<div class="empty-state"><div class="empty-text">暂无员工</div></div>'}
                         </div>
                     </div>
-                    ` : ''}
                 </form>
             `;
         }
 
-        // 切换展开/收起
-        function toggleExpand(event, button) {
-            event.stopPropagation();
-            
-            const treeNode = button.closest('.tree-node');
-            const children = treeNode.querySelector('.tree-children');
-            
-            if (children) {
-                const isExpanded = children.classList.contains('expanded');
-                
-                if (isExpanded) {
-                    children.classList.remove('expanded');
-                    button.classList.remove('expanded');
-                } else {
-                    children.classList.add('expanded');
-                    button.classList.add('expanded');
-                }
-            }
-        }
-
-        // 展开全部
-        function expandAll() {
-            document.querySelectorAll('.tree-children').forEach(children => {
-                children.classList.add('expanded');
-            });
-            document.querySelectorAll('.tree-expand:not(.empty)').forEach(button => {
-                button.classList.add('expanded');
-            });
-        }
-
-        // 收起全部
-        function collapseAll() {
-            document.querySelectorAll('.tree-children').forEach(children => {
-                children.classList.remove('expanded');
-            });
-            document.querySelectorAll('.tree-expand').forEach(button => {
-                button.classList.remove('expanded');
-            });
-        }
-
-        // 搜索部门
-        function searchDepartments(keyword) {
-            const treeNodes = document.querySelectorAll('.tree-node');
-            
-            if (!keyword.trim()) {
-                // 清空搜索，显示全部
-                treeNodes.forEach(node => {
-                    node.style.display = '';
-                });
-                return;
-            }
-            
-            treeNodes.forEach(node => {
-                const label = node.querySelector('.tree-label').textContent;
-                const match = label.toLowerCase().includes(keyword.toLowerCase());
-                node.style.display = match ? '' : 'none';
-                
-                // 如果匹配，展开父节点
-                if (match) {
-                    let parent = node.parentElement;
-                    while (parent && parent.classList.contains('tree-children')) {
-                        parent.classList.add('expanded');
-                        const expandBtn = parent.previousElementSibling.querySelector('.tree-expand');
-                        if (expandBtn) expandBtn.classList.add('expanded');
-                        parent = parent.parentElement.parentElement;
-                    }
-                }
-            });
-        }
-
-        // 拖拽处理
-        let draggedDepartment = null;
-
-        function handleDragStart(event, department) {
-            draggedDepartment = department;
-            event.currentTarget.classList.add('dragging');
-        }
-
-        function handleDragOver(event) {
-            event.preventDefault();
-            const indicator = event.currentTarget.querySelector('.drag-indicator');
-            indicator.classList.add('active');
-        }
-
-        function handleDrop(event, targetDepartment) {
-            event.preventDefault();
-            
-            const indicator = event.currentTarget.querySelector('.drag-indicator');
-            indicator.classList.remove('active');
-            
-            if (draggedDepartment && draggedDepartment.id !== targetDepartment.id) {
-                // 检查是否会造成循环引用
-                if (!wouldCreateCycle(draggedDepartment.id, targetDepartment.id)) {
-                    // 移动部门
-                    moveDepartment(draggedDepartment.id, targetDepartment.id);
-                } else {
-                    Portal.Message.warning('不能将部门移动到其子部门下');
-                }
-            }
-            
-            document.querySelectorAll('.tree-node-content.dragging').forEach(el => {
-                el.classList.remove('dragging');
-            });
-            
-            draggedDepartment = null;
-        }
-
-        // 检查是否会造成循环引用
-        function wouldCreateCycle(sourceId, targetId) {
-            let current = targetId;
-            while (current) {
-                if (current === sourceId) return true;
-                const dept = departments.find(d => d.id === current);
-                current = dept ? dept.parentId : null;
-            }
-            return false;
-        }
-
-        // 移动部门
-        function moveDepartment(sourceId, targetId) {
-            const dept = departments.find(d => d.id === sourceId);
-            if (dept) {
-                dept.parentId = targetId;
-                // 重新计算等级
-                const targetDept = departments.find(d => d.id === targetId);
-                dept.gradeid = targetDept.gradeid + 1;
-                
-                renderDepartmentTree();
-                Portal.Message.success('部门移动成功');
-            }
-        }
-
-        // 新增部门
+        // 添加部门
         function addDepartment() {
-            const parentId = currentDepartment ? currentDepartment.id : 0;
-            const parentLevel = currentDepartment ? currentDepartment.gradeid : 0;
-            
-            Portal.Modal.confirm({
-                title: '新增部门',
-                content: `
-                    <form id="addDeptForm">
-                        <div class="form-group">
-                            <label class="form-label">部门名称 *</label>
-                            <input type="text" name="name" class="form-control" data-validate="required" placeholder="请输入部门名称">
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <label class="form-label">部门编号</label>
-                                <input type="text" name="depNo" class="form-control" placeholder="如：D010">
-                            </div>
-                            <div class="form-col">
-                                <label class="form-label">是否分公司</label>
-                                <select name="fiiale" class="form-control">
-                                    <option value="">否</option>
-                                    <option value="1">是</option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">上级部门</label>
-                            <input type="text" class="form-control" value="${currentDepartment ? currentDepartment.name : '根部门'}" readonly>
-                        </div>
-                    </form>
-                `,
-                onConfirm: () => {
-                    const form = document.getElementById('addDeptForm');
-                    const validation = Portal.Validator.validate(form);
-                    
-                    if (validation.isValid) {
-                        const formData = new FormData(form);
-                        const newDept = {
-                            id: MockData.generator.generateId(),
-                            name: formData.get('name'),
-                            depNo: formData.get('depNo'),
-                            parentId: parentId,
-                            gradeid: parentLevel + 1,
-                            fiiale: formData.get('fiiale'),
-                            directorId: null,
-                            createTime: new Date().toISOString().split('T')[0]
-                        };
-                        
-                        departments.push(newDept);
-                        renderDepartmentTree();
-                        Portal.Message.success('部门新增成功');
-                    }
-                }
-            });
+            showMessage('正在打开添加部门对话框...', 'info');
+            // 这里可以实现添加部门的对话框
         }
 
         // 添加子部门
         function addSubDepartment(event, parentId) {
             event.stopPropagation();
-            const parent = departments.find(d => d.id === parentId);
-            currentDepartment = parent;
-            addDepartment();
+            showMessage(`正在为部门${parentId}添加子部门...`, 'info');
         }
 
         // 编辑部门
-        function editDepartment(event, deptId) {
-            if (event) event.stopPropagation();
+        function editDepartment() {
+            if (!selectedDepartment) return;
             
-            const dept = deptId ? departments.find(d => d.id === deptId) : currentDepartment;
-            if (!dept) return;
-            
-            Portal.Modal.confirm({
-                title: '编辑部门',
-                content: `
-                    <form id="editDeptForm">
-                        <div class="form-group">
-                            <label class="form-label">部门名称 *</label>
-                            <input type="text" name="name" class="form-control" value="${dept.name}" data-validate="required">
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <label class="form-label">部门编号</label>
-                                <input type="text" name="depNo" class="form-control" value="${dept.depNo || ''}">
-                            </div>
-                            <div class="form-col">
-                                <label class="form-label">是否分公司</label>
-                                <select name="fiiale" class="form-control">
-                                    <option value="" ${dept.fiiale !== '1' ? 'selected' : ''}>否</option>
-                                    <option value="1" ${dept.fiiale === '1' ? 'selected' : ''}>是</option>
-                                </select>
-                            </div>
-                        </div>
-                    </form>
-                `,
-                onConfirm: () => {
-                    const form = document.getElementById('editDeptForm');
-                    const validation = Portal.Validator.validate(form);
-                    
-                    if (validation.isValid) {
-                        const formData = new FormData(form);
-                        dept.name = formData.get('name');
-                        dept.depNo = formData.get('depNo');
-                        dept.fiiale = formData.get('fiiale');
-                        
-                        renderDepartmentTree();
-                        if (currentDepartment && currentDepartment.id === dept.id) {
-                            showDepartmentDetail(dept);
-                        }
-                        Portal.Message.success('部门编辑成功');
-                    }
-                }
-            });
+            showMessage('正在打开编辑部门对话框...', 'info');
+            // 这里可以实现编辑部门的对话框
+        }
+
+        // 内联编辑部门
+        function editDepartmentInline(event, deptId) {
+            event.stopPropagation();
+            showMessage(`正在编辑部门${deptId}...`, 'info');
         }
 
         // 删除部门
-        function deleteDepartment(event, deptId) {
-            if (event) event.stopPropagation();
+        function deleteDepartment() {
+            if (!selectedDepartment) return;
             
-            const dept = deptId ? departments.find(d => d.id === deptId) : currentDepartment;
-            if (!dept) return;
-            
-            // 检查是否有子部门
-            const children = departments.filter(d => d.parentId === dept.id);
-            if (children.length > 0) {
-                Portal.Message.error('该部门下还有子部门，无法删除');
-                return;
+            if (confirm(`确定要删除部门"${selectedDepartment.name}"吗？`)) {
+                showMessage('部门删除成功', 'success');
+                // 这里可以实现删除部门的逻辑
             }
+        }
+
+        // 查看员工
+        function viewEmployee(empId) {
+            showMessage(`正在查看员工${empId}详情...`, 'info');
+        }
+
+        // 编辑员工
+        function editEmployee(empId) {
+            showMessage(`正在编辑员工${empId}...`, 'info');
+        }
+
+        // 过滤部门树
+        function filterDepartmentTree(keyword) {
+            const allNodes = document.querySelectorAll('.tree-node');
             
-            // 检查是否有员工
-            const deptEmployees = employees.filter(emp => emp.department === dept.id);
-            if (deptEmployees.length > 0) {
-                Portal.Message.error('该部门下还有员工，无法删除');
-                return;
-            }
-            
-            Portal.Modal.confirm({
-                title: '确认删除',
-                content: `确定要删除部门"${dept.name}"吗？此操作不可恢复。`,
-                onConfirm: () => {
-                    const index = departments.findIndex(d => d.id === dept.id);
-                    if (index > -1) {
-                        departments.splice(index, 1);
-                        renderDepartmentTree();
-                        
-                        // 清空详情面板
-                        document.getElementById('departmentDetail').innerHTML = `
-                            <div class="empty-state">
-                                <div class="empty-icon">🏢</div>
-                                <p>请选择一个部门查看详情</p>
-                            </div>
-                        `;
-                        document.getElementById('editBtn').style.display = 'none';
-                        document.getElementById('deleteBtn').style.display = 'none';
-                        currentDepartment = null;
-                        
-                        Portal.Message.success('部门删除成功');
-                    }
+            allNodes.forEach(node => {
+                const label = node.querySelector('.tree-label').textContent.toLowerCase();
+                const isMatch = label.includes(keyword);
+                
+                if (keyword === '' || isMatch) {
+                    node.style.display = 'block';
+                } else {
+                    node.style.display = 'none';
                 }
             });
         }
 
-        // 导出部门
-        function exportDepartments() {
-            const data = departments.map(dept => ({
-                '部门名称': dept.name,
-                '部门编号': dept.depNo || '',
-                '部门等级': dept.gradeid,
-                '是否分公司': dept.fiiale === '1' ? '是' : '否',
-                '员工人数': employees.filter(emp => emp.department === dept.id).length,
-                '创建时间': dept.createTime
-            }));
-            
-            console.log('导出部门数据:', data);
-            Portal.Message.success('部门数据导出成功');
-        }
-
-        // 刷新部门
-        function refreshDepartments() {
-            loadData();
-            renderDepartmentTree();
-            Portal.Message.success('数据刷新成功');
+        // 初始化拖拽功能（可选）
+        function initDragAndDrop() {
+            // 实现部门拖拽排序功能
         }
     </script>
 </body>

@@ -63,20 +63,30 @@
             display: flex;
             align-items: center;
             padding: 12px 20px;
-            color: var(--text-color-secondary);
+            color: #666 !important;
             text-decoration: none;
             transition: all 0.3s ease;
             position: relative;
+            font-size: 14px;
+            width: 100%;
+            overflow: visible;
+        }
+
+        .nav-link span {
+            display: inline-block;
+            color: inherit;
+            white-space: nowrap;
+            overflow: visible;
         }
 
         .nav-link:hover {
-            background: var(--bg-color-light);
-            color: var(--text-color);
+            background: #f5f5f5 !important;
+            color: #333 !important;
         }
 
         .nav-link.active {
-            background: rgba(24, 144, 255, 0.1);
-            color: var(--primary-color);
+            background: rgba(24, 144, 255, 0.1) !important;
+            color: #1890ff !important;
         }
 
         .nav-link.active::before {
@@ -86,12 +96,14 @@
             top: 0;
             bottom: 0;
             width: 3px;
-            background: var(--primary-color);
+            background: #1890ff;
         }
 
         .nav-icon {
             margin-right: 12px;
             font-size: 16px;
+            display: inline-block;
+            min-width: 20px;
         }
 
         .main-content {

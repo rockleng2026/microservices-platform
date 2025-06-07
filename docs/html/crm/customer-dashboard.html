@@ -3,53 +3,326 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM工作台 - Portal 3.0</title>
+    <title>客户管理 - Portal 3.0</title>
     <link rel="stylesheet" href="../assets/css/common.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 24px;
-            margin-bottom: 24px;
+        .workspace-container {
+            display: flex;
+            min-height: 100vh;
+            background: #f5f5f5;
         }
-        
-        .stat-card {
+
+        .sidebar {
+            width: 240px;
             background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            padding: 24px;
-            position: relative;
-            overflow: hidden;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: fixed;
+            height: 100vh;
+            z-index: 100;
         }
-        
-        .stat-card::before {
+
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666 !important;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            width: 100%;
+            overflow: visible;
+        }
+
+        .nav-link span {
+            display: inline-block;
+            color: inherit;
+            white-space: nowrap;
+            overflow: visible;
+        }
+
+        .nav-link:hover {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+        }
+
+        .nav-link.active {
+            background: rgba(24, 144, 255, 0.1) !important;
+            color: #1890ff !important;
+        }
+
+        .nav-link.active::before {
             content: '';
             position: absolute;
-            top: 0;
             left: 0;
-            width: 4px;
-            height: 100%;
-            background: var(--primary-color);
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
         }
-        
-        .stat-card.success::before { background: var(--success-color); }
-        .stat-card.warning::before { background: var(--warning-color); }
-        .stat-card.error::before { background: var(--error-color); }
-        
-        .stat-header {
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            min-height: 100vh;
+        }
+
+        .header {
+            height: 60px;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 16px;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
         }
-        
-        .stat-title {
-            font-size: 14px;
-            color: var(--text-color-secondary);
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            color: #666;
+        }
+
+        .breadcrumb-item {
+            margin-right: 8px;
+        }
+
+        .breadcrumb-separator {
+            margin: 0 8px;
+            color: #d9d9d9;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            width: 200px;
+            height: 32px;
+            padding: 0 12px 0 36px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .notification-btn {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .notification-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
+            background: #ff4d4f;
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .user-menu:hover {
+            background: #f5f5f5;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #1890ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .page-content {
+            padding: 24px;
+        }
+
+        /* 原有的仪表板样式，保持不变 */
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .dashboard-title {
+            color: #333;
+            font-size: 28px;
+            font-weight: 600;
             margin: 0;
         }
-        
+
+        .dashboard-meta {
+            color: #666;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .dashboard-controls {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #666;
+            border-color: #d9d9d9;
+        }
+
+        .btn-secondary:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-title {
+            color: #666;
+            font-size: 14px;
+            margin: 0;
+        }
+
         .stat-icon {
             width: 40px;
             height: 40px;
@@ -58,497 +331,458 @@
             align-items: center;
             justify-content: center;
             font-size: 18px;
-            color: white;
-            background: var(--primary-color);
         }
-        
-        .stat-icon.success { background: var(--success-color); }
-        .stat-icon.warning { background: var(--warning-color); }
-        .stat-icon.error { background: var(--error-color); }
-        
+
         .stat-value {
-            font-size: 28px;
-            font-weight: bold;
-            color: var(--text-color);
+            font-size: 32px;
+            font-weight: 700;
+            color: #333;
             margin-bottom: 8px;
         }
-        
+
         .stat-change {
             font-size: 12px;
             display: flex;
             align-items: center;
             gap: 4px;
         }
-        
+
         .stat-change.positive {
-            color: var(--success-color);
+            color: #52c41a;
         }
-        
+
         .stat-change.negative {
-            color: var(--error-color);
+            color: #ff4d4f;
         }
-        
-        .chart-container {
-            background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
-            padding: 24px;
-            margin-bottom: 24px;
-        }
-        
-        .chart-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 24px;
-        }
-        
-        .chart-title {
-            font-size: 16px;
-            font-weight: 500;
-            margin: 0;
-        }
-        
-        .chart-filters {
-            display: flex;
-            gap: 8px;
-        }
-        
-        .filter-btn {
-            padding: 4px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 4px;
-            background: white;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-        
-        .filter-btn.active,
-        .filter-btn:hover {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-        
-        .content-grid {
+
+        .chart-grid {
             display: grid;
             grid-template-columns: 2fr 1fr;
             gap: 24px;
+            margin-bottom: 32px;
         }
-        
-        .todo-list {
+
+        .chart-card {
             background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
         }
-        
-        .todo-header {
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--border-color);
+
+        .chart-header {
             display: flex;
-            align-items: center;
             justify-content: space-between;
-        }
-        
-        .todo-item {
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
             align-items: center;
-            gap: 12px;
-            transition: background 0.3s;
+            margin-bottom: 20px;
         }
-        
-        .todo-item:hover {
-            background: var(--background-color);
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
         }
-        
-        .todo-item:last-child {
-            border-bottom: none;
+
+        .chart-filter {
+            display: flex;
+            gap: 8px;
         }
-        
-        .todo-checkbox {
-            width: 18px;
-            height: 18px;
-            border: 2px solid var(--border-color);
-            border-radius: 3px;
+
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            background: white;
+            color: #666;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            font-size: 12px;
             transition: all 0.3s;
         }
-        
-        .todo-checkbox.checked {
-            background: var(--success-color);
-            border-color: var(--success-color);
-            color: white;
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
         }
-        
-        .todo-content {
-            flex: 1;
-        }
-        
-        .todo-title {
-            font-weight: 500;
-            margin-bottom: 4px;
-        }
-        
-        .todo-meta {
-            font-size: 12px;
-            color: var(--text-color-secondary);
-        }
-        
-        .todo-priority {
-            padding: 2px 8px;
-            border-radius: 10px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-        
-        .priority-high {
-            background: #fff2f0;
-            color: var(--error-color);
-        }
-        
-        .priority-medium {
-            background: #fffbe6;
-            color: var(--warning-color);
-        }
-        
-        .priority-low {
-            background: #f6ffed;
-            color: var(--success-color);
-        }
-        
-        .recent-customers {
+
+        .customer-table {
             background: white;
-            border-radius: var(--border-radius);
-            box-shadow: var(--box-shadow);
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
         }
-        
-        .customer-item {
-            padding: 16px 24px;
-            border-bottom: 1px solid var(--border-color);
+
+        .table-header {
             display: flex;
+            justify-content: space-between;
             align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .table-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .table-actions {
+            display: flex;
             gap: 12px;
         }
-        
-        .customer-item:last-child {
-            border-bottom: none;
+
+        .table-content {
+            overflow-x: auto;
         }
-        
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #f5f5f5;
+        }
+
+        .data-table th {
+            background: #fafafa;
+            color: #333;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .data-table td {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f9f9f9;
+        }
+
         .customer-avatar {
-            width: 40px;
-            height: 40px;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
-            background: var(--primary-color);
+            background: #1890ff;
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            margin-right: 12px;
         }
-        
+
         .customer-info {
-            flex: 1;
+            display: flex;
+            align-items: center;
         }
-        
+
         .customer-name {
-            font-weight: 500;
-            margin-bottom: 4px;
+            font-weight: 600;
+            color: #333;
         }
-        
-        .customer-status {
+
+        .customer-company {
+            color: #999;
             font-size: 12px;
-            padding: 2px 8px;
-            border-radius: 10px;
+            margin-top: 2px;
         }
-        
-        .status-formal {
-            background: #f6ffed;
-            color: var(--success-color);
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
         }
-        
-        .status-trial {
+
+        .status-potential {
             background: #e6f7ff;
-            color: var(--primary-color);
+            color: #1890ff;
         }
-        
-        .status-intention {
-            background: #fffbe6;
-            color: var(--warning-color);
+
+        .status-contacted {
+            background: #fff2e8;
+            color: #fa8c16;
         }
-        
-        .status-pending {
-            background: #fff2f0;
-            color: var(--error-color);
+
+        .status-qualified {
+            background: #f6ffed;
+            color: #52c41a;
         }
-        
-        @media (max-width: 1200px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr 1fr;
-            }
+
+        .status-converted {
+            background: #f9f0ff;
+            color: #722ed1;
         }
-        
+
+        .action-btn {
+            padding: 4px 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+            margin-right: 8px;
+        }
+
+        .action-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        /* 响应式设计 */
         @media (max-width: 768px) {
-            .dashboard-grid {
+            .sidebar {
+                transform: translateX(-240px);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .page-content {
+                padding: 16px;
+            }
+
+            .stats-grid {
                 grid-template-columns: 1fr;
             }
-            
-            .content-grid {
+
+            .chart-grid {
                 grid-template-columns: 1fr;
             }
-            
-            .chart-filters {
-                flex-wrap: wrap;
+
+            .dashboard-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 16px;
+            }
+
+            .dashboard-controls {
+                width: 100%;
+                justify-content: flex-start;
             }
         }
     </style>
 </head>
 <body>
-    <div class="layout-container">
+    <div class="workspace-container">
         <!-- 侧边栏 -->
-        <div class="layout-sidebar">
-            <div class="logo">
-                <span>Portal 3.0</span>
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">P3</div>
+                <div class="brand-name">Portal 3.0</div>
             </div>
+            
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="../index.html" class="nav-link">
-                        <i>🏠</i> 首页总览
+                    <a href="../dashboard/oa-workspace.html" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        <span>OA工作台</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="../dashboard/crm-workspace.html" class="nav-link">
+                        <span class="nav-icon">👥</span>
+                        <span>CRM工作台</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="../dashboard/sales-workspace.html" class="nav-link">
+                        <span class="nav-icon">📊</span>
+                        <span>销售工作台</span>
                     </a>
                 </li>
                 <li class="nav-item">
                     <a href="../organization/department-tree.html" class="nav-link">
-                        <i>📋</i> 组织架构
+                        <span class="nav-icon">🏢</span>
+                        <span>组织架构</span>
                     </a>
                 </li>
-                <li class="nav-item has-submenu active">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active">
+                        <span class="nav-icon">👤</span>
+                        <span>客户管理</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="#" class="nav-link">
-                        <i>🤝</i> 客户管理
-                    </a>
-                    <ul class="submenu open">
-                        <li><a href="customer-dashboard.html" class="nav-link active">CRM工作台</a></li>
-                        <li><a href="customer-list.html" class="nav-link">客户列表</a></li>
-                        <li><a href="customer-detail.html" class="nav-link">客户详情</a></li>
-                        <li><a href="follow-record.html" class="nav-link">跟进记录</a></li>
-                        <li><a href="customer-transfer.html" class="nav-link">客户交接</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item">
-                    <a href="../product/category-manage.html" class="nav-link">
-                        <i>📦</i> 商品管理
+                        <span class="nav-icon">📦</span>
+                        <span>商品管理</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../order/order-dashboard.html" class="nav-link">
-                        <i>📋</i> 订单管理
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">📋</span>
+                        <span>订单管理</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../support/ticket-dashboard.html" class="nav-link">
-                        <i>🎧</i> 客服中心
+                    <a href="#" class="nav-link">
+                        <span class="nav-icon">🎧</span>
+                        <span>客服中心</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="../ops/task-board.html" class="nav-link">
-                        <i>⚙️</i> 运维管理
+                    <a href="../dashboard/workspace-config.html" class="nav-link">
+                        <span class="nav-icon">⚙️</span>
+                        <span>工作台配置</span>
                     </a>
                 </li>
             </ul>
         </div>
 
-        <!-- 头部 -->
-        <div class="layout-header">
-            <div class="breadcrumb">
-                <span class="breadcrumb-item">客户管理</span>
-                <span class="breadcrumb-item active">CRM工作台</span>
-            </div>
-            <div class="header-actions">
-                <div class="search-box">
-                    <input type="text" class="search-input" placeholder="搜索客户...">
-                    <i class="search-icon">🔍</i>
-                </div>
-                <div class="user-info">
-                    <div class="avatar">张</div>
-                    <span>张总</span>
-                </div>
-            </div>
-        </div>
-
         <!-- 主内容区 -->
-        <div class="layout-content">
-            <!-- 页面标题 -->
-            <div class="page-header">
-                <h1 class="page-title">CRM工作台</h1>
-                <p class="page-description">客户关系管理数据概览，跟进任务提醒，销售业绩分析</p>
-            </div>
-
-            <!-- 关键指标卡片 -->
-            <div class="dashboard-grid">
-                <div class="stat-card">
-                    <div class="stat-header">
-                        <h3 class="stat-title">总客户数</h3>
-                        <div class="stat-icon">👥</div>
-                    </div>
-                    <div class="stat-value">5</div>
-                    <div class="stat-change positive">
-                        <span>↗</span>
-                        <span>+2 本月</span>
-                    </div>
+        <div class="main-content">
+            <!-- 顶部导航 -->
+            <div class="header">
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">客户关系</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">客户管理</span>
                 </div>
-
-                <div class="stat-card success">
-                    <div class="stat-header">
-                        <h3 class="stat-title">正式客户</h3>
-                        <div class="stat-icon success">✓</div>
+                
+                <div class="header-actions">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" class="search-input" placeholder="搜索客户...">
                     </div>
-                    <div class="stat-value">2</div>
-                    <div class="stat-change positive">
-                        <span>↗</span>
-                        <span>+1 本月</span>
-                    </div>
-                </div>
-
-                <div class="stat-card warning">
-                    <div class="stat-header">
-                        <h3 class="stat-title">试用客户</h3>
-                        <div class="stat-icon warning">⏱</div>
-                    </div>
-                    <div class="stat-value">1</div>
-                    <div class="stat-change">
-                        <span>→</span>
-                        <span>无变化</span>
-                    </div>
-                </div>
-
-                <div class="stat-card error">
-                    <div class="stat-header">
-                        <h3 class="stat-title">待跟进</h3>
-                        <div class="stat-icon error">⚠</div>
-                    </div>
-                    <div class="stat-value">3</div>
-                    <div class="stat-change negative">
-                        <span>↘</span>
-                        <span>-1 今日</span>
+                    
+                    <button class="notification-btn">
+                        <span>🔔</span>
+                        <span class="notification-badge">5</span>
+                    </button>
+                    
+                    <div class="user-menu">
+                        <div class="user-avatar">管</div>
+                        <span>管理员</span>
                     </div>
                 </div>
             </div>
 
-            <!-- 图表区域 -->
-            <div class="chart-container">
-                <div class="chart-header">
-                    <h3 class="chart-title">客户转化趋势</h3>
-                    <div class="chart-filters">
-                        <button class="filter-btn active" onclick="changeTimeRange('week')">本周</button>
-                        <button class="filter-btn" onclick="changeTimeRange('month')">本月</button>
-                        <button class="filter-btn" onclick="changeTimeRange('quarter')">本季度</button>
-                        <button class="filter-btn" onclick="changeTimeRange('year')">本年</button>
+            <!-- 页面内容 -->
+            <div class="page-content">
+                <!-- 仪表板头部 -->
+                <div class="dashboard-header">
+                    <div>
+                        <h1 class="dashboard-title">客户关系管理</h1>
+                        <div class="dashboard-meta">今日新增客户 12 个，总计 2,847 个客户</div>
                     </div>
-                </div>
-                <canvas id="customerChart" width="400" height="200"></canvas>
-            </div>
-
-            <!-- 内容网格 -->
-            <div class="content-grid">
-                <!-- 待办任务 -->
-                <div class="todo-list">
-                    <div class="todo-header">
-                        <h3 class="panel-title">今日待办</h3>
-                        <span class="status-tag warning">3个任务</span>
-                    </div>
-                    <div class="todo-item">
-                        <div class="todo-checkbox" onclick="toggleTodo(this)"></div>
-                        <div class="todo-content">
-                            <div class="todo-title">回访北京科技有限公司</div>
-                            <div class="todo-meta">客户反馈 | 预计15分钟</div>
-                        </div>
-                        <div class="todo-priority priority-high">高</div>
-                    </div>
-                    <div class="todo-item">
-                        <div class="todo-checkbox" onclick="toggleTodo(this)"></div>
-                        <div class="todo-content">
-                            <div class="todo-title">上海商贸集团方案演示</div>
-                            <div class="todo-meta">产品演示 | 预计60分钟</div>
-                        </div>
-                        <div class="todo-priority priority-high">高</div>
-                    </div>
-                    <div class="todo-item">
-                        <div class="todo-checkbox" onclick="toggleTodo(this)"></div>
-                        <div class="todo-content">
-                            <div class="todo-title">广州制造企业需求调研</div>
-                            <div class="todo-meta">需求分析 | 预计30分钟</div>
-                        </div>
-                        <div class="todo-priority priority-medium">中</div>
-                    </div>
-                    <div class="todo-item">
-                        <div class="todo-checkbox checked" onclick="toggleTodo(this)">✓</div>
-                        <div class="todo-content">
-                            <div class="todo-title">整理本周销售报告</div>
-                            <div class="todo-meta">已完成 | 用时45分钟</div>
-                        </div>
-                        <div class="todo-priority priority-low">低</div>
+                    <div class="dashboard-controls">
+                        <button class="btn btn-primary">+ 新增客户</button>
+                        <button class="btn btn-secondary">📤 导出客户</button>
+                        <button class="btn btn-secondary">🔄 刷新数据</button>
                     </div>
                 </div>
 
-                <!-- 最近客户 -->
-                <div class="recent-customers">
-                    <div class="todo-header">
-                        <h3 class="panel-title">最近客户</h3>
-                        <a href="customer-list.html" class="btn btn-sm">查看全部</a>
-                    </div>
-                    <div class="customer-item">
-                        <div class="customer-avatar">北</div>
-                        <div class="customer-info">
-                            <div class="customer-name">北京科技有限公司</div>
-                            <div class="customer-meta">
-                                <span class="customer-status status-formal">正式客户</span>
-                                <span style="margin-left: 8px; font-size: 12px; color: #999;">2天前</span>
-                            </div>
+                <!-- 统计卡片 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="stat-title">总客户数</h3>
+                            <div class="stat-icon" style="background: rgba(24, 144, 255, 0.1); color: #1890ff;">👥</div>
+                        </div>
+                        <div class="stat-value">2,847</div>
+                        <div class="stat-change positive">
+                            <span>↗</span>
+                            <span>+12% 较上月</span>
                         </div>
                     </div>
-                    <div class="customer-item">
-                        <div class="customer-avatar">上</div>
-                        <div class="customer-info">
-                            <div class="customer-name">上海商贸集团</div>
-                            <div class="customer-meta">
-                                <span class="customer-status status-trial">试用客户</span>
-                                <span style="margin-left: 8px; font-size: 12px; color: #999;">3天前</span>
-                            </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="stat-title">潜在客户</h3>
+                            <div class="stat-icon" style="background: rgba(250, 140, 22, 0.1); color: #fa8c16;">🎯</div>
+                        </div>
+                        <div class="stat-value">426</div>
+                        <div class="stat-change positive">
+                            <span>↗</span>
+                            <span>+8% 较上月</span>
                         </div>
                     </div>
-                    <div class="customer-item">
-                        <div class="customer-avatar">广</div>
-                        <div class="customer-info">
-                            <div class="customer-name">广州制造企业</div>
-                            <div class="customer-meta">
-                                <span class="customer-status status-intention">意向客户</span>
-                                <span style="margin-left: 8px; font-size: 12px; color: #999;">5天前</span>
-                            </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="stat-title">成交客户</h3>
+                            <div class="stat-icon" style="background: rgba(82, 196, 26, 0.1); color: #52c41a;">✅</div>
+                        </div>
+                        <div class="stat-value">1,538</div>
+                        <div class="stat-change positive">
+                            <span>↗</span>
+                            <span>+15% 较上月</span>
                         </div>
                     </div>
-                    <div class="customer-item">
-                        <div class="customer-avatar">深</div>
-                        <div class="customer-info">
-                            <div class="customer-name">深圳互联网公司</div>
-                            <div class="customer-meta">
-                                <span class="customer-status status-pending">审核中</span>
-                                <span style="margin-left: 8px; font-size: 12px; color: #999;">1周前</span>
-                            </div>
+
+                    <div class="stat-card">
+                        <div class="stat-header">
+                            <h3 class="stat-title">客户价值</h3>
+                            <div class="stat-icon" style="background: rgba(114, 46, 209, 0.1); color: #722ed1;">💰</div>
+                        </div>
+                        <div class="stat-value">¥2.8M</div>
+                        <div class="stat-change negative">
+                            <span>↘</span>
+                            <span>-3% 较上月</span>
                         </div>
                     </div>
-                    <div class="customer-item">
-                        <div class="customer-avatar">杭</div>
-                        <div class="customer-info">
-                            <div class="customer-name">杭州电商平台</div>
-                            <div class="customer-meta">
-                                <span class="customer-status status-formal">正式客户</span>
-                                <span style="margin-left: 8px; font-size: 12px; color: #999;">2周前</span>
+                </div>
+
+                <!-- 图表区域 -->
+                <div class="chart-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">客户获取趋势</h3>
+                            <div class="chart-filter">
+                                <button class="filter-btn active">近7天</button>
+                                <button class="filter-btn">近30天</button>
+                                <button class="filter-btn">近3月</button>
                             </div>
                         </div>
+                        <canvas id="customerTrendChart" width="400" height="200"></canvas>
+                    </div>
+
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <h3 class="chart-title">客户分布</h3>
+                        </div>
+                        <canvas id="customerDistributionChart" width="300" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- 客户列表 -->
+                <div class="customer-table">
+                    <div class="table-header">
+                        <h3 class="table-title">客户列表</h3>
+                        <div class="table-actions">
+                            <button class="btn btn-secondary">筛选</button>
+                            <button class="btn btn-secondary">排序</button>
+                        </div>
+                    </div>
+                    <div class="table-content">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>客户信息</th>
+                                    <th>联系方式</th>
+                                    <th>客户状态</th>
+                                    <th>跟进人</th>
+                                    <th>最后跟进</th>
+                                    <th>客户价值</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customerTableBody">
+                                <!-- 客户数据将通过JavaScript动态生成 -->
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -558,224 +792,129 @@
     <script src="../assets/js/common.js"></script>
     <script src="../assets/js/mock-data.js"></script>
     <script>
-        let customerChart;
-
-        // 页面初始化
+        // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
-            initializeChart();
-            loadDashboardData();
+            initCharts();
+            loadCustomerData();
         });
 
         // 初始化图表
-        function initializeChart() {
-            const ctx = document.getElementById('customerChart').getContext('2d');
-            
-            customerChart = new Chart(ctx, {
+        function initCharts() {
+            // 客户获取趋势图
+            const trendCtx = document.getElementById('customerTrendChart').getContext('2d');
+            new Chart(trendCtx, {
                 type: 'line',
                 data: {
-                    labels: ['周一', '周二', '周三', '周四', '周五', '周六', '周日'],
-                    datasets: [
-                        {
-                            label: '新增客户',
-                            data: [2, 1, 0, 3, 1, 0, 1],
-                            borderColor: '#1890ff',
-                            backgroundColor: 'rgba(24, 144, 255, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        },
-                        {
-                            label: '客户转化',
-                            data: [0, 1, 0, 1, 2, 0, 0],
-                            borderColor: '#52c41a',
-                            backgroundColor: 'rgba(82, 196, 26, 0.1)',
-                            tension: 0.4,
-                            fill: true
-                        }
-                    ]
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月'],
+                    datasets: [{
+                        label: '新增客户',
+                        data: [65, 78, 90, 81, 96, 105],
+                        borderColor: '#1890ff',
+                        backgroundColor: 'rgba(24, 144, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
                     scales: {
                         y: {
-                            beginAtZero: true,
-                            max: 5,
-                            ticks: {
-                                stepSize: 1
-                            }
+                            beginAtZero: true
                         }
                     },
                     plugins: {
                         legend: {
-                            position: 'top',
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // 客户分布饼图
+            const distributionCtx = document.getElementById('customerDistributionChart').getContext('2d');
+            new Chart(distributionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['潜在客户', '已联系', '合格客户', '成交客户'],
+                    datasets: [{
+                        data: [426, 612, 398, 1411],
+                        backgroundColor: ['#1890ff', '#fa8c16', '#52c41a', '#722ed1'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20
+                            }
                         }
                     }
                 }
             });
         }
 
-        // 加载工作台数据
-        function loadDashboardData() {
-            const dashboardData = MockData.dashboard.crm;
+        // 加载客户数据
+        function loadCustomerData() {
+            const customers = window.mockData.customers || [];
+            const tableBody = document.getElementById('customerTableBody');
             
-            // 更新统计卡片
-            updateStatCard(0, dashboardData.totalCustomers);
-            updateStatCard(1, dashboardData.formalCustomers);
-            updateStatCard(2, dashboardData.trialCustomers);
-            updateStatCard(3, dashboardData.pendingCustomers + dashboardData.intentionCustomers);
-            
-            console.log('CRM Dashboard data loaded:', dashboardData);
+            tableBody.innerHTML = customers.slice(0, 10).map(customer => `
+                <tr>
+                    <td>
+                        <div class="customer-info">
+                            <div class="customer-avatar">${customer.name.charAt(0)}</div>
+                            <div>
+                                <div class="customer-name">${customer.name}</div>
+                                <div class="customer-company">${customer.company}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <div>${customer.phone}</div>
+                        <div style="color: #999; font-size: 12px;">${customer.email}</div>
+                    </td>
+                    <td>
+                        <span class="status-badge status-${customer.status}">
+                            ${getStatusText(customer.status)}
+                        </span>
+                    </td>
+                    <td>${customer.assignee}</td>
+                    <td>${customer.lastContact}</td>
+                    <td>¥${customer.value.toLocaleString()}</td>
+                    <td>
+                        <button class="action-btn" onclick="viewCustomer('${customer.id}')">查看</button>
+                        <button class="action-btn" onclick="editCustomer('${customer.id}')">编辑</button>
+                    </td>
+                </tr>
+            `).join('');
         }
 
-        // 更新统计卡片
-        function updateStatCard(index, value) {
-            const cards = document.querySelectorAll('.stat-card');
-            if (cards[index]) {
-                const valueEl = cards[index].querySelector('.stat-value');
-                if (valueEl) {
-                    valueEl.textContent = value;
-                }
-            }
-        }
-
-        // 切换时间范围
-        function changeTimeRange(range) {
-            // 更新按钮状态
-            document.querySelectorAll('.filter-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // 更新图表数据
-            let labels, newCustomers, conversions;
-            
-            switch(range) {
-                case 'week':
-                    labels = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
-                    newCustomers = [2, 1, 0, 3, 1, 0, 1];
-                    conversions = [0, 1, 0, 1, 2, 0, 0];
-                    break;
-                case 'month':
-                    labels = ['第1周', '第2周', '第3周', '第4周'];
-                    newCustomers = [8, 6, 10, 5];
-                    conversions = [4, 3, 6, 2];
-                    break;
-                case 'quarter':
-                    labels = ['1月', '2月', '3月'];
-                    newCustomers = [29, 22, 15];
-                    conversions = [15, 12, 8];
-                    break;
-                case 'year':
-                    labels = ['Q1', 'Q2', 'Q3', 'Q4'];
-                    newCustomers = [66, 58, 72, 45];
-                    conversions = [35, 28, 38, 22];
-                    break;
-            }
-            
-            customerChart.data.labels = labels;
-            customerChart.data.datasets[0].data = newCustomers;
-            customerChart.data.datasets[1].data = conversions;
-            customerChart.update();
-            
-            Portal.Message.success(`已切换到${getTimeRangeLabel(range)}视图`);
-        }
-
-        // 获取时间范围标签
-        function getTimeRangeLabel(range) {
-            const labels = {
-                'week': '本周',
-                'month': '本月', 
-                'quarter': '本季度',
-                'year': '本年'
+        // 获取状态文本
+        function getStatusText(status) {
+            const statusMap = {
+                'potential': '潜在客户',
+                'contacted': '已联系',
+                'qualified': '合格客户',
+                'converted': '成交客户'
             };
-            return labels[range] || '本周';
+            return statusMap[status] || status;
         }
 
-        // 切换待办任务状态
-        function toggleTodo(checkbox) {
-            const isChecked = checkbox.classList.contains('checked');
-            
-            if (isChecked) {
-                checkbox.classList.remove('checked');
-                checkbox.textContent = '';
-            } else {
-                checkbox.classList.add('checked');
-                checkbox.textContent = '✓';
-            }
-            
-            // 更新待办任务计数
-            updateTodoCount();
+        // 查看客户
+        function viewCustomer(customerId) {
+            showMessage(`正在查看客户 ${customerId} 详情...`, 'info');
         }
 
-        // 更新待办任务计数
-        function updateTodoCount() {
-            const uncheckedTodos = document.querySelectorAll('.todo-checkbox:not(.checked)').length;
-            const todoHeader = document.querySelector('.todo-header .status-tag');
-            if (todoHeader) {
-                todoHeader.textContent = `${uncheckedTodos}个任务`;
-                todoHeader.className = uncheckedTodos > 0 ? 'status-tag warning' : 'status-tag success';
-            }
+        // 编辑客户
+        function editCustomer(customerId) {
+            showMessage(`正在编辑客户 ${customerId}...`, 'info');
         }
-
-        // 快捷操作
-        function quickAddCustomer() {
-            Portal.Message.info('跳转到新增客户页面');
-        }
-
-        function quickAddTask() {
-            Portal.Modal.confirm({
-                title: '新增待办任务',
-                content: `
-                    <form id="taskForm">
-                        <div class="form-group">
-                            <label class="form-label">任务标题 *</label>
-                            <input type="text" name="title" class="form-control" data-validate="required" placeholder="请输入任务标题">
-                        </div>
-                        <div class="form-row">
-                            <div class="form-col">
-                                <label class="form-label">优先级</label>
-                                <select name="priority" class="form-control">
-                                    <option value="low">低</option>
-                                    <option value="medium" selected>中</option>
-                                    <option value="high">高</option>
-                                </select>
-                            </div>
-                            <div class="form-col">
-                                <label class="form-label">预计时长(分钟)</label>
-                                <input type="number" name="duration" class="form-control" value="30">
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">任务描述</label>
-                            <textarea name="description" class="form-control" rows="3" placeholder="请输入任务描述"></textarea>
-                        </div>
-                    </form>
-                `,
-                onConfirm: () => {
-                    const form = document.getElementById('taskForm');
-                    const validation = Portal.Validator.validate(form);
-                    
-                    if (validation.isValid) {
-                        Portal.Message.success('任务添加成功');
-                        // 这里可以添加实际的任务添加逻辑
-                    }
-                }
-            });
-        }
-
-        // 添加快捷按钮事件监听
-        document.addEventListener('keydown', function(e) {
-            // Ctrl + N 新增客户
-            if (e.ctrlKey && e.key === 'n') {
-                e.preventDefault();
-                quickAddCustomer();
-            }
-            // Ctrl + T 新增任务
-            if (e.ctrlKey && e.key === 't') {
-                e.preventDefault();
-                quickAddTask();
-            }
-        });
     </script>
 </body>
 </html>

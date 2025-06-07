@@ -6,33 +6,79 @@
     <title>工作台配置 - Portal 3.0</title>
     <link rel="stylesheet" href="../assets/css/common.css">
     <style>
-        .workspace-container {
-            display: flex;
+        /* 框架布局结构 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
             min-height: 100vh;
-            background: var(--bg-color);
+            background: #f5f5f5;
         }
 
-        .sidebar {
-            width: 240px;
+        /* 头部区域 */
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        /* 左侧导航区域 */
+        .app-sidebar {
+            grid-area: sidebar;
             background: white;
             box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
-            position: fixed;
+            position: sticky;
+            top: 0;
             height: 100vh;
+            overflow-y: auto;
             z-index: 100;
         }
 
+        /* 主内容区域 */
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* 底部页脚区域 */
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 侧边栏头部 */
         .sidebar-header {
             height: 60px;
             display: flex;
             align-items: center;
             padding: 0 20px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
         }
 
         .logo {
             width: 32px;
             height: 32px;
-            background: var(--primary-color);
+            background: #1890ff;
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -45,7 +91,7 @@
         .brand-name {
             font-size: 18px;
             font-weight: 600;
-            color: var(--text-color);
+            color: #333;
         }
 
         .nav-menu {
@@ -105,29 +151,89 @@
             min-width: 20px;
         }
 
-        .main-content {
-            flex: 1;
-            margin-left: 240px;
-            min-height: 100vh;
-        }
-
-        .header {
-            height: 60px;
-            background: white;
-            border-bottom: 1px solid var(--border-color);
+        /* 二级菜单样式 */
+        .nav-group {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0 24px;
-            position: sticky;
-            top: 0;
-            z-index: 50;
+            padding: 12px 20px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
         }
 
+        .nav-group:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-group.expanded {
+            background: rgba(24, 144, 255, 0.05);
+            color: #1890ff;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #fafafa;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 10px 20px 10px 52px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-subitem:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .nav-subitem.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: #1890ff;
+        }
+
+        .nav-subitem.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        /* 面包屑导航 */
         .breadcrumb {
             display: flex;
             align-items: center;
-            color: var(--text-color-secondary);
+            color: #666;
         }
 
         .breadcrumb-item {
@@ -136,9 +242,10 @@
 
         .breadcrumb-separator {
             margin: 0 8px;
-            color: var(--border-color);
+            color: #d9d9d9;
         }
 
+        /* 头部操作区 */
         .header-actions {
             display: flex;
             align-items: center;
@@ -153,9 +260,9 @@
             width: 200px;
             height: 32px;
             padding: 0 12px 0 36px;
-            border: 1px solid var(--border-color);
+            border: 1px solid #d9d9d9;
             border-radius: 6px;
-            background: var(--bg-color-light);
+            background: #fafafa;
         }
 
         .search-icon {
@@ -163,7 +270,7 @@
             left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--text-color-secondary);
+            color: #999;
         }
 
         .notification-btn {
@@ -177,12 +284,12 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--text-color-secondary);
+            color: #666;
             transition: all 0.3s ease;
         }
 
         .notification-btn:hover {
-            background: var(--bg-color-light);
+            background: #f5f5f5;
         }
 
         .notification-badge {
@@ -191,7 +298,7 @@
             right: -2px;
             width: 16px;
             height: 16px;
-            background: var(--error-color);
+            background: #ff4d4f;
             color: white;
             border-radius: 50%;
             font-size: 10px;
@@ -210,14 +317,14 @@
         }
 
         .user-menu:hover {
-            background: var(--bg-color-light);
+            background: #f5f5f5;
         }
 
         .user-avatar {
             width: 32px;
             height: 32px;
             border-radius: 50%;
-            background: var(--primary-color);
+            background: #1890ff;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -226,24 +333,42 @@
             margin-right: 8px;
         }
 
-        .config-content {
-            padding: 24px;
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
         }
 
+        .footer-content {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+        }
+
+        /* 工作台配置特有样式 */
         .config-header {
-            margin-bottom: 32px;
+            background: linear-gradient(135deg, #722ed1 0%, #9254de 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
         }
 
         .config-title {
             font-size: 24px;
-            font-weight: 600;
-            color: var(--text-color);
+            font-weight: 700;
             margin-bottom: 8px;
         }
 
         .config-subtitle {
-            color: var(--text-color-secondary);
-            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 0;
         }
 
         .config-tabs {
@@ -600,22 +725,77 @@
         }
 
         .btn-primary:hover {
-            background: var(--primary-color-hover);
+            background: #40a9ff;
             transform: translateY(-1px);
             box-shadow: 0 4px 12px rgba(24, 144, 255, 0.3);
         }
 
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            font-size: 14px;
+        }
+
+        .form-range {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .range-value {
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .toggle-switch {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toggle-switch input[type="checkbox"] {
+            margin: 0;
+        }
+
         /* 响应式设计 */
         @media (max-width: 768px) {
-            .sidebar {
-                transform: translateX(-240px);
+            .app-layout {
+                grid-template-areas: 
+                    "header"
+                    "main"
+                    "footer";
+                grid-template-columns: 1fr;
+                grid-template-rows: 60px 1fr auto;
             }
 
-            .main-content {
-                margin-left: 0;
+            .app-sidebar {
+                position: fixed;
+                left: -240px;
+                height: 100vh;
+                transition: left 0.3s ease;
+                z-index: 200;
             }
 
-            .config-content {
+            .app-sidebar.mobile-open {
+                left: 0;
+            }
+
+            .app-main {
                 padding: 16px;
             }
 
@@ -630,13 +810,23 @@
             .theme-options {
                 grid-template-columns: repeat(2, 1fr);
             }
+
+            .mobile-menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                font-size: 18px;
+                cursor: pointer;
+                padding: 8px;
+                color: #666;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="workspace-container">
-        <!-- 侧边栏 -->
-        <div class="sidebar">
+    <div class="app-layout">
+        <!-- 左侧导航 -->
+        <aside class="app-sidebar">
             <div class="sidebar-header">
                 <div class="logo">P3</div>
                 <div class="brand-name">Portal 3.0</div>
@@ -644,66 +834,93 @@
             
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="oa-workspace.html" class="nav-link">
+                    <a href="../index.html" class="nav-link">
                         <span class="nav-icon">🏠</span>
-                        <span>OA工作台</span>
+                        <span>首页总览</span>
                     </a>
                 </li>
+                
+                <!-- 工作台模块 -->
                 <li class="nav-item">
-                    <a href="crm-workspace.html" class="nav-link">
-                        <span class="nav-icon">👥</span>
-                        <span>CRM工作台</span>
-                    </a>
+                    <button class="nav-group expanded" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">💼</span>
+                        <span>工作台</span>
+                        <span class="nav-arrow rotated">▶</span>
+                    </button>
+                    <div class="nav-submenu expanded">
+                        <a href="oa-workspace.html" class="nav-subitem">OA工作台</a>
+                        <a href="crm-workspace.html" class="nav-subitem">CRM工作台</a>
+                        <a href="sales-workspace.html" class="nav-subitem">销售工作台</a>
+                        <a href="workspace-config.html" class="nav-subitem active">工作台配置</a>
+                    </div>
                 </li>
+                
+                <!-- 组织架构模块 -->
                 <li class="nav-item">
-                    <a href="sales-workspace.html" class="nav-link">
-                        <span class="nav-icon">📊</span>
-                        <span>销售工作台</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="../organization/department-tree.html" class="nav-link">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
                         <span class="nav-icon">🏢</span>
                         <span>组织架构</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../organization/department-tree.html" class="nav-subitem">部门管理</a>
+                        <a href="../organization/employee-list.html" class="nav-subitem">员工管理</a>
+                        <a href="../organization/position-manage.html" class="nav-subitem">岗位管理</a>
+                        <a href="../organization/role-permission.html" class="nav-subitem">角色权限</a>
+                    </div>
                 </li>
+                
+                <!-- 客户管理模块 -->
                 <li class="nav-item">
-                    <a href="../crm/customer-list.html" class="nav-link">
-                        <span class="nav-icon">👤</span>
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">👥</span>
                         <span>客户管理</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../crm/customer-list.html" class="nav-subitem">客户列表</a>
+                        <a href="#" class="nav-subitem">客户详情</a>
+                        <a href="#" class="nav-subitem">跟进记录</a>
+                        <a href="#" class="nav-subitem">客户转移</a>
+                    </div>
                 </li>
+                
+                <!-- 商品管理模块 -->
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
                         <span class="nav-icon">📦</span>
                         <span>商品管理</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="#" class="nav-subitem">商品列表</a>
+                        <a href="#" class="nav-subitem">商品分类</a>
+                        <a href="#" class="nav-subitem">库存管理</a>
+                        <a href="#" class="nav-subitem">价格策略</a>
+                    </div>
                 </li>
+                
+                <!-- 订单管理模块 -->
                 <li class="nav-item">
-                    <a href="#" class="nav-link">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
                         <span class="nav-icon">📋</span>
                         <span>订单管理</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
-                        <span class="nav-icon">🎧</span>
-                        <span>客服中心</span>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link active">
-                        <span class="nav-icon">⚙️</span>
-                        <span>工作台配置</span>
-                    </a>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="#" class="nav-subitem">订单列表</a>
+                        <a href="#" class="nav-subitem">订单详情</a>
+                        <a href="#" class="nav-subitem">订单统计</a>
+                        <a href="#" class="nav-subitem">退货管理</a>
+                    </div>
                 </li>
             </ul>
-        </div>
+        </aside>
 
-        <!-- 主内容区 -->
-        <div class="main-content">
-            <!-- 顶部导航 -->
-            <div class="header">
+        <!-- 头部区域 -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
                 <div class="breadcrumb">
                     <span class="breadcrumb-item">Portal 3.0</span>
                     <span class="breadcrumb-separator">/</span>
@@ -711,31 +928,33 @@
                     <span class="breadcrumb-separator">/</span>
                     <span class="breadcrumb-item">工作台配置</span>
                 </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索配置项...">
+                </div>
                 
-                <div class="header-actions">
-                    <div class="search-box">
-                        <span class="search-icon">🔍</span>
-                        <input type="text" class="search-input" placeholder="搜索配置项...">
-                    </div>
-                    
-                    <button class="notification-btn">
-                        <span>🔔</span>
-                        <span class="notification-badge">2</span>
-                    </button>
-                    
-                    <div class="user-menu">
-                        <div class="user-avatar">张</div>
-                        <span>张三</span>
-                    </div>
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">2</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">张</div>
+                    <span>张三</span>
                 </div>
             </div>
+        </header>
 
-            <!-- 配置内容 -->
-            <div class="config-content">
-                <div class="config-header">
-                    <h1 class="config-title">工作台配置</h1>
-                    <p class="config-subtitle">个性化定制您的工作台，提升工作效率</p>
-                </div>
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <!-- 工作台头部 -->
+            <div class="config-header">
+                <h1 class="config-title">⚙️ 工作台配置</h1>
+                <p class="config-subtitle">个性化定制您的工作台，提升工作效率</p>
+            </div>
 
                 <!-- 配置选项卡 -->
                 <div class="config-tabs">
@@ -1037,12 +1256,66 @@
                     <button class="btn-secondary" onclick="previewConfig()">预览效果</button>
                     <button class="btn-primary" onclick="saveConfig()">保存配置</button>
                 </div>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台 | 
+                <a href="#" style="color: #1890ff; text-decoration: none;">技术支持</a> | 
+                <a href="#" style="color: #1890ff; text-decoration: none;">帮助文档</a> | 
+                <span style="color: #999;">版本 v3.0.1</span>
             </div>
-        </div>
+        </footer>
     </div>
 
     <script src="../assets/js/common.js"></script>
     <script>
+        // 二级菜单控制
+        function toggleNavGroup(button) {
+            const submenu = button.nextElementSibling;
+            const arrow = button.querySelector('.nav-arrow');
+            const isExpanded = submenu.classList.contains('expanded');
+            
+            // 关闭所有其他展开的菜单
+            document.querySelectorAll('.nav-submenu.expanded').forEach(menu => {
+                if (menu !== submenu) {
+                    menu.classList.remove('expanded');
+                    menu.previousElementSibling.classList.remove('expanded');
+                    menu.previousElementSibling.querySelector('.nav-arrow').classList.remove('rotated');
+                }
+            });
+            
+            // 切换当前菜单状态
+            if (isExpanded) {
+                submenu.classList.remove('expanded');
+                button.classList.remove('expanded');
+                arrow.classList.remove('rotated');
+            } else {
+                submenu.classList.add('expanded');
+                button.classList.add('expanded');
+                arrow.classList.add('rotated');
+            }
+        }
+
+        // 移动端菜单切换
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.app-sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // 点击主内容区域时关闭移动端菜单
+        document.addEventListener('click', function(e) {
+            const sidebar = document.querySelector('.app-sidebar');
+            const toggleBtn = document.querySelector('.mobile-menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !toggleBtn.contains(e.target)) {
+                sidebar.classList.remove('mobile-open');
+            }
+        });
+
         // 切换配置选项卡
         function switchTab(tabName) {
             // 更新选项卡状态
@@ -1204,6 +1477,9 @@
 
         // 页面加载时恢复配置
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('工作台配置页面已加载');
+            showMessage('欢迎使用工作台配置！', 'success');
+            
             const savedConfig = localStorage.getItem('workspace-config');
             
             if (savedConfig) {

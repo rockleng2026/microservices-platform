@@ -642,7 +642,7 @@
             
             <ul class="nav-menu">
                 <li class="nav-item">
-                    <a href="javascript:void(0)" class="nav-link active" onclick="loadHomePage()">
+                    <a href="index.html" class="nav-link active">
                         <span class="nav-icon">🏠</span>
                         <span>首页总览</span>
                     </a>
@@ -656,10 +656,10 @@
                         <span class="nav-arrow">▶</span>
                     </button>
                     <div class="nav-submenu">
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('oa-workspace')">OA工作台</a>
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('crm-workspace')">CRM工作台</a>
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('sales-workspace')">销售工作台</a>
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('workspace-config')">工作台配置</a>
+                        <a href="dashboard/oa-workspace.html" class="nav-subitem">OA工作台</a>
+                        <a href="dashboard/crm-workspace.html" class="nav-subitem">CRM工作台</a>
+                        <a href="dashboard/sales-workspace.html" class="nav-subitem">销售工作台</a>
+                        <a href="dashboard/workspace-config.html" class="nav-subitem">工作台配置</a>
                     </div>
                 </li>
                 
@@ -671,10 +671,10 @@
                         <span class="nav-arrow">▶</span>
                     </button>
                     <div class="nav-submenu">
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('department-tree')">部门管理</a>
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('employee-list')">员工管理</a>
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('position-manage')">岗位管理</a>
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('role-permission')">角色权限</a>
+                        <a href="organization/department-tree.html" class="nav-subitem">部门管理</a>
+                        <a href="organization/employee-list.html" class="nav-subitem">员工管理</a>
+                        <a href="organization/position-manage.html" class="nav-subitem">岗位管理</a>
+                        <a href="organization/role-permission.html" class="nav-subitem">角色权限</a>
                     </div>
                 </li>
                 
@@ -686,10 +686,10 @@
                         <span class="nav-arrow">▶</span>
                     </button>
                     <div class="nav-submenu">
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('customer-list')">客户列表</a>
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('customer-detail')">客户详情</a>
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('follow-record')">跟进记录</a>
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('customer-transfer')">客户转移</a>
+                        <a href="crm/customer-list.html" class="nav-subitem">客户列表</a>
+                        <a href="#" class="nav-subitem">客户详情</a>
+                        <a href="#" class="nav-subitem">跟进记录</a>
+                        <a href="#" class="nav-subitem">客户转移</a>
                     </div>
                 </li>
                 
@@ -701,10 +701,10 @@
                         <span class="nav-arrow">▶</span>
                     </button>
                     <div class="nav-submenu">
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('product-list')">商品列表</a>
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('product-category')">商品分类</a>
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('inventory-manage')">库存管理</a>
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('price-strategy')">价格策略</a>
+                        <a href="#" class="nav-subitem">商品列表</a>
+                        <a href="#" class="nav-subitem">商品分类</a>
+                        <a href="#" class="nav-subitem">库存管理</a>
+                        <a href="#" class="nav-subitem">价格策略</a>
                     </div>
                 </li>
                 
@@ -716,10 +716,10 @@
                         <span class="nav-arrow">▶</span>
                     </button>
                     <div class="nav-submenu">
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('order-list')">订单列表</a>
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('order-detail')">订单详情</a>
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('order-statistics')">订单统计</a>
-                        <a href="javascript:void(0)" class="nav-subitem" onclick="loadPageContent('return-manage')">退货管理</a>
+                        <a href="#" class="nav-subitem">订单列表</a>
+                        <a href="#" class="nav-subitem">订单详情</a>
+                        <a href="#" class="nav-subitem">订单统计</a>
+                        <a href="#" class="nav-subitem">退货管理</a>
                     </div>
                 </li>
             </ul>
@@ -781,7 +781,7 @@
                 <!-- 功能模块 -->
                 <div class="modules-grid">
                     <!-- OA办公模块 -->
-                    <div class="module-card oa" onclick="navigateToModule('oa')">
+                    <div class="module-card oa" onclick="window.location.href='dashboard/oa-workspace.html'">
                         <div class="module-header">
                             <div class="module-icon">🏢</div>
                             <div class="module-info">
@@ -810,7 +810,7 @@
                     </div>
 
                     <!-- CRM客户管理 -->
-                    <div class="module-card crm" onclick="navigateToModule('crm')">
+                    <div class="module-card crm" onclick="window.location.href='dashboard/crm-workspace.html'">
                         <div class="module-header">
                             <div class="module-icon">👥</div>
                             <div class="module-info">
@@ -839,7 +839,7 @@
                     </div>
 
                     <!-- 销售管理 -->
-                    <div class="module-card sales" onclick="navigateToModule('sales')">
+                    <div class="module-card sales" onclick="window.location.href='dashboard/sales-workspace.html'">
                         <div class="module-header">
                             <div class="module-icon">📊</div>
                             <div class="module-info">
@@ -868,7 +868,7 @@
                     </div>
 
                     <!-- 组织架构 -->
-                    <div class="module-card org" onclick="navigateToModule('organization')">
+                    <div class="module-card org" onclick="window.location.href='organization/department-tree.html'">
                         <div class="module-header">
                             <div class="module-icon">🌳</div>
                             <div class="module-info">
@@ -897,7 +897,7 @@
                     </div>
 
                     <!-- 商品管理 -->
-                    <div class="module-card product" onclick="navigateToModule('product')">
+                    <div class="module-card product" onclick="showMessage('商品管理模块正在开发中...', 'info')">
                         <div class="module-header">
                             <div class="module-icon">📦</div>
                             <div class="module-info">
@@ -926,7 +926,7 @@
                     </div>
 
                     <!-- 客服中心 -->
-                    <div class="module-card service" onclick="navigateToModule('service')">
+                    <div class="module-card service" onclick="showMessage('客服中心模块正在开发中...', 'info')">
                         <div class="module-header">
                             <div class="module-icon">🎧</div>
                             <div class="module-info">
@@ -983,44 +983,48 @@
             showMessage('欢迎使用 Portal 3.0 企业管理平台！', 'success');
         }
 
-        // 模块导航 - 修改为动态加载
-        function navigateToModule(module) {
-            const modulePageMap = {
-                'oa': 'oa-workspace',
-                'crm': 'crm-workspace', 
-                'sales': 'sales-workspace',
-                'organization': 'department-tree',
-                'product': 'product-list',
-                'service': 'service-center'
-            };
+        // 移动端菜单切换
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.app-sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
 
-            const pageType = modulePageMap[module];
-            if (pageType) {
-                // 自动展开对应模块的菜单
-                let targetModuleName = '';
-                if (module === 'oa' || module === 'crm' || module === 'sales') {
-                    targetModuleName = '工作台';
-                } else if (module === 'organization') {
-                    targetModuleName = '组织架构';
-                } else if (module === 'product') {
-                    targetModuleName = '商品管理';
-                } else if (module === 'service') {
-                    targetModuleName = '客服中心';
+        // 点击主内容区域时关闭移动端菜单
+        document.addEventListener('click', function(e) {
+            const sidebar = document.querySelector('.app-sidebar');
+            const toggleBtn = document.querySelector('.mobile-menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !toggleBtn.contains(e.target)) {
+                sidebar.classList.remove('mobile-open');
+            }
+        });
+
+        // 二级菜单控制
+        function toggleNavGroup(button) {
+            const submenu = button.nextElementSibling;
+            const arrow = button.querySelector('.nav-arrow');
+            const isExpanded = submenu.classList.contains('expanded');
+            
+            // 关闭所有其他展开的菜单
+            document.querySelectorAll('.nav-submenu.expanded').forEach(menu => {
+                if (menu !== submenu) {
+                    menu.classList.remove('expanded');
+                    menu.previousElementSibling.classList.remove('expanded');
+                    menu.previousElementSibling.querySelector('.nav-arrow').classList.remove('rotated');
                 }
-                
-                if (targetModuleName) {
-                    const moduleButton = Array.from(document.querySelectorAll('.nav-group')).find(
-                        btn => btn.textContent.includes(targetModuleName)
-                    );
-                    if (moduleButton && !moduleButton.classList.contains('expanded')) {
-                        toggleNavGroup(moduleButton);
-                    }
-                }
-                
-                // 加载对应页面内容
-                loadPageContent(pageType);
+            });
+            
+            // 切换当前菜单状态
+            if (isExpanded) {
+                submenu.classList.remove('expanded');
+                button.classList.remove('expanded');
+                arrow.classList.remove('rotated');
             } else {
-                showMessage(`${module}模块正在开发中...`, 'info');
+                submenu.classList.add('expanded');
+                button.classList.add('expanded');
+                arrow.classList.add('rotated');
             }
         }
 
@@ -1037,18 +1041,17 @@
         // 搜索功能实现
         function searchFeatures(keyword) {
             const modules = {
-                'oa': ['办公', '审批', '任务', '工作台'],
-                'crm': ['客户', '销售', '跟进', '管理'],
-                'sales': ['销售', '业绩', '统计', '目标'],
-                'organization': ['组织', '架构', '部门', '员工'],
-                'product': ['商品', '库存', '分类', '价格'],
-                'service': ['客服', '工单', '服务', '支持']
+                'dashboard/oa-workspace.html': ['办公', '审批', '任务', '工作台', 'oa'],
+                'dashboard/crm-workspace.html': ['客户', '销售', '跟进', '管理', 'crm'],
+                'dashboard/sales-workspace.html': ['销售', '业绩', '统计', '目标'],
+                'organization/department-tree.html': ['组织', '架构', '部门', '员工'],
+                'crm/customer-list.html': ['客户', '列表', '客户管理']
             };
 
             let found = false;
-            for (const [module, keywords] of Object.entries(modules)) {
+            for (const [url, keywords] of Object.entries(modules)) {
                 if (keywords.some(k => k.includes(keyword) || keyword.includes(k))) {
-                    navigateToModule(module);
+                    window.location.href = url;
                     found = true;
                     break;
                 }
@@ -1086,479 +1089,35 @@
             }
         }
 
-        // 根据当前页面自动展开对应模块
-        function autoExpandCurrentModule() {
-            const currentPath = window.location.pathname;
-            let targetModule = null;
-            
-            if (currentPath.includes('/organization/')) {
-                targetModule = '组织架构';
-            } else if (currentPath.includes('/crm/')) {
-                targetModule = '客户管理';
-            } else if (currentPath.includes('/dashboard/')) {
-                targetModule = '工作台';
-            }
-            
-            if (targetModule) {
-                const moduleButton = Array.from(document.querySelectorAll('.nav-group')).find(
-                    btn => btn.textContent.includes(targetModule)
-                );
-                if (moduleButton && !moduleButton.classList.contains('expanded')) {
-                    toggleNavGroup(moduleButton);
-                }
-            }
-        }
-
-        // 动态加载页面内容
-        function loadPageContent(pageType) {
-            const pageContent = document.querySelector('.app-main');
-            const breadcrumb = document.querySelector('.breadcrumb');
-            
-            // 更新菜单激活状态
-            updateActiveMenuItem(pageType);
-            
-            // 根据页面类型生成内容
-            const content = generatePageContent(pageType);
-            const breadcrumbText = getBreadcrumbText(pageType);
-            
-            // 更新面包屑
-            breadcrumb.innerHTML = `
-                <span class="breadcrumb-item">Portal 3.0</span>
-                <span class="breadcrumb-separator">/</span>
-                <span class="breadcrumb-item">${breadcrumbText}</span>
-            `;
-            
-            // 添加加载动画
-            pageContent.innerHTML = '<div style="text-align: center; padding: 60px;"><div style="font-size: 18px; color: #999;">正在加载...</div></div>';
-            
-            // 模拟加载延迟，然后显示内容
-            setTimeout(() => {
-                pageContent.innerHTML = content;
-                // 如果有特定页面的初始化函数，调用它
-                if (window[`init${capitalize(pageType)}`]) {
-                    window[`init${capitalize(pageType)}`]();
-                }
-            }, 500);
-        }
-
-        // 更新菜单激活状态
-        function updateActiveMenuItem(pageType) {
-            // 移除所有激活状态
-            document.querySelectorAll('.nav-link.active, .nav-subitem.active').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // 添加当前项的激活状态
-            const activeItem = document.querySelector(`[onclick="loadPageContent('${pageType}')"]`);
-            if (activeItem) {
-                activeItem.classList.add('active');
-            }
-        }
-
-        // 获取面包屑文本
-        function getBreadcrumbText(pageType) {
-            const breadcrumbMap = {
-                'oa-workspace': 'OA工作台',
-                'crm-workspace': 'CRM工作台', 
-                'sales-workspace': '销售工作台',
-                'workspace-config': '工作台配置',
-                'department-tree': '组织架构 / 部门管理',
-                'employee-list': '组织架构 / 员工管理',
-                'position-manage': '组织架构 / 岗位管理',
-                'role-permission': '组织架构 / 角色权限',
-                'customer-list': '客户管理 / 客户列表',
-                'customer-detail': '客户管理 / 客户详情',
-                'follow-record': '客户管理 / 跟进记录',
-                'customer-transfer': '客户管理 / 客户转移',
-                'product-list': '商品管理 / 商品列表',
-                'product-category': '商品管理 / 商品分类',
-                'inventory-manage': '商品管理 / 库存管理',
-                'price-strategy': '商品管理 / 价格策略',
-                'order-list': '订单管理 / 订单列表',
-                'order-detail': '订单管理 / 订单详情',
-                'order-statistics': '订单管理 / 订单统计',
-                'return-manage': '订单管理 / 退货管理'
-            };
-            return breadcrumbMap[pageType] || pageType;
-        }
-
-        // 生成页面内容
-        function generatePageContent(pageType) {
-            // 这里可以根据不同的页面类型返回对应的HTML内容
-            // 为了演示，先返回一个通用模板
-            const pageConfig = getPageConfig(pageType);
-            
-            return `
-                <div class="page-header" style="margin-bottom: 24px;">
-                    <h2 style="margin: 0; color: #333; font-size: 24px; font-weight: 600;">
-                        ${pageConfig.icon} ${pageConfig.title}
-                    </h2>
-                    <p style="margin: 8px 0 0 0; color: #666; font-size: 14px;">
-                        ${pageConfig.description}
-                    </p>
-                </div>
-                
-                <div class="content-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
-                    ${pageConfig.cards.map(card => `
-                        <div style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                            <h3 style="margin: 0 0 12px 0; color: #333; font-size: 16px;">${card.title}</h3>
-                            <p style="margin: 0 0 16px 0; color: #666; font-size: 14px;">${card.desc}</p>
-                            <div style="display: flex; gap: 8px;">
-                                ${card.actions.map(action => `
-                                    <button style="padding: 6px 12px; border: 1px solid #d9d9d9; border-radius: 6px; background: white; color: #666; cursor: pointer; font-size: 14px;"
-                                            onmouseover="this.style.borderColor='#1890ff'; this.style.color='#1890ff'"
-                                            onmouseout="this.style.borderColor='#d9d9d9'; this.style.color='#666'">
-                                        ${action}
-                                    </button>
-                                `).join('')}
-                            </div>
-                        </div>
-                    `).join('')}
-                </div>
-                
-                <div style="margin-top: 24px; text-align: center; color: #999; font-size: 14px;">
-                    🚧 ${pageConfig.title}功能正在开发中，敬请期待...
-                </div>
-            `;
-        }
-
-        // 获取页面配置
-        function getPageConfig(pageType) {
-            const configs = {
-                'oa-workspace': {
-                    icon: '🏢',
-                    title: 'OA工作台',
-                    description: '办公自动化工作台，处理日常办公事务、审批流程和任务管理',
-                    cards: [
-                        { title: '待办任务', desc: '查看和处理待办事项', actions: ['查看详情', '立即处理'] },
-                        { title: '审批流程', desc: '管理各类审批流程', actions: ['发起审批', '审批中心'] },
-                        { title: '公告通知', desc: '发布和查看公司公告', actions: ['发布公告', '查看详情'] }
-                    ]
-                },
-                'crm-workspace': {
-                    icon: '👥',
-                    title: 'CRM工作台',
-                    description: '客户关系管理工作台，管理客户信息、销售跟进和业绩分析',
-                    cards: [
-                        { title: '客户概览', desc: '查看客户总体情况', actions: ['查看报表', '导出数据'] },
-                        { title: '销售线索', desc: '管理销售机会和线索', actions: ['新增线索', '跟进管理'] },
-                        { title: '业绩统计', desc: '分析销售业绩数据', actions: ['查看详情', '生成报告'] }
-                    ]
-                },
-                'department-tree': {
-                    icon: '🌳',
-                    title: '部门管理',
-                    description: '管理组织架构，支持7级部门层级，拖拽操作和权限配置',
-                    cards: [
-                        { title: '部门树形结构', desc: '查看和编辑部门层级关系', actions: ['编辑结构', '添加部门'] },
-                        { title: '部门信息', desc: '管理部门基本信息和负责人', actions: ['编辑信息', '设置负责人'] },
-                        { title: '权限配置', desc: '配置部门访问权限', actions: ['权限设置', '继承配置'] }
-                    ]
-                },
-                'employee-list': {
-                    icon: '👤',
-                    title: '员工管理',
-                    description: '管理员工信息、岗位分配和绩效考核',
-                    cards: [
-                        { title: '员工档案', desc: '员工基本信息和履历管理', actions: ['查看档案', '编辑信息'] },
-                        { title: '岗位分配', desc: '员工岗位和部门分配', actions: ['分配岗位', '调动申请'] },
-                        { title: '绩效考核', desc: '员工绩效评估和考核', actions: ['绩效评估', '查看报告'] }
-                    ]
-                },
-                'customer-list': {
-                    icon: '📋',
-                    title: '客户列表',
-                    description: '管理客户信息，支持多维度筛选和批量操作',
-                    cards: [
-                        { title: '客户信息', desc: '查看和管理客户基本信息', actions: ['查看详情', '编辑信息'] },
-                        { title: '跟进记录', desc: '记录客户沟通和跟进情况', actions: ['添加记录', '查看历史'] },
-                        { title: '客户分析', desc: '分析客户价值和潜力', actions: ['价值分析', '生成报告'] }
-                    ]
-                }
-            };
-            
-            return configs[pageType] || {
-                icon: '📄',
-                title: pageType.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
-                description: '功能模块描述',
-                cards: [
-                    { title: '功能模块1', desc: '模块功能描述', actions: ['操作1', '操作2'] },
-                    { title: '功能模块2', desc: '模块功能描述', actions: ['操作1', '操作2'] }
-                ]
-            };
-        }
-
-        // 首字母大写工具函数
-        function capitalize(str) {
-            return str.charAt(0).toUpperCase() + str.slice(1);
-        }
-
-        // 返回首页
-        function loadHomePage() {
-            const pageContent = document.querySelector('.app-main');
-            const breadcrumb = document.querySelector('.breadcrumb');
-            
-            // 更新面包屑
-            breadcrumb.innerHTML = `
-                <span class="breadcrumb-item">Portal 3.0</span>
-                <span class="breadcrumb-separator">/</span>
-                <span class="breadcrumb-item">首页总览</span>
-            `;
-            
-            // 移除所有菜单激活状态
-            document.querySelectorAll('.nav-link.active, .nav-subitem.active').forEach(item => {
-                item.classList.remove('active');
-            });
-            
-            // 激活首页链接
-            document.querySelector('[onclick="loadHomePage()"]').classList.add('active');
-            
-            // 收起所有展开的菜单
-            document.querySelectorAll('.nav-submenu.expanded').forEach(menu => {
-                menu.classList.remove('expanded');
-                menu.previousElementSibling.classList.remove('expanded');
-                menu.previousElementSibling.querySelector('.nav-arrow').classList.remove('rotated');
-            });
-            
-            // 加载首页内容
-            pageContent.innerHTML = getHomePageContent();
-        }
-
-        // 获取首页内容
-        function getHomePageContent() {
-            return `
-                <!-- 欢迎横幅 -->
-                <div class="welcome-banner">
-                    <div class="welcome-content">
-                        <h1 class="welcome-title">欢迎使用 Portal 3.0</h1>
-                        <p class="welcome-desc">企业级一体化管理平台，整合OA、CRM、库存管理等核心业务模块</p>
-                        <div class="welcome-stats">
-                            <div class="welcome-stat">
-                                <div class="welcome-stat-value">2,847</div>
-                                <div class="welcome-stat-label">总客户数</div>
-                            </div>
-                            <div class="welcome-stat">
-                                <div class="welcome-stat-value">156</div>
-                                <div class="welcome-stat-label">在线员工</div>
-                            </div>
-                            <div class="welcome-stat">
-                                <div class="welcome-stat-value">98.5%</div>
-                                <div class="welcome-stat-label">系统稳定性</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 功能模块 -->
-                <div class="modules-grid">
-                    <!-- OA办公模块 -->
-                    <div class="module-card oa" onclick="navigateToModule('oa')">
-                        <div class="module-header">
-                            <div class="module-icon">🏢</div>
-                            <div class="module-info">
-                                <h3 class="module-title">OA办公系统</h3>
-                                <p class="module-desc">日常办公、审批流程、任务管理</p>
-                            </div>
-                        </div>
-                        <div class="module-stats">
-                            <div class="module-stat">
-                                <div class="module-stat-value">15</div>
-                                <div class="module-stat-label">待办任务</div>
-                            </div>
-                            <div class="module-stat">
-                                <div class="module-stat-value">8</div>
-                                <div class="module-stat-label">待审批</div>
-                            </div>
-                            <div class="module-stat">
-                                <div class="module-stat-value">23</div>
-                                <div class="module-stat-label">今日消息</div>
-                            </div>
-                        </div>
-                        <div class="module-actions">
-                            <button class="module-btn">查看详情</button>
-                            <button class="module-btn primary">立即使用</button>
-                        </div>
-                    </div>
-
-                    <!-- CRM客户管理 -->
-                    <div class="module-card crm" onclick="navigateToModule('crm')">
-                        <div class="module-header">
-                            <div class="module-icon">👥</div>
-                            <div class="module-info">
-                                <h3 class="module-title">CRM客户管理</h3>
-                                <p class="module-desc">客户关系、销售跟进、业绩分析</p>
-                            </div>
-                        </div>
-                        <div class="module-stats">
-                            <div class="module-stat">
-                                <div class="module-stat-value">2,847</div>
-                                <div class="module-stat-label">总客户</div>
-                            </div>
-                            <div class="module-stat">
-                                <div class="module-stat-value">426</div>
-                                <div class="module-stat-label">潜在客户</div>
-                            </div>
-                            <div class="module-stat">
-                                <div class="module-stat-value">12</div>
-                                <div class="module-stat-label">今日新增</div>
-                            </div>
-                        </div>
-                        <div class="module-actions">
-                            <button class="module-btn">查看详情</button>
-                            <button class="module-btn primary">立即使用</button>
-                        </div>
-                    </div>
-
-                    <!-- 销售管理 -->
-                    <div class="module-card sales" onclick="navigateToModule('sales')">
-                        <div class="module-header">
-                            <div class="module-icon">📊</div>
-                            <div class="module-info">
-                                <h3 class="module-title">销售管理</h3>
-                                <p class="module-desc">销售统计、业绩分析、目标管理</p>
-                            </div>
-                        </div>
-                        <div class="module-stats">
-                            <div class="module-stat">
-                                <div class="module-stat-value">¥2.8M</div>
-                                <div class="module-stat-label">本月销售额</div>
-                            </div>
-                            <div class="module-stat">
-                                <div class="module-stat-value">85%</div>
-                                <div class="module-stat-label">目标完成率</div>
-                            </div>
-                            <div class="module-stat">
-                                <div class="module-stat-value">1,538</div>
-                                <div class="module-stat-label">成交订单</div>
-                            </div>
-                        </div>
-                        <div class="module-actions">
-                            <button class="module-btn">查看详情</button>
-                            <button class="module-btn primary">立即使用</button>
-                        </div>
-                    </div>
-
-                    <!-- 组织架构 -->
-                    <div class="module-card org" onclick="navigateToModule('organization')">
-                        <div class="module-header">
-                            <div class="module-icon">🌳</div>
-                            <div class="module-info">
-                                <h3 class="module-title">组织架构</h3>
-                                <p class="module-desc">部门管理、员工信息、权限配置</p>
-                            </div>
-                        </div>
-                        <div class="module-stats">
-                            <div class="module-stat">
-                                <div class="module-stat-value">9</div>
-                                <div class="module-stat-label">部门数量</div>
-                            </div>
-                            <div class="module-stat">
-                                <div class="module-stat-value">156</div>
-                                <div class="module-stat-label">员工总数</div>
-                            </div>
-                            <div class="module-stat">
-                                <div class="module-stat-value">7</div>
-                                <div class="module-stat-label">层级深度</div>
-                            </div>
-                        </div>
-                        <div class="module-actions">
-                            <button class="module-btn">查看详情</button>
-                            <button class="module-btn primary">立即使用</button>
-                        </div>
-                    </div>
-
-                    <!-- 商品管理 -->
-                    <div class="module-card product" onclick="navigateToModule('product')">
-                        <div class="module-header">
-                            <div class="module-icon">📦</div>
-                            <div class="module-info">
-                                <h3 class="module-title">商品管理</h3>
-                                <p class="module-desc">库存管理、商品分类、价格策略</p>
-                            </div>
-                        </div>
-                        <div class="module-stats">
-                            <div class="module-stat">
-                                <div class="module-stat-value">2,156</div>
-                                <div class="module-stat-label">商品总数</div>
-                            </div>
-                            <div class="module-stat">
-                                <div class="module-stat-value">12</div>
-                                <div class="module-stat-label">分类数量</div>
-                            </div>
-                            <div class="module-stat">
-                                <div class="module-stat-value">86</div>
-                                <div class="module-stat-label">库存预警</div>
-                            </div>
-                        </div>
-                        <div class="module-actions">
-                            <button class="module-btn">查看详情</button>
-                            <button class="module-btn primary">立即使用</button>
-                        </div>
-                    </div>
-
-                    <!-- 客服中心 -->
-                    <div class="module-card service" onclick="navigateToModule('service')">
-                        <div class="module-header">
-                            <div class="module-icon">🎧</div>
-                            <div class="module-info">
-                                <h3 class="module-title">客服中心</h3>
-                                <p class="module-desc">工单管理、在线客服、服务质量</p>
-                            </div>
-                        </div>
-                        <div class="module-stats">
-                            <div class="module-stat">
-                                <div class="module-stat-value">45</div>
-                                <div class="module-stat-label">待处理工单</div>
-                            </div>
-                            <div class="module-stat">
-                                <div class="module-stat-value">4.8</div>
-                                <div class="module-stat-label">服务评分</div>
-                            </div>
-                            <div class="module-stat">
-                                <div class="module-stat-value">98%</div>
-                                <div class="module-stat-label">解决率</div>
-                            </div>
-                        </div>
-                        <div class="module-actions">
-                            <button class="module-btn">查看详情</button>
-                            <button class="module-btn primary">立即使用</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // 移动端菜单切换
-        function toggleMobileMenu() {
-            const sidebar = document.querySelector('.app-sidebar');
-            sidebar.classList.toggle('mobile-open');
-        }
-
-        // 点击主内容区域时关闭移动端菜单
-        document.addEventListener('click', function(e) {
-            const sidebar = document.querySelector('.app-sidebar');
-            const toggleBtn = document.querySelector('.mobile-menu-toggle');
-            
-            if (window.innerWidth <= 768 && 
-                !sidebar.contains(e.target) && 
-                !toggleBtn.contains(e.target)) {
-                sidebar.classList.remove('mobile-open');
-            }
-        });
-
-        // 页面加载时自动展开当前模块
-        document.addEventListener('DOMContentLoaded', function() {
-            autoExpandCurrentModule();
-        });
-
         // 快捷键支持
         document.addEventListener('keydown', function(e) {
-            // Ctrl + 1-6 快速导航到对应模块
-            if (e.ctrlKey && e.key >= '1' && e.key <= '6') {
-                e.preventDefault();
-                const modules = ['oa', 'crm', 'sales', 'organization', 'product', 'service'];
-                const moduleIndex = parseInt(e.key) - 1;
-                navigateToModule(modules[moduleIndex]);
+            if (e.ctrlKey) {
+                switch(e.key) {
+                    case '1':
+                        e.preventDefault();
+                        window.location.href = 'dashboard/oa-workspace.html';
+                        break;
+                    case '2':
+                        e.preventDefault();
+                        window.location.href = 'dashboard/crm-workspace.html';
+                        break;
+                    case '3':
+                        e.preventDefault();
+                        window.location.href = 'dashboard/sales-workspace.html';
+                        break;
+                    case '4':
+                        e.preventDefault();
+                        window.location.href = 'organization/department-tree.html';
+                        break;
+                    case '5':
+                        e.preventDefault();
+                        window.location.href = 'crm/customer-list.html';
+                        break;
+                    case '6':
+                        e.preventDefault();
+                        window.location.href = 'dashboard/workspace-config.html';
+                        break;
+                }
             }
         });
     </script>

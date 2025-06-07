@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商品类目管理 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <style>
+        /* 引用通用布局样式 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        /* 头部区域 */
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        /* 左侧导航区域 */
+        .app-sidebar {
+            grid-area: sidebar;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        /* 主内容区域 */
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+            min-height: calc(100vh - 120px);
+        }
+
+        /* 底部页脚区域 */
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 侧边栏头部 */
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666 !important;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .nav-link:hover {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+        }
+
+        .nav-link.active {
+            background: rgba(24, 144, 255, 0.1) !important;
+            color: #1890ff !important;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        /* 二级菜单样式 */
+        .nav-group {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-group:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-group.expanded {
+            background: rgba(24, 144, 255, 0.05);
+            color: #1890ff;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #fafafa;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 8px 20px 8px 52px;
+            color: #666 !important;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-subitem:hover {
+            background: #f0f0f0;
+            color: #333 !important;
+        }
+
+        .nav-subitem.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: #1890ff !important;
+        }
+
+        /* 头部左侧区域 */
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        /* 面包屑导航 */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .breadcrumb-item {
+            margin-right: 8px;
+        }
+
+        .breadcrumb-separator {
+            margin: 0 8px;
+            color: #d9d9d9;
+        }
+
+        /* 头部右侧操作区 */
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            width: 200px;
+            height: 32px;
+            padding: 0 12px 0 36px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: #fafafa;
+            font-size: 14px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #1890ff;
+            background: white;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 14px;
+            color: #999;
+        }
+
+        .notification-btn {
+            position: relative;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+
+        .notification-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            background: #ff4d4f;
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 12px;
+            min-width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+
+        .user-menu:hover {
+            background: #f5f5f5;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #1890ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        /* 移动端适配 */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 8px;
+            color: #666;
+        }
+
+        /* 页面头部 */
+        .page-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            opacity: 0.9;
+            margin-bottom: 0;
+        }
+
+        /* 主要内容布局 */
+        .content-layout {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 24px;
+            height: calc(100vh - 200px);
+        }
+
+        /* 左侧类目树面板 */
+        .category-tree-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+
+        /* 右侧属性配置面板 */
+        .category-config-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* 类目树样式 */
+        .category-tree {
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .tree-node {
+            margin-bottom: 4px;
+        }
+
+        .tree-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .tree-item:hover {
+            background: #f5f5f5;
+        }
+
+        .tree-item.active {
+            background: #e6f7ff;
+            border: 1px solid #1890ff;
+        }
+
+        .tree-expand {
+            margin-right: 8px;
+            cursor: pointer;
+            color: #999;
+            font-size: 12px;
+            transition: transform 0.3s;
+            width: 16px;
+            text-align: center;
+        }
+
+        .tree-expand.expanded {
+            transform: rotate(90deg);
+        }
+
+        .tree-icon {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .tree-label {
+            flex: 1;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .tree-actions {
+            display: none;
+            gap: 4px;
+        }
+
+        .tree-item:hover .tree-actions {
+            display: flex;
+        }
+
+        .tree-action-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-add {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .btn-edit {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .btn-delete {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+
+        .tree-children {
+            margin-left: 24px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .tree-children.expanded {
+            display: block;
+        }
+
+        /* 配置表单样式 */
+        .config-form {
+            display: grid;
+            gap: 20px;
+        }
+
+        .form-section {
+            background: #fafafa;
+            padding: 16px;
+            border-radius: 8px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            font-size: 14px;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+
+        .form-textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        /* 属性字段管理 */
+        .attributes-section {
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .attribute-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 12px;
+            border: 1px solid #f0f0f0;
+            border-radius: 6px;
+            background: white;
+        }
+
+        .attribute-name {
+            flex: 1;
+        }
+
+        .attribute-type {
+            width: 120px;
+        }
+
+        .attribute-required {
+            width: 80px;
+        }
+
+        .attribute-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+
+        .btn-danger {
+            background: #ff4d4f;
+            border-color: #ff4d4f;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #ff7875;
+            border-color: #ff7875;
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .content-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr;
+                gap: 16px;
+            }
+
+            .category-tree-panel {
+                height: 300px;
+            }
+
+            .attribute-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .attribute-name,
+            .attribute-type,
+            .attribute-required {
+                width: 100%;
+            }
+        }
+
+        /* 空状态样式 */
+        .empty-state {
+            text-align: center;
+            color: #999;
+            padding: 60px 20px;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .empty-desc {
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 左侧导航 -->
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">P3</div>
+                <div class="brand-name">Portal 3.0</div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        <span>首页总览</span>
+                    </a>
+                </li>
+                
+                <!-- 工作台模块 -->
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">💼</span>
+                        <span>工作台</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../dashboard/oa-workspace.html" class="nav-subitem">OA工作台</a>
+                        <a href="../dashboard/crm-workspace.html" class="nav-subitem">CRM工作台</a>
+                        <a href="../dashboard/sales-workspace.html" class="nav-subitem">销售工作台</a>
+                        <a href="../dashboard/workspace-config.html" class="nav-subitem">工作台配置</a>
+                    </div>
+                </li>
+                
+                <!-- 组织架构模块 -->
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">🏢</span>
+                        <span>组织架构</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../organization/department-tree.html" class="nav-subitem">部门管理</a>
+                        <a href="../organization/employee-list.html" class="nav-subitem">员工管理</a>
+                        <a href="../organization/position-manage.html" class="nav-subitem">岗位管理</a>
+                        <a href="../organization/role-permission.html" class="nav-subitem">角色权限</a>
+                    </div>
+                </li>
+                
+                <!-- 客户管理模块 -->
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">👥</span>
+                        <span>客户管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../crm/customer-list.html" class="nav-subitem">客户列表</a>
+                        <a href="../crm/customer-detail.html" class="nav-subitem">客户详情</a>
+                        <a href="../crm/follow-record.html" class="nav-subitem">跟进记录</a>
+                        <a href="../crm/customer-transfer.html" class="nav-subitem">客户转移</a>
+                    </div>
+                </li>
+                
+                <!-- 商品管理模块 -->
+                <li class="nav-item">
+                    <button class="nav-group expanded" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">📦</span>
+                        <span>商品管理</span>
+                        <span class="nav-arrow rotated">▶</span>
+                    </button>
+                    <div class="nav-submenu expanded">
+                        <a href="product-list.html" class="nav-subitem">商品列表</a>
+                        <a href="category-manage.html" class="nav-subitem active">商品分类</a>
+                        <a href="inventory-monitor.html" class="nav-subitem">库存管理</a>
+                        <a href="product-form.html" class="nav-subitem">商品编辑</a>
+                    </div>
+                </li>
+                
+                <!-- 订单管理模块 -->
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">📋</span>
+                        <span>订单管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../order/order-list.html" class="nav-subitem">订单列表</a>
+                        <a href="../order/order-detail.html" class="nav-subitem">订单详情</a>
+                        <a href="../order/order-dashboard.html" class="nav-subitem">订单统计</a>
+                        <a href="../order/order-create.html" class="nav-subitem">创建订单</a>
+                    </div>
+                </li>
+                
+                <!-- 客服中心模块 -->
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">🎧</span>
+                        <span>客服中心</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../support/ticket-list.html" class="nav-subitem">工单管理</a>
+                        <a href="../support/knowledge-base.html" class="nav-subitem">知识库</a>
+                        <a href="#" class="nav-subitem">在线客服</a>
+                    </div>
+                </li>
+            </ul>
+        </aside>
+
+        <!-- 头部区域 -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">商品管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">商品分类</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索分类...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">3</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">管</div>
+                    <span>管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <h1 class="page-title">🗂️ 商品类目管理</h1>
+                <p class="page-subtitle">管理商品分类结构和属性配置，支持多级分类和自定义属性</p>
+            </div>
+
+            <!-- 内容布局 -->
+            <div class="content-layout">
+                <!-- 左侧类目树面板 -->
+                <div class="category-tree-panel">
+                    <div class="panel-title">
+                        类目结构
+                        <button class="btn btn-primary" onclick="addRootCategory()">新增根类目</button>
+                    </div>
+
+                    <div class="category-tree">
+                        <!-- 数码电子 -->
+                        <div class="tree-node">
+                            <div class="tree-item active" onclick="selectCategory(this, 1)">
+                                <span class="tree-expand expanded" onclick="toggleTreeNode(this, event)">▶</span>
+                                <span class="tree-icon">📱</span>
+                                <span class="tree-label">数码电子</span>
+                                <div class="tree-actions">
+                                    <button class="tree-action-btn btn-add" onclick="addSubCategory(1, event)">➕</button>
+                                    <button class="tree-action-btn btn-edit" onclick="editCategory(1, event)">✏️</button>
+                                    <button class="tree-action-btn btn-delete" onclick="deleteCategory(1, event)">🗑️</button>
+                                </div>
+                            </div>
+                            <div class="tree-children expanded">
+                                <div class="tree-node">
+                                    <div class="tree-item" onclick="selectCategory(this, 11)">
+                                        <span class="tree-expand expanded" onclick="toggleTreeNode(this, event)">▶</span>
+                                        <span class="tree-icon">📱</span>
+                                        <span class="tree-label">手机通讯</span>
+                                        <div class="tree-actions">
+                                            <button class="tree-action-btn btn-add" onclick="addSubCategory(11, event)">➕</button>
+                                            <button class="tree-action-btn btn-edit" onclick="editCategory(11, event)">✏️</button>
+                                            <button class="tree-action-btn btn-delete" onclick="deleteCategory(11, event)">🗑️</button>
+                                        </div>
+                                    </div>
+                                    <div class="tree-children expanded">
+                                        <div class="tree-node">
+                                            <div class="tree-item" onclick="selectCategory(this, 111)">
+                                                <span class="tree-icon">📱</span>
+                                                <span class="tree-label">智能手机</span>
+                                                <div class="tree-actions">
+                                                    <button class="tree-action-btn btn-add" onclick="addSubCategory(111, event)">➕</button>
+                                                    <button class="tree-action-btn btn-edit" onclick="editCategory(111, event)">✏️</button>
+                                                    <button class="tree-action-btn btn-delete" onclick="deleteCategory(111, event)">🗑️</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="tree-node">
+                                            <div class="tree-item" onclick="selectCategory(this, 112)">
+                                                <span class="tree-icon">📞</span>
+                                                <span class="tree-label">座机电话</span>
+                                                <div class="tree-actions">
+                                                    <button class="tree-action-btn btn-add" onclick="addSubCategory(112, event)">➕</button>
+                                                    <button class="tree-action-btn btn-edit" onclick="editCategory(112, event)">✏️</button>
+                                                    <button class="tree-action-btn btn-delete" onclick="deleteCategory(112, event)">🗑️</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="tree-node">
+                                    <div class="tree-item" onclick="selectCategory(this, 12)">
+                                        <span class="tree-icon">💻</span>
+                                        <span class="tree-label">电脑数码</span>
+                                        <div class="tree-actions">
+                                            <button class="tree-action-btn btn-add" onclick="addSubCategory(12, event)">➕</button>
+                                            <button class="tree-action-btn btn-edit" onclick="editCategory(12, event)">✏️</button>
+                                            <button class="tree-action-btn btn-delete" onclick="deleteCategory(12, event)">🗑️</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 服装鞋帽 -->
+                        <div class="tree-node">
+                            <div class="tree-item" onclick="selectCategory(this, 2)">
+                                <span class="tree-expand" onclick="toggleTreeNode(this, event)">▶</span>
+                                <span class="tree-icon">👔</span>
+                                <span class="tree-label">服装鞋帽</span>
+                                <div class="tree-actions">
+                                    <button class="tree-action-btn btn-add" onclick="addSubCategory(2, event)">➕</button>
+                                    <button class="tree-action-btn btn-edit" onclick="editCategory(2, event)">✏️</button>
+                                    <button class="tree-action-btn btn-delete" onclick="deleteCategory(2, event)">🗑️</button>
+                                </div>
+                            </div>
+                            <div class="tree-children">
+                                <div class="tree-node">
+                                    <div class="tree-item" onclick="selectCategory(this, 21)">
+                                        <span class="tree-icon">👕</span>
+                                        <span class="tree-label">男装</span>
+                                        <div class="tree-actions">
+                                            <button class="tree-action-btn btn-add" onclick="addSubCategory(21, event)">➕</button>
+                                            <button class="tree-action-btn btn-edit" onclick="editCategory(21, event)">✏️</button>
+                                            <button class="tree-action-btn btn-delete" onclick="deleteCategory(21, event)">🗑️</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tree-node">
+                                    <div class="tree-item" onclick="selectCategory(this, 22)">
+                                        <span class="tree-icon">👗</span>
+                                        <span class="tree-label">女装</span>
+                                        <div class="tree-actions">
+                                            <button class="tree-action-btn btn-add" onclick="addSubCategory(22, event)">➕</button>
+                                            <button class="tree-action-btn btn-edit" onclick="editCategory(22, event)">✏️</button>
+                                            <button class="tree-action-btn btn-delete" onclick="deleteCategory(22, event)">🗑️</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 家居家装 -->
+                        <div class="tree-node">
+                            <div class="tree-item" onclick="selectCategory(this, 3)">
+                                <span class="tree-expand" onclick="toggleTreeNode(this, event)">▶</span>
+                                <span class="tree-icon">🏠</span>
+                                <span class="tree-label">家居家装</span>
+                                <div class="tree-actions">
+                                    <button class="tree-action-btn btn-add" onclick="addSubCategory(3, event)">➕</button>
+                                    <button class="tree-action-btn btn-edit" onclick="editCategory(3, event)">✏️</button>
+                                    <button class="tree-action-btn btn-delete" onclick="deleteCategory(3, event)">🗑️</button>
+                                </div>
+                            </div>
+                            <div class="tree-children">
+                                <div class="tree-node">
+                                    <div class="tree-item" onclick="selectCategory(this, 31)">
+                                        <span class="tree-icon">🛋️</span>
+                                        <span class="tree-label">家具</span>
+                                        <div class="tree-actions">
+                                            <button class="tree-action-btn btn-add" onclick="addSubCategory(31, event)">➕</button>
+                                            <button class="tree-action-btn btn-edit" onclick="editCategory(31, event)">✏️</button>
+                                            <button class="tree-action-btn btn-delete" onclick="deleteCategory(31, event)">🗑️</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 右侧属性配置面板 -->
+                <div class="category-config-panel">
+                    <div class="panel-title">
+                        类目配置 - 数码电子
+                    </div>
+
+                    <div class="config-form">
+                        <!-- 基本信息 -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span>📝</span>
+                                <span>基本信息</span>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">类目名称</label>
+                                <input type="text" class="form-input" value="数码电子" placeholder="请输入类目名称">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">类目编码</label>
+                                <input type="text" class="form-input" value="DIGITAL_ELECTRONICS" placeholder="请输入类目编码">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">排序权重</label>
+                                <input type="number" class="form-input" value="1" placeholder="数字越小越靠前">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">类目描述</label>
+                                <textarea class="form-input form-textarea" placeholder="请输入类目描述">包含手机、电脑、数码产品等电子设备</textarea>
+                            </div>
+                        </div>
+
+                        <!-- 商品属性配置 -->
+                        <div class="form-section">
+                            <div class="section-title">
+                                <span>⚙️</span>
+                                <span>商品属性配置</span>
+                            </div>
+                            
+                            <div class="attributes-section">
+                                <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 16px;">
+                                    <span style="font-weight: 500;">自定义属性</span>
+                                    <button class="btn btn-primary btn-small" onclick="addAttribute()">添加属性</button>
+                                </div>
+                                
+                                <!-- 属性列表 -->
+                                <div id="attributesList">
+                                    <div class="attribute-item">
+                                        <input type="text" class="form-input attribute-name" placeholder="属性名称" value="品牌">
+                                        <select class="form-input attribute-type">
+                                            <option value="text">文本</option>
+                                            <option value="number">数字</option>
+                                            <option value="select" selected>下拉选择</option>
+                                            <option value="checkbox">多选</option>
+                                        </select>
+                                        <select class="form-input attribute-required">
+                                            <option value="0">非必填</option>
+                                            <option value="1" selected>必填</option>
+                                        </select>
+                                        <div class="attribute-actions">
+                                            <button class="btn btn-small" onclick="editAttributeOptions(this)">选项</button>
+                                            <button class="btn btn-danger btn-small" onclick="removeAttribute(this)">删除</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="attribute-item">
+                                        <input type="text" class="form-input attribute-name" placeholder="属性名称" value="型号">
+                                        <select class="form-input attribute-type">
+                                            <option value="text" selected>文本</option>
+                                            <option value="number">数字</option>
+                                            <option value="select">下拉选择</option>
+                                            <option value="checkbox">多选</option>
+                                        </select>
+                                        <select class="form-input attribute-required">
+                                            <option value="0">非必填</option>
+                                            <option value="1" selected>必填</option>
+                                        </select>
+                                        <div class="attribute-actions">
+                                            <button class="btn btn-small" onclick="editAttributeOptions(this)">选项</button>
+                                            <button class="btn btn-danger btn-small" onclick="removeAttribute(this)">删除</button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="attribute-item">
+                                        <input type="text" class="form-input attribute-name" placeholder="属性名称" value="颜色">
+                                        <select class="form-input attribute-type">
+                                            <option value="text">文本</option>
+                                            <option value="number">数字</option>
+                                            <option value="select" selected>下拉选择</option>
+                                            <option value="checkbox">多选</option>
+                                        </select>
+                                        <select class="form-input attribute-required">
+                                            <option value="0" selected>非必填</option>
+                                            <option value="1">必填</option>
+                                        </select>
+                                        <div class="attribute-actions">
+                                            <button class="btn btn-small" onclick="editAttributeOptions(this)">选项</button>
+                                            <button class="btn btn-danger btn-small" onclick="removeAttribute(this)">删除</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 操作按钮 -->
+                        <div class="btn-group">
+                            <button class="btn" onclick="resetForm()">重置</button>
+                            <button class="btn btn-primary" onclick="saveCategory()">保存配置</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // 树形节点展开/收起
+        function toggleTreeNode(arrow, event) {
+            event.stopPropagation();
+            const isExpanded = arrow.classList.contains('expanded');
+            const children = arrow.closest('.tree-node').querySelector('.tree-children');
+            
+            if (isExpanded) {
+                arrow.classList.remove('expanded');
+                if (children) children.classList.remove('expanded');
+            } else {
+                arrow.classList.add('expanded');
+                if (children) children.classList.add('expanded');
+            }
+        }
+
+        // 选择类目
+        function selectCategory(element, categoryId) {
+            // 移除所有活动状态
+            document.querySelectorAll('.tree-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // 设置当前选中状态
+            element.classList.add('active');
+            
+            // 加载类目配置
+            loadCategoryConfig(categoryId);
+        }
+
+        // 加载类目配置
+        function loadCategoryConfig(categoryId) {
+            console.log('加载类目配置:', categoryId);
+            
+            // 模拟加载不同类目的配置数据
+            const configs = {
+                1: { name: '数码电子', code: 'DIGITAL_ELECTRONICS', desc: '包含手机、电脑、数码产品等电子设备' },
+                11: { name: '手机通讯', code: 'MOBILE_COMMUNICATION', desc: '各类手机和通讯设备' },
+                111: { name: '智能手机', code: 'SMARTPHONE', desc: '智能手机产品' },
+                2: { name: '服装鞋帽', code: 'CLOTHING_SHOES', desc: '各类服装、鞋子、帽子等' },
+                3: { name: '家居家装', code: 'HOME_FURNITURE', desc: '家具、装修材料等家居用品' }
+            };
+            
+            const config = configs[categoryId] || configs[1];
+            
+            // 更新面板标题
+            document.querySelector('.category-config-panel .panel-title').textContent = `类目配置 - ${config.name}`;
+            
+            // 更新表单数据
+            document.querySelector('input[placeholder="请输入类目名称"]').value = config.name;
+            document.querySelector('input[placeholder="请输入类目编码"]').value = config.code;
+            document.querySelector('textarea[placeholder="请输入类目描述"]').value = config.desc;
+        }
+
+        // 新增根类目
+        function addRootCategory() {
+            showMessage('新增根类目功能开发中...', 'info');
+        }
+
+        // 新增子类目
+        function addSubCategory(parentId, event) {
+            event.stopPropagation();
+            showMessage(`新增子类目功能开发中... 父类目ID: ${parentId}`, 'info');
+        }
+
+        // 编辑类目
+        function editCategory(categoryId, event) {
+            event.stopPropagation();
+            showMessage(`编辑类目功能开发中... 类目ID: ${categoryId}`, 'info');
+        }
+
+        // 删除类目
+        function deleteCategory(categoryId, event) {
+            event.stopPropagation();
+            if (confirm('确定要删除此类目吗？删除后不可恢复！')) {
+                showMessage(`删除类目功能开发中... 类目ID: ${categoryId}`, 'warning');
+            }
+        }
+
+        // 添加属性
+        function addAttribute() {
+            const attributesList = document.getElementById('attributesList');
+            const attributeItem = document.createElement('div');
+            attributeItem.className = 'attribute-item';
+            
+            attributeItem.innerHTML = `
+                <input type="text" class="form-input attribute-name" placeholder="属性名称">
+                <select class="form-input attribute-type">
+                    <option value="text">文本</option>
+                    <option value="number">数字</option>
+                    <option value="select">下拉选择</option>
+                    <option value="checkbox">多选</option>
+                </select>
+                <select class="form-input attribute-required">
+                    <option value="0">非必填</option>
+                    <option value="1">必填</option>
+                </select>
+                <div class="attribute-actions">
+                    <button class="btn btn-small" onclick="editAttributeOptions(this)">选项</button>
+                    <button class="btn btn-danger btn-small" onclick="removeAttribute(this)">删除</button>
+                </div>
+            `;
+            
+            attributesList.appendChild(attributeItem);
+        }
+
+        // 删除属性
+        function removeAttribute(button) {
+            if (confirm('确定要删除此属性吗？')) {
+                button.closest('.attribute-item').remove();
+            }
+        }
+
+        // 编辑属性选项
+        function editAttributeOptions(button) {
+            const attributeItem = button.closest('.attribute-item');
+            const attributeName = attributeItem.querySelector('.attribute-name').value;
+            showMessage(`编辑属性选项功能开发中... 属性: ${attributeName}`, 'info');
+        }
+
+        // 重置表单
+        function resetForm() {
+            if (confirm('确定要重置表单吗？')) {
+                document.querySelector('input[placeholder="请输入类目名称"]').value = '';
+                document.querySelector('input[placeholder="请输入类目编码"]').value = '';
+                document.querySelector('textarea[placeholder="请输入类目描述"]').value = '';
+                showMessage('表单已重置！', 'warning');
+            }
+        }
+
+        // 保存类目配置
+        function saveCategory() {
+            const name = document.querySelector('input[placeholder="请输入类目名称"]').value;
+            const code = document.querySelector('input[placeholder="请输入类目编码"]').value;
+            
+            if (!name || !code) {
+                showMessage('请填写类目名称和编码！', 'error');
+                return;
+            }
+            
+            // 收集属性配置
+            const attributes = [];
+            document.querySelectorAll('.attribute-item').forEach(item => {
+                const attrName = item.querySelector('.attribute-name').value;
+                const attrType = item.querySelector('.attribute-type').value;
+                const attrRequired = item.querySelector('.attribute-required').value;
+                
+                if (attrName) {
+                    attributes.push({
+                        name: attrName,
+                        type: attrType,
+                        required: attrRequired === '1'
+                    });
+                }
+            });
+            
+            console.log('保存类目配置:', { name, code, attributes });
+            showMessage('类目配置保存成功！', 'success');
+        }
+
+        // 消息提示函数
+        function showMessage(message, type) {
+            console.log(`${type.toUpperCase()}: ${message}`);
+            alert(message);
+        }
+
+        // 二级菜单控制
+        function toggleNavGroup(button) {
+            const submenu = button.nextElementSibling;
+            const arrow = button.querySelector('.nav-arrow');
+            const isExpanded = submenu.classList.contains('expanded');
+            
+            // 关闭所有其他展开的菜单
+            document.querySelectorAll('.nav-submenu.expanded').forEach(menu => {
+                if (menu !== submenu) {
+                    menu.classList.remove('expanded');
+                    menu.previousElementSibling.classList.remove('expanded');
+                    menu.previousElementSibling.querySelector('.nav-arrow').classList.remove('rotated');
+                }
+            });
+            
+            // 切换当前菜单状态
+            if (isExpanded) {
+                submenu.classList.remove('expanded');
+                button.classList.remove('expanded');
+                arrow.classList.remove('rotated');
+            } else {
+                submenu.classList.add('expanded');
+                button.classList.add('expanded');
+                arrow.classList.add('rotated');
+            }
+        }
+
+        // 移动端菜单切换
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.app-sidebar');
+            sidebar.classList.toggle('mobile-open');
+        }
+
+        // 点击主内容区域时关闭移动端菜单
+        document.addEventListener('click', function(e) {
+            const sidebar = document.querySelector('.app-sidebar');
+            const toggleBtn = document.querySelector('.mobile-menu-toggle');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(e.target) && 
+                !toggleBtn.contains(e.target)) {
+                sidebar.classList.remove('mobile-open');
+            }
+        });
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('商品类目管理页面已加载');
+            showMessage('商品类目管理页面加载完成！', 'success');
+        });
+    </script>
+</body>
+</html> 

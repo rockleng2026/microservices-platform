@@ -37,6 +37,8 @@
 - 左侧展示企业Logo、Slogan和产品介绍轮播图
 - 右侧登录表单区域：用户名/手机号、密码、验证码、记住密码
 - 支持多种登录方式：账号密码、手机验证码、扫码登录
+- **多租户支持**：支持租户域名识别和租户选择
+- **租户切换**：超级管理员可切换到不同租户环境
 - 登录成功后根据用户角色自动跳转到对应工作台
 - 集成忘记密码、注册账号等辅助功能
 
@@ -87,12 +89,18 @@
 - `organization/employee-list.html` - 员工信息列表页面  
 - `organization/position-manage.html` - 岗位管理页面
 - `organization/role-permission.html` - 角色权限配置页面
+- `tenant/tenant-list.html` - 租户管理列表页面（超级管理员）
+- `tenant/tenant-config.html` - 租户配置页面
+- `tenant/org-template.html` - 组织架构模板管理页面
 
 **关键设计要求：**
 - 部门树支持拖拽调整层级关系,部门树可以实时编辑，部门树上可以进行岗位管理、岗位人员管理
 - 员工列表支持多维度筛选(部门、岗位、在职状态、员工姓名、工号)
 - 表格支持批量操作(导入、导出、批量修改)
 - 权限配置采用树形选择组件
+- **多租户管理**：租户列表展示、租户配置、资源监控
+- **租户隔离**：确保各租户数据和界面完全隔离
+- **配额监控**：实时显示租户资源使用情况和配额限制
 
 ### 模块2：客户关系管理(CRM)
 **原型页面：**
@@ -193,6 +201,480 @@
 - **消息反馈**：成功(绿色)、警告(橙色)、错误(红色)、信息(蓝色)
 - **表单验证**：实时校验，错误信息红色显示
 - **页面跳转**：使用页内路由，保持导航状态
+
+## 🏢 多租户UI设计规范
+
+### 1. 租户识别与切换
+
+#### 1.1 租户域名识别
+- **独立域名**：支持租户独立域名访问（如：company.portal.com）
+- **子路径模式**：支持子路径租户识别（如：portal.com/company）
+- **参数模式**：支持URL参数租户识别（如：portal.com?tenant=company）
+
+#### 1.2 租户切换界面
+```html
+<!-- 超级管理员租户切换器 -->
+<div class="tenant-switcher">
+  <div class="current-tenant">
+    <img src="{tenant.logoUrl}" class="tenant-logo" />
+    <span class="tenant-name">{tenant.name}</span>
+    <i class="anticon anticon-down"></i>
+  </div>
+  <div class="tenant-dropdown">
+    <div class="tenant-search">
+      <input placeholder="搜索租户..." />
+    </div>
+    <div class="tenant-list">
+      <div class="tenant-item" v-for="tenant in tenants">
+        <img :src="tenant.logoUrl" />
+        <div class="tenant-info">
+          <div class="tenant-name">{{tenant.name}}</div>
+          <div class="tenant-status">{{tenant.status}}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+```
+
+### 2. 租户个性化界面
+
+#### 2.1 Logo与品牌定制
+- **Logo替换**：支持租户自定义Logo，自动适配不同尺寸
+- **主题色彩**：支持租户自定义主题色彩，影响按钮、链接、图标等
+- **企业标识**：顶部导航栏显示租户企业名称和标识
+
+#### 2.2 界面布局定制
+```typescript
+// 租户UI配置接口
+interface TenantUIConfig {
+  theme: {
+    primaryColor: string;      // 主色调
+    secondaryColor: string;    // 辅助色
+    successColor: string;      // 成功色
+    warningColor: string;      // 警告色
+    errorColor: string;        // 错误色
+  };
+  logo: {
+    url: string;              // Logo URL
+    width: number;            // Logo宽度
+    height: number;           // Logo高度
+  };
+  layout: {
+    sidebarCollapsed: boolean; // 侧边栏默认状态
+    breadcrumbEnabled: boolean; // 面包屑导航
+    footerEnabled: boolean;    // 页脚显示
+  };
+  features: {
+    enabledModules: string[];  // 启用的功能模块
+    customMenus: MenuConfig[]; // 自定义菜单
+  };
+}
+```
+
+### 3. 租户管理界面
+
+#### 3.1 租户列表页面 (tenant/tenant-list.html)
+- **列表视图**：表格展示所有租户基本信息
+- **筛选功能**：按状态、到期时间、创建时间筛选
+- **搜索功能**：支持租户名称、编码、联系人搜索
+- **状态标识**：不同状态用不同颜色标签区分
+- **操作菜单**：查看详情、编辑、启用/禁用、删除
+
+```html
+<div class="tenant-list-page">
+  <!-- 工具栏 -->
+  <div class="toolbar">
+    <div class="left-actions">
+      <a-button type="primary" @click="createTenant">
+        <PlusOutlined /> 新增租户
+      </a-button>
+      <a-button @click="exportTenants">
+        <ExportOutlined /> 导出
+      </a-button>
+    </div>
+    <div class="right-filters">
+      <a-select placeholder="状态筛选" style="width: 120px">
+        <a-select-option value="active">启用</a-select-option>
+        <a-select-option value="inactive">禁用</a-select-option>
+        <a-select-option value="expired">已过期</a-select-option>
+      </a-select>
+      <a-input-search placeholder="搜索租户..." style="width: 200px" />
+    </div>
+  </div>
+  
+  <!-- 租户表格 -->
+  <a-table 
+    :dataSource="tenants" 
+    :columns="columns"
+    :pagination="pagination"
+    row-key="id">
+    
+    <!-- 租户信息列 -->
+    <template #tenantInfo="{ record }">
+      <div class="tenant-info">
+        <img :src="record.logoUrl" class="tenant-avatar" />
+        <div>
+          <div class="tenant-name">{{ record.name }}</div>
+          <div class="tenant-code">{{ record.code }}</div>
+        </div>
+      </div>
+    </template>
+    
+    <!-- 状态列 -->
+    <template #status="{ record }">
+      <a-tag :color="getStatusColor(record.status)">
+        {{ getStatusText(record.status) }}
+      </a-tag>
+    </template>
+    
+    <!-- 配额使用情况 -->
+    <template #usage="{ record }">
+      <div class="quota-usage">
+        <div class="usage-item">
+          <span>用户：</span>
+          <a-progress 
+            :percent="record.userUsageRate" 
+            size="small"
+            :showInfo="false" />
+          <span>{{ record.userCount }}/{{ record.maxUsers }}</span>
+        </div>
+        <div class="usage-item">
+          <span>存储：</span>
+          <a-progress 
+            :percent="record.storageUsageRate" 
+            size="small"
+            :showInfo="false" />
+          <span>{{ formatStorage(record.usedStorage) }}/{{ formatStorage(record.maxStorage) }}</span>
+        </div>
+      </div>
+    </template>
+    
+    <!-- 操作列 -->
+    <template #action="{ record }">
+      <a-space>
+        <a @click="viewTenant(record)">查看</a>
+        <a @click="editTenant(record)">编辑</a>
+        <a @click="configTenant(record)">配置</a>
+        <a-dropdown>
+          <a>更多 <DownOutlined /></a>
+          <template #overlay>
+            <a-menu>
+              <a-menu-item @click="resetTenant(record)">重置</a-menu-item>
+              <a-menu-item @click="backupTenant(record)">备份</a-menu-item>
+              <a-menu-item @click="deleteTenant(record)" danger>删除</a-menu-item>
+            </a-menu>
+          </template>
+        </a-dropdown>
+      </a-space>
+    </template>
+  </a-table>
+</div>
+```
+
+#### 3.2 租户配置页面 (tenant/tenant-config.html)
+- **基本信息**：租户名称、编码、联系方式等
+- **功能模块**：可开启/关闭的功能模块配置
+- **资源配额**：用户数、存储空间、API调用限制等
+- **个性化设置**：Logo、主题、域名等定制选项
+
+```html
+<div class="tenant-config-page">
+  <a-tabs v-model:activeKey="activeTab">
+    
+    <!-- 基本信息 -->
+    <a-tab-pane key="basic" tab="基本信息">
+      <a-form :model="tenantForm" layout="vertical">
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="租户名称" required>
+              <a-input v-model:value="tenantForm.name" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="租户编码" required>
+              <a-input v-model:value="tenantForm.code" />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        
+        <a-row :gutter="16">
+          <a-col :span="12">
+            <a-form-item label="联系人">
+              <a-input v-model:value="tenantForm.contactPerson" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="12">
+            <a-form-item label="联系电话">
+              <a-input v-model:value="tenantForm.contactPhone" />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        
+        <a-form-item label="公司地址">
+          <a-textarea v-model:value="tenantForm.address" rows="3" />
+        </a-form-item>
+      </a-form>
+    </a-tab-pane>
+    
+    <!-- 功能模块 -->
+    <a-tab-pane key="modules" tab="功能模块">
+      <div class="module-config">
+        <div class="module-group" v-for="group in moduleGroups" :key="group.code">
+          <h3>{{ group.name }}</h3>
+          <a-row :gutter="16">
+            <a-col :span="8" v-for="module in group.modules" :key="module.code">
+              <a-card size="small" class="module-card">
+                <div class="module-header">
+                  <a-switch 
+                    v-model:checked="module.enabled"
+                    @change="onModuleChange(module)" />
+                  <span class="module-name">{{ module.name }}</span>
+                </div>
+                <p class="module-desc">{{ module.description }}</p>
+                <div class="module-quota" v-if="module.hasQuota">
+                  <span>配额：</span>
+                  <a-input-number 
+                    v-model:value="module.quota"
+                    :min="0"
+                    :disabled="!module.enabled" />
+                </div>
+              </a-card>
+            </a-col>
+          </a-row>
+        </div>
+      </div>
+    </a-tab-pane>
+    
+    <!-- 资源配额 -->
+    <a-tab-pane key="quota" tab="资源配额">
+      <a-form :model="quotaForm" layout="vertical">
+        <a-row :gutter="16">
+          <a-col :span="8">
+            <a-form-item label="最大用户数">
+              <a-input-number 
+                v-model:value="quotaForm.maxUsers"
+                :min="1"
+                style="width: 100%" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="8">
+            <a-form-item label="最大存储空间(GB)">
+              <a-input-number 
+                v-model:value="quotaForm.maxStorageGB"
+                :min="1"
+                style="width: 100%" />
+            </a-form-item>
+          </a-col>
+          <a-col :span="8">
+            <a-form-item label="API调用限制(/小时)">
+              <a-input-number 
+                v-model:value="quotaForm.apiRateLimit"
+                :min="100"
+                style="width: 100%" />
+            </a-form-item>
+          </a-col>
+        </a-row>
+        
+        <!-- 使用统计 -->
+        <div class="usage-statistics">
+          <h4>当前使用情况</h4>
+          <a-row :gutter="16">
+            <a-col :span="8">
+              <a-statistic 
+                title="用户数" 
+                :value="currentUsage.userCount"
+                suffix="/ {{ quotaForm.maxUsers }}" />
+              <a-progress 
+                :percent="currentUsage.userUsageRate"
+                :status="getUsageStatus(currentUsage.userUsageRate)" />
+            </a-col>
+            <a-col :span="8">
+              <a-statistic 
+                title="存储空间" 
+                :value="currentUsage.storageUsedGB"
+                :precision="2"
+                suffix="GB / {{ quotaForm.maxStorageGB }}GB" />
+              <a-progress 
+                :percent="currentUsage.storageUsageRate"
+                :status="getUsageStatus(currentUsage.storageUsageRate)" />
+            </a-col>
+            <a-col :span="8">
+              <a-statistic 
+                title="今日API调用" 
+                :value="currentUsage.todayApiCalls"
+                suffix="/ {{ quotaForm.apiRateLimit }}" />
+              <a-progress 
+                :percent="currentUsage.apiUsageRate"
+                :status="getUsageStatus(currentUsage.apiUsageRate)" />
+            </a-col>
+          </a-row>
+        </div>
+      </a-form>
+    </a-tab-pane>
+    
+    <!-- 个性化设置 -->
+    <a-tab-pane key="customization" tab="个性化设置">
+      <a-form :model="customForm" layout="vertical">
+        <!-- Logo上传 -->
+        <a-form-item label="企业Logo">
+          <div class="logo-upload">
+            <a-upload
+              name="logo"
+              list-type="picture-card"
+              class="logo-uploader"
+              :show-upload-list="false"
+              action="/api/upload/logo"
+              @change="handleLogoChange">
+              <img v-if="customForm.logoUrl" :src="customForm.logoUrl" alt="logo" />
+              <div v-else>
+                <PlusOutlined />
+                <div style="margin-top: 8px">上传Logo</div>
+              </div>
+            </a-upload>
+          </div>
+        </a-form-item>
+        
+        <!-- 主题色彩 -->
+        <a-form-item label="主题色彩">
+          <div class="theme-colors">
+            <div class="color-item">
+              <span>主色调：</span>
+              <a-input 
+                v-model:value="customForm.primaryColor"
+                type="color"
+                style="width: 60px" />
+            </div>
+            <div class="color-item">
+              <span>辅助色：</span>
+              <a-input 
+                v-model:value="customForm.secondaryColor"
+                type="color"
+                style="width: 60px" />
+            </div>
+          </div>
+        </a-form-item>
+        
+        <!-- 独立域名 -->
+        <a-form-item label="独立域名">
+          <a-input 
+            v-model:value="customForm.domain"
+            placeholder="例如：company.portal.com"
+            addon-before="https://" />
+        </a-form-item>
+        
+        <!-- 界面布局 -->
+        <a-form-item label="界面布局">
+          <a-space direction="vertical">
+            <a-checkbox v-model:checked="customForm.sidebarCollapsed">
+              默认收起侧边栏
+            </a-checkbox>
+            <a-checkbox v-model:checked="customForm.breadcrumbEnabled">
+              显示面包屑导航
+            </a-checkbox>
+            <a-checkbox v-model:checked="customForm.footerEnabled">
+              显示页面页脚
+            </a-checkbox>
+          </a-space>
+        </a-form-item>
+      </a-form>
+    </a-tab-pane>
+  </a-tabs>
+  
+  <!-- 底部操作栏 -->
+  <div class="config-actions">
+    <a-space>
+      <a-button @click="resetConfig">重置</a-button>
+      <a-button type="primary" @click="saveConfig">保存配置</a-button>
+    </a-space>
+  </div>
+</div>
+```
+
+### 4. 多租户数据隔离UI
+
+#### 4.1 租户上下文显示
+- **顶部标识**：页面顶部显示当前租户信息
+- **数据过滤**：所有列表自动过滤显示当前租户数据
+- **操作限制**：根据租户权限限制可见操作按钮
+
+#### 4.2 配额警告提示
+```html
+<!-- 配额警告组件 -->
+<div class="quota-warning" v-if="showQuotaWarning">
+  <a-alert
+    :message="quotaWarning.message"
+    :type="quotaWarning.type"
+    :showIcon="true"
+    :closable="true"
+    @close="dismissWarning">
+    <template #description>
+      <div>
+        <p>{{ quotaWarning.description }}</p>
+        <a-button size="small" @click="upgradeQuota">升级配额</a-button>
+      </div>
+    </template>
+  </a-alert>
+</div>
+```
+
+### 5. 组织架构模板界面
+
+#### 5.1 模板管理页面 (tenant/org-template.html)
+- **模板列表**：预定义的组织架构模板
+- **模板预览**：可视化预览组织架构结构
+- **自定义模板**：支持创建自定义组织架构模板
+- **模板应用**：一键应用模板到新租户
+
+```html
+<div class="org-template-page">
+  <!-- 模板分类 -->
+  <div class="template-categories">
+    <a-radio-group v-model:value="currentCategory" button-style="solid">
+      <a-radio-button value="all">全部模板</a-radio-button>
+      <a-radio-button value="startup">初创企业</a-radio-button>
+      <a-radio-button value="small">小型企业</a-radio-button>
+      <a-radio-button value="medium">中型企业</a-radio-button>
+      <a-radio-button value="large">大型企业</a-radio-button>
+    </a-radio-group>
+  </div>
+  
+  <!-- 模板网格 -->
+  <div class="template-grid">
+    <a-row :gutter="16">
+      <a-col :span="6" v-for="template in templates" :key="template.id">
+        <a-card 
+          hoverable
+          class="template-card"
+          @click="selectTemplate(template)">
+          <div class="template-preview">
+            <img :src="template.previewImage" :alt="template.name" />
+          </div>
+          <div class="template-info">
+            <h4>{{ template.name }}</h4>
+            <p>{{ template.description }}</p>
+            <div class="template-stats">
+              <span>{{ template.deptCount }}个部门</span>
+              <span>{{ template.positionCount }}个岗位</span>
+            </div>
+          </div>
+          <div class="template-actions">
+            <a-button size="small" @click.stop="previewTemplate(template)">
+              预览
+            </a-button>
+            <a-button 
+              type="primary" 
+              size="small" 
+              @click.stop="applyTemplate(template)">
+              应用
+            </a-button>
+          </div>
+        </a-card>
+      </a-col>
+    </a-row>
+  </div>
+</div>
+```
 
 ## 💻 技术实现要求
 
@@ -324,3 +806,257 @@ docs/html/
 **输出路径：** `docs/html/` 文件夹  
 **文件命名：** 采用kebab-case命名规范  
 **版本标注：** v1.0 Portal 3.0 原型设计
+
+**整体设计要求**
+- 页面功能点可以根据给用户配置的权限点进行控制(置灰或者不展示)
+- 导航菜单支持动态配置，根据用户角色和权限动态生成
+- 工作台模块支持个性化配置，基于权限控制可见性
+- 所有操作按钮支持权限控制(显示/隐藏/置灰)
+- 数据展示支持按权限过滤，确保用户只能看到有权限的数据
+
+## 🔐 权限控制系统设计
+
+### 权限控制核心原则
+1. **菜单权限**：控制用户可以访问哪些菜单和页面
+2. **功能权限**：控制用户在页面内可以执行哪些操作
+3. **数据权限**：控制用户可以查看和操作哪些数据范围
+4. **字段权限**：控制用户可以看到哪些字段信息
+5. **工作台权限**：控制用户工作台显示哪些模块卡片
+
+### 权限控制模块页面
+
+#### 权限管理页面
+**原型页面：**
+- `system/role-manage.html` - 角色管理页面
+- `system/menu-manage.html` - 菜单权限配置页面  
+- `system/permission-assign.html` - 权限分配页面
+- `system/data-permission.html` - 数据权限配置页面
+
+**关键设计要求：**
+
+**角色管理页面 (system/role-manage.html)：**
+- 角色列表展示：角色名称、描述、状态、创建时间
+- 角色新增/编辑表单：基本信息录入
+- 角色权限配置按钮：跳转到权限分配页面
+- 支持角色启用/禁用状态切换
+- 角色删除确认机制
+
+**菜单权限配置页面 (system/menu-manage.html)：**
+- 左侧：树形菜单结构展示，支持拖拽排序
+- 右侧：菜单详情配置表单
+  - 菜单基本信息：名称、编码、图标、路径
+  - 菜单类型：目录、菜单、按钮、接口
+  - 权限标识：用于前端权限判断
+  - 显示设置：是否可见、是否外链、排序
+- 菜单状态管理：启用/禁用
+- 批量操作：批量启用/禁用、批量删除
+
+**权限分配页面 (system/permission-assign.html)：**
+- 左侧：角色列表，支持搜索和筛选
+- 中间：权限树形选择器
+  - 菜单权限：按模块分类的树形结构
+  - 功能权限：每个菜单下的操作权限(增删改查等)
+  - 支持全选/反选、父子联动
+- 右侧：已选权限预览
+- 权限继承关系展示
+- 批量权限操作
+
+**数据权限配置页面 (system/data-permission.html)：**
+- 数据权限规则定义
+  - 全部数据：无限制访问
+  - 本部门：仅本部门数据  
+  - 本部门及下级：本部门及所有子部门
+  - 仅本人：只能查看自己的数据
+  - 自定义：自定义SQL条件
+- 角色数据权限配置
+- 特殊用户权限例外设置
+
+### 动态菜单设计规范
+
+#### 菜单层级结构
+```
+一级菜单 (主模块)
+├── 工作台
+├── 组织架构
+│   ├── 部门管理 (二级菜单)
+│   │   ├── 查看部门 (三级权限-功能点)
+│   │   ├── 新增部门 (三级权限-功能点)
+│   │   ├── 编辑部门 (三级权限-功能点)
+│   │   └── 删除部门 (三级权限-功能点)
+│   └── 员工管理
+├── CRM管理
+│   ├── 客户管理
+│   └── 跟进记录
+├── 商品管理
+├── 订单管理
+├── 客服中心
+├── 运维管理
+└── 系统管理
+    ├── 角色管理
+    ├── 菜单管理
+    └── 权限配置
+```
+
+#### 菜单权限控制状态
+1. **正常显示**：用户有完整访问权限
+2. **置灰显示**：用户有查看权限但无操作权限  
+3. **完全隐藏**：用户无任何访问权限
+4. **部分显示**：子菜单根据权限动态显示/隐藏
+
+#### 导航菜单组件设计
+**菜单项状态样式：**
+```css
+/* 正常状态 */
+.menu-item {
+  color: #333;
+  cursor: pointer;
+}
+
+/* 置灰状态 */
+.menu-item.disabled {
+  color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+/* 隐藏状态 */
+.menu-item.hidden {
+  display: none;
+}
+
+/* 有权限但子菜单全部隐藏 */
+.menu-item.empty-children {
+  opacity: 0.6;
+}
+```
+
+### 页面功能点权限控制
+
+#### 按钮权限控制
+**控制方式：**
+1. **完全隐藏**：按钮不显示，适用于无权限的操作
+2. **置灰禁用**：按钮显示但不可点击，提示用户权限不足
+3. **文字提示**：显示"无权限"文字代替按钮
+
+**权限控制组件设计：**
+```html
+<!-- 权限控制包装器 -->
+<PermissionWrapper permission="organization:emp:add" mode="hidden">
+  <Button type="primary">新增员工</Button>
+</PermissionWrapper>
+
+<PermissionWrapper permission="organization:emp:edit" mode="disabled">
+  <Button>编辑</Button>
+</PermissionWrapper>
+
+<PermissionWrapper permission="organization:emp:delete" fallback={<span>无权限</span>}>
+  <Button danger>删除</Button>
+</PermissionWrapper>
+```
+
+#### 表格操作列权限控制
+**操作列动态生成：**
+- 根据用户权限动态显示操作按钮
+- 支持批量操作权限控制
+- 行级权限控制(如只能操作自己创建的数据)
+
+#### 表单字段权限控制
+**字段级权限：**
+- 只读权限：字段显示但不可编辑
+- 隐藏权限：字段完全不显示
+- 脱敏权限：敏感信息部分遮盖显示
+
+### 工作台权限配置
+
+#### 工作台模块权限
+**模块卡片控制：**
+```typescript
+// 工作台模块权限配置
+const workspaceModules = [
+  {
+    code: 'task_summary',
+    name: '任务汇总',
+    permission: 'dashboard:task:view',
+    defaultSize: 'medium',
+    position: { x: 0, y: 0 }
+  },
+  {
+    code: 'approval_pending', 
+    name: '待审批',
+    permission: 'workflow:approve:view',
+    defaultSize: 'small',
+    position: { x: 1, y: 0 }
+  },
+  {
+    code: 'customer_stats',
+    name: '客户统计', 
+    permission: 'crm:stats:view',
+    defaultSize: 'large',
+    position: { x: 0, y: 1 }
+  }
+];
+```
+
+#### 个性化配置权限
+- 用户可自定义显示的模块
+- 管理员可配置默认工作台布局
+- 部门主管可配置下属默认工作台
+- 支持工作台模板保存和应用
+
+### 数据权限展示规范
+
+#### 列表数据过滤
+**数据范围控制：**
+- 列表自动按权限过滤数据
+- 统计数据基于权限范围计算
+- 搜索结果限制在权限范围内
+- 导出数据按权限限制
+
+#### 详情页面权限
+**信息展示控制：**
+- 敏感字段根据权限显示/隐藏
+- 关联数据按权限过滤
+- 操作历史按权限显示
+- 附件下载权限控制
+
+### 权限提示和反馈
+
+#### 无权限状态页面
+**空状态设计：**
+```html
+<div class="no-permission-state">
+  <Icon name="lock" size="48" color="#ccc" />
+  <h3>暂无访问权限</h3>
+  <p>您当前没有访问此页面的权限，请联系管理员</p>
+  <Button type="link">申请权限</Button>
+</div>
+```
+
+#### 权限不足提示
+**操作反馈：**
+- Toast提示：操作失败，权限不足
+- Modal确认：确定要申请此权限吗？
+- 内联提示：鼠标悬停显示权限说明
+
+### 权限控制实现规范
+
+#### 前端权限校验
+**多层权限校验：**
+1. 路由层：页面访问权限
+2. 组件层：功能操作权限  
+3. 数据层：数据获取权限
+4. 接口层：API调用权限
+
+#### 权限缓存策略
+**缓存机制：**
+- 用户权限本地缓存，减少服务器请求
+- 权限变更时自动刷新缓存
+- 菜单权限缓存到SessionStorage
+- 定期校验权限有效性
+
+#### 安全防护
+**前端安全：**
+- 敏感操作二次确认
+- 关键权限服务端双重校验
+- 防止权限绕过攻击
+- 权限变更日志记录

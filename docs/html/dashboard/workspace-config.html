@@ -827,94 +827,7 @@
     <div class="app-layout">
         <!-- 左侧导航 -->
         <aside class="app-sidebar">
-            <div class="sidebar-header">
-                <div class="logo">P3</div>
-                <div class="brand-name">Portal 3.0</div>
-            </div>
-            
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="../index.html" class="nav-link">
-                        <span class="nav-icon">🏠</span>
-                        <span>首页总览</span>
-                    </a>
-                </li>
-                
-                <!-- 工作台模块 -->
-                <li class="nav-item">
-                    <button class="nav-group expanded" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">💼</span>
-                        <span>工作台</span>
-                        <span class="nav-arrow rotated">▶</span>
-                    </button>
-                    <div class="nav-submenu expanded">
-                        <a href="oa-workspace.html" class="nav-subitem">OA工作台</a>
-                        <a href="crm-workspace.html" class="nav-subitem">CRM工作台</a>
-                        <a href="sales-workspace.html" class="nav-subitem">销售工作台</a>
-                        <a href="workspace-config.html" class="nav-subitem active">工作台配置</a>
-                    </div>
-                </li>
-                
-                <!-- 组织架构模块 -->
-                <li class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">🏢</span>
-                        <span>组织架构</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../organization/department-tree.html" class="nav-subitem">部门管理</a>
-                        <a href="../organization/employee-list.html" class="nav-subitem">员工管理</a>
-                        <a href="../organization/position-manage.html" class="nav-subitem">岗位管理</a>
-                        <a href="../organization/role-permission.html" class="nav-subitem">角色权限</a>
-                    </div>
-                </li>
-                
-                <!-- 客户管理模块 -->
-                <li class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">👥</span>
-                        <span>客户管理</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../crm/customer-list.html" class="nav-subitem">客户列表</a>
-                        <a href="#" class="nav-subitem">客户详情</a>
-                        <a href="#" class="nav-subitem">跟进记录</a>
-                        <a href="#" class="nav-subitem">客户转移</a>
-                    </div>
-                </li>
-                
-                <!-- 商品管理模块 -->
-                <li class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">📦</span>
-                        <span>商品管理</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="#" class="nav-subitem">商品列表</a>
-                        <a href="#" class="nav-subitem">商品分类</a>
-                        <a href="#" class="nav-subitem">库存管理</a>
-                        <a href="#" class="nav-subitem">价格策略</a>
-                    </div>
-                </li>
-                
-                <!-- 订单管理模块 -->
-                <li class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">📋</span>
-                        <span>订单管理</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="#" class="nav-subitem">订单列表</a>
-                        <a href="#" class="nav-subitem">订单详情</a>
-                        <a href="#" class="nav-subitem">订单统计</a>
-                        <a href="#" class="nav-subitem">退货管理</a>
-                    </div>
-                </li>
-            </ul>
+            <!-- 导航内容将由navigation.js动态生成 -->
         </aside>
 
         <!-- 头部区域 -->
@@ -1575,5 +1488,8 @@
             }, { offset: Number.NEGATIVE_INFINITY }).element;
         }
     </script>
+    
+    <!-- 引入统一导航系统 -->
+    <script src="../assets/js/navigation.js"></script>
 </body>
 </html>

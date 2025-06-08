@@ -46,6 +46,116 @@
             z-index: 100;
         }
 
+        /* 导航样式 */
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            color: white;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .brand-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .nav-menu {
+            list-style: none;
+            margin: 0;
+            padding: 16px 0;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link, .nav-group {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #333;
+            text-decoration: none;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+        }
+
+        .nav-link:hover, .nav-group:hover {
+            background: #f0f9ff;
+            color: #1890ff;
+        }
+
+        .nav-link.active, .nav-group.expanded {
+            background: #e6f7ff;
+            color: #1890ff;
+            border-right: 3px solid #1890ff;
+        }
+
+        .nav-icon {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            background: #fafafa;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 8px 52px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-subitem:hover {
+            background: #f0f9ff;
+            color: #1890ff;
+        }
+
+        .nav-subitem.active {
+            background: #e6f7ff;
+            color: #1890ff;
+            font-weight: 500;
+        }
+
         /* 主内容区域 */
         .app-main {
             grid-area: main;

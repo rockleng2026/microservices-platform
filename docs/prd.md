@@ -157,14 +157,6 @@ workposition (
     delflag int(11) -- 删除标识
 )
 
--- 权限组表 (基于原groups表)
-groups (
-    groupID int(11) -- 权限组ID
-    groupName varchar(50) -- 权限组名称
-    groupInfo varchar(500) -- 权限组描述
-    functionIDs varchar(500) -- 包含的功能权限ID
-    isDelete int(11) -- 删除标识
-)
 ```
 
 ### 2.2.2 客户管理相关表  
@@ -280,10 +272,10 @@ saleorderinfo (
 按业务域将表分配到不同的微服务数据库：
 ```
 ├── user-center-db -- 用户中心数据库
-│   ├── department (复用原表)
-│   ├── employee (复用原表)
-│   ├── groups (复用原表)
-│   └── users (复用原表)
+│   ├── department 
+│   ├── employee 
+│   ├── workposition
+│   └── functioninfo    
 ├── central_crm -- CRM数据库  
 │   ├── customer (复用原表)
 │   ├── customermove (复用原表)

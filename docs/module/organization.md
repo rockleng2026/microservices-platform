@@ -138,6 +138,8 @@ CREATE TABLE workposition (
     requirements text COMMENT '任职要求',
     salary_range varchar(50) COMMENT '薪资范围',
     max_employees int(11) DEFAULT 1 COMMENT '最大任职人数',
+    menu_page_ids text COMMENT '页面菜单ID串，用逗号分隔',
+    function_ids text COMMENT '功能权限ID串，用逗号分隔',
     status tinyint(1) DEFAULT 1 COMMENT '状态(1启用,0禁用)',
     sort_order int(11) DEFAULT 0 COMMENT '排序号',
     delflag int(11) DEFAULT 0 COMMENT '删除标识',
@@ -150,15 +152,6 @@ CREATE TABLE workposition (
     KEY idx_tenant_id (tenant_id)
 ) COMMENT='岗位表';
 
--- 岗位权限组关联表
-CREATE TABLE workposition_groups (
-    id int(11) NOT NULL AUTO_INCREMENT,
-    workposition_id int(11) NOT NULL COMMENT '岗位ID',
-    group_id int(11) NOT NULL COMMENT '权限组ID',
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_wp_group (workposition_id, group_id)
-) COMMENT='岗位权限组关联表';
 
 -- 岗位分管部门关联表
 CREATE TABLE workposition_manage_dept (
@@ -171,6 +164,7 @@ CREATE TABLE workposition_manage_dept (
     PRIMARY KEY (id),
     UNIQUE KEY uk_wp_dept (workposition_id, department_id)
 ) COMMENT='岗位分管部门表';
+
 ```
 
 ### 3.3 界面功能
@@ -731,56 +725,44 @@ function savePermissions() {
 
 #### 5.1.2 数据模型
 ```sql
--- 权限组表（复用原groups表）
-CREATE TABLE groups (
-    groupID int(11) NOT NULL AUTO_INCREMENT COMMENT '权限组ID',
-    groupName varchar(50) NOT NULL COMMENT '权限组名称',
-    groupCode varchar(50) COMMENT '权限组代码',
-    groupInfo varchar(500) COMMENT '权限组描述',
-    group_type tinyint(1) DEFAULT 1 COMMENT '组类型(1功能组,2数据组)',
-    parent_id int(11) DEFAULT 0 COMMENT '父权限组ID',
-    sort_order int(11) DEFAULT 0 COMMENT '排序号',
-    status tinyint(1) DEFAULT 1 COMMENT '状态(1启用,0禁用)',
-    isDelete int(11) DEFAULT 0 COMMENT '删除标识',
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    tenant_id varchar(32) COMMENT '租户ID',
-    PRIMARY KEY (groupID),
-    KEY idx_parent_id (parent_id),
-    KEY idx_tenant_id (tenant_id)
-) COMMENT='权限组表';
 
--- 权限表
-CREATE TABLE permission (
+-- 菜单页面表
+CREATE TABLE menu_page (
+    id int(11) NOT NULL AUTO_INCREMENT COMMENT '菜单ID',    
+    name varchar(255) NOT NULL COMMENT '菜单名称',
+    parent_id int(11) NOT NULL COMMENT '父级id',
+    link_url varchar(100) DEFAULT NULL COMMENT '链接功能页面',
+    description varchar(255) COMMENT '权限描述',
+    image_path varchar(50) DEFAULT NULL COMMENT '图片路径',
+    delflag int(11) DEFAULT NULL COMMENT '删除标识',
+    sort_order int(11) DEFAULT 0 COMMENT '排序号',
+    icon varchar(50) COMMENT '图标',
+    status tinyint(1) DEFAULT 1 COMMENT '状态(1启用,0禁用)',
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+    tenant_id varchar(32) COMMENT '租户ID',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_perm_code (id, tenant_id),
+    KEY idx_parent_id (parent_id)
+) COMMENT='菜单页面表';
+
+-- 菜单页面功能点表
+CREATE TABLE menu_func (
     id int(11) NOT NULL AUTO_INCREMENT COMMENT '权限ID',
     perm_code varchar(100) NOT NULL COMMENT '权限代码',
     perm_name varchar(100) NOT NULL COMMENT '权限名称',
-    perm_type tinyint(1) DEFAULT 1 COMMENT '权限类型(1菜单,2按钮,3数据)',
-    module_code varchar(50) COMMENT '模块代码',
-    resource_url varchar(200) COMMENT '资源URL',
-    parent_id int(11) DEFAULT 0 COMMENT '父权限ID',
-    level_depth int(11) DEFAULT 1 COMMENT '层级深度',
+    perm_type tinyint(1) DEFAULT 1 COMMENT '权限类型(1按钮,2数据)',
+    menu_page_id int(11) DEFAULT 0 COMMENT '父权限ID',
     sort_order int(11) DEFAULT 0 COMMENT '排序号',
     icon varchar(50) COMMENT '图标',
-    description varchar(500) COMMENT '权限描述',
-    status tinyint(1) DEFAULT 1 COMMENT '状态(1启用,0禁用)',
+    description varchar(255) COMMENT '权限描述',
     created_at timestamp DEFAULT CURRENT_TIMESTAMP,
     tenant_id varchar(32) COMMENT '租户ID',
     PRIMARY KEY (id),
     UNIQUE KEY uk_perm_code (perm_code, tenant_id),
-    KEY idx_parent_id (parent_id),
-    KEY idx_module_code (module_code)
-) COMMENT='权限表';
+    KEY idx_parent_id (menu_page_id)
+) COMMENT='菜单页面功能点表';
 
--- 权限组权限关联表
-CREATE TABLE group_permission (
-    id int(11) NOT NULL AUTO_INCREMENT,
-    group_id int(11) NOT NULL COMMENT '权限组ID',
-    permission_id int(11) NOT NULL COMMENT '权限ID',
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_group_perm (group_id, permission_id)
-) COMMENT='权限组权限关联表';
+
 ```
 
 ### 5.2 数据权限管理

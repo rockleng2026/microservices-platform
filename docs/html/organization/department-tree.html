@@ -610,6 +610,371 @@
                 color: #666;
             }
         }
+
+        /* 部门管理页面专用样式 */
+        .dept-container {
+            display: flex;
+            gap: 24px;
+            height: calc(100vh - 120px);
+        }
+
+        .dept-tree-panel {
+            width: 400px;
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .dept-detail-panel {
+            flex: 1;
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .dept-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .dept-header h3 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .dept-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn-action:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-action.primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .dept-search {
+            margin-bottom: 16px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .dept-tree {
+            max-height: calc(100vh - 300px);
+            overflow-y: auto;
+        }
+
+        .tree-node {
+            margin-bottom: 4px;
+        }
+
+        .tree-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            position: relative;
+        }
+
+        .tree-item:hover {
+            background: #f5f5f5;
+        }
+
+        .tree-item.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: var(--primary-color);
+        }
+
+        .tree-item.half-dept::after {
+            content: '*';
+            color: var(--warning-color);
+            font-weight: bold;
+            margin-left: 4px;
+        }
+
+        .tree-expand {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 4px;
+            font-size: 12px;
+            color: #999;
+            cursor: pointer;
+        }
+
+        .tree-expand.expanded {
+            transform: rotate(90deg);
+        }
+
+        .tree-icon {
+            margin-right: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .tree-title {
+            flex: 1;
+            font-size: 14px;
+        }
+
+        .tree-count {
+            font-size: 12px;
+            color: #999;
+            margin-left: 8px;
+        }
+
+        .tree-actions {
+            display: none;
+            gap: 4px;
+            margin-left: 8px;
+        }
+
+        .tree-item:hover .tree-actions {
+            display: flex;
+        }
+
+        .tree-action {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: none;
+            color: #999;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 2px;
+        }
+
+        .tree-action:hover {
+            background: rgba(0,0,0,0.1);
+            color: #333;
+        }
+
+        .tree-children {
+            margin-left: 20px;
+            display: none;
+        }
+
+        .tree-children.expanded {
+            display: block;
+        }
+
+        .dept-form {
+            display: none;
+        }
+
+        .dept-form.active {
+            display: block;
+        }
+
+        .form-section {
+            margin-bottom: 24px;
+        }
+
+        .form-section h4 {
+            margin: 0 0 16px 0;
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 1px solid #f0f0f0;
+            padding-bottom: 8px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .form-label.required::after {
+            content: '*';
+            color: var(--error-color);
+            margin-left: 2px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .dept-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .position-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .position-list {
+            margin-top: 16px;
+        }
+
+        .position-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border: 1px solid #f0f0f0;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            background: #fafafa;
+        }
+
+        .position-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .position-name {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .position-type {
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 11px;
+            background: rgba(24, 144, 255, 0.1);
+            color: var(--primary-color);
+        }
+
+        .position-count {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .position-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 11px;
+            border-radius: 3px;
+        }
+
+        @media (max-width: 768px) {
+            .dept-container {
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .dept-tree-panel {
+                width: 100%;
+            }
+            
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .dept-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
     </style>
 </head>
 <body>
@@ -654,6 +1019,7 @@
                     <div class="nav-submenu expanded">
                         <a href="department-tree.html" class="nav-subitem active">部门管理</a>
                         <a href="employee-list.html" class="nav-subitem">员工管理</a>
+                        <a href="employee-add.html" class="nav-subitem">新增员工</a>
                         <a href="position-manage.html" class="nav-subitem">岗位管理</a>
                         <a href="role-permission.html" class="nav-subitem">角色权限</a>
                     </div>
@@ -722,12 +1088,12 @@
             <div class="header-actions">
                 <div class="search-box">
                     <span class="search-icon">🔍</span>
-                    <input type="text" class="search-input" placeholder="搜索部门...">
+                    <input type="text" class="search-input" placeholder="搜索功能...">
                 </div>
                 
                 <button class="notification-btn">
-                    <span>🔔</span>
-                    <span class="notification-badge">2</span>
+                    🔔
+                    <span class="notification-badge">3</span>
                 </button>
                 
                 <div class="user-menu">
@@ -742,7 +1108,7 @@
             <!-- 页面头部 -->
             <div class="page-header">
                 <h1 class="page-title">🏢 部门管理</h1>
-                <p class="page-desc">管理公司组织架构，维护部门信息和人员关系</p>
+                <p class="page-desc">管理企业组织架构，支持7级部门层级和半级部门设置</p>
                 <div class="page-actions">
                     <button class="btn btn-primary">新增部门</button>
                     <button class="btn">批量导入</button>
@@ -751,79 +1117,102 @@
             </div>
 
             <!-- 内容网格 -->
-            <div class="content-grid">
-                <!-- 部门树 -->
-                <div class="content-card">
-                    <h3 class="card-title">
-                        <span class="card-icon">🌳</span>
-                        部门架构
-                    </h3>
-                    <div class="department-tree">
+            <div class="dept-container">
+                <!-- 部门树面板 -->
+                <div class="dept-tree-panel">
+                    <div class="dept-header">
+                        <h3>组织架构</h3>
+                        <div class="dept-actions">
+                            <button class="btn-action" onclick="expandAllDepts()">📂 全部展开</button>
+                            <button class="btn-action" onclick="collapseAllDepts()">📁 全部收起</button>
+                            <button class="btn-action primary" onclick="showAddDeptForm()">➕ 新增部门</button>
+                        </div>
+                    </div>
+
+                    <div class="dept-search">
+                        <input type="text" class="search-input" placeholder="搜索部门..." onkeyup="searchDepartment(this.value)">
+                    </div>
+
+                    <div class="dept-tree" id="deptTree">
+                        <!-- 部门树结构 -->
                         <div class="tree-node">
-                            <div class="tree-item active" onclick="selectDepartment('001')">
-                                <span class="tree-expand expanded" onclick="toggleTreeNode(event)">▶</span>
+                            <div class="tree-item active" onclick="selectDepartment(1)">
+                                <span class="tree-expand expanded" onclick="toggleTreeNode(this, event)">▶</span>
                                 <span class="tree-icon">🏢</span>
-                                <span>Portal科技有限公司</span>
+                                <span class="tree-title">总经理办公室</span>
+                                <span class="tree-count">(3人)</span>
+                                <div class="tree-actions">
+                                    <button class="tree-action" title="新增子部门" onclick="addSubDept(1, event)">➕</button>
+                                    <button class="tree-action" title="编辑部门" onclick="editDept(1, event)">✏️</button>
+                                    <button class="tree-action" title="删除部门" onclick="deleteDept(1, event)">🗑️</button>
+                                </div>
                             </div>
                             <div class="tree-children expanded">
                                 <div class="tree-node">
-                                    <div class="tree-item" onclick="selectDepartment('002')">
-                                        <span class="tree-expand expanded" onclick="toggleTreeNode(event)">▶</span>
-                                        <span class="tree-icon">🔧</span>
-                                        <span>技术部</span>
-                                    </div>
-                                    <div class="tree-children expanded">
-                                        <div class="tree-node">
-                                            <div class="tree-item" onclick="selectDepartment('003')">
-                                                <span class="tree-expand"></span>
-                                                <span class="tree-icon">💻</span>
-                                                <span>前端开发组</span>
-                                            </div>
-                                        </div>
-                                        <div class="tree-node">
-                                            <div class="tree-item" onclick="selectDepartment('004')">
-                                                <span class="tree-expand"></span>
-                                                <span class="tree-icon">⚙️</span>
-                                                <span>后端开发组</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="tree-node">
-                                    <div class="tree-item" onclick="selectDepartment('005')">
-                                        <span class="tree-expand expanded" onclick="toggleTreeNode(event)">▶</span>
-                                        <span class="tree-icon">📊</span>
-                                        <span>销售部</span>
-                                    </div>
-                                    <div class="tree-children expanded">
-                                        <div class="tree-node">
-                                            <div class="tree-item" onclick="selectDepartment('006')">
-                                                <span class="tree-expand"></span>
-                                                <span class="tree-icon">🎯</span>
-                                                <span>销售一组</span>
-                                            </div>
-                                        </div>
-                                        <div class="tree-node">
-                                            <div class="tree-item" onclick="selectDepartment('007')">
-                                                <span class="tree-expand"></span>
-                                                <span class="tree-icon">🎯</span>
-                                                <span>销售二组</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="tree-node">
-                                    <div class="tree-item" onclick="selectDepartment('008')">
-                                        <span class="tree-expand"></span>
+                                    <div class="tree-item" onclick="selectDepartment(2)">
+                                        <span class="tree-expand" onclick="toggleTreeNode(this, event)">▶</span>
                                         <span class="tree-icon">👥</span>
-                                        <span>人事行政部</span>
+                                        <span class="tree-title">人力资源部</span>
+                                        <span class="tree-count">(8人)</span>
+                                        <div class="tree-actions">
+                                            <button class="tree-action" title="新增子部门" onclick="addSubDept(2, event)">➕</button>
+                                            <button class="tree-action" title="编辑部门" onclick="editDept(2, event)">✏️</button>
+                                            <button class="tree-action" title="删除部门" onclick="deleteDept(2, event)">🗑️</button>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="tree-node">
-                                    <div class="tree-item" onclick="selectDepartment('009')">
-                                        <span class="tree-expand"></span>
+                                    <div class="tree-item" onclick="selectDepartment(3)">
+                                        <span class="tree-expand" onclick="toggleTreeNode(this, event)">▶</span>
                                         <span class="tree-icon">💰</span>
-                                        <span>财务部</span>
+                                        <span class="tree-title">财务部</span>
+                                        <span class="tree-count">(6人)</span>
+                                        <div class="tree-actions">
+                                            <button class="tree-action" title="新增子部门" onclick="addSubDept(3, event)">➕</button>
+                                            <button class="tree-action" title="编辑部门" onclick="editDept(3, event)">✏️</button>
+                                            <button class="tree-action" title="删除部门" onclick="deleteDept(3, event)">🗑️</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tree-node">
+                                    <div class="tree-item" onclick="selectDepartment(4)">
+                                        <span class="tree-expand expanded" onclick="toggleTreeNode(this, event)">▶</span>
+                                        <span class="tree-icon">💻</span>
+                                        <span class="tree-title">技术研发部</span>
+                                        <span class="tree-count">(25人)</span>
+                                        <div class="tree-actions">
+                                            <button class="tree-action" title="新增子部门" onclick="addSubDept(4, event)">➕</button>
+                                            <button class="tree-action" title="编辑部门" onclick="editDept(4, event)">✏️</button>
+                                            <button class="tree-action" title="删除部门" onclick="deleteDept(4, event)">🗑️</button>
+                                        </div>
+                                    </div>
+                                    <div class="tree-children expanded">
+                                        <div class="tree-node">
+                                            <div class="tree-item half-dept" onclick="selectDepartment(5)">
+                                                <span class="tree-expand" onclick="toggleTreeNode(this, event)">▶</span>
+                                                <span class="tree-icon">🎨</span>
+                                                <span class="tree-title">前端团队</span>
+                                                <span class="tree-count">(8人)</span>
+                                                <div class="tree-actions">
+                                                    <button class="tree-action" title="新增子部门" onclick="addSubDept(5, event)">➕</button>
+                                                    <button class="tree-action" title="编辑部门" onclick="editDept(5, event)">✏️</button>
+                                                    <button class="tree-action" title="删除部门" onclick="deleteDept(5, event)">🗑️</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="tree-node">
+                                            <div class="tree-item" onclick="selectDepartment(6)">
+                                                <span class="tree-expand" onclick="toggleTreeNode(this, event)">▶</span>
+                                                <span class="tree-icon">⚙️</span>
+                                                <span class="tree-title">后端团队</span>
+                                                <span class="tree-count">(12人)</span>
+                                                <div class="tree-actions">
+                                                    <button class="tree-action" title="新增子部门" onclick="addSubDept(6, event)">➕</button>
+                                                    <button class="tree-action" title="编辑部门" onclick="editDept(6, event)">✏️</button>
+                                                    <button class="tree-action" title="删除部门" onclick="deleteDept(6, event)">🗑️</button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -831,112 +1220,235 @@
                     </div>
                 </div>
 
-                <!-- 部门详情 -->
-                <div class="content-card">
-                    <h3 class="card-title">
-                        <span class="card-icon">📋</span>
-                        部门详情
-                    </h3>
-                    
-                    <!-- 公司详情 -->
-                    <div class="dept-info active" id="dept-001">
-                        <div class="info-group">
-                            <div class="info-title">基本信息</div>
-                            <div class="info-item">
-                                <span class="info-label">部门名称</span>
-                                <span class="info-value">Portal科技有限公司</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">部门类型</span>
-                                <span class="info-value">总公司</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">负责人</span>
-                                <span class="info-value">张总</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">状态</span>
-                                <span class="info-value">
-                                    <span class="status-badge status-active">正常</span>
-                                </span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">创建时间</span>
-                                <span class="info-value">2020-01-01</span>
+                <!-- 部门详情面板 -->
+                <div class="dept-detail-panel">
+                    <!-- 部门详情视图 -->
+                    <div class="dept-detail" id="deptDetail">
+                        <div class="dept-header">
+                            <h3>总经理办公室</h3>
+                            <div class="dept-actions">
+                                <button class="btn-action" onclick="showDeptForm()">✏️ 编辑</button>
+                                <button class="btn-action" onclick="manageDeptPositions()">👥 岗位管理</button>
+                                <button class="btn-action" onclick="manageDeptPersonnel()">👤 人员管理</button>
                             </div>
                         </div>
 
-                        <div class="info-group">
-                            <div class="info-title">部门员工 (156人)</div>
-                            <div class="employee-list">
-                                <div class="employee-item">
-                                    <div class="employee-avatar">张</div>
-                                    <div class="employee-info">
-                                        <div class="employee-name">张总</div>
-                                        <div class="employee-position">董事长</div>
+                        <div class="dept-stats">
+                            <div class="stat-card">
+                                <div class="stat-number">3</div>
+                                <div class="stat-label">在职员工</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">2</div>
+                                <div class="stat-label">岗位数量</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">3</div>
+                                <div class="stat-label">子部门</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">1</div>
+                                <div class="stat-label">部门等级</div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h4>基本信息</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">部门名称</label>
+                                    <div class="form-value">总经理办公室</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">部门编号</label>
+                                    <div class="form-value">D001</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">部门等级</label>
+                                    <div class="form-value">1级部门</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">是否分公司</label>
+                                    <div class="form-value">是</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">部门主管</label>
+                                    <div class="form-value">张总</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">联系电话</label>
+                                    <div class="form-value">010-12345678</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h4>组织关系</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">上级部门</label>
+                                    <div class="form-value">无（根部门）</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">子部门数量</label>
+                                    <div class="form-value">3个</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">部门路径</label>
+                                    <div class="form-value">总经理办公室</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">排序号</label>
+                                    <div class="form-value">1</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 部门岗位管理 -->
+                        <div class="position-section">
+                            <div class="dept-header">
+                                <h4>部门岗位</h4>
+                                <div class="dept-actions">
+                                    <button class="btn-action primary btn-sm" onclick="addPosition()">➕ 新增岗位</button>
+                                </div>
+                            </div>
+                            <div class="position-list">
+                                <div class="position-item">
+                                    <div class="position-info">
+                                        <span class="position-name">总经理</span>
+                                        <span class="position-type">主管岗位</span>
+                                        <span class="position-count">1/1人</span>
+                                    </div>
+                                    <div class="position-actions">
+                                        <button class="btn-action btn-sm" onclick="managePosition(1)">👥 人员管理</button>
+                                        <button class="btn-action btn-sm" onclick="editPosition(1)">✏️ 编辑</button>
                                     </div>
                                 </div>
-                                <div class="employee-item">
-                                    <div class="employee-avatar">李</div>
-                                    <div class="employee-info">
-                                        <div class="employee-name">李副总</div>
-                                        <div class="employee-position">副总经理</div>
+                                <div class="position-item">
+                                    <div class="position-info">
+                                        <span class="position-name">总经理助理</span>
+                                        <span class="position-type">普通岗位</span>
+                                        <span class="position-count">2/3人</span>
                                     </div>
-                                </div>
-                                <div class="employee-item">
-                                    <div class="employee-avatar">王</div>
-                                    <div class="employee-info">
-                                        <div class="employee-name">王助理</div>
-                                        <div class="employee-position">总经理助理</div>
+                                    <div class="position-actions">
+                                        <button class="btn-action btn-sm" onclick="managePosition(2)">👥 人员管理</button>
+                                        <button class="btn-action btn-sm" onclick="editPosition(2)">✏️ 编辑</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- 技术部详情 -->
-                    <div class="dept-info" id="dept-002">
-                        <div class="info-group">
-                            <div class="info-title">基本信息</div>
-                            <div class="info-item">
-                                <span class="info-label">部门名称</span>
-                                <span class="info-value">技术部</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">上级部门</span>
-                                <span class="info-value">Portal科技有限公司</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">负责人</span>
-                                <span class="info-value">技术总监</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">状态</span>
-                                <span class="info-value">
-                                    <span class="status-badge status-active">正常</span>
-                                </span>
+                    <!-- 部门编辑表单 -->
+                    <div class="dept-form" id="deptForm">
+                        <div class="dept-header">
+                            <h3>编辑部门</h3>
+                            <div class="dept-actions">
+                                <button class="btn-action" onclick="hideDeptForm()">❌ 取消</button>
+                                <button class="btn-action primary" onclick="saveDept()">💾 保存</button>
                             </div>
                         </div>
 
-                        <div class="info-group">
-                            <div class="info-title">部门员工 (45人)</div>
-                            <div class="employee-list">
-                                <div class="employee-item">
-                                    <div class="employee-avatar">赵</div>
-                                    <div class="employee-info">
-                                        <div class="employee-name">赵技术总监</div>
-                                        <div class="employee-position">技术总监</div>
+                        <form>
+                            <div class="form-section">
+                                <h4>基本信息</h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label class="form-label required">部门名称</label>
+                                        <input type="text" class="form-input" placeholder="请输入部门名称" value="总经理办公室">
                                     </div>
-                                </div>
-                                <div class="employee-item">
-                                    <div class="employee-avatar">孙</div>
-                                    <div class="employee-info">
-                                        <div class="employee-name">孙架构师</div>
-                                        <div class="employee-position">系统架构师</div>
+                                    <div class="form-group">
+                                        <label class="form-label">部门简写</label>
+                                        <input type="text" class="form-input" placeholder="请输入部门简写" value="总办">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">部门编号</label>
+                                        <input type="text" class="form-input" placeholder="请输入部门编号" value="D001">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label required">上级部门</label>
+                                        <select class="form-select">
+                                            <option value="">无（根部门）</option>
+                                            <option value="1">总经理办公室</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label required">部门等级</label>
+                                        <select class="form-select">
+                                            <option value="1" selected>1级部门</option>
+                                            <option value="2">2级部门</option>
+                                            <option value="3">3级部门</option>
+                                            <option value="4">4级部门</option>
+                                            <option value="5">5级部门</option>
+                                            <option value="6">6级部门</option>
+                                            <option value="7">7级部门</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">部门主管</label>
+                                        <select class="form-select">
+                                            <option value="">请选择部门主管</option>
+                                            <option value="1" selected>张总</option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+
+                            <div class="form-section">
+                                <h4>部门属性</h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label class="form-label">是否分公司</label>
+                                        <select class="form-select">
+                                            <option value="1" selected>是</option>
+                                            <option value="0">否</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">是否半级部门</label>
+                                        <select class="form-select">
+                                            <option value="0" selected>否</option>
+                                            <option value="1">是</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">排序号</label>
+                                        <input type="number" class="form-input" placeholder="排序号" value="1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">状态</label>
+                                        <select class="form-select">
+                                            <option value="1" selected>启用</option>
+                                            <option value="0">禁用</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h4>联系信息</h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label class="form-label">联系电话</label>
+                                        <input type="tel" class="form-input" placeholder="请输入联系电话" value="010-12345678">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">办公地址</label>
+                                        <input type="text" class="form-input" placeholder="请输入办公地址" value="北京市朝阳区">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">部门描述</label>
+                                    <textarea class="form-input" rows="3" placeholder="请输入部门描述">负责公司整体战略规划和重大决策</textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 空状态 -->
+                    <div class="empty-state" id="emptyState" style="display: none;">
+                        <div class="empty-icon">📁</div>
+                        <p>请选择一个部门查看详情</p>
                     </div>
                 </div>
             </div>
@@ -954,50 +1466,63 @@
     </div>
 
     <script src="../assets/js/common.js"></script>
+    <script src="../assets/js/navigation.js"></script>
+    <script src="../assets/js/mock-data.js"></script>
     <script>
-        // 二级菜单控制
-        function toggleNavGroup(button) {
-            const submenu = button.nextElementSibling;
-            const arrow = button.querySelector('.nav-arrow');
-            const isExpanded = submenu.classList.contains('expanded');
-            
-            // 关闭所有其他展开的菜单
-            document.querySelectorAll('.nav-submenu.expanded').forEach(menu => {
-                if (menu !== submenu) {
-                    menu.classList.remove('expanded');
-                    menu.previousElementSibling.classList.remove('expanded');
-                    menu.previousElementSibling.querySelector('.nav-arrow').classList.remove('rotated');
-                }
+        // 部门管理页面脚本
+        let currentDept = null;
+        let isFormMode = false;
+
+        // 选择部门
+        function selectDepartment(deptId) {
+            // 移除其他选中状态
+            document.querySelectorAll('.tree-item').forEach(item => {
+                item.classList.remove('active');
             });
             
-            // 切换当前菜单状态
-            if (isExpanded) {
-                submenu.classList.remove('expanded');
-                button.classList.remove('expanded');
-                arrow.classList.remove('rotated');
+            // 设置当前选中
+            event.target.closest('.tree-item').classList.add('active');
+            currentDept = deptId;
+            
+            // 显示部门详情
+            showDeptDetail();
+            hideDeptForm();
+        }
+
+        // 显示部门详情
+        function showDeptDetail() {
+            document.getElementById('deptDetail').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+        }
+
+        // 显示部门表单
+        function showDeptForm() {
+            document.getElementById('deptDetail').style.display = 'none';
+            document.getElementById('deptForm').style.display = 'block';
+            isFormMode = true;
+        }
+
+        // 隐藏部门表单
+        function hideDeptForm() {
+            document.getElementById('deptForm').style.display = 'none';
+            if (currentDept) {
+                document.getElementById('deptDetail').style.display = 'block';
             } else {
-                submenu.classList.add('expanded');
-                button.classList.add('expanded');
-                arrow.classList.add('rotated');
+                document.getElementById('emptyState').style.display = 'block';
             }
+            isFormMode = false;
         }
 
-        // 移动端菜单切换
-        function toggleMobileMenu() {
-            const sidebar = document.querySelector('.app-sidebar');
-            sidebar.classList.toggle('mobile-open');
-        }
-
-        // 部门树节点切换
-        function toggleTreeNode(event) {
+        // 切换树节点展开状态
+        function toggleTreeNode(element, event) {
             event.stopPropagation();
-            const expand = event.target;
-            const treeItem = expand.closest('.tree-item');
-            const children = treeItem.parentNode.querySelector('.tree-children');
+            
+            const treeItem = element.closest('.tree-node');
+            const children = treeItem.querySelector('.tree-children');
+            const expand = element;
             
             if (children) {
-                const isExpanded = children.classList.contains('expanded');
-                if (isExpanded) {
+                if (children.classList.contains('expanded')) {
                     children.classList.remove('expanded');
                     expand.classList.remove('expanded');
                 } else {
@@ -1007,28 +1532,156 @@
             }
         }
 
-        // 选择部门
-        function selectDepartment(deptId) {
-            // 更新树选中状态
-            document.querySelectorAll('.tree-item').forEach(item => {
-                item.classList.remove('active');
+        // 展开所有部门
+        function expandAllDepts() {
+            document.querySelectorAll('.tree-children').forEach(children => {
+                children.classList.add('expanded');
             });
-            event.currentTarget.classList.add('active');
+            document.querySelectorAll('.tree-expand').forEach(expand => {
+                expand.classList.add('expanded');
+            });
+            Message.success('已展开所有部门');
+        }
+
+        // 收起所有部门
+        function collapseAllDepts() {
+            document.querySelectorAll('.tree-children').forEach(children => {
+                children.classList.remove('expanded');
+            });
+            document.querySelectorAll('.tree-expand').forEach(expand => {
+                expand.classList.remove('expanded');
+            });
+            Message.success('已收起所有部门');
+        }
+
+        // 搜索部门
+        function searchDepartment(keyword) {
+            const treeNodes = document.querySelectorAll('.tree-item');
             
-            // 显示对应部门详情
-            document.querySelectorAll('.dept-info').forEach(info => {
-                info.classList.remove('active');
+            treeNodes.forEach(node => {
+                const title = node.querySelector('.tree-title').textContent;
+                const parent = node.closest('.tree-node');
+                
+                if (keyword === '' || title.toLowerCase().includes(keyword.toLowerCase())) {
+                    parent.style.display = 'block';
+                } else {
+                    parent.style.display = 'none';
+                }
             });
-            const targetInfo = document.getElementById(`dept-${deptId}`);
-            if (targetInfo) {
-                targetInfo.classList.add('active');
+        }
+
+        // 新增部门
+        function showAddDeptForm() {
+            currentDept = null;
+            showDeptForm();
+            
+            // 清空表单
+            document.querySelectorAll('.form-input').forEach(input => {
+                input.value = '';
+            });
+            document.querySelectorAll('.form-select').forEach(select => {
+                select.selectedIndex = 0;
+            });
+            
+            document.querySelector('.dept-form h3').textContent = '新增部门';
+        }
+
+        // 新增子部门
+        function addSubDept(parentId, event) {
+            event.stopPropagation();
+            showAddDeptForm();
+            
+            // 设置父部门
+            const parentSelect = document.querySelector('select[placeholder="请选择上级部门"]');
+            if (parentSelect) {
+                parentSelect.value = parentId;
             }
+            
+            Message.info('正在创建子部门...');
+        }
+
+        // 编辑部门
+        function editDept(deptId, event) {
+            event.stopPropagation();
+            currentDept = deptId;
+            showDeptForm();
+            document.querySelector('.dept-form h3').textContent = '编辑部门';
+        }
+
+        // 删除部门
+        function deleteDept(deptId, event) {
+            event.stopPropagation();
+            
+            Modal.confirm({
+                title: '删除确认',
+                content: '确定要删除该部门吗？删除后将同时删除所有子部门，此操作不可恢复。',
+                onConfirm: () => {
+                    Message.success('部门删除成功');
+                    // 这里添加实际的删除逻辑
+                },
+                onCancel: () => {
+                    Message.info('已取消删除');
+                }
+            });
+        }
+
+        // 保存部门
+        function saveDept() {
+            // 验证表单
+            const requiredFields = document.querySelectorAll('.form-label.required');
+            let isValid = true;
+            
+            requiredFields.forEach(label => {
+                const input = label.parentNode.querySelector('.form-input, .form-select');
+                if (!input.value.trim()) {
+                    input.style.borderColor = 'var(--error-color)';
+                    isValid = false;
+                } else {
+                    input.style.borderColor = 'var(--border-color)';
+                }
+            });
+            
+            if (!isValid) {
+                Message.error('请填写必填字段');
+                return;
+            }
+            
+            Message.success('部门保存成功');
+            hideDeptForm();
+        }
+
+        // 岗位管理
+        function manageDeptPositions() {
+            Message.info('跳转到岗位管理页面...');
+            // window.location.href = 'position-manage.html?deptId=' + currentDept;
+        }
+
+        // 人员管理
+        function manageDeptPersonnel() {
+            Message.info('跳转到人员管理页面...');
+            // window.location.href = 'employee-list.html?deptId=' + currentDept;
+        }
+
+        // 新增岗位
+        function addPosition() {
+            Message.info('跳转到新增岗位页面...');
+        }
+
+        // 管理岗位
+        function managePosition(positionId) {
+            Message.info(`管理岗位 ${positionId}...`);
+        }
+
+        // 编辑岗位
+        function editPosition(positionId) {
+            Message.info(`编辑岗位 ${positionId}...`);
         }
 
         // 页面初始化
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('部门管理页面已加载');
-            showMessage('欢迎使用部门管理！', 'success');
+            // 默认选中第一个部门
+            currentDept = 1;
+            showDeptDetail();
         });
     </script>
 </body>

@@ -552,630 +552,984 @@
             width: 60px;
             text-align: center;
         }
+
+        /* 员工管理页面专用样式 */
+        .emp-container {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .emp-toolbar {
+            background: white;
+            border-radius: 8px;
+            padding: 20px 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .toolbar-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .toolbar-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .toolbar-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            padding: 8px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-action:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn-action.primary {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .filter-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            align-items: end;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .filter-input, .filter-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .filter-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .emp-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            overflow: hidden;
+        }
+
+        .emp-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1px;
+            background: #f0f0f0;
+            margin-bottom: 24px;
+        }
+
+        .stat-item {
+            background: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .emp-table-container {
+            padding: 24px;
+        }
+
+        .emp-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .emp-table th,
+        .emp-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .emp-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .emp-table td {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .emp-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .emp-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .emp-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .emp-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .emp-name {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .emp-no {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-active {
+            background: rgba(82, 196, 26, 0.1);
+            color: var(--success-color);
+        }
+
+        .status-leave {
+            background: rgba(245, 34, 45, 0.1);
+            color: var(--error-color);
+        }
+
+        .status-trial {
+            background: rgba(250, 173, 20, 0.1);
+            color: var(--warning-color);
+        }
+
+        .emp-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 3px;
+            background: white;
+            color: #666;
+            cursor: pointer;
+            font-size: 12px;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 0;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .pagination-info {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .page-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            background: white;
+            color: #666;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .page-btn:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .page-btn.active {
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* 员工详情模态框 */
+        .emp-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .emp-modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.15);
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+        }
+
+        .modal-close:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .emp-detail-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .detail-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            font-weight: bold;
+            margin-right: 24px;
+        }
+
+        .detail-info {
+            flex: 1;
+        }
+
+        .detail-name {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .detail-title {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .detail-tags {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tag {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .tag.primary {
+            background: rgba(24, 144, 255, 0.1);
+            color: var(--primary-color);
+        }
+
+        .tag.success {
+            background: rgba(82, 196, 26, 0.1);
+            color: var(--success-color);
+        }
+
+        .detail-sections {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 32px;
+        }
+
+        .detail-section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .detail-label {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+            min-width: 100px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: #333;
+            flex: 1;
+            text-align: right;
+        }
+
+        .position-list {
+            margin-top: 12px;
+        }
+
+        .position-tag {
+            display: inline-block;
+            padding: 4px 8px;
+            margin: 2px;
+            background: rgba(24, 144, 255, 0.1);
+            color: var(--primary-color);
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .position-tag.primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .filter-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .toolbar-top {
+                flex-direction: column;
+                gap: 16px;
+                align-items: stretch;
+            }
+            
+            .toolbar-actions {
+                justify-content: center;
+            }
+            
+            .emp-stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .detail-sections {
+                grid-template-columns: 1fr;
+            }
+            
+            .pagination {
+                flex-direction: column;
+                gap: 16px;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="app-layout">
-        <!-- 左侧导航栏 -->
-        <aside class="app-sidebar">
-            <div class="sidebar-header">
-                <div class="logo">P</div>
-                <div class="brand-name">Portal 3.0</div>
-            </div>
-            
-            <nav class="nav-menu">
-                <!-- 首页总览 -->
-                <div class="nav-item">
-                    <a href="../index.html" class="nav-link">
-                        <span class="nav-icon">🏠</span>
-                        <span>首页总览</span>
-                    </a>
-                </div>
-
-                <!-- 工作台 -->
-                <div class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">🎯</span>
-                        <span>工作台</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../dashboard/oa-workspace.html" class="nav-subitem">
-                            <span>OA工作台</span>
-                        </a>
-                        <a href="../dashboard/crm-workspace.html" class="nav-subitem">
-                            <span>CRM工作台</span>
-                        </a>
-                        <a href="../dashboard/sales-workspace.html" class="nav-subitem">
-                            <span>销售工作台</span>
-                        </a>
-                        <a href="../dashboard/workspace-config.html" class="nav-subitem">
-                            <span>工作台配置</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- 组织架构 -->
-                <div class="nav-item">
-                    <button class="nav-group expanded" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">🏢</span>
-                        <span>组织架构</span>
-                        <span class="nav-arrow rotated">▶</span>
-                    </button>
-                    <div class="nav-submenu expanded">
-                        <a href="department-tree.html" class="nav-subitem">
-                            <span>部门管理</span>
-                        </a>
-                        <a href="employee-list.html" class="nav-subitem active">
-                            <span>员工管理</span>
-                        </a>
-                        <a href="position-manage.html" class="nav-subitem">
-                            <span>岗位管理</span>
-                        </a>
-                        <a href="role-permission.html" class="nav-subitem">
-                            <span>角色权限</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- 客户管理 -->
-                <div class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">👤</span>
-                        <span>客户管理</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../crm/customer-list.html" class="nav-subitem">
-                            <span>客户列表</span>
-                        </a>
-                        <a href="../crm/customer-detail.html" class="nav-subitem">
-                            <span>客户详情</span>
-                        </a>
-                        <a href="../crm/follow-record.html" class="nav-subitem">
-                            <span>跟进记录</span>
-                        </a>
-                        <a href="../crm/customer-transfer.html" class="nav-subitem">
-                            <span>客户转移</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- 商品管理 -->
-                <div class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">📦</span>
-                        <span>商品管理</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../product/product-list.html" class="nav-subitem">
-                            <span>商品列表</span>
-                        </a>
-                        <a href="../product/product-category.html" class="nav-subitem">
-                            <span>商品分类</span>
-                        </a>
-                        <a href="../product/inventory-manage.html" class="nav-subitem">
-                            <span>库存管理</span>
-                        </a>
-                        <a href="../product/price-strategy.html" class="nav-subitem">
-                            <span>价格策略</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- 订单管理 -->
-                <div class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">📋</span>
-                        <span>订单管理</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../order/order-list.html" class="nav-subitem">
-                            <span>订单列表</span>
-                        </a>
-                        <a href="../order/order-detail.html" class="nav-subitem">
-                            <span>订单详情</span>
-                        </a>
-                        <a href="../order/order-statistics.html" class="nav-subitem">
-                            <span>订单统计</span>
-                        </a>
-                        <a href="../order/return-manage.html" class="nav-subitem">
-                            <span>退货管理</span>
-                        </a>
-                    </div>
-                </div>
-            </nav>
+        <!-- 侧边导航 -->
+        <aside class="app-sidebar" id="app-sidebar">
+            <!-- 导航内容将由navigation.js动态生成 -->
         </aside>
 
-        <!-- 头部导航栏 -->
+        <!-- 顶部导航 -->
         <header class="app-header">
-            <div class="header-title">员工管理</div>
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">组织架构</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">员工管理</span>
+                </div>
+            </div>
             <div class="header-actions">
-                <button class="btn btn-icon" onclick="location.reload()" title="刷新">
-                    🔄
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索功能...">
+                </div>
+                <button class="notification-btn">
+                    🔔
+                    <span class="notification-badge">3</span>
                 </button>
-                <div class="user-info">
-                    <img src="https://ui-avatars.com/api/?name=Admin&background=1890ff&color=fff" 
-                         alt="用户头像" class="user-avatar">
-                    <span class="user-name">管理员</span>
+                <div class="user-menu">
+                    <div class="user-avatar">管</div>
+                    <span>管理员</span>
                 </div>
             </div>
         </header>
 
-        <!-- 主内容区域 -->
+        <!-- 主内容区 -->
         <main class="app-main">
             <div class="page-header">
-                <h1 class="page-title">员工管理</h1>
-                <p class="page-description">管理员工信息，支持多维度筛选和批量操作</p>
+                <h1>员工管理</h1>
+                <p>管理企业员工信息，支持多岗位任职和权限分配</p>
             </div>
 
-            <!-- 搜索面板 -->
-            <div class="card">
-                <div class="card-body">
-                    <form class="search-form" id="searchForm">
-                        <div class="form-group">
-                            <label class="form-label">员工姓名</label>
-                            <input type="text" name="name" class="form-control" placeholder="请输入员工姓名">
+            <div class="emp-container">
+                <!-- 工具栏 -->
+                <div class="emp-toolbar">
+                    <div class="toolbar-top">
+                        <div class="toolbar-title">员工列表</div>
+                        <div class="toolbar-actions">
+                            <button class="btn-action" onclick="exportEmployees()">📤 导出</button>
+                            <button class="btn-action" onclick="importEmployees()">📥 导入</button>
+                            <button class="btn-action primary" onclick="addEmployee()">➕ 新增员工</button>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">员工编号</label>
-                            <input type="text" name="empNo" class="form-control" placeholder="请输入员工编号">
+                    </div>
+
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label class="filter-label">员工姓名</label>
+                            <input type="text" class="filter-input" placeholder="请输入员工姓名" id="filterName">
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">所属部门</label>
-                            <select name="department" class="form-control">
+                        <div class="filter-group">
+                            <label class="filter-label">工号</label>
+                            <input type="text" class="filter-input" placeholder="请输入工号" id="filterEmpNo">
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">所属部门</label>
+                            <select class="filter-select" id="filterDept">
                                 <option value="">全部部门</option>
-                                <!-- 部门选项将通过JS动态生成 -->
+                                <option value="1">总经理办公室</option>
+                                <option value="2">人力资源部</option>
+                                <option value="3">财务部</option>
+                                <option value="4">技术研发部</option>
+                                <option value="5">前端团队</option>
+                                <option value="6">后端团队</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <label class="form-label">岗位</label>
-                            <select name="position" class="form-control">
-                                <option value="">全部岗位</option>
-                                <!-- 岗位选项将通过JS动态生成 -->
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">在职状态</label>
-                            <select name="status" class="form-control">
+                        <div class="filter-group">
+                            <label class="filter-label">在职状态</label>
+                            <select class="filter-select" id="filterStatus">
                                 <option value="">全部状态</option>
-                                <option value="1">在职</option>
+                                <option value="1" selected>在职</option>
+                                <option value="2">试用期</option>
                                 <option value="0">离职</option>
                             </select>
                         </div>
-                        <div class="form-group">
-                            <button type="button" class="btn btn-primary" onclick="searchEmployees()">
-                                🔍 搜索
-                            </button>
-                            <button type="button" class="btn btn-default" onclick="resetSearch()">
-                                🔄 重置
-                            </button>
+                        <div class="filter-actions">
+                            <button class="btn-action" onclick="searchEmployees()">🔍 查询</button>
+                            <button class="btn-action" onclick="resetFilters()">🔄 重置</button>
                         </div>
-                    </form>
-                </div>
-            </div>
-            
-            <!-- 表格面板 -->
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="card-title">员工列表</h3>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn btn-primary" onclick="addEmployee()">
-                            ➕ 新增员工
-                        </button>
-                        <button class="btn btn-default" onclick="importEmployees()">
-                            📤 批量导入
-                        </button>
-                        <button class="btn btn-default" onclick="exportEmployees()">
-                            📥 导出Excel
-                        </button>
                     </div>
                 </div>
-                
-                <!-- 批量操作栏 -->
-                <div class="batch-actions" id="batchActions">
-                    <span>已选择 <strong id="selectedCount">0</strong> 项</span>
-                    <div>
-                        <button class="btn btn-default btn-sm" onclick="batchTransfer()">
-                            🔄 批量调岗
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="batchDelete()">
-                            🗑️ 批量删除
-                        </button>
+
+                <!-- 员工统计 -->
+                <div class="emp-stats">
+                    <div class="stat-item">
+                        <div class="stat-number">156</div>
+                        <div class="stat-label">总员工数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">142</div>
+                        <div class="stat-label">在职员工</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">8</div>
+                        <div class="stat-label">试用期员工</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">3</div>
+                        <div class="stat-label">本月入职</div>
                     </div>
                 </div>
-                
-                <!-- 员工表格 -->
-                <div class="table-container">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th width="40">
-                                    <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
-                                </th>
-                                <th width="200">员工信息</th>
-                                <th width="120">员工编号</th>
-                                <th width="120">所属部门</th>
-                                <th width="120">岗位</th>
-                                <th width="100">入职时间</th>
-                                <th width="80">在职状态</th>
-                                <th width="150">操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="employeeTableBody">
-                            <!-- 员工数据将通过JS动态生成 -->
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- 分页 -->
-                <div class="pagination">
-                    <div class="pagination-info">
-                        共 <span id="totalRecords">0</span> 条记录，显示第 <span id="currentPage">1</span> 页，共 <span id="totalPages">0</span> 页
-                    </div>
-                    <div class="pagination-controls">
-                        <button class="btn btn-default btn-sm" onclick="prevPage()" id="prevBtn">上一页</button>
-                        <input type="number" class="form-control page-input" id="pageInput" value="1" min="1" onchange="gotoPage()">
-                        <button class="btn btn-default btn-sm" onclick="nextPage()" id="nextBtn">下一页</button>
-                        <select class="form-control" style="width: auto; margin-left: 8px;" onchange="changePageSize()" id="pageSizeSelect">
-                            <option value="10">10条/页</option>
-                            <option value="20" selected>20条/页</option>
-                            <option value="50">50条/页</option>
-                            <option value="100">100条/页</option>
-                        </select>
+
+                <!-- 员工列表 -->
+                <div class="emp-content">
+                    <div class="emp-table-container">
+                        <table class="emp-table">
+                            <thead>
+                                <tr>
+                                    <th>员工信息</th>
+                                    <th>所属部门</th>
+                                    <th>主岗位</th>
+                                    <th>联系方式</th>
+                                    <th>在职状态</th>
+                                    <th>入职日期</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="empTableBody">
+                                <tr>
+                                    <td>
+                                        <div class="emp-info">
+                                            <div class="emp-avatar">张</div>
+                                            <div class="emp-details">
+                                                <div class="emp-name">张总</div>
+                                                <div class="emp-no">E001</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>总经理办公室</td>
+                                    <td>总经理</td>
+                                    <td>13800138001</td>
+                                    <td><span class="status-badge status-active">在职</span></td>
+                                    <td>2020-01-01</td>
+                                    <td>
+                                        <div class="emp-actions">
+                                            <button class="action-btn" onclick="viewEmployee(1)">👁️ 查看</button>
+                                            <button class="action-btn" onclick="editEmployee(1)">✏️ 编辑</button>
+                                            <button class="action-btn" onclick="managePositions(1)">👥 岗位</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="emp-info">
+                                            <div class="emp-avatar">李</div>
+                                            <div class="emp-details">
+                                                <div class="emp-name">李经理</div>
+                                                <div class="emp-no">E002</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>人力资源部</td>
+                                    <td>人力资源经理</td>
+                                    <td>13800138002</td>
+                                    <td><span class="status-badge status-active">在职</span></td>
+                                    <td>2020-03-01</td>
+                                    <td>
+                                        <div class="emp-actions">
+                                            <button class="action-btn" onclick="viewEmployee(2)">👁️ 查看</button>
+                                            <button class="action-btn" onclick="editEmployee(2)">✏️ 编辑</button>
+                                            <button class="action-btn" onclick="managePositions(2)">👥 岗位</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="emp-info">
+                                            <div class="emp-avatar">王</div>
+                                            <div class="emp-details">
+                                                <div class="emp-name">王会计</div>
+                                                <div class="emp-no">E003</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>财务部</td>
+                                    <td>财务经理</td>
+                                    <td>13800138003</td>
+                                    <td><span class="status-badge status-active">在职</span></td>
+                                    <td>2020-02-01</td>
+                                    <td>
+                                        <div class="emp-actions">
+                                            <button class="action-btn" onclick="viewEmployee(3)">👁️ 查看</button>
+                                            <button class="action-btn" onclick="editEmployee(3)">✏️ 编辑</button>
+                                            <button class="action-btn" onclick="managePositions(3)">👥 岗位</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="emp-info">
+                                            <div class="emp-avatar">刘</div>
+                                            <div class="emp-details">
+                                                <div class="emp-name">刘架构师</div>
+                                                <div class="emp-no">E004</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>技术研发部</td>
+                                    <td>技术总监</td>
+                                    <td>13800138004</td>
+                                    <td><span class="status-badge status-active">在职</span></td>
+                                    <td>2020-01-15</td>
+                                    <td>
+                                        <div class="emp-actions">
+                                            <button class="action-btn" onclick="viewEmployee(4)">👁️ 查看</button>
+                                            <button class="action-btn" onclick="editEmployee(4)">✏️ 编辑</button>
+                                            <button class="action-btn" onclick="managePositions(4)">👥 岗位</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="emp-info">
+                                            <div class="emp-avatar">陈</div>
+                                            <div class="emp-details">
+                                                <div class="emp-name">陈前端</div>
+                                                <div class="emp-no">E005</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>前端团队</td>
+                                    <td>前端主管</td>
+                                    <td>13800138005</td>
+                                    <td><span class="status-badge status-trial">试用期</span></td>
+                                    <td>2023-11-01</td>
+                                    <td>
+                                        <div class="emp-actions">
+                                            <button class="action-btn" onclick="viewEmployee(5)">👁️ 查看</button>
+                                            <button class="action-btn" onclick="editEmployee(5)">✏️ 编辑</button>
+                                            <button class="action-btn" onclick="managePositions(5)">👥 岗位</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- 分页 -->
+                        <div class="pagination">
+                            <div class="pagination-info">
+                                共 156 条记录，当前第 1 页，共 16 页
+                            </div>
+                            <div class="pagination-controls">
+                                <button class="page-btn" disabled>上一页</button>
+                                <button class="page-btn active">1</button>
+                                <button class="page-btn">2</button>
+                                <button class="page-btn">3</button>
+                                <button class="page-btn">...</button>
+                                <button class="page-btn">16</button>
+                                <button class="page-btn">下一页</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </main>
 
-        <!-- 底部页脚 -->
+        <!-- 底部 -->
         <footer class="app-footer">
             © 2024 Portal 3.0 企业管理平台. All rights reserved.
         </footer>
     </div>
 
-    <script src="../assets/js/common.js"></script>
-    <script src="../assets/js/mock-data.js"></script>
-    <script>
-        let employees = [];
-        let filteredEmployees = [];
-        let currentPage = 1;
-        let pageSize = 20;
-        let selectedEmployees = new Set();
-        
-        // 初始化页面
-        document.addEventListener('DOMContentLoaded', function() {
-            loadEmployeeData();
-            initializeSearchOptions();
-        });
-        
-        // 切换导航组展开/收起
-        function toggleNavGroup(element) {
-            const submenu = element.nextElementSibling;
-            const arrow = element.querySelector('.nav-arrow');
-            
-            if (submenu && submenu.classList.contains('nav-submenu')) {
-                submenu.classList.toggle('expanded');
-                element.classList.toggle('expanded');
-                
-                if (submenu.classList.contains('expanded')) {
-                    arrow.style.transform = 'rotate(90deg)';
-                } else {
-                    arrow.style.transform = 'rotate(0deg)';
-                }
-            }
-        }
-        
-        // 加载员工数据
-        function loadEmployeeData() {
-            employees = window.MockData.employees.map(emp => {
-                const dept = window.MockData.departments.find(d => d.id == emp.department);
-                const pos = window.MockData.positions.find(p => p.id == emp.workposition);
-                
-                return {
-                    ...emp,
-                    deptName: dept ? dept.name : '未分配',
-                    positionName: pos ? pos.name : '未分配'
-                };
-            });
-            
-            filteredEmployees = [...employees];
-            renderEmployeeTable();
-            updatePagination();
-        }
-        
-        // 初始化搜索选项
-        function initializeSearchOptions() {
-            const deptSelect = document.querySelector('select[name="department"]');
-            const posSelect = document.querySelector('select[name="position"]');
-            
-            // 填充部门选项
-            window.MockData.departments.forEach(dept => {
-                const option = document.createElement('option');
-                option.value = dept.id;
-                option.textContent = dept.name;
-                deptSelect.appendChild(option);
-            });
-            
-            // 填充岗位选项
-            window.MockData.positions.forEach(pos => {
-                const option = document.createElement('option');
-                option.value = pos.id;
-                option.textContent = pos.name;
-                posSelect.appendChild(option);
-            });
-        }
-        
-        // 渲染员工表格
-        function renderEmployeeTable() {
-            const tbody = document.getElementById('employeeTableBody');
-            const start = (currentPage - 1) * pageSize;
-            const end = start + pageSize;
-            const pageData = filteredEmployees.slice(start, end);
-            
-            if (pageData.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" style="text-align: center; padding: 48px; color: #999;">
-                            <i style="font-size: 48px;">👥</i><br>
-                            暂无员工数据
-                        </td>
-                    </tr>
-                `;
-                return;
-            }
-            
-            tbody.innerHTML = pageData.map(emp => {
-                const statusClass = emp.isLeave ? 'status-left' : 'status-active';
-                const statusText = emp.isLeave ? '离职' : '在职';
-                
-                return `
-                    <tr>
-                        <td>
-                            <input type="checkbox" class="employee-checkbox" value="${emp.id}" 
-                                   onchange="toggleEmployeeSelection(${emp.id})" 
-                                   ${selectedEmployees.has(emp.id) ? 'checked' : ''}>
-                        </td>
-                        <td>
-                            <div class="employee-info">
-                                <div class="employee-avatar">${emp.name.charAt(0)}</div>
-                                <div class="employee-details">
-                                    <div class="employee-name">${emp.name}</div>
-                                    <div class="employee-meta">${emp.email || '未设置邮箱'}</div>
+    <!-- 员工详情模态框 -->
+    <div class="emp-modal" id="empModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">员工详情</h3>
+                <button class="modal-close" onclick="closeEmployeeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="emp-detail-header">
+                    <div class="detail-avatar">张</div>
+                    <div class="detail-info">
+                        <div class="detail-name">张总</div>
+                        <div class="detail-title">总经理 · 总经理办公室</div>
+                        <div class="detail-tags">
+                            <span class="tag success">在职</span>
+                            <span class="tag primary">主管</span>
+                            <span class="tag primary">分公司负责人</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-sections">
+                    <div class="detail-section">
+                        <div class="section-title">基本信息</div>
+                        <div class="detail-item">
+                            <span class="detail-label">工号</span>
+                            <span class="detail-value">E001</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">姓名</span>
+                            <span class="detail-value">张总</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">性别</span>
+                            <span class="detail-value">男</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">出生日期</span>
+                            <span class="detail-value">1975-08-15</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">身份证号</span>
+                            <span class="detail-value">110101197508151234</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <div class="section-title">联系方式</div>
+                        <div class="detail-item">
+                            <span class="detail-label">手机号码</span>
+                            <span class="detail-value">13800138001</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">邮箱地址</span>
+                            <span class="detail-value">zhangzong@company.com</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">住址</span>
+                            <span class="detail-value">北京市朝阳区XXX小区</span>
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <div class="section-title">组织信息</div>
+                        <div class="detail-item">
+                            <span class="detail-label">主部门</span>
+                            <span class="detail-value">总经理办公室</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">主岗位</span>
+                            <span class="detail-value">总经理</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">员工级别</span>
+                            <span class="detail-value">1级</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">担任岗位</span>
+                            <div class="detail-value">
+                                <div class="position-list">
+                                    <span class="position-tag primary">总经理(主)</span>
                                 </div>
                             </div>
-                        </td>
-                        <td>${emp.empNo}</td>
-                        <td>${emp.deptName}</td>
-                        <td>${emp.positionName}</td>
-                        <td>${emp.entryTime || '未设置'}</td>
-                        <td>
-                            <span class="status-badge ${statusClass}">${statusText}</span>
-                        </td>
-                        <td>
-                            <div class="action-buttons">
-                                <button class="btn btn-default btn-sm" onclick="viewEmployee(${emp.id})" title="查看详情">
-                                    👁️
-                                </button>
-                                <button class="btn btn-default btn-sm" onclick="editEmployee(${emp.id})" title="编辑">
-                                    ✏️
-                                </button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteEmployee(${emp.id})" title="删除">
-                                    🗑️
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-        
+                        </div>
+                    </div>
+
+                    <div class="detail-section">
+                        <div class="section-title">入职信息</div>
+                        <div class="detail-item">
+                            <span class="detail-label">员工类型</span>
+                            <span class="detail-value">正式员工</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">入职日期</span>
+                            <span class="detail-value">2020-01-01</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">试用期</span>
+                            <span class="detail-value">已转正</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">合同类型</span>
+                            <span class="detail-value">无固定期限</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">合同期限</span>
+                            <span class="detail-value">2020-01-01 至 长期</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-action" onclick="editEmployee(1)">✏️ 编辑员工</button>
+                <button class="btn-action" onclick="managePositions(1)">👥 管理岗位</button>
+                <button class="btn-action" onclick="closeEmployeeModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/common.js"></script>
+    <script src="../assets/js/navigation.js"></script>
+    <script src="../assets/js/mock-data.js"></script>
+    <script>
+        // 员工管理页面脚本
+        let currentPage = 1;
+        let pageSize = 10;
+        let totalCount = 156;
+
         // 搜索员工
         function searchEmployees() {
-            const formData = new FormData(document.getElementById('searchForm'));
-            const filters = Object.fromEntries(formData.entries());
+            const name = document.getElementById('filterName').value;
+            const empNo = document.getElementById('filterEmpNo').value;
+            const dept = document.getElementById('filterDept').value;
+            const status = document.getElementById('filterStatus').value;
+
+            console.log('搜索条件:', { name, empNo, dept, status });
+            Message.success('搜索完成');
+        }
+
+        // 重置筛选
+        function resetFilters() {
+            document.getElementById('filterName').value = '';
+            document.getElementById('filterEmpNo').value = '';
+            document.getElementById('filterDept').value = '';
+            document.getElementById('filterStatus').value = '';
             
-            filteredEmployees = employees.filter(emp => {
-                if (filters.name && !emp.name.includes(filters.name)) return false;
-                if (filters.empNo && !emp.empNo.includes(filters.empNo)) return false;
-                if (filters.department && emp.department != filters.department) return false;
-                if (filters.position && emp.workposition != filters.position) return false;
-                if (filters.status !== '' && emp.isLeave != (filters.status === '0')) return false;
-                return true;
-            });
-            
-            currentPage = 1;
-            selectedEmployees.clear();
-            renderEmployeeTable();
-            updatePagination();
-            updateBatchActions();
+            searchEmployees();
+            Message.info('筛选条件已重置');
         }
-        
-        // 重置搜索
-        function resetSearch() {
-            document.getElementById('searchForm').reset();
-            filteredEmployees = [...employees];
-            currentPage = 1;
-            selectedEmployees.clear();
-            renderEmployeeTable();
-            updatePagination();
-            updateBatchActions();
-        }
-        
-        // 切换全选
-        function toggleSelectAll() {
-            const selectAll = document.getElementById('selectAll');
-            const checkboxes = document.querySelectorAll('.employee-checkbox');
-            
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = selectAll.checked;
-                const empId = parseInt(checkbox.value);
-                if (selectAll.checked) {
-                    selectedEmployees.add(empId);
-                } else {
-                    selectedEmployees.delete(empId);
-                }
-            });
-            
-            updateBatchActions();
-        }
-        
-        // 切换员工选择
-        function toggleEmployeeSelection(empId) {
-            if (selectedEmployees.has(empId)) {
-                selectedEmployees.delete(empId);
-            } else {
-                selectedEmployees.add(empId);
-            }
-            
-            // 更新全选状态
-            const checkboxes = document.querySelectorAll('.employee-checkbox');
-            const checkedCount = document.querySelectorAll('.employee-checkbox:checked').length;
-            const selectAll = document.getElementById('selectAll');
-            
-            selectAll.checked = checkedCount === checkboxes.length;
-            selectAll.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
-            
-            updateBatchActions();
-        }
-        
-        // 更新批量操作
-        function updateBatchActions() {
-            const batchActions = document.getElementById('batchActions');
-            const selectedCount = document.getElementById('selectedCount');
-            
-            if (selectedEmployees.size > 0) {
-                batchActions.classList.add('show');
-                selectedCount.textContent = selectedEmployees.size;
-            } else {
-                batchActions.classList.remove('show');
-            }
-        }
-        
-        // 更新分页信息
-        function updatePagination() {
-            const totalRecords = filteredEmployees.length;
-            const totalPages = Math.ceil(totalRecords / pageSize);
-            
-            document.getElementById('totalRecords').textContent = totalRecords;
-            document.getElementById('currentPage').textContent = currentPage;
-            document.getElementById('totalPages').textContent = totalPages;
-            document.getElementById('pageInput').value = currentPage;
-            document.getElementById('pageInput').max = totalPages;
-            
-            document.getElementById('prevBtn').disabled = currentPage <= 1;
-            document.getElementById('nextBtn').disabled = currentPage >= totalPages;
-        }
-        
-        // 上一页
-        function prevPage() {
-            if (currentPage > 1) {
-                currentPage--;
-                renderEmployeeTable();
-                updatePagination();
-            }
-        }
-        
-        // 下一页
-        function nextPage() {
-            const totalPages = Math.ceil(filteredEmployees.length / pageSize);
-            if (currentPage < totalPages) {
-                currentPage++;
-                renderEmployeeTable();
-                updatePagination();
-            }
-        }
-        
-        // 跳转到指定页
-        function gotoPage() {
-            const pageInput = document.getElementById('pageInput');
-            const targetPage = parseInt(pageInput.value);
-            const totalPages = Math.ceil(filteredEmployees.length / pageSize);
-            
-            if (targetPage >= 1 && targetPage <= totalPages) {
-                currentPage = targetPage;
-                renderEmployeeTable();
-                updatePagination();
-            } else {
-                pageInput.value = currentPage;
-            }
-        }
-        
-        // 改变每页显示数量
-        function changePageSize() {
-            const pageSizeSelect = document.getElementById('pageSizeSelect');
-            pageSize = parseInt(pageSizeSelect.value);
-            currentPage = 1;
-            renderEmployeeTable();
-            updatePagination();
-        }
-        
-        // 员工操作功能
-        function addEmployee() {
-            alert('新增员工功能开发中...');
-        }
-        
-        function viewEmployee(empId) {
-            const employee = employees.find(emp => emp.id === empId);
-            if (employee) {
-                alert(`查看员工：${employee.name}\n编号：${employee.empNo}\n部门：${employee.deptName}\n岗位：${employee.positionName}`);
-            }
-        }
-        
-        function editEmployee(empId) {
-            alert(`编辑员工 ID: ${empId} 功能开发中...`);
-        }
-        
-        function deleteEmployee(empId) {
-            const employee = employees.find(emp => emp.id === empId);
-            if (!employee) return;
-            
-            if (confirm(`确定要删除员工"${employee.name}"吗？`)) {
-                employees = employees.filter(emp => emp.id !== empId);
-                filteredEmployees = filteredEmployees.filter(emp => emp.id !== empId);
-                selectedEmployees.delete(empId);
-                renderEmployeeTable();
-                updatePagination();
-                updateBatchActions();
-                alert('员工删除成功！');
-            }
-        }
-        
-        // 批量操作功能
-        function batchTransfer() {
-            if (selectedEmployees.size === 0) {
-                alert('请先选择要调岗的员工');
-                return;
-            }
-            alert(`批量调岗 ${selectedEmployees.size} 名员工功能开发中...`);
-        }
-        
-        function batchDelete() {
-            if (selectedEmployees.size === 0) {
-                alert('请先选择要删除的员工');
-                return;
-            }
-            
-            if (confirm(`确定要删除选中的 ${selectedEmployees.size} 名员工吗？`)) {
-                employees = employees.filter(emp => !selectedEmployees.has(emp.id));
-                filteredEmployees = filteredEmployees.filter(emp => !selectedEmployees.has(emp.id));
-                selectedEmployees.clear();
-                renderEmployeeTable();
-                updatePagination();
-                updateBatchActions();
-                alert('批量删除成功！');
-            }
-        }
-        
-        function importEmployees() {
-            alert('批量导入功能开发中...');
-        }
-        
+
+        // 导出员工
         function exportEmployees() {
-            alert('导出Excel功能开发中...');
+            Message.success('员工数据导出成功');
         }
+
+        // 导入员工
+        function importEmployees() {
+            Message.info('请选择Excel文件进行导入');
+        }
+
+        // 新增员工
+        function addEmployee() {
+            window.location.href = 'employee-add.html';
+        }
+
+        // 查看员工详情
+        function viewEmployee(empId) {
+            window.location.href = `employee-detail.html?id=${empId}`;
+        }
+
+        // 编辑员工
+        function editEmployee(empId) {
+            Message.info(`编辑员工 ${empId}...`);
+            // window.location.href = `employee-form.html?id=${empId}`;
+        }
+
+        // 管理员工岗位
+        function managePositions(empId) {
+            Message.info(`管理员工 ${empId} 的岗位...`);
+        }
+
+        // 关闭员工详情模态框
+        function closeEmployeeModal() {
+            document.getElementById('empModal').classList.remove('show');
+        }
+
+        // 点击模态框外部关闭
+        document.getElementById('empModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeEmployeeModal();
+            }
+        });
+
+        // 分页处理
+        function changePage(page) {
+            currentPage = page;
+            // 这里添加分页逻辑
+            console.log('跳转到第', page, '页');
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 默认搜索在职员工
+            searchEmployees();
+        });
     </script>
 </body>
 </html> 

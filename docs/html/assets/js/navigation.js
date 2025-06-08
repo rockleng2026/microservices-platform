@@ -36,6 +36,7 @@ const navigationData = {
             children: [
                 { id: 'department-tree', label: '部门管理', url: 'organization/department-tree.html' },
                 { id: 'employee-list', label: '员工管理', url: 'organization/employee-list.html' },
+                { id: 'employee-add', label: '新增员工', url: 'organization/employee-add.html' },
                 { id: 'position-manage', label: '岗位管理', url: 'organization/position-manage.html' },
                 { id: 'role-permission', label: '角色权限', url: 'organization/role-permission.html' }
             ]

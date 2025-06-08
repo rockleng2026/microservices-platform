@@ -1225,21 +1225,21 @@ public class PermissionCacheService {
 基于现有microservices-platform架构，扩展业务服务：
 
 ```
-├── zlt-uaa -- 认证中心[8000] (已有)
-├── zlt-gateway -- API网关[9900] (已有)
-├── zlt-register -- 注册中心[8848] (已有)
+├── zlt-uaa -- 认证中心[8000]
+├── zlt-gateway -- API网关[9900]
+├── zlt-register -- 注册中心[8848]
 ├── zlt-business -- 业务模块
-│   ├── user-center -- 用户中心[7000] (已有，扩展组织架构)
-│   ├── file-center -- 文件中心[5000] (已有)
-│   ├── permission-center -- 权限管理中心[7100] (新增)
-│   ├── crm-service -- 客户管理服务[7400] (新增)
-│   ├── product-service -- 商品管理服务[7500] (新增)
-│   ├── order-service -- 订单管理服务[7600] (新增)
-│   ├── support-service -- 客服中心服务[7700] (新增)
-│   ├── ops-service -- 运维管理服务[7800] (新增)
-│   └── workflow-service -- 流程引擎服务[7900] (新增)
-├── zlt-monitor -- 监控模块 (已有)
-└── zlt-commons -- 通用组件 (已有)
+│   ├── user-center -- 用户中心[7000]
+│   ├── file-center -- 文件中心[5000]
+│   ├── permission-center -- 权限管理中心[7100]
+│   ├── crm-service -- 客户管理服务[7400]
+│   ├── product-service -- 商品管理服务[7500]
+│   ├── order-service -- 订单管理服务[7600]
+│   ├── support-service -- 客服中心服务[7700]
+│   ├── ops-service -- 运维管理服务[7800]
+│   └── workflow-service -- 流程引擎服务[7900]
+├── zlt-monitor -- 监控模块
+└── zlt-commons -- 通用组件
 ```
 
 ### 4.2 数据库设计
@@ -1378,5 +1378,198 @@ react-web/src/main/frontend/
 **更新时间：** 2024年  
 **负责人：** 项目组  
 **审核人：** 技术总监
+
+### 3.4 组织管理模块数据库设计
+
+#### 3.4.1 核心表设计
+
+**员工表 (employee)**
+```sql
+CREATE TABLE `employee` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '员工ID',
+  `uuid` varchar(36) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT 'UUID',
+  `emp_no` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '员工编号',
+  `name` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '姓名',
+  `name_en` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '英文姓名',
+  `gender` tinyint(1) NULL DEFAULT NULL COMMENT '性别(1:男,2:女)',
+  `birth_date` date NULL DEFAULT NULL COMMENT '出生日期',
+  `id_card` varchar(18) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '身份证号',
+  `mobile` varchar(11) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '手机号',
+  `email` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '邮箱',
+  `department_id` int(11) NULL DEFAULT NULL COMMENT '部门ID',
+  `position_id` int(11) NULL DEFAULT NULL COMMENT '主岗位ID',
+  `secondary_position_ids` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '副岗位ID列表',
+  `grade_id` int(11) NULL DEFAULT NULL COMMENT '员工等级ID',
+  `employment_type` tinyint(1) NULL DEFAULT NULL COMMENT '用工类型(1:正式,2:实习,3:外包,4:劳务)',
+  `employment_status` tinyint(1) NULL DEFAULT NULL COMMENT '在职状态(1:在职,2:试用,3:离职)',
+  `entry_date` date NULL DEFAULT NULL COMMENT '入职日期',
+  `probation_end_date` date NULL DEFAULT NULL COMMENT '试用期结束日期',
+  `leave_date` date NULL DEFAULT NULL COMMENT '离职日期',
+  `leave_reason` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '离职原因',
+  `education` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '学历',
+  `nation` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '民族',
+  `health_status` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '健康状况',
+  `height` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '身高',
+  `weight` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '体重',
+  `marital_status` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '婚姻状况',
+  `birthplace` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '籍贯',
+  `residence` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '现居住地',
+  `emergency_contact` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '紧急联系人',
+  `emergency_phone` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '紧急联系电话',
+  `specialty` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '专业技能',
+  `avatar` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '头像',
+  `remark` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '备注',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `create_by` int(11) NULL DEFAULT NULL COMMENT '创建人',
+  `update_by` int(11) NULL DEFAULT NULL COMMENT '更新人',
+  `del_flag` tinyint(1) NULL DEFAULT 0 COMMENT '删除标记(0:正常,1:删除)',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_emp_no`(`emp_no`) USING BTREE,
+  INDEX `idx_department`(`department_id`) USING BTREE,
+  INDEX `idx_position`(`position_id`) USING BTREE,
+  INDEX `idx_status`(`employment_status`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '员工表';
+```
+
+**员工等级表 (employee_grade)**
+```sql
+CREATE TABLE `employee_grade` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '等级ID',
+  `grade_code` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '等级编码',
+  `grade_name` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '等级名称',
+  `grade_level` tinyint(2) NULL DEFAULT NULL COMMENT '等级级别(1-20)',
+  `description` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '等级描述',
+  `sort_order` int(11) NULL DEFAULT 0 COMMENT '排序',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `del_flag` tinyint(1) NULL DEFAULT 0 COMMENT '删除标记',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_grade_code`(`grade_code`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '员工等级表';
+```
+
+#### 3.4.2 扩展信息设计
+
+**字段配置表 (field_config)**
+```sql
+CREATE TABLE `field_config` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '配置ID',
+  `uuid` varchar(36) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT 'UUID',
+  `entity_type` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '实体类型(Employee)',
+  `config_name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '配置名称',
+  `config_code` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '配置编码',
+  `description` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '描述',
+  `field_definitions` json NULL COMMENT '字段定义(JSON格式)',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `del_flag` tinyint(1) NULL DEFAULT 0 COMMENT '删除标记',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_entity_code`(`entity_type`, `config_code`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '字段配置表';
+```
+
+**员工扩展数据表 (employee_extend_data)**
+```sql
+CREATE TABLE `employee_extend_data` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '扩展数据ID',
+  `employee_id` int(11) NOT NULL COMMENT '员工ID',
+  `config_id` int(11) NOT NULL COMMENT '配置ID',
+  `data_content` json NOT NULL COMMENT '数据内容(JSON格式)',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_employee`(`employee_id`) USING BTREE,
+  INDEX `idx_config`(`config_id`) USING BTREE,
+  CONSTRAINT `fk_extend_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `fk_extend_config` FOREIGN KEY (`config_id`) REFERENCES `field_config` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '员工扩展数据表';
+```
+
+#### 3.4.3 附件管理设计
+
+**员工附件表 (employee_attachment)**
+```sql
+CREATE TABLE `employee_attachment` (
+  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '附件ID',
+  `employee_id` int(11) NOT NULL COMMENT '员工ID',
+  `attachment_type` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '附件类型',
+  `attachment_name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '附件名称',
+  `original_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '原始文件名',
+  `file_size` bigint(20) NULL DEFAULT NULL COMMENT '文件大小(bytes)',
+  `file_type` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '文件类型',
+  `file_path` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '文件存储路径',
+  `upload_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '上传时间',
+  `upload_by` int(11) NULL DEFAULT NULL COMMENT '上传人',
+  `audit_status` tinyint(1) NULL DEFAULT 0 COMMENT '审核状态(0:待审核,1:通过,2:拒绝)',
+  `audit_time` datetime NULL DEFAULT NULL COMMENT '审核时间',
+  `audit_by` int(11) NULL DEFAULT NULL COMMENT '审核人',
+  `audit_remark` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '审核备注',
+  `del_flag` tinyint(1) NULL DEFAULT 0 COMMENT '删除标记',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_employee`(`employee_id`) USING BTREE,
+  INDEX `idx_type`(`attachment_type`) USING BTREE,
+  CONSTRAINT `fk_attachment_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '员工附件表';
+```
+
+#### 3.4.4 预置数据配置
+
+**员工等级预置数据**
+```sql
+INSERT INTO `employee_grade` (`grade_code`, `grade_name`, `grade_level`, `description`, `sort_order`) VALUES
+('L01', '初级员工', 1, '初级员工等级', 1),
+('L02', '中级员工', 2, '中级员工等级', 2),
+('L03', '高级员工', 3, '高级员工等级', 3),
+('L04', '专家级员工', 4, '专家级员工等级', 4),
+('M01', '初级主管', 5, '初级主管等级', 5),
+('M02', '中级主管', 6, '中级主管等级', 6),
+('M03', '高级主管', 7, '高级主管等级', 7),
+('S01', '初级经理', 8, '初级经理等级', 8),
+('S02', '中级经理', 9, '中级经理等级', 9),
+('S03', '高级经理', 10, '高级经理等级', 10);
+```
+
+**扩展字段预置配置**
+```sql
+INSERT INTO `field_config` (`entity_type`, `config_name`, `config_code`, `description`, `field_definitions`) VALUES
+('Employee', '家庭成员', 'family_members', '员工家庭成员信息', '[
+  {"field": "name", "label": "姓名", "type": "text", "required": true},
+  {"field": "relationship", "label": "关系", "type": "select", "required": true, "options": ["父亲", "母亲", "配偶", "子女", "兄弟姐妹", "其他"]},
+  {"field": "position", "label": "职位", "type": "text", "required": false},
+  {"field": "company", "label": "工作单位", "type": "text", "required": false}
+]'),
+('Employee', '教育经历', 'education_history', '员工教育经历信息', '[
+  {"field": "school", "label": "毕业院校", "type": "text", "required": true},
+  {"field": "start_date", "label": "开始时间", "type": "date", "required": true},
+  {"field": "end_date", "label": "结束时间", "type": "date", "required": true},
+  {"field": "major", "label": "专业", "type": "text", "required": true},
+  {"field": "degree", "label": "学位/证书", "type": "text", "required": false},
+  {"field": "referee", "label": "证明人", "type": "text", "required": false}
+]'),
+('Employee', '工作经验', 'work_experience', '员工工作经验信息', '[
+  {"field": "company", "label": "公司", "type": "text", "required": true},
+  {"field": "start_date", "label": "开始时间", "type": "date", "required": true},
+  {"field": "end_date", "label": "结束时间", "type": "date", "required": true},
+  {"field": "position", "label": "职务", "type": "text", "required": true},
+  {"field": "salary", "label": "收入", "type": "number", "required": false},
+  {"field": "leave_reason", "label": "离职原因", "type": "text", "required": false},
+  {"field": "referee", "label": "证明人", "type": "text", "required": false},
+  {"field": "referee_phone", "label": "证明人联系电话", "type": "text", "required": false}
+]');
+```
+
+#### 3.4.5 附件类型定义
+
+**员工附件类型枚举**
+- PHOTO_2INCH: 2寸半身照
+- ID_CARD_FRONT: 身份证正面
+- ID_CARD_BACK: 身份证反面
+- DIPLOMA: 毕业证
+- DEGREE: 学位证
+- EXAM_SCORE: 笔试成绩
+- FULL_PHOTO: 个人全身照
+- RESUME: 个人简历
+- OTHER: 其他附件
 
 

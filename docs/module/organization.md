@@ -216,131 +216,198 @@ CREATE TABLE workposition_manage_dept (
 ## 4. 员工管理
 
 ### 4.1 功能概述
-基于原有`employee`表结构，提供员工全生命周期管理，支持多岗位任职和权限分配。
+员工管理是组织管理的核心模块，提供员工全生命周期管理，包括员工信息录入、维护、查询、统计等功能。支持扩展信息管理和附件上传，满足企业人力资源管理需求。
 
-### 4.2 数据模型
-```sql
--- 员工表（扩展原employee表）
-CREATE TABLE employee (
-    id int(11) NOT NULL AUTO_INCREMENT COMMENT '员工ID',
-    uuid varchar(255) COMMENT 'UUID标识',
-    emp_no varchar(50) NOT NULL COMMENT '员工编号',
-    name varchar(20) NOT NULL COMMENT '姓名',
-    english_name varchar(50) COMMENT '英文名',
-    gender tinyint(1) COMMENT '性别(1男,2女)',
-    birth_date date COMMENT '出生日期',
-    card_id varchar(50) COMMENT '身份证号',
-    phone varchar(20) COMMENT '手机号',
-    email varchar(255) COMMENT '邮箱',
-    address varchar(255) COMMENT '住址',
-    department_id int(11) NOT NULL COMMENT '主部门ID',
-    primary_position_id int(11) COMMENT '主岗位ID',
-    employee_level int(11) DEFAULT 1 COMMENT '员工级别',
-    employee_type tinyint(1) DEFAULT 1 COMMENT '员工类型(1正式,2试用,3实习,4外包)',
-    hire_date date COMMENT '入职日期',
-    probation_end_date date COMMENT '试用期结束日期',
-    contract_type varchar(20) COMMENT '合同类型',
-    contract_start_date date COMMENT '合同开始日期',
-    contract_end_date date COMMENT '合同结束日期',
-    is_login_account tinyint(1) DEFAULT 0 COMMENT '是否有登录账号',
-    status tinyint(1) DEFAULT 1 COMMENT '状态(1在职,2离职,3停薪留职)',
-    leave_date date COMMENT '离职日期',
-    leave_reason varchar(500) COMMENT '离职原因',
-    delflag int(11) DEFAULT 0 COMMENT '删除标识',
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    tenant_id varchar(32) COMMENT '租户ID',
-    created_by int(11) COMMENT '创建人',
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_emp_no (emp_no, tenant_id),
-    KEY idx_department_id (department_id),
-    KEY idx_status (status)
-) COMMENT='员工表';
+### 4.2 功能清单
 
--- 员工岗位关联表（支持多岗位）
-CREATE TABLE employee_position (
-    id int(11) NOT NULL AUTO_INCREMENT,
-    employee_id int(11) NOT NULL COMMENT '员工ID',
-    workposition_id int(11) NOT NULL COMMENT '岗位ID',
-    is_primary tinyint(1) DEFAULT 0 COMMENT '是否主岗位',
-    start_date date COMMENT '任职开始日期',
-    end_date date COMMENT '任职结束日期',
-    status tinyint(1) DEFAULT 1 COMMENT '状态(1在职,0离职)',
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (id),
-    KEY idx_employee_id (employee_id),
-    KEY idx_workposition_id (workposition_id)
-) COMMENT='员工岗位关联表';
+#### 4.2.1 员工信息管理
+- **新增员工**
+  - 分步骤表单填写员工信息
+  - 自动生成员工编号
+  - 支持草稿保存和继续编辑
+  - 实时表单验证和重复性检查
+  - 批量导入员工信息
 
--- 员工个人权限表
-CREATE TABLE employee_permission (
-    id int(11) NOT NULL AUTO_INCREMENT,
-    employee_id int(11) NOT NULL COMMENT '员工ID',
-    permission_code varchar(100) NOT NULL COMMENT '权限代码',
-    permission_type tinyint(1) DEFAULT 1 COMMENT '权限类型(1授予,0撤销)',
-    effective_date date COMMENT '生效日期',
-    expire_date date COMMENT '失效日期',
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-    created_by int(11) COMMENT '授权人',
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_emp_perm (employee_id, permission_code)
-) COMMENT='员工个人权限表';
+- **员工信息维护**
+  - 员工基本信息编辑
+  - 组织关系调整
+  - 在职状态变更
+  - 员工等级调整
+  - 信息变更历史追踪
+
+- **员工信息查询**
+  - 多条件组合搜索
+  - 高级筛选功能
+  - 员工列表分页展示
+  - 员工详情快速查看
+  - 组织架构中的员工分布
+
+#### 4.2.2 扩展信息管理
+- **家庭成员信息**
+  - 家庭成员动态添加/删除
+  - 成员信息：姓名、关系、职位、工作单位
+  - 家庭关系类型：父亲、母亲、配偶、子女、兄弟姐妹、其他
+  - 家庭成员信息批量导入
+
+- **教育经历管理**
+  - 教育经历动态添加/删除
+  - 经历信息：毕业院校、开始/结束时间、专业、证书、证明人
+  - 学历层次：小学、初中、高中、中专、大专、本科、硕士、博士
+  - 教育经历时间轴展示
+
+- **工作经验管理**
+  - 工作经验动态添加/删除
+  - 经验信息：公司、开始/结束时间、职务、收入、离职原因、证明人及联系电话
+  - 工作经验连续性检查
+  - 工作轨迹可视化展示
+
+#### 4.2.3 附件管理
+- **附件上传**
+  - 支持多种附件类型：2寸半身照、身份证正反面、毕业证、学位证、笔试成绩、个人全身照等
+  - 拖拽上传和点击上传
+  - 文件格式限制：图片(jpg,png,gif)、文档(pdf,doc,docx)
+  - 文件大小限制：单文件不超过10MB
+  - 批量上传支持
+
+- **附件管理**
+  - 附件预览功能
+  - 附件下载和分享
+  - 附件版本管理
+  - 附件审核状态跟踪
+  - 附件分类归档
+
+#### 4.2.4 员工状态管理
+- **在职状态**
+  - 在职：正常工作状态
+  - 试用：试用期员工
+  - 离职：已离职员工
+  - 停职：暂时停职员工
+
+- **用工类型**
+  - 正式员工：签订正式劳动合同
+  - 实习生：在校学生实习
+  - 外包员工：外包公司派遣
+  - 劳务员工：劳务派遣
+
+#### 4.2.5 统计分析
+- **员工统计**
+  - 员工总数统计
+  - 在职员工数量
+  - 试用期员工数量
+  - 新入职员工数量
+  - 离职员工数量
+
+- **分布分析**
+  - 部门员工分布
+  - 岗位员工分布
+  - 年龄结构分析
+  - 学历结构分析
+  - 工龄分布统计
+
+### 4.3 数据结构
+
+#### 4.3.1 员工基本信息
+```javascript
+{
+  id: "员工ID",
+  empNo: "员工编号",
+  name: "姓名",
+  nameEn: "英文姓名",
+  gender: "性别(1:男,2:女)",
+  birthDate: "出生日期",
+  idCard: "身份证号",
+  mobile: "手机号",
+  email: "邮箱",
+  departmentId: "部门ID",
+  positionId: "主岗位ID",
+  secondaryPositionIds: "副岗位ID列表",
+  gradeId: "员工等级ID",
+  employmentType: "用工类型",
+  employmentStatus: "在职状态",
+  entryDate: "入职日期",
+  probationEndDate: "试用期结束日期",
+  leaveDate: "离职日期",
+  leaveReason: "离职原因",
+  avatar: "头像地址"
+}
 ```
 
-### 4.3 界面功能
+#### 4.3.2 扩展信息结构
+```javascript
+// 家庭成员
+{
+  familyMembers: [
+    {
+      name: "姓名",
+      relationship: "关系",
+      position: "职位",
+      company: "工作单位"
+    }
+  ]
+}
 
-#### 4.3.1 员工列表
-- **列表字段**：
-  - 员工编号
-  - 姓名
-  - 性别  
-  - 所属部门
-  - 主岗位
-  - 员工类型
-  - 在职状态
-  - 入职日期
-  - 操作菜单
-- **高级筛选**：
-  - 部门筛选（支持多选）
-  - 岗位筛选
-  - 员工类型筛选
-  - 在职状态筛选
-  - 入职时间范围
+// 教育经历
+{
+  educationHistory: [
+    {
+      school: "毕业院校",
+      startDate: "开始时间",
+      endDate: "结束时间",
+      major: "专业",
+      degree: "学位/证书",
+      referee: "证明人"
+    }
+  ]
+}
 
-#### 4.3.2 员工详情页面
-- **基本信息**：个人基础信息、联系方式、证件信息
-- **组织信息**：所属部门、担任岗位、汇报关系
-- **合同信息**：合同类型、签约时间、到期时间
-- **权限信息**：岗位权限、个人权限、数据权限范围
-- **操作记录**：入职、调岗、离职等关键操作日志
-
-#### 4.3.3 员工操作功能
-- **岗位分配**：
-  - 支持同时担任多个岗位
-  - 设置主岗位和兼职岗位
-  - 岗位任职时间管理
-- **权限管理**：
-  - 个人权限授予/撤销
-  - 权限生效时间设置
-  - 权限审批流程
-- **员工调动**：
-  - 部门调动
-  - 岗位调整
-  - 权限迁移
+// 工作经验
+{
+  workExperience: [
+    {
+      company: "公司",
+      startDate: "开始时间",
+      endDate: "结束时间",
+      position: "职务",
+      salary: "收入",
+      leaveReason: "离职原因",
+      referee: "证明人",
+      refereePhone: "证明人联系电话"
+    }
+  ]
+}
+```
 
 ### 4.4 业务规则
 
-#### 4.4.1 员工岗位规则
-- 每个员工必须有一个主岗位
-- 支持同时担任多个岗位（主岗位+兼职岗位）
-- 岗位变更需要审批流程
-- 离职时自动清除所有岗位关联
+#### 4.4.1 员工编号规则
+- 自动生成，格式：EMP + 年份 + 4位序号（如：EMP20240001）
+- 全局唯一，不可重复
+- 离职员工编号不可重用
 
-#### 4.4.2 权限继承规则
-- 员工权限 = 个人权限 ∪ 岗位权限
-- 个人权限优先级高于岗位权限
-- 撤销权限优先级高于授予权限
-- 权限变更实时生效
+#### 4.4.2 必填字段规则
+- 基本信息：姓名、性别、手机号、部门、岗位
+- 身份验证：身份证号（中国大陆员工必填）
+- 组织信息：入职日期、用工类型、在职状态
+
+#### 4.4.3 数据验证规则
+- 手机号：11位数字，符合中国手机号格式
+- 邮箱：符合标准邮箱格式
+- 身份证：18位，通过身份证校验算法
+- 入职日期：不能晚于当前日期
+- 试用期结束日期：不能早于入职日期
+
+#### 4.4.4 权限控制规则
+- 员工本人：查看自己的基本信息和扩展信息
+- 直接主管：查看下属员工完整信息，编辑部分字段
+- HR人员：查看和编辑所有员工信息
+- 部门负责人：查看本部门员工信息
+- 系统管理员：完整的员工数据管理权限
+
+#### 4.4.5 审批流程规则
+- 员工入职：HR录入 → 部门确认 → 系统激活
+- 信息变更：申请人提交 → 主管审批 → HR确认
+- 组织调动：原部门主管 → 新部门主管 → HR审批
+- 离职申请：员工申请 → 直接主管 → 部门负责人 → HR审批
 
 ## 5. 权限管理体系
 

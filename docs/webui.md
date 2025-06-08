@@ -1060,3 +1060,292 @@ const workspaceModules = [
 - 关键权限服务端双重校验
 - 防止权限绕过攻击
 - 权限变更日志记录
+
+#### 5.4.3 员工管理页面
+
+**员工列表页面 (employee-list.html)**
+
+页面结构：
+- 顶部工具栏：搜索、筛选、新增员工、导入/导出
+- 员工统计卡片：总数、在职、试用、新入职等
+- 员工表格：支持分页、排序、批量操作
+- 员工详情抽屉：快速查看和编辑
+
+核心功能：
+- 员工信息搜索和筛选
+- 员工状态管理
+- 批量操作功能
+- 快速查看员工详情
+
+**新增员工页面 (employee-add.html)**
+
+页面结构：
+- 分步骤表单设计，包含5个步骤
+- 每个步骤独立验证和保存
+- 支持草稿保存和继续填写
+
+步骤设计：
+1. **基本信息**
+   - 员工编号（自动生成）
+   - 姓名、英文姓名
+   - 性别、出生日期
+   - 身份证号、手机号、邮箱
+   - 头像上传
+
+2. **组织信息**
+   - 所属部门（树形选择）
+   - 主岗位、副岗位
+   - 员工等级
+   - 用工类型、在职状态
+   - 入职日期、试用期结束日期
+
+3. **个人详情**
+   - 学历、民族、健康状况
+   - 身高、体重、婚姻状况
+   - 籍贯、现居住地
+   - 紧急联系人和电话
+   - 专业技能
+
+4. **扩展信息**
+   - 家庭成员（动态添加/删除）
+     - 姓名、关系、职位、工作单位
+   - 教育经历（动态添加/删除）
+     - 毕业院校、开始/结束时间、专业、证书、证明人
+   - 工作经验（动态添加/删除）
+     - 公司、开始/结束时间、职务、收入、离职原因、证明人及联系电话
+
+5. **附件上传**
+   - 2寸半身照
+   - 身份证正面/反面
+   - 毕业证、学位证
+   - 笔试成绩
+   - 个人全身照
+   - 其他附件
+
+表单验证规则：
+- 必填项校验
+- 格式校验（手机号、邮箱、身份证等）
+- 重复性校验（员工编号、手机号、邮箱）
+- 文件类型和大小校验
+
+**员工详情页面 (employee-detail.html)**
+
+页面结构：
+- 员工头像和基本信息概览
+- 选项卡式详情展示
+- 快速编辑功能
+- 操作历史记录
+
+选项卡设计：
+1. **基本信息**：展示基础资料和组织信息
+2. **扩展信息**：家庭成员、教育经历、工作经验
+3. **附件管理**：已上传附件的预览和下载
+4. **操作记录**：员工信息变更历史
+
+**员工编辑页面 (employee-edit.html)**
+
+页面结构：
+- 与新增页面相同的分步骤设计
+- 预填充现有数据
+- 支持部分更新
+- 变更记录追踪
+
+特殊功能：
+- 敏感信息修改需要权限验证
+- 组织调动需要审批流程
+- 离职处理专门流程
+
+#### 5.4.4 岗位管理页面
+
+**岗位配置页面 (position-manage.html)**
+
+页面布局：
+- 左侧：岗位树形结构
+- 右侧：岗位详情和配置
+
+核心功能：
+- 岗位层级管理
+- 岗位职责配置
+- 岗位权限设置
+- 岗位人员分配
+
+**岗位详情面板**
+- 岗位基本信息编辑
+- 岗位职责描述
+- 任职要求设置
+- 薪资范围配置
+- 汇报关系设置
+
+#### 5.4.5 角色权限页面
+
+**角色权限管理页面 (role-permission.html)**
+
+页面结构：
+- 角色列表（左侧）
+- 权限配置（右侧）
+- 权限树形展示
+
+权限配置：
+- 菜单权限
+- 操作权限
+- 数据权限
+- 字段权限
+
+功能特性：
+- 权限继承机制
+- 批量权限分配
+- 权限模板管理
+- 权限变更审核
+
+#### 5.4.6 表单组件设计
+
+**员工选择器组件**
+```html
+<div class="employee-selector">
+  <div class="selected-employees">
+    <!-- 已选员工展示 -->
+  </div>
+  <div class="selector-modal">
+    <!-- 员工选择弹窗 -->
+  </div>
+</div>
+```
+
+**部门选择器组件**
+```html
+<div class="department-selector">
+  <div class="tree-view">
+    <!-- 部门树形结构 -->
+  </div>
+</div>
+```
+
+**动态表单组件**
+```html
+<div class="dynamic-form">
+  <div class="form-items">
+    <!-- 动态表单项 -->
+  </div>
+  <div class="form-actions">
+    <button class="add-item">添加</button>
+    <button class="remove-item">删除</button>
+  </div>
+</div>
+```
+
+**文件上传组件**
+```html
+<div class="file-upload">
+  <div class="upload-area">
+    <!-- 拖拽上传区域 -->
+  </div>
+  <div class="file-list">
+    <!-- 文件列表 -->
+  </div>
+  <div class="upload-progress">
+    <!-- 上传进度 -->
+  </div>
+</div>
+```
+
+#### 5.4.7 响应式设计
+
+**移动端适配**
+- 表格在移动端转换为卡片式布局
+- 表单步骤在移动端垂直展示
+- 文件上传支持拍照功能
+- 触摸友好的交互设计
+
+**平板端优化**
+- 双列布局优化
+- 侧边栏收缩展开
+- 手势操作支持
+
+#### 5.4.8 样式规范
+
+**色彩方案**
+```css
+:root {
+  /* 员工管理模块专用色彩 */
+  --employee-primary: #1890ff;
+  --employee-success: #52c41a;
+  --employee-warning: #faad14;
+  --employee-error: #f5222d;
+  
+  /* 状态色彩 */
+  --status-active: #52c41a;
+  --status-probation: #faad14;
+  --status-leave: #f5222d;
+  --status-inactive: #d9d9d9;
+  
+  /* 附件类型色彩 */
+  --attachment-image: #13c2c2;
+  --attachment-doc: #722ed1;
+  --attachment-pdf: #eb2f96;
+  --attachment-other: #8c8c8c;
+}
+```
+
+**组件样式**
+```css
+/* 员工卡片样式 */
+.employee-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.employee-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+/* 状态标签样式 */
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.status-active { background: var(--status-active); color: white; }
+.status-probation { background: var(--status-probation); color: white; }
+.status-leave { background: var(--status-leave); color: white; }
+
+/* 动态表单样式 */
+.dynamic-form-item {
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 12px;
+  position: relative;
+}
+
+.dynamic-form-item .remove-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  color: #f5222d;
+  cursor: pointer;
+}
+```
+
+#### 5.4.9 交互设计
+
+**表单交互**
+- 分步骤表单支持前进后退
+- 实时保存草稿
+- 智能提示和自动补全
+- 错误提示就近展示
+
+**列表交互**
+- 表格排序和筛选
+- 批量操作确认
+- 快速预览和编辑
+- 无限滚动加载
+
+**附件交互**
+- 拖拽上传支持
+- 图片预览功能
+- 进度显示
+- 错误重试机制

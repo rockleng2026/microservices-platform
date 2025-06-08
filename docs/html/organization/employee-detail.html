@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>员工详情 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        .employee-detail {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .detail-header {
+            background: linear-gradient(135deg, #1890ff, #40a9ff);
+            color: white;
+            padding: 32px;
+            position: relative;
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .employee-avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            object-fit: cover;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+        }
+
+        .employee-info h1 {
+            margin: 0 0 8px 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+
+        .employee-subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 16px;
+        }
+
+        .status-badges {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .status-badge {
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        .header-actions {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-header {
+            padding: 8px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-header:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .detail-tabs {
+            border-bottom: 1px solid #f0f0f0;
+            background: #fafafa;
+        }
+
+        .tab-nav {
+            display: flex;
+            padding: 0 32px;
+        }
+
+        .tab-item {
+            padding: 16px 24px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            font-weight: 500;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .tab-item.active {
+            color: #1890ff;
+            border-bottom-color: #1890ff;
+            background: white;
+        }
+
+        .tab-item:hover {
+            color: #1890ff;
+        }
+
+        .detail-content {
+            padding: 32px;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .info-section {
+            background: #f9f9f9;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e8e8e8;
+        }
+
+        .info-item {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: flex-start;
+        }
+
+        .info-label {
+            width: 100px;
+            font-weight: 500;
+            color: #666;
+            flex-shrink: 0;
+        }
+
+        .info-value {
+            flex: 1;
+            color: #333;
+        }
+
+        .extend-list {
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        .extend-header {
+            background: #fafafa;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .extend-item {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .extend-item:last-child {
+            border-bottom: none;
+        }
+
+        .extend-item-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .item-index {
+            background: #1890ff;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+
+        .extend-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .attachment-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .attachment-card {
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .attachment-card:hover {
+            border-color: #1890ff;
+            box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+        }
+
+        .attachment-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .attachment-name {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .attachment-meta {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .attachment-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn-small {
+            padding: 4px 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            background: white;
+            color: #333;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-small:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 24px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e8e8e8;
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 24px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -7px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #1890ff;
+            border: 2px solid white;
+            box-shadow: 0 0 0 2px #1890ff;
+        }
+
+        .timeline-content {
+            background: white;
+            border: 1px solid #f0f0f0;
+            border-radius: 6px;
+            padding: 16px;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .timeline-time {
+            font-size: 12px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .timeline-desc {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .detail-header {
+                padding: 20px 16px;
+            }
+
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 16px;
+            }
+
+            .employee-avatar {
+                width: 80px;
+                height: 80px;
+            }
+
+            .employee-info h1 {
+                font-size: 24px;
+            }
+
+            .header-actions {
+                position: static;
+                justify-content: center;
+                margin-top: 16px;
+            }
+
+            .tab-nav {
+                overflow-x: auto;
+                padding: 0 16px;
+            }
+
+            .detail-content {
+                padding: 20px 16px;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .attachment-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 顶部导航 -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">组织架构</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">员工详情</span>
+                </div>
+            </div>
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索功能...">
+                </div>
+                <button class="notification-btn">
+                    🔔
+                    <span class="notification-badge">3</span>
+                </button>
+                <div class="user-menu">
+                    <div class="user-avatar">管</div>
+                    <span>管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 侧边栏 -->
+        <aside class="app-sidebar" id="app-sidebar">
+            <!-- 导航内容将由navigation.js动态生成 -->
+        </aside>
+
+        <!-- 主要内容区 -->
+        <main class="app-main">
+            <div class="employee-detail">
+                <!-- 详情头部 -->
+                <div class="detail-header">
+                    <div class="header-actions">
+                        <a href="employee-edit.html?id=1" class="btn-header">✏️ 编辑</a>
+                        <a href="employee-list.html" class="btn-header">← 返回</a>
+                    </div>
+                    
+                    <div class="header-content">
+                        <div class="employee-avatar">
+                            👤
+                        </div>
+                        <div class="employee-info">
+                            <h1>张三</h1>
+                            <div class="employee-subtitle">技术研发部 · 高级工程师 · EMP20240001</div>
+                            <div class="status-badges">
+                                <span class="status-badge">在职</span>
+                                <span class="status-badge">正式员工</span>
+                                <span class="status-badge">高级员工</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 选项卡导航 -->
+                <div class="detail-tabs">
+                    <div class="tab-nav">
+                        <div class="tab-item active" onclick="switchTab('basic')">基本信息</div>
+                        <div class="tab-item" onclick="switchTab('extend')">扩展信息</div>
+                        <div class="tab-item" onclick="switchTab('attachments')">附件管理</div>
+                        <div class="tab-item" onclick="switchTab('history')">操作记录</div>
+                    </div>
+                </div>
+
+                <!-- 详情内容 -->
+                <div class="detail-content">
+                    <!-- 基本信息选项卡 -->
+                    <div class="tab-panel active" id="basic">
+                        <div class="info-grid">
+                            <div class="info-section">
+                                <div class="section-title">个人信息</div>
+                                <div class="info-item">
+                                    <span class="info-label">员工编号</span>
+                                    <span class="info-value">EMP20240001</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">姓名</span>
+                                    <span class="info-value">张三</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">英文姓名</span>
+                                    <span class="info-value">Zhang San</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">性别</span>
+                                    <span class="info-value">男</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">出生日期</span>
+                                    <span class="info-value">1990-05-15</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">身份证号</span>
+                                    <span class="info-value">110101199005151234</span>
+                                </div>
+                            </div>
+
+                            <div class="info-section">
+                                <div class="section-title">联系方式</div>
+                                <div class="info-item">
+                                    <span class="info-label">手机号</span>
+                                    <span class="info-value">13800138000</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">邮箱</span>
+                                    <span class="info-value">zhangsan@company.com</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">籍贯</span>
+                                    <span class="info-value">北京市</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">现居住地</span>
+                                    <span class="info-value">北京市朝阳区XXX小区</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">紧急联系人</span>
+                                    <span class="info-value">李四</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">紧急联系电话</span>
+                                    <span class="info-value">13900139000</span>
+                                </div>
+                            </div>
+
+                            <div class="info-section">
+                                <div class="section-title">组织信息</div>
+                                <div class="info-item">
+                                    <span class="info-label">所属部门</span>
+                                    <span class="info-value">技术研发部</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">主岗位</span>
+                                    <span class="info-value">高级工程师</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">副岗位</span>
+                                    <span class="info-value">项目经理</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">员工等级</span>
+                                    <span class="info-value">高级员工</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">用工类型</span>
+                                    <span class="info-value">正式员工</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">在职状态</span>
+                                    <span class="info-value">在职</span>
+                                </div>
+                            </div>
+
+                            <div class="info-section">
+                                <div class="section-title">入职信息</div>
+                                <div class="info-item">
+                                    <span class="info-label">入职日期</span>
+                                    <span class="info-value">2022-03-01</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">试用期结束</span>
+                                    <span class="info-value">2022-06-01</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">学历</span>
+                                    <span class="info-value">本科</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">民族</span>
+                                    <span class="info-value">汉族</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">婚姻状况</span>
+                                    <span class="info-value">已婚</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">健康状况</span>
+                                    <span class="info-value">健康</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="info-section">
+                            <div class="section-title">专业技能</div>
+                            <div class="info-value">
+                                熟练掌握Java、Spring Boot、微服务架构设计；具备丰富的大型项目开发经验；
+                                精通数据库设计和优化；熟悉云平台部署和运维。
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 扩展信息选项卡 -->
+                    <div class="tab-panel" id="extend">
+                        <!-- 家庭成员 -->
+                        <div class="extend-list">
+                            <div class="extend-header">家庭成员信息</div>
+                            <div class="extend-item">
+                                <div class="extend-item-title">
+                                    <span class="item-index">1</span>
+                                    王芳 (配偶)
+                                </div>
+                                <div class="extend-grid">
+                                    <div class="info-item">
+                                        <span class="info-label">职位</span>
+                                        <span class="info-value">财务经理</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">工作单位</span>
+                                        <span class="info-value">某会计师事务所</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="extend-item">
+                                <div class="extend-item-title">
+                                    <span class="item-index">2</span>
+                                    张建国 (父亲)
+                                </div>
+                                <div class="extend-grid">
+                                    <div class="info-item">
+                                        <span class="info-label">职位</span>
+                                        <span class="info-value">已退休</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">工作单位</span>
+                                        <span class="info-value">某国有企业</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 教育经历 -->
+                        <div class="extend-list">
+                            <div class="extend-header">教育经历</div>
+                            <div class="extend-item">
+                                <div class="extend-item-title">
+                                    <span class="item-index">1</span>
+                                    北京理工大学 (2008-2012)
+                                </div>
+                                <div class="extend-grid">
+                                    <div class="info-item">
+                                        <span class="info-label">专业</span>
+                                        <span class="info-value">计算机科学与技术</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">学位</span>
+                                        <span class="info-value">学士学位</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">证明人</span>
+                                        <span class="info-value">李教授</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 工作经验 -->
+                        <div class="extend-list">
+                            <div class="extend-header">工作经验</div>
+                            <div class="extend-item">
+                                <div class="extend-item-title">
+                                    <span class="item-index">1</span>
+                                    阿里巴巴集团 (2018-2022)
+                                </div>
+                                <div class="extend-grid">
+                                    <div class="info-item">
+                                        <span class="info-label">职务</span>
+                                        <span class="info-value">高级开发工程师</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">离职原因</span>
+                                        <span class="info-value">职业发展</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">证明人</span>
+                                        <span class="info-value">王经理</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">证明人电话</span>
+                                        <span class="info-value">13700137000</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="extend-item">
+                                <div class="extend-item-title">
+                                    <span class="item-index">2</span>
+                                    腾讯科技 (2012-2018)
+                                </div>
+                                <div class="extend-grid">
+                                    <div class="info-item">
+                                        <span class="info-label">职务</span>
+                                        <span class="info-value">软件工程师</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">离职原因</span>
+                                        <span class="info-value">薪资待遇</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">证明人</span>
+                                        <span class="info-value">赵主管</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <span class="info-label">证明人电话</span>
+                                        <span class="info-value">13600136000</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 附件管理选项卡 -->
+                    <div class="tab-panel" id="attachments">
+                        <div class="attachment-grid">
+                            <div class="attachment-card">
+                                <div class="attachment-icon">📷</div>
+                                <div class="attachment-name">2寸半身照</div>
+                                <div class="attachment-meta">上传时间：2022-03-01<br>文件大小：156KB</div>
+                                <div class="attachment-actions">
+                                    <button class="btn-small" onclick="previewFile('photo2inch')">预览</button>
+                                    <button class="btn-small" onclick="downloadFile('photo2inch')">下载</button>
+                                </div>
+                            </div>
+
+                            <div class="attachment-card">
+                                <div class="attachment-icon">🆔</div>
+                                <div class="attachment-name">身份证正面</div>
+                                <div class="attachment-meta">上传时间：2022-03-01<br>文件大小：245KB</div>
+                                <div class="attachment-actions">
+                                    <button class="btn-small" onclick="previewFile('idCardFront')">预览</button>
+                                    <button class="btn-small" onclick="downloadFile('idCardFront')">下载</button>
+                                </div>
+                            </div>
+
+                            <div class="attachment-card">
+                                <div class="attachment-icon">🆔</div>
+                                <div class="attachment-name">身份证反面</div>
+                                <div class="attachment-meta">上传时间：2022-03-01<br>文件大小：238KB</div>
+                                <div class="attachment-actions">
+                                    <button class="btn-small" onclick="previewFile('idCardBack')">预览</button>
+                                    <button class="btn-small" onclick="downloadFile('idCardBack')">下载</button>
+                                </div>
+                            </div>
+
+                            <div class="attachment-card">
+                                <div class="attachment-icon">🎓</div>
+                                <div class="attachment-name">毕业证</div>
+                                <div class="attachment-meta">上传时间：2022-03-01<br>文件大小：1.2MB</div>
+                                <div class="attachment-actions">
+                                    <button class="btn-small" onclick="previewFile('diploma')">预览</button>
+                                    <button class="btn-small" onclick="downloadFile('diploma')">下载</button>
+                                </div>
+                            </div>
+
+                            <div class="attachment-card">
+                                <div class="attachment-icon">🏆</div>
+                                <div class="attachment-name">学士学位证</div>
+                                <div class="attachment-meta">上传时间：2022-03-01<br>文件大小：1.1MB</div>
+                                <div class="attachment-actions">
+                                    <button class="btn-small" onclick="previewFile('degree')">预览</button>
+                                    <button class="btn-small" onclick="downloadFile('degree')">下载</button>
+                                </div>
+                            </div>
+
+                            <div class="attachment-card">
+                                <div class="attachment-icon">📝</div>
+                                <div class="attachment-name">笔试成绩单</div>
+                                <div class="attachment-meta">上传时间：2022-02-28<br>文件大小：456KB</div>
+                                <div class="attachment-actions">
+                                    <button class="btn-small" onclick="previewFile('examScore')">预览</button>
+                                    <button class="btn-small" onclick="downloadFile('examScore')">下载</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 操作记录选项卡 -->
+                    <div class="tab-panel" id="history">
+                        <div class="timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-content">
+                                    <div class="timeline-title">员工信息创建</div>
+                                    <div class="timeline-time">2022-03-01 09:00:00</div>
+                                    <div class="timeline-desc">HR 张女士 创建了员工档案，完成基本信息录入</div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-content">
+                                    <div class="timeline-title">试用期转正</div>
+                                    <div class="timeline-time">2022-06-01 10:30:00</div>
+                                    <div class="timeline-desc">部门经理 李先生 确认试用期考核通过，办理转正手续</div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-content">
+                                    <div class="timeline-title">岗位调整</div>
+                                    <div class="timeline-time">2023-01-15 14:20:00</div>
+                                    <div class="timeline-desc">由初级工程师晋升为高级工程师，兼任项目经理职务</div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-content">
+                                    <div class="timeline-title">联系方式更新</div>
+                                    <div class="timeline-time">2023-08-10 16:45:00</div>
+                                    <div class="timeline-desc">员工本人 更新了手机号码和家庭住址信息</div>
+                                </div>
+                            </div>
+
+                            <div class="timeline-item">
+                                <div class="timeline-content">
+                                    <div class="timeline-title">附件上传</div>
+                                    <div class="timeline-time">2024-01-05 11:15:00</div>
+                                    <div class="timeline-desc">员工本人 上传了新的证件照片</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 选项卡切换
+        function switchTab(tabId) {
+            // 隐藏所有选项卡内容
+            document.querySelectorAll('.tab-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // 移除所有选项卡激活状态
+            document.querySelectorAll('.tab-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // 显示目标选项卡内容
+            document.getElementById(tabId).classList.add('active');
+            
+            // 激活目标选项卡
+            event.target.classList.add('active');
+        }
+
+        // 文件预览
+        function previewFile(fileType) {
+            showMessage(`预览 ${fileType} 文件`, 'info');
+            // 这里可以实现文件预览功能
+        }
+
+        // 文件下载
+        function downloadFile(fileType) {
+            showMessage(`下载 ${fileType} 文件`, 'success');
+            // 这里可以实现文件下载功能
+        }
+
+        // 消息提示
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                background: ${type === 'success' ? '#52c41a' : type === 'warning' ? '#faad14' : '#1890ff'};
+                color: white;
+                border-radius: 4px;
+                z-index: 9999;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            `;
+            messageDiv.textContent = message;
+            document.body.appendChild(messageDiv);
+
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+
+        // 导航菜单功能将由统一导航系统提供
+    </script>
+    
+    <!-- 引入统一导航系统 -->
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html> 

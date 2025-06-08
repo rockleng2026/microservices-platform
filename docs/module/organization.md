@@ -409,14 +409,323 @@ CREATE TABLE workposition_manage_dept (
 - 组织调动：原部门主管 → 新部门主管 → HR审批
 - 离职申请：员工申请 → 直接主管 → 部门负责人 → HR审批
 
-## 5. 权限管理体系
+## 5. 岗位权限配置管理
 
-### 5.1 权限架构设计
+### 5.1 功能概述
+岗位权限配置是Portal 3.0组织管理的核心功能，基于原有的workposition表和groups表重构，实现从"角色权限"到"岗位权限"的转变，提供更精细化、更贴合企业实际组织结构的权限管理方案。
 
-#### 5.1.1 权限模型
+### 5.2 设计理念
+
+#### 5.2.1 岗位化权限管理
+- **权限主体转变**：从基于"角色"的权限管理转变为基于"岗位"的权限管理
+- **组织结构映射**：权限配置直接映射到企业的岗位体系，更符合管理实际
+- **精细化控制**：支持到具体功能点的权限控制，满足企业精细化管理需求
+- **动态权限切换**：员工可在其担任的多个岗位间切换，获得对应权限
+
+#### 5.2.2 双面板交互设计
+- **左侧岗位面板**：展示企业所有岗位，支持搜索和筛选
+- **右侧权限面板**：展示选中岗位的功能权限配置
+- **即时响应**：点击岗位立即切换对应的权限配置界面
+- **状态联动**：权限勾选状态支持全选、半选的智能联动
+
+### 5.3 界面功能设计
+
+#### 5.3.1 岗位列表面板（左侧）
+**布局结构**：
+- 面板标题：显示"岗位列表"和岗位总数统计
+- 搜索框：支持按岗位名称、部门名称进行实时搜索
+- 岗位列表：以卡片形式展示岗位信息
+
+**岗位卡片信息**：
 ```
-用户 → 员工 → 岗位 → 权限组 → 权限
-     ↘    ↘              ↗
+┌─────────────────────────┐
+│ 岗位名称                │
+│ 所属部门    [权重等级]   │
+└─────────────────────────┘
+```
+
+**交互特性**：
+- 点击岗位卡片切换到对应的权限配置
+- 当前选中岗位高亮显示（蓝色边框+背景色）
+- 支持键盘上下键快速切换岗位选择
+
+#### 5.3.2 权限配置面板（右侧）
+**面板头部**：
+- 标题："功能权限配置"
+- 操作按钮：全部展开、全部折叠、保存配置
+
+**选中岗位信息区**：
+```
+┌─────────────────────────────────────┐
+│ 技术总监                            │
+│ 所属部门：技术部    岗位级别：总经理级│
+└─────────────────────────────────────┘
+```
+
+**权限树结构**：
+```
+🏢 组织架构 ☑️
+├── 部门管理 ☑️
+│   ├── ☑️ 查看部门
+│   ├── ☑️ 新增部门
+│   ├── ☑️ 编辑部门
+│   └── ☐ 删除部门
+├── 员工管理 ☐
+└── 岗位管理 ☑️
+
+👥 客户关系管理 ☑️
+├── 客户管理 ☑️
+└── 跟进管理 ☐
+```
+
+### 5.4 权限模块结构
+
+#### 5.4.1 模块分层设计
+**三级权限结构**：
+1. **一级模块**：系统的主要功能模块（如：组织架构、CRM、产品管理）
+2. **二级功能组**：模块下的功能分组（如：部门管理、员工管理）
+3. **三级功能点**：具体的操作权限（如：查看、新增、编辑、删除）
+
+#### 5.4.2 权限模块定义
+```javascript
+const permissionModules = [
+  {
+    id: 'organization',
+    name: '组织架构',
+    icon: '🏢',
+    functions: [
+      {
+        groupName: '部门管理',
+        permissions: [
+          { code: 'dept_view', name: '查看部门' },
+          { code: 'dept_add', name: '新增部门' },
+          { code: 'dept_edit', name: '编辑部门' },
+          { code: 'dept_delete', name: '删除部门' }
+        ]
+      },
+      {
+        groupName: '员工管理',
+        permissions: [
+          { code: 'emp_view', name: '查看员工' },
+          { code: 'emp_add', name: '新增员工' },
+          { code: 'emp_edit', name: '编辑员工' },
+          { code: 'emp_delete', name: '删除员工' }
+        ]
+      },
+      {
+        groupName: '岗位管理',
+        permissions: [
+          { code: 'pos_view', name: '查看岗位' },
+          { code: 'pos_add', name: '新增岗位' },
+          { code: 'pos_edit', name: '编辑岗位' },
+          { code: 'pos_delete', name: '删除岗位' },
+          { code: 'pos_permission', name: '配置权限' }
+        ]
+      }
+    ]
+  },
+  {
+    id: 'crm',
+    name: '客户关系管理',
+    icon: '👥',
+    functions: [
+      {
+        groupName: '客户管理',
+        permissions: [
+          { code: 'customer_view', name: '查看客户' },
+          { code: 'customer_add', name: '新增客户' },
+          { code: 'customer_edit', name: '编辑客户' },
+          { code: 'customer_delete', name: '删除客户' },
+          { code: 'customer_transfer', name: '客户转移' }
+        ]
+      }
+    ]
+  }
+  // ... 其他模块
+];
+```
+
+### 5.5 数据模型设计
+
+#### 5.5.1 权限存储结构
+**JSON格式权限配置**：
+```javascript
+{
+  permissions: {
+    organization: {
+      department: {
+        view: true,
+        add: true,
+        edit: true,
+        delete: false
+      },
+      employee: {
+        view: true,
+        add: false,
+        edit: false,
+        delete: false
+      },
+      position: {
+        view: true,
+        add: true,
+        edit: true,
+        delete: true
+      }
+    },
+    crm: {
+      customer: {
+        view: true,
+        add: true,
+        edit: true,
+        delete: false,
+        transfer: true
+      },
+      follow: {
+        view: true,
+        add: true,
+        edit: true,
+        delete: false
+      }
+    },
+    product: {
+      category: {
+        view: true,
+        add: false,
+        edit: false,
+        delete: false
+      },
+      product: {
+        view: true,
+        add: true,
+        edit: true,
+        delete: false
+      }
+    }
+    // ... 其他模块权限
+  },
+  functionIDs: "1,2,3,5,8,9,12,15,18,20,25,28" // 兼容原系统的功能ID串
+}
+```
+
+#### 5.5.2 数据库表结构
+```sql
+-- 岗位权限表（扩展原workposition表）
+ALTER TABLE workposition ADD COLUMN permissions text COMMENT '权限配置JSON';
+ALTER TABLE workposition ADD COLUMN functionIDs varchar(500) COMMENT '功能权限ID串';
+ALTER TABLE workposition ADD COLUMN workgrade int(11) DEFAULT 1 COMMENT '权重等级(1-5)';
+ALTER TABLE workposition ADD COLUMN workcontent text COMMENT '工作职责';
+ALTER TABLE workposition ADD COLUMN edittime datetime COMMENT '最后编辑时间';
+
+-- 权限功能点表
+CREATE TABLE permission_function (
+    id int(11) NOT NULL AUTO_INCREMENT COMMENT '功能ID',
+    function_code varchar(100) NOT NULL COMMENT '功能代码',
+    function_name varchar(100) NOT NULL COMMENT '功能名称',
+    module_code varchar(50) NOT NULL COMMENT '模块代码',
+    group_code varchar(50) NOT NULL COMMENT '分组代码',
+    parent_id int(11) DEFAULT 0 COMMENT '父功能ID',
+    sort_order int(11) DEFAULT 0 COMMENT '排序号',
+    status tinyint(1) DEFAULT 1 COMMENT '状态',
+    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
+    tenant_id varchar(32) COMMENT '租户ID',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_function_code (function_code, tenant_id),
+    KEY idx_module_code (module_code),
+    KEY idx_group_code (group_code)
+) COMMENT='权限功能点表';
+```
+
+### 5.6 交互逻辑实现
+
+#### 5.6.1 权限状态联动
+**模块级联动**：
+- 勾选模块复选框：该模块下所有功能权限被选中
+- 取消模块复选框：该模块下所有功能权限被取消
+- 部分功能被选中时：模块复选框显示半选状态（indeterminate）
+
+**功能组级联动**：
+- 勾选功能组复选框：该组下所有具体功能被选中
+- 取消功能组复选框：该组下所有具体功能被取消
+- 部分功能被选中时：功能组复选框显示半选状态
+
+**代码实现**：
+```javascript
+// 更新权限状态联动
+function updatePermissionState() {
+    // 更新功能组复选框状态
+    document.querySelectorAll('.function-group-checkbox').forEach(groupCheckbox => {
+        const functionCheckboxes = document.querySelectorAll(
+            `input[data-group="${groupCheckbox.dataset.group}"].function-checkbox`
+        );
+        
+        const checkedCount = Array.from(functionCheckboxes).filter(cb => cb.checked).length;
+        groupCheckbox.checked = checkedCount === functionCheckboxes.length;
+        groupCheckbox.indeterminate = checkedCount > 0 && checkedCount < functionCheckboxes.length;
+    });
+    
+    // 更新模块复选框状态
+    document.querySelectorAll('.module-checkbox').forEach(moduleCheckbox => {
+        const allCheckboxes = moduleCheckbox.closest('.permission-module')
+            .querySelectorAll('.function-checkbox');
+        
+        const checkedCount = Array.from(allCheckboxes).filter(cb => cb.checked).length;
+        moduleCheckbox.checked = checkedCount === allCheckboxes.length;
+        moduleCheckbox.indeterminate = checkedCount > 0 && checkedCount < allCheckboxes.length;
+    });
+}
+```
+
+#### 5.6.2 权限保存机制
+**数据收集**：
+```javascript
+function savePermissions() {
+    const permissions = {};
+    const functionIds = [];
+    
+    // 收集所有选中的权限
+    document.querySelectorAll('.function-checkbox:checked').forEach((checkbox, index) => {
+        const module = checkbox.dataset.module;
+        const group = checkbox.dataset.group;
+        const permission = checkbox.dataset.permission;
+        
+        if (!permissions[module]) permissions[module] = {};
+        if (!permissions[module][group]) permissions[module][group] = {};
+        
+        permissions[module][group][permission] = true;
+        functionIds.push(index + 1);
+    });
+    
+    // 更新岗位权限配置
+    updatePositionPermissions(currentPosition.id, {
+        permissions: permissions,
+        functionIDs: functionIds.join(','),
+        editTime: new Date().toISOString()
+    });
+}
+```
+
+### 5.7 业务规则和约束
+
+#### 5.7.1 权限配置规则
+- **权限下钻原则**：只能为岗位配置不超过其上级岗位的权限
+- **权限互斥检查**：检测权限配置是否存在逻辑冲突
+- **必要权限保障**：某些关键岗位的基础权限不可删除
+- **权限继承机制**：下级岗位可继承上级岗位的基础权限
+
+#### 5.7.2 数据完整性约束
+- **岗位权限关联**：删除岗位时需要检查权限配置依赖
+- **功能权限映射**：确保权限代码与实际功能点的一致性
+- **版本兼容性**：新增功能权限时保持向下兼容
+- **权限审计追踪**：记录所有权限变更的操作日志
+
+### 5.8 权限管理体系
+
+#### 5.8.1 权限架构设计
+
+#### 5.8.1 权限模型
+```
+用户 → 员工 → 岗位 → 功能权限
+     ↘    ↘         ↗
        个人权限 ← 权限授权
 ```
 

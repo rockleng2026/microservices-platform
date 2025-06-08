@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>角色权限配置 - Portal 3.0</title>
+    <title>岗位权限配置 - Portal 3.0</title>
     <link rel="stylesheet" href="../assets/css/common.css">
     <style>
         /* 框架布局结构 */
@@ -65,68 +65,101 @@
             text-align: center;
         }
 
-        /* 侧边栏头部 */
-        .sidebar-header {
-            height: 60px;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
-            border-bottom: 1px solid #e8e8e8;
+        /* 页面头部 */
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .page-description {
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* 权限配置主容器 */
+        .permission-container {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 24px;
+            height: calc(100vh - 200px);
+            min-height: 600px;
+        }
+
+        /* 岗位列表面板 */
+        .position-panel {
             background: white;
-        }
-
-        .logo {
-            width: 32px;
-            height: 32px;
-            background: #1890ff;
-            border-radius: 6px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            margin-right: 12px;
+            flex-direction: column;
         }
 
-        .brand-name {
-            font-size: 18px;
+        .position-panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .position-panel-title {
+            font-size: 16px;
             font-weight: 600;
             color: #333;
         }
 
-        .nav-menu {
-            padding: 20px 0;
-            list-style: none;
-            margin: 0;
+        .position-search {
+            margin: 16px 20px;
         }
 
-        .nav-item {
-            margin-bottom: 4px;
+        .position-search input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
         }
 
-        .nav-link {
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            color: #666 !important;
-            text-decoration: none;
+        .position-search input:focus {
+            outline: none;
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+
+        .position-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px 20px 20px;
+        }
+
+        .position-item {
+            padding: 12px 16px;
+            border: 1px solid #f0f0f0;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
             transition: all 0.3s ease;
             position: relative;
-            font-size: 14px;
-            width: 100%;
         }
 
-        .nav-link:hover {
-            background: #f5f5f5 !important;
-            color: #333 !important;
+        .position-item:hover {
+            border-color: #d9d9d9;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
-        .nav-link.active {
-            background: rgba(24, 144, 255, 0.1) !important;
-            color: #1890ff !important;
+        .position-item.active {
+            border-color: #1890ff;
+            background: #f6ffed;
+            box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
         }
 
-        .nav-link.active::before {
+        .position-item.active::before {
             content: '';
             position: absolute;
             left: 0;
@@ -134,95 +167,269 @@
             bottom: 0;
             width: 3px;
             background: #1890ff;
+            border-radius: 0 3px 3px 0;
         }
 
-        .nav-icon {
-            margin-right: 12px;
-            font-size: 16px;
-            display: inline-block;
-            min-width: 20px;
-        }
-
-        /* 二级菜单样式 */
-        .nav-group {
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            color: #666;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            position: relative;
+        .position-name {
             font-size: 14px;
-            cursor: pointer;
-            background: none;
-            border: none;
-            width: 100%;
-            text-align: left;
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 4px;
         }
 
-        .nav-group:hover {
-            background: #f5f5f5;
+        .position-info {
+            font-size: 12px;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .position-department {
+            flex: 1;
+        }
+
+        .position-level {
+            background: #f0f9ff;
+            color: #1890ff;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 11px;
+        }
+
+        /* 权限配置面板 */
+        .permission-panel {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .permission-panel-header {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .permission-panel-title {
+            font-size: 16px;
+            font-weight: 600;
             color: #333;
         }
 
-        .nav-group.expanded {
-            background: rgba(24, 144, 255, 0.05);
-            color: #1890ff;
-        }
-
-        .nav-arrow {
-            margin-left: auto;
-            transition: transform 0.3s ease;
-            font-size: 12px;
-        }
-
-        .nav-arrow.rotated {
-            transform: rotate(90deg);
-        }
-
-        .nav-submenu {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            background: #fafafa;
-        }
-
-        .nav-submenu.expanded {
-            max-height: 300px;
-        }
-
-        .nav-subitem {
-            display: block;
-            padding: 8px 20px 8px 52px;
-            color: #666 !important;
-            text-decoration: none;
-            font-size: 13px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-subitem:hover {
-            background: #f0f0f0;
-            color: #333 !important;
-        }
-
-        .nav-subitem.active {
-            background: rgba(24, 144, 255, 0.1);
-            color: #1890ff !important;
-        }
-
-        /* 头部左侧区域 */
-        .header-left {
+        .permission-actions {
             display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            background: white;
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
             align-items: center;
+            gap: 4px;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            border-color: #1890ff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+            border-color: #40a9ff;
+        }
+
+        .btn:hover {
+            border-color: #40a9ff;
+            color: #40a9ff;
+        }
+
+        .permission-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .position-selected-info {
+            background: #f8f9fa;
+            padding: 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            border-left: 3px solid #1890ff;
+        }
+
+        .selected-position-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .selected-position-details {
+            font-size: 13px;
+            color: #666;
+            display: flex;
             gap: 16px;
         }
 
-        /* 面包屑导航 */
+        .permission-tree {
+            border: 1px solid #f0f0f0;
+            border-radius: 6px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .permission-module {
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .permission-module:last-child {
+            border-bottom: none;
+        }
+
+        .module-header {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            background: #fafafa;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .module-header:hover {
+            background: #f5f5f5;
+        }
+
+        .module-header.expanded {
+            background: #e6f7ff;
+        }
+
+        .module-checkbox {
+            margin-right: 12px;
+        }
+
+        .module-icon {
+            font-size: 16px;
+            margin-right: 12px;
+        }
+
+        .module-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            flex: 1;
+        }
+
+        .module-arrow {
+            transition: transform 0.3s ease;
+            color: #999;
+        }
+
+        .module-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .module-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .module-content.expanded {
+            max-height: 800px;
+        }
+
+        .function-group {
+            padding: 12px 20px 12px 48px;
+            border-bottom: 1px solid #f8f9fa;
+        }
+
+        .function-group:last-child {
+            border-bottom: none;
+        }
+
+        .function-group-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .function-group-checkbox {
+            margin-right: 8px;
+        }
+
+        .function-group-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .function-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 8px;
+        }
+
+        .function-item {
+            display: flex;
+            align-items: center;
+            padding: 6px 0;
+        }
+
+        .function-checkbox {
+            margin-right: 8px;
+        }
+
+        .function-name {
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-text {
+            font-size: 14px;
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .permission-container {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            
+            .position-panel {
+                max-height: 300px;
+            }
+        }
+
+        /* 顶部导航相关样式 */
         .breadcrumb {
             display: flex;
             align-items: center;
             color: #666;
-            font-size: 14px;
         }
 
         .breadcrumb-item {
@@ -234,11 +441,18 @@
             color: #d9d9d9;
         }
 
-        /* 头部右侧操作区 */
-        .header-actions {
+        .header-left {
             display: flex;
             align-items: center;
-            gap: 16px;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            margin-right: 16px;
         }
 
         .search-box {
@@ -252,13 +466,6 @@
             border: 1px solid #d9d9d9;
             border-radius: 6px;
             background: #fafafa;
-            font-size: 14px;
-        }
-
-        .search-input:focus {
-            outline: none;
-            border-color: #1890ff;
-            background: white;
         }
 
         .search-icon {
@@ -266,18 +473,22 @@
             left: 12px;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 14px;
             color: #999;
         }
 
         .notification-btn {
             position: relative;
-            background: none;
+            width: 32px;
+            height: 32px;
             border: none;
+            background: none;
             cursor: pointer;
-            padding: 8px;
             border-radius: 6px;
-            transition: background 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: all 0.3s ease;
         }
 
         .notification-btn:hover {
@@ -286,15 +497,14 @@
 
         .notification-badge {
             position: absolute;
-            top: 2px;
-            right: 2px;
+            top: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
             background: #ff4d4f;
             color: white;
-            border-radius: 10px;
-            padding: 2px 6px;
-            font-size: 12px;
-            min-width: 16px;
-            height: 16px;
+            border-radius: 50%;
+            font-size: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -303,11 +513,10 @@
         .user-menu {
             display: flex;
             align-items: center;
-            gap: 8px;
             cursor: pointer;
-            padding: 8px 12px;
+            padding: 4px;
             border-radius: 6px;
-            transition: background 0.3s;
+            transition: all 0.3s ease;
         }
 
         .user-menu:hover {
@@ -324,381 +533,42 @@
             justify-content: center;
             color: white;
             font-weight: bold;
-            font-size: 14px;
-        }
-
-        /* 移动端适配 */
-        .mobile-menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 8px;
-            color: #666;
-        }
-
-        /* 页面内容样式 */
-        .page-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 24px;
-            border-radius: 12px;
-            margin-bottom: 24px;
-        }
-
-        .page-title {
-            font-size: 24px;
-            font-weight: 700;
-            margin-bottom: 8px;
-        }
-
-        .page-subtitle {
-            opacity: 0.9;
-            margin-bottom: 0;
-        }
-
-        .content-layout {
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 24px;
-            height: calc(100vh - 200px);
-        }
-
-        .role-list-panel {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            overflow-y: auto;
-        }
-
-        .permission-panel {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            overflow-y: auto;
-        }
-
-        .panel-title {
-            font-size: 16px;
-            font-weight: 600;
-            margin-bottom: 16px;
-            color: #333;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .role-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 12px 16px;
-            border: 1px solid #f0f0f0;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .role-item:hover {
-            border-color: #1890ff;
-            background: #f6f8ff;
-        }
-
-        .role-item.active {
-            border-color: #1890ff;
-            background: #e6f7ff;
-        }
-
-        .role-info {
-            flex: 1;
-        }
-
-        .role-name {
-            font-weight: 500;
-            color: #333;
-            margin-bottom: 4px;
-        }
-
-        .role-desc {
-            font-size: 12px;
-            color: #999;
-        }
-
-        .role-status {
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .role-status.enabled {
-            background: #f6ffed;
-            color: #52c41a;
-        }
-
-        .role-status.disabled {
-            background: #fff2f0;
-            color: #ff4d4f;
-        }
-
-        .permission-tree {
-            border: 1px solid #f0f0f0;
-            border-radius: 8px;
-            padding: 16px;
-            max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .tree-node {
-            margin-bottom: 8px;
-        }
-
-        .tree-item {
-            display: flex;
-            align-items: center;
-            padding: 8px 12px;
-            border-radius: 6px;
-            transition: background 0.3s;
-        }
-
-        .tree-item:hover {
-            background: #f5f5f5;
-        }
-
-        .tree-checkbox {
             margin-right: 8px;
         }
 
-        .tree-icon {
-            margin-right: 8px;
-            font-size: 14px;
-            color: #666;
-        }
-
-        .tree-label {
-            flex: 1;
-            font-size: 14px;
-            color: #333;
-        }
-
-        .tree-children {
-            margin-left: 24px;
-            margin-top: 4px;
-        }
-
-        .tree-expand {
-            margin-right: 4px;
-            cursor: pointer;
-            color: #999;
-            font-size: 12px;
-            transition: transform 0.3s;
-        }
-
-        .tree-expand.expanded {
-            transform: rotate(90deg);
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
-            background: white;
-            color: #666;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .btn:hover {
-            border-color: #1890ff;
-            color: #1890ff;
-        }
-
-        .btn-primary {
-            background: #1890ff;
-            border-color: #1890ff;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #40a9ff;
-            border-color: #40a9ff;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 12px;
-            justify-content: flex-end;
-            margin-top: 20px;
-            padding-top: 20px;
-            border-top: 1px solid #f0f0f0;
-        }
-
-        /* 响应式设计 */
         @media (max-width: 768px) {
-            .app-layout {
-                grid-template-areas: 
-                    "header"
-                    "main"
-                    "footer";
-                grid-template-columns: 1fr;
-                grid-template-rows: 60px 1fr auto;
-            }
-
-            .app-sidebar {
-                position: fixed;
-                left: -240px;
-                width: 240px;
-                transition: left 0.3s ease;
-                z-index: 1000;
-            }
-
-            .app-sidebar.mobile-open {
-                left: 0;
-            }
-
-            .content-layout {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-
             .mobile-menu-toggle {
                 display: block;
             }
-        }
-
-        /* 页脚内容 */
-        .footer-content {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
         }
     </style>
 </head>
 <body>
     <div class="app-layout">
-        <!-- 左侧导航 -->
-        <aside class="app-sidebar">
-            <div class="sidebar-header">
-                <div class="logo">P3</div>
-                <div class="brand-name">Portal 3.0</div>
-            </div>
-            
-            <ul class="nav-menu">
-                <li class="nav-item">
-                    <a href="../index.html" class="nav-link">
-                        <span class="nav-icon">🏠</span>
-                        <span>首页总览</span>
-                    </a>
-                </li>
-                
-                <!-- 工作台模块 -->
-                <li class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">💼</span>
-                        <span>工作台</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../dashboard/oa-workspace.html" class="nav-subitem">OA工作台</a>
-                        <a href="../dashboard/crm-workspace.html" class="nav-subitem">CRM工作台</a>
-                        <a href="../dashboard/sales-workspace.html" class="nav-subitem">销售工作台</a>
-                        <a href="../dashboard/workspace-config.html" class="nav-subitem">工作台配置</a>
-                    </div>
-                </li>
-                
-                <!-- 组织架构模块 -->
-                <li class="nav-item">
-                    <button class="nav-group expanded" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">🏢</span>
-                        <span>组织架构</span>
-                        <span class="nav-arrow rotated">▶</span>
-                    </button>
-                    <div class="nav-submenu expanded">
-                        <a href="department-tree.html" class="nav-subitem">部门管理</a>
-                        <a href="employee-list.html" class="nav-subitem">员工管理</a>
-                        <a href="position-manage.html" class="nav-subitem">岗位管理</a>
-                        <a href="role-permission.html" class="nav-subitem active">角色权限</a>
-                    </div>
-                </li>
-                
-                <!-- 客户管理模块 -->
-                <li class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">👥</span>
-                        <span>客户管理</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../crm/customer-list.html" class="nav-subitem">客户列表</a>
-                        <a href="#" class="nav-subitem">客户详情</a>
-                        <a href="#" class="nav-subitem">跟进记录</a>
-                        <a href="#" class="nav-subitem">客户转移</a>
-                    </div>
-                </li>
-                
-                <!-- 商品管理模块 -->
-                <li class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">📦</span>
-                        <span>商品管理</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="#" class="nav-subitem">商品列表</a>
-                        <a href="#" class="nav-subitem">商品分类</a>
-                        <a href="#" class="nav-subitem">库存管理</a>
-                        <a href="#" class="nav-subitem">价格策略</a>
-                    </div>
-                </li>
-                
-                <!-- 订单管理模块 -->
-                <li class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">📋</span>
-                        <span>订单管理</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="#" class="nav-subitem">订单列表</a>
-                        <a href="#" class="nav-subitem">订单详情</a>
-                        <a href="#" class="nav-subitem">订单统计</a>
-                        <a href="#" class="nav-subitem">退货管理</a>
-                    </div>
-                </li>
-            </ul>
+        <!-- 左侧导航栏 -->
+        <aside class="app-sidebar" id="app-sidebar">
+            <!-- 导航内容将由navigation.js动态生成 -->
         </aside>
 
-        <!-- 头部区域 -->
+        <!-- 顶部导航 -->
         <header class="app-header">
             <div class="header-left">
                 <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
                 <div class="breadcrumb">
-                    <span class="breadcrumb-item">Portal 3.0</span>
-                    <span class="breadcrumb-separator">/</span>
                     <span class="breadcrumb-item">组织架构</span>
                     <span class="breadcrumb-separator">/</span>
-                    <span class="breadcrumb-item">角色权限</span>
+                    <span class="breadcrumb-item">岗位权限配置</span>
                 </div>
             </div>
-            
             <div class="header-actions">
                 <div class="search-box">
                     <span class="search-icon">🔍</span>
-                    <input type="text" class="search-input" placeholder="搜索角色...">
+                    <input type="text" class="search-input" placeholder="搜索功能...">
                 </div>
-                
                 <button class="notification-btn">
-                    <span>🔔</span>
+                    🔔
                     <span class="notification-badge">3</span>
                 </button>
-                
                 <div class="user-menu">
                     <div class="user-avatar">管</div>
                     <span>管理员</span>
@@ -708,273 +578,44 @@
 
         <!-- 主内容区域 -->
         <main class="app-main">
-            <!-- 页面头部 -->
             <div class="page-header">
-                <h1 class="page-title">🔐 角色权限配置</h1>
-                <p class="page-subtitle">管理系统角色和权限分配，控制用户功能访问权限</p>
+                <h1 class="page-title">岗位权限配置</h1>
+                <p class="page-description">为不同岗位配置相应的系统功能权限，实现精细化权限控制</p>
             </div>
 
-            <!-- 内容布局 -->
-            <div class="content-layout">
-                <!-- 角色列表面板 -->
-                <div class="role-list-panel">
-                    <div class="panel-title">
-                        角色列表
-                        <button class="btn btn-primary" onclick="addRole()">新增角色</button>
+            <div class="permission-container">
+                <!-- 岗位列表面板 -->
+                <div class="position-panel">
+                    <div class="position-panel-header">
+                        <h3 class="position-panel-title">岗位列表</h3>
+                        <span class="position-count" id="positionCount">0个岗位</span>
                     </div>
-
-                    <div class="role-item active" onclick="selectRole(this, 1)">
-                        <div class="role-info">
-                            <div class="role-name">超级管理员</div>
-                            <div class="role-desc">拥有系统所有权限</div>
-                        </div>
-                        <div class="role-status enabled">启用</div>
+                    
+                    <div class="position-search">
+                        <input type="text" id="positionSearchInput" placeholder="搜索岗位名称或部门..." onkeyup="searchPositions()">
                     </div>
-
-                    <div class="role-item" onclick="selectRole(this, 2)">
-                        <div class="role-info">
-                            <div class="role-name">部门经理</div>
-                            <div class="role-desc">管理本部门员工和业务</div>
-                        </div>
-                        <div class="role-status enabled">启用</div>
-                    </div>
-
-                    <div class="role-item" onclick="selectRole(this, 3)">
-                        <div class="role-info">
-                            <div class="role-name">销售人员</div>
-                            <div class="role-desc">客户管理和销售业务</div>
-                        </div>
-                        <div class="role-status enabled">启用</div>
-                    </div>
-
-                    <div class="role-item" onclick="selectRole(this, 4)">
-                        <div class="role-info">
-                            <div class="role-name">客服人员</div>
-                            <div class="role-desc">客户服务和工单处理</div>
-                        </div>
-                        <div class="role-status enabled">启用</div>
-                    </div>
-
-                    <div class="role-item" onclick="selectRole(this, 5)">
-                        <div class="role-info">
-                            <div class="role-name">普通员工</div>
-                            <div class="role-desc">基本系统功能使用</div>
-                        </div>
-                        <div class="role-status enabled">启用</div>
-                    </div>
-
-                    <div class="role-item" onclick="selectRole(this, 6)">
-                        <div class="role-info">
-                            <div class="role-name">财务人员</div>
-                            <div class="role-desc">财务数据查看和审核</div>
-                        </div>
-                        <div class="role-status disabled">禁用</div>
+                    
+                    <div class="position-list" id="positionList">
+                        <!-- 岗位列表将由JavaScript动态生成 -->
                     </div>
                 </div>
 
                 <!-- 权限配置面板 -->
                 <div class="permission-panel">
-                    <div class="panel-title">
-                        权限配置 - 超级管理员
-                        <button class="btn" onclick="expandAll()">展开全部</button>
-                    </div>
-
-                    <div class="permission-tree">
-                        <!-- 系统管理 -->
-                        <div class="tree-node">
-                            <div class="tree-item">
-                                <span class="tree-expand expanded" onclick="toggleTreeNode(this)">▶</span>
-                                <input type="checkbox" class="tree-checkbox" checked>
-                                <span class="tree-icon">⚙️</span>
-                                <span class="tree-label">系统管理</span>
-                            </div>
-                            <div class="tree-children">
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">👥</span>
-                                        <span class="tree-label">用户管理</span>
-                                    </div>
-                                </div>
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">🔐</span>
-                                        <span class="tree-label">角色权限</span>
-                                    </div>
-                                </div>
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">📊</span>
-                                        <span class="tree-label">系统监控</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 组织架构 -->
-                        <div class="tree-node">
-                            <div class="tree-item">
-                                <span class="tree-expand expanded" onclick="toggleTreeNode(this)">▶</span>
-                                <input type="checkbox" class="tree-checkbox" checked>
-                                <span class="tree-icon">🏢</span>
-                                <span class="tree-label">组织架构</span>
-                            </div>
-                            <div class="tree-children">
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">🌳</span>
-                                        <span class="tree-label">部门管理</span>
-                                    </div>
-                                </div>
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">👤</span>
-                                        <span class="tree-label">员工管理</span>
-                                    </div>
-                                </div>
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">💼</span>
-                                        <span class="tree-label">岗位管理</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 客户管理 -->
-                        <div class="tree-node">
-                            <div class="tree-item">
-                                <span class="tree-expand expanded" onclick="toggleTreeNode(this)">▶</span>
-                                <input type="checkbox" class="tree-checkbox" checked>
-                                <span class="tree-icon">👥</span>
-                                <span class="tree-label">客户管理</span>
-                            </div>
-                            <div class="tree-children">
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">📋</span>
-                                        <span class="tree-label">客户列表</span>
-                                    </div>
-                                </div>
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">📝</span>
-                                        <span class="tree-label">跟进记录</span>
-                                    </div>
-                                </div>
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">🔄</span>
-                                        <span class="tree-label">客户转移</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 商品管理 -->
-                        <div class="tree-node">
-                            <div class="tree-item">
-                                <span class="tree-expand expanded" onclick="toggleTreeNode(this)">▶</span>
-                                <input type="checkbox" class="tree-checkbox" checked>
-                                <span class="tree-icon">📦</span>
-                                <span class="tree-label">商品管理</span>
-                            </div>
-                            <div class="tree-children">
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">📝</span>
-                                        <span class="tree-label">商品列表</span>
-                                    </div>
-                                </div>
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">🗂️</span>
-                                        <span class="tree-label">分类管理</span>
-                                    </div>
-                                </div>
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">📊</span>
-                                        <span class="tree-label">库存管理</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 订单管理 -->
-                        <div class="tree-node">
-                            <div class="tree-item">
-                                <span class="tree-expand expanded" onclick="toggleTreeNode(this)">▶</span>
-                                <input type="checkbox" class="tree-checkbox" checked>
-                                <span class="tree-icon">📋</span>
-                                <span class="tree-label">订单管理</span>
-                            </div>
-                            <div class="tree-children">
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">📄</span>
-                                        <span class="tree-label">订单列表</span>
-                                    </div>
-                                </div>
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">📊</span>
-                                        <span class="tree-label">订单统计</span>
-                                    </div>
-                                </div>
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">↩️</span>
-                                        <span class="tree-label">退货管理</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 客服中心 -->
-                        <div class="tree-node">
-                            <div class="tree-item">
-                                <span class="tree-expand expanded" onclick="toggleTreeNode(this)">▶</span>
-                                <input type="checkbox" class="tree-checkbox" checked>
-                                <span class="tree-icon">🎧</span>
-                                <span class="tree-label">客服中心</span>
-                            </div>
-                            <div class="tree-children">
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">🎫</span>
-                                        <span class="tree-label">工单管理</span>
-                                    </div>
-                                </div>
-                                <div class="tree-node">
-                                    <div class="tree-item">
-                                        <input type="checkbox" class="tree-checkbox" checked>
-                                        <span class="tree-icon">📚</span>
-                                        <span class="tree-label">知识库</span>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="permission-panel-header">
+                        <h3 class="permission-panel-title">功能权限配置</h3>
+                        <div class="permission-actions">
+                            <button class="btn" onclick="expandAllModules()">全部展开</button>
+                            <button class="btn" onclick="collapseAllModules()">全部折叠</button>
+                            <button class="btn btn-primary" onclick="savePermissions()">保存配置</button>
                         </div>
                     </div>
-
-                    <div class="btn-group">
-                        <button class="btn" onclick="resetPermissions()">重置</button>
-                        <button class="btn btn-primary" onclick="savePermissions()">保存配置</button>
+                    
+                    <div class="permission-content" id="permissionContent">
+                        <div class="empty-state">
+                            <div class="empty-icon">👆</div>
+                            <div class="empty-text">请选择左侧岗位以配置权限</div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -982,162 +623,512 @@
 
         <!-- 底部页脚 -->
         <footer class="app-footer">
-            <div class="footer-content">
-                © 2024 Portal 3.0 企业管理平台 | 
-                <a href="#" style="color: #1890ff; text-decoration: none;">技术支持</a> | 
-                <a href="#" style="color: #1890ff; text-decoration: none;">帮助文档</a> | 
-                <span style="color: #999;">版本 v3.0.1</span>
-            </div>
+            © 2024 Portal 3.0 企业管理平台. All rights reserved.
         </footer>
     </div>
 
     <script src="../assets/js/common.js"></script>
+    <script src="../assets/js/mock-data.js"></script>
     <script>
-        // 二级菜单控制
-        function toggleNavGroup(button) {
-            const submenu = button.nextElementSibling;
-            const arrow = button.querySelector('.nav-arrow');
-            const isExpanded = submenu.classList.contains('expanded');
-            
-            // 关闭所有其他展开的菜单
-            document.querySelectorAll('.nav-submenu.expanded').forEach(menu => {
-                if (menu !== submenu) {
-                    menu.classList.remove('expanded');
-                    menu.previousElementSibling.classList.remove('expanded');
-                    menu.previousElementSibling.querySelector('.nav-arrow').classList.remove('rotated');
-                }
-            });
-            
-            // 切换当前菜单状态
-            if (isExpanded) {
-                submenu.classList.remove('expanded');
-                button.classList.remove('expanded');
-                arrow.classList.remove('rotated');
-            } else {
-                submenu.classList.add('expanded');
-                button.classList.add('expanded');
-                arrow.classList.add('rotated');
-            }
-        }
+        let currentSelectedPosition = null;
+        let positions = [];
+        let allPermissions = [];
 
-        // 移动端菜单切换
-        function toggleMobileMenu() {
-            const sidebar = document.querySelector('.app-sidebar');
-            sidebar.classList.toggle('mobile-open');
-        }
-
-        // 点击主内容区域时关闭移动端菜单
-        document.addEventListener('click', function(e) {
-            const sidebar = document.querySelector('.app-sidebar');
-            const toggleBtn = document.querySelector('.mobile-menu-toggle');
-            
-            if (window.innerWidth <= 768 && 
-                !sidebar.contains(e.target) && 
-                !toggleBtn.contains(e.target)) {
-                sidebar.classList.remove('mobile-open');
-            }
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPositions();
+            initPermissionData();
         });
 
-        // 选择角色
-        function selectRole(element, roleId) {
-            // 移除所有活动状态
-            document.querySelectorAll('.role-item').forEach(item => {
+        // 加载岗位数据
+        function loadPositions() {
+            positions = window.MockData.positions.map(pos => {
+                const dept = window.MockData.departments.find(d => d.id == pos.deptId);
+                return {
+                    ...pos,
+                    deptName: dept ? dept.name : '未分配'
+                };
+            });
+            
+            renderPositionList(positions);
+            updatePositionCount(positions.length);
+        }
+
+        // 渲染岗位列表
+        function renderPositionList(positionList) {
+            const container = document.getElementById('positionList');
+            
+            if (positionList.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">💼</div>
+                        <div class="empty-text">暂无岗位数据</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = positionList.map(position => `
+                <div class="position-item" data-position-id="${position.id}" onclick="selectPosition(${position.id})">
+                    <div class="position-name">${position.name}</div>
+                    <div class="position-info">
+                        <span class="position-department">${position.deptName}</span>
+                        <span class="position-level">
+                            ${position.level === 5 ? '高级经理级' : 
+                              position.level === 4 ? '总经理级' : 
+                              position.level === 3 ? '主管级' : 
+                              position.level === 2 ? '组长级' : '成员级'}
+                        </span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 更新岗位数量显示
+        function updatePositionCount(count) {
+            document.getElementById('positionCount').textContent = `${count}个岗位`;
+        }
+
+        // 搜索岗位
+        function searchPositions() {
+            const keyword = document.getElementById('positionSearchInput').value.toLowerCase().trim();
+            
+            const filteredPositions = positions.filter(position => 
+                position.name.toLowerCase().includes(keyword) ||
+                position.deptName.toLowerCase().includes(keyword)
+            );
+            
+            renderPositionList(filteredPositions);
+            updatePositionCount(filteredPositions.length);
+        }
+
+        // 选择岗位
+        function selectPosition(positionId) {
+            // 移除之前的选中状态
+            document.querySelectorAll('.position-item').forEach(item => {
                 item.classList.remove('active');
             });
             
             // 设置当前选中状态
-            element.classList.add('active');
+            const selectedItem = document.querySelector(`[data-position-id="${positionId}"]`);
+            if (selectedItem) {
+                selectedItem.classList.add('active');
+            }
             
-            // 更新权限面板标题
-            const roleName = element.querySelector('.role-name').textContent;
-            document.querySelector('.permission-panel .panel-title').innerHTML = `
-                权限配置 - ${roleName}
-                <button class="btn" onclick="expandAll()">展开全部</button>
+            // 保存当前选中的岗位
+            currentSelectedPosition = positions.find(p => p.id === positionId);
+            
+            // 渲染权限配置面板
+            renderPermissionPanel();
+        }
+
+        // 渲染权限配置面板
+        function renderPermissionPanel() {
+            const content = document.getElementById('permissionContent');
+            
+            if (!currentSelectedPosition) {
+                content.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">👆</div>
+                        <div class="empty-text">请选择左侧岗位以配置权限</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            const permissionModules = [
+                {
+                    id: 'organization',
+                    name: '组织架构',
+                    icon: '🏢',
+                    functions: [
+                        {
+                            groupName: '部门管理',
+                            permissions: [
+                                { code: 'dept_view', name: '查看部门' },
+                                { code: 'dept_add', name: '新增部门' },
+                                { code: 'dept_edit', name: '编辑部门' },
+                                { code: 'dept_delete', name: '删除部门' }
+                            ]
+                        },
+                        {
+                            groupName: '员工管理',
+                            permissions: [
+                                { code: 'emp_view', name: '查看员工' },
+                                { code: 'emp_add', name: '新增员工' },
+                                { code: 'emp_edit', name: '编辑员工' },
+                                { code: 'emp_delete', name: '删除员工' }
+                            ]
+                        },
+                        {
+                            groupName: '岗位管理',
+                            permissions: [
+                                { code: 'pos_view', name: '查看岗位' },
+                                { code: 'pos_add', name: '新增岗位' },
+                                { code: 'pos_edit', name: '编辑岗位' },
+                                { code: 'pos_delete', name: '删除岗位' },
+                                { code: 'pos_permission', name: '配置权限' }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'crm',
+                    name: '客户关系管理',
+                    icon: '👥',
+                    functions: [
+                        {
+                            groupName: '客户管理',
+                            permissions: [
+                                { code: 'customer_view', name: '查看客户' },
+                                { code: 'customer_add', name: '新增客户' },
+                                { code: 'customer_edit', name: '编辑客户' },
+                                { code: 'customer_delete', name: '删除客户' },
+                                { code: 'customer_transfer', name: '客户转移' }
+                            ]
+                        },
+                        {
+                            groupName: '跟进管理',
+                            permissions: [
+                                { code: 'follow_view', name: '查看跟进' },
+                                { code: 'follow_add', name: '新增跟进' },
+                                { code: 'follow_edit', name: '编辑跟进' },
+                                { code: 'follow_delete', name: '删除跟进' }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'product',
+                    name: '产品管理',
+                    icon: '📦',
+                    functions: [
+                        {
+                            groupName: '产品信息',
+                            permissions: [
+                                { code: 'product_view', name: '查看产品' },
+                                { code: 'product_add', name: '新增产品' },
+                                { code: 'product_edit', name: '编辑产品' },
+                                { code: 'product_delete', name: '删除产品' }
+                            ]
+                        },
+                        {
+                            groupName: '产品分类',
+                            permissions: [
+                                { code: 'category_view', name: '查看分类' },
+                                { code: 'category_add', name: '新增分类' },
+                                { code: 'category_edit', name: '编辑分类' },
+                                { code: 'category_delete', name: '删除分类' }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'order',
+                    name: '订单管理',
+                    icon: '📋',
+                    functions: [
+                        {
+                            groupName: '订单处理',
+                            permissions: [
+                                { code: 'order_view', name: '查看订单' },
+                                { code: 'order_add', name: '新增订单' },
+                                { code: 'order_edit', name: '编辑订单' },
+                                { code: 'order_delete', name: '删除订单' },
+                                { code: 'order_audit', name: '审核订单' }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    id: 'system',
+                    name: '系统管理',
+                    icon: '⚙️',
+                    functions: [
+                        {
+                            groupName: '用户管理',
+                            permissions: [
+                                { code: 'user_view', name: '查看用户' },
+                                { code: 'user_add', name: '新增用户' },
+                                { code: 'user_edit', name: '编辑用户' },
+                                { code: 'user_delete', name: '删除用户' }
+                            ]
+                        },
+                        {
+                            groupName: '菜单管理',
+                            permissions: [
+                                { code: 'menu_view', name: '查看菜单' },
+                                { code: 'menu_add', name: '新增菜单' },
+                                { code: 'menu_edit', name: '编辑菜单' },
+                                { code: 'menu_delete', name: '删除菜单' }
+                            ]
+                        },
+                        {
+                            groupName: '日志管理',
+                            permissions: [
+                                { code: 'log_view', name: '查看日志' },
+                                { code: 'log_export', name: '导出日志' },
+                                { code: 'log_clear', name: '清理日志' }
+                            ]
+                        }
+                    ]
+                }
+            ];
+            
+            content.innerHTML = `
+                <div class="position-selected-info">
+                    <div class="selected-position-name">${currentSelectedPosition.name}</div>
+                    <div class="selected-position-details">
+                        <span>所属部门：${currentSelectedPosition.deptName}</span>
+                        <span>岗位级别：${currentSelectedPosition.level === 5 ? '高级经理级' : 
+                                         currentSelectedPosition.level === 4 ? '总经理级' : 
+                                         currentSelectedPosition.level === 3 ? '主管级' : 
+                                         currentSelectedPosition.level === 2 ? '组长级' : '成员级'}</span>
+                    </div>
+                </div>
+                
+                <div class="permission-tree">
+                    ${permissionModules.map(module => `
+                        <div class="permission-module">
+                            <div class="module-header" onclick="toggleModule('${module.id}')">
+                                <input type="checkbox" class="module-checkbox" 
+                                       onchange="toggleModulePermissions('${module.id}', this)"
+                                       onclick="event.stopPropagation()">
+                                <span class="module-icon">${module.icon}</span>
+                                <span class="module-name">${module.name}</span>
+                                <span class="module-arrow" id="arrow-${module.id}">▶</span>
+                            </div>
+                            <div class="module-content" id="content-${module.id}">
+                                ${module.functions.map(funcGroup => `
+                                    <div class="function-group">
+                                        <div class="function-group-header">
+                                            <input type="checkbox" class="function-group-checkbox"
+                                                   data-module="${module.id}" data-group="${funcGroup.groupName}"
+                                                   onchange="toggleGroupPermissions('${module.id}', '${funcGroup.groupName}', this)">
+                                            <span class="function-group-name">${funcGroup.groupName}</span>
+                                        </div>
+                                        <div class="function-list">
+                                            ${funcGroup.permissions.map(perm => `
+                                                <div class="function-item">
+                                                    <input type="checkbox" class="function-checkbox"
+                                                           data-module="${module.id}" 
+                                                           data-group="${funcGroup.groupName}"
+                                                           data-permission="${perm.code}"
+                                                           onchange="updatePermissionState()">
+                                                    <span class="function-name">${perm.name}</span>
+                                                </div>
+                                            `).join('')}
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
             `;
             
-            // 根据角色加载对应权限
-            loadRolePermissions(roleId);
+            // 加载当前岗位的权限配置
+            loadPositionPermissions();
         }
 
-        // 加载角色权限
-        function loadRolePermissions(roleId) {
-            // 这里可以根据roleId加载对应的权限配置
-            console.log('加载角色权限:', roleId);
+        // 加载岗位权限配置
+        function loadPositionPermissions() {
+            if (!currentSelectedPosition || !currentSelectedPosition.permissions) {
+                return;
+            }
             
-            // 示例：根据角色设置不同的权限
-            const checkboxes = document.querySelectorAll('.tree-checkbox');
-            checkboxes.forEach(checkbox => {
-                if (roleId === 1) { // 超级管理员
-                    checkbox.checked = true;
-                } else if (roleId === 5) { // 普通员工
-                    checkbox.checked = false;
-                    // 只开放部分权限
-                    const label = checkbox.nextElementSibling.nextElementSibling.textContent;
-                    if (label.includes('客户列表') || label.includes('商品列表')) {
-                        checkbox.checked = true;
-                    }
-                } else {
-                    checkbox.checked = Math.random() > 0.3; // 随机权限
+            const permissions = currentSelectedPosition.permissions;
+            
+            // 遍历权限对象，设置复选框状态
+            Object.keys(permissions).forEach(module => {
+                const modulePerms = permissions[module];
+                if (modulePerms && typeof modulePerms === 'object') {
+                    Object.keys(modulePerms).forEach(category => {
+                        const categoryPerms = modulePerms[category];
+                        if (categoryPerms && typeof categoryPerms === 'object') {
+                            Object.keys(categoryPerms).forEach(action => {
+                                if (categoryPerms[action]) {
+                                    const checkbox = document.querySelector(
+                                        `input[data-module="${module}"][data-permission="${action}"]`
+                                    );
+                                    if (checkbox) {
+                                        checkbox.checked = true;
+                                    }
+                                }
+                            });
+                        }
+                    });
                 }
             });
+            
+            // 更新分组和模块复选框状态
+            updatePermissionState();
         }
 
-        // 树形节点展开/收起
-        function toggleTreeNode(arrow) {
-            const isExpanded = arrow.classList.contains('expanded');
-            const children = arrow.parentElement.parentElement.querySelector('.tree-children');
+        // 切换模块展开/折叠
+        function toggleModule(moduleId) {
+            const content = document.getElementById(`content-${moduleId}`);
+            const arrow = document.getElementById(`arrow-${moduleId}`);
             
-            if (isExpanded) {
-                arrow.classList.remove('expanded');
-                if (children) children.style.display = 'none';
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                arrow.classList.remove('rotated');
+                arrow.textContent = '▶';
             } else {
-                arrow.classList.add('expanded');
-                if (children) children.style.display = 'block';
+                content.classList.add('expanded');
+                arrow.classList.add('rotated');
+                arrow.textContent = '▼';
             }
         }
 
-        // 展开全部
-        function expandAll() {
-            document.querySelectorAll('.tree-expand').forEach(arrow => {
-                arrow.classList.add('expanded');
-                const children = arrow.parentElement.parentElement.querySelector('.tree-children');
-                if (children) children.style.display = 'block';
+        // 全部展开模块
+        function expandAllModules() {
+            document.querySelectorAll('.module-content').forEach(content => {
+                content.classList.add('expanded');
+            });
+            document.querySelectorAll('.module-arrow').forEach(arrow => {
+                arrow.classList.add('rotated');
+                arrow.textContent = '▼';
             });
         }
 
-        // 新增角色
-        function addRole() {
-            showMessage('新增角色功能开发中...', 'info');
+        // 全部折叠模块
+        function collapseAllModules() {
+            document.querySelectorAll('.module-content').forEach(content => {
+                content.classList.remove('expanded');
+            });
+            document.querySelectorAll('.module-arrow').forEach(arrow => {
+                arrow.classList.remove('rotated');
+                arrow.textContent = '▶';
+            });
+        }
+
+        // 切换模块所有权限
+        function toggleModulePermissions(moduleId, checkbox) {
+            const checkboxes = document.querySelectorAll(`input[data-module="${moduleId}"]`);
+            checkboxes.forEach(cb => {
+                if (cb !== checkbox) {
+                    cb.checked = checkbox.checked;
+                }
+            });
+            updatePermissionState();
+        }
+
+        // 切换分组权限
+        function toggleGroupPermissions(moduleId, groupName, checkbox) {
+            const checkboxes = document.querySelectorAll(
+                `input[data-module="${moduleId}"][data-group="${groupName}"].function-checkbox`
+            );
+            checkboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+            updatePermissionState();
+        }
+
+        // 更新权限状态
+        function updatePermissionState() {
+            // 更新分组复选框状态
+            document.querySelectorAll('.function-group-checkbox').forEach(groupCheckbox => {
+                const module = groupCheckbox.dataset.module;
+                const group = groupCheckbox.dataset.group;
+                const functionCheckboxes = document.querySelectorAll(
+                    `input[data-module="${module}"][data-group="${group}"].function-checkbox`
+                );
+                
+                const checkedCount = Array.from(functionCheckboxes).filter(cb => cb.checked).length;
+                groupCheckbox.checked = checkedCount === functionCheckboxes.length;
+                groupCheckbox.indeterminate = checkedCount > 0 && checkedCount < functionCheckboxes.length;
+            });
+            
+            // 更新模块复选框状态
+            document.querySelectorAll('.module-checkbox').forEach(moduleCheckbox => {
+                const moduleContent = moduleCheckbox.closest('.permission-module');
+                const allCheckboxes = moduleContent.querySelectorAll('.function-checkbox');
+                
+                const checkedCount = Array.from(allCheckboxes).filter(cb => cb.checked).length;
+                moduleCheckbox.checked = checkedCount === allCheckboxes.length;
+                moduleCheckbox.indeterminate = checkedCount > 0 && checkedCount < allCheckboxes.length;
+            });
         }
 
         // 保存权限配置
         function savePermissions() {
-            const selectedPermissions = [];
-            document.querySelectorAll('.tree-checkbox:checked').forEach(checkbox => {
-                const label = checkbox.nextElementSibling.nextElementSibling.textContent;
-                selectedPermissions.push(label);
+            if (!currentSelectedPosition) {
+                showToast('请先选择要配置权限的岗位', 'error');
+                return;
+            }
+            
+            // 收集权限配置
+            const permissions = {};
+            const functionIds = [];
+            
+            document.querySelectorAll('.function-checkbox:checked').forEach((checkbox, index) => {
+                const module = checkbox.dataset.module;
+                const group = checkbox.dataset.group;
+                const permission = checkbox.dataset.permission;
+                
+                if (!permissions[module]) {
+                    permissions[module] = {};
+                }
+                if (!permissions[module][group]) {
+                    permissions[module][group] = {};
+                }
+                
+                permissions[module][group][permission] = true;
+                functionIds.push(index + 1);
             });
             
-            console.log('保存权限:', selectedPermissions);
-            showMessage('权限配置保存成功！', 'success');
-        }
-
-        // 重置权限
-        function resetPermissions() {
-            document.querySelectorAll('.tree-checkbox').forEach(checkbox => {
-                checkbox.checked = false;
-            });
-            showMessage('权限配置已重置！', 'warning');
-        }
-
-        // 页面初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('角色权限配置页面已加载');
-            showMessage('角色权限管理页面加载完成！', 'success');
+            // 更新岗位权限
+            const position = positions.find(p => p.id === currentSelectedPosition.id);
+            if (position) {
+                position.permissions = permissions;
+                position.functionIDs = functionIds.join(',');
+                position.editTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
+            }
             
-            // 默认加载超级管理员权限
-            loadRolePermissions(1);
-        });
+            showToast(`${currentSelectedPosition.name} 权限配置保存成功！`, 'success');
+        }
+
+        // 消息提示
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#52c41a' : type === 'error' ? '#ff4d4f' : '#1890ff'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 6px;
+                z-index: 10000;
+                animation: slideInRight 0.3s ease;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        // 动画样式
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
     </script>
+    
+    <!-- 引入统一导航系统 -->
+    <script src="../assets/js/navigation.js"></script>
 </body>
 </html> 

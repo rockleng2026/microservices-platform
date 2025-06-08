@@ -141,7 +141,33 @@ groups (
 )
 ```
 
-#### 2.2.2 客户管理相关表  
+#-- 岗位表 (扩展原workposition表)
+workposition (
+    id int(11) -- 岗位ID
+    name varchar(100) -- 岗位名称
+    shortname varchar(20) -- 岗位简称
+    deptid int(11) -- 部门ID
+    workgrade int(11) -- 权重等级(1-5)
+    workcontent text -- 工作职责
+    functionIDs varchar(500) -- 功能权限ID串
+    permissions text -- 权限配置JSON
+    parpostionid int(11) -- 上级岗位ID
+    ispersonman int(11) -- 是否主管岗位
+    edittime datetime -- 最后编辑时间
+    delflag int(11) -- 删除标识
+)
+
+-- 权限组表 (基于原groups表)
+groups (
+    groupID int(11) -- 权限组ID
+    groupName varchar(50) -- 权限组名称
+    groupInfo varchar(500) -- 权限组描述
+    functionIDs varchar(500) -- 包含的功能权限ID
+    isDelete int(11) -- 删除标识
+)
+```
+
+### 2.2.2 客户管理相关表  
 ```sql
 -- 客户表 (保留原结构)
 customer (

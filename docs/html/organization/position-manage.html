@@ -359,94 +359,170 @@
             font-size: 12px;
         }
 
-        /* 双栏布局样式 */
-        .position-page {
+        /* 岗位管理样式 */
+        .position-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 24px;
+        }
+
+        .position-toolbar {
             display: flex;
-            gap: 16px;
-            height: calc(100vh - 140px);
-        }
-
-        .position-list-panel {
-            width: 400px;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .position-detail-panel {
-            flex: 1;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-
-        .panel-header {
-            padding: 20px 24px;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 24px;
+            padding-bottom: 20px;
             border-bottom: 1px solid #f0f0f0;
-            background: #fafafa;
         }
 
-        .panel-title {
-            font-size: 16px;
+        .toolbar-left h2 {
+            margin: 0 0 8px 0;
+            font-size: 20px;
             font-weight: 600;
-            color: #262626;
-            margin-bottom: 8px;
+            color: #333;
         }
 
-        .panel-subtitle {
+        .toolbar-left p {
+            margin: 0;
             font-size: 14px;
             color: #666;
         }
 
-        .panel-body {
-            padding: 24px;
-            overflow-y: auto;
-            height: calc(100% - 80px);
-        }
-
-        .position-search {
-            margin-bottom: 16px;
-        }
-
-        .position-item {
-            padding: 16px;
-            border: 1px solid #e8e8e8;
-            border-radius: 6px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .position-item:hover {
-            border-color: #1890ff;
-            background: #f0f9ff;
-        }
-
-        .position-item.active {
-            border-color: #1890ff;
-            background: #e6f7ff;
-        }
-
-        .position-name {
-            font-weight: 500;
-            color: #262626;
-            margin-bottom: 4px;
-        }
-
-        .position-meta {
-            font-size: 12px;
-            color: #999;
+        .toolbar-right {
             display: flex;
-            justify-content: space-between;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .toolbar-right .search-box {
+            position: relative;
+        }
+
+        .toolbar-right .search-box .form-control {
+            width: 250px;
+        }
+
+        /* 表格样式 */
+        .position-table-container {
+            overflow-x: auto;
+        }
+
+        .position-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .position-table th,
+        .position-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .position-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .position-table td {
+            font-size: 14px;
+            color: #666;
+        }
+
+        .position-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .position-name-cell {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .position-short-name {
+            background: #f0f9ff;
+            color: #1890ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .is-manager-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .is-manager-yes {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+
+        .is-manager-no {
+            background: #fafafa;
+            color: #999;
+            border: 1px solid #d9d9d9;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
             align-items: center;
         }
 
-        .position-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 12px;
+        .action-btn {
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .action-btn-manage {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .action-btn-manage:hover {
+            background: #bae7ff;
+        }
+
+        .action-btn-permission {
+            background: #fff1f0;
+            color: #ff4d4f;
+        }
+
+        .action-btn-permission:hover {
+            background: #ffccc7;
+        }
+
+        .action-btn-edit {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .action-btn-edit:hover {
+            background: #d9f7be;
+        }
+
+        .action-btn-delete {
+            background: #fff2e8;
+            color: #fa8c16;
+        }
+
+        .action-btn-delete:hover {
+            background: #ffd8bf;
         }
 
         .form-section {
@@ -584,154 +660,231 @@
             color: #666;
             border: 1px solid #d9d9d9;
         }
+
+        /* 模态框样式 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            width: 600px;
+            max-width: 90vw;
+            max-height: 90vh;
+            overflow: hidden;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #999;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            max-height: calc(90vh - 120px);
+        }
+
+        /* 头部样式补充 */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            color: #666;
+        }
+
+        .breadcrumb-item {
+            margin-right: 8px;
+        }
+
+        .breadcrumb-separator {
+            margin: 0 8px;
+            color: #d9d9d9;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+        }
+
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            margin-right: 16px;
+        }
+
+        .search-box {
+            position: relative;
+        }
+
+        .search-input {
+            width: 200px;
+            height: 32px;
+            padding: 0 12px 0 36px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: #fafafa;
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+        }
+
+        .notification-btn {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            transition: all 0.3s ease;
+        }
+
+        .notification-btn:hover {
+            background: #f5f5f5;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            width: 16px;
+            height: 16px;
+            background: #ff4d4f;
+            color: white;
+            border-radius: 50%;
+            font-size: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+        }
+
+        .user-menu:hover {
+            background: #f5f5f5;
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #1890ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-toggle {
+                display: block;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="app-layout">
         <!-- 左侧导航栏 -->
-        <aside class="app-sidebar">
-            <div class="sidebar-header">
-                <div class="logo">P</div>
-                <div class="brand-name">Portal 3.0</div>
-            </div>
-            
-            <nav class="nav-menu">
-                <!-- 首页总览 -->
-                <div class="nav-item">
-                    <a href="../index.html" class="nav-link">
-                        <span class="nav-icon">🏠</span>
-                        <span>首页总览</span>
-                    </a>
-                </div>
-
-                <!-- 工作台 -->
-                <div class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">🎯</span>
-                        <span>工作台</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../dashboard/oa-workspace.html" class="nav-subitem">
-                            <span>OA工作台</span>
-                        </a>
-                        <a href="../dashboard/crm-workspace.html" class="nav-subitem">
-                            <span>CRM工作台</span>
-                        </a>
-                        <a href="../dashboard/sales-workspace.html" class="nav-subitem">
-                            <span>销售工作台</span>
-                        </a>
-                        <a href="../dashboard/workspace-config.html" class="nav-subitem">
-                            <span>工作台配置</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- 组织架构 -->
-                <div class="nav-item">
-                    <button class="nav-group expanded" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">🏢</span>
-                        <span>组织架构</span>
-                        <span class="nav-arrow rotated">▶</span>
-                    </button>
-                    <div class="nav-submenu expanded">
-                        <a href="department-tree.html" class="nav-subitem">
-                            <span>部门管理</span>
-                        </a>
-                        <a href="employee-list.html" class="nav-subitem">
-                            <span>员工管理</span>
-                        </a>
-                        <a href="position-manage.html" class="nav-subitem active">
-                            <span>岗位管理</span>
-                        </a>
-                        <a href="role-permission.html" class="nav-subitem">
-                            <span>角色权限</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- 客户管理 -->
-                <div class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">👤</span>
-                        <span>客户管理</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../crm/customer-list.html" class="nav-subitem">
-                            <span>客户列表</span>
-                        </a>
-                        <a href="../crm/customer-detail.html" class="nav-subitem">
-                            <span>客户详情</span>
-                        </a>
-                        <a href="../crm/follow-record.html" class="nav-subitem">
-                            <span>跟进记录</span>
-                        </a>
-                        <a href="../crm/customer-transfer.html" class="nav-subitem">
-                            <span>客户转移</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- 商品管理 -->
-                <div class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">📦</span>
-                        <span>商品管理</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../product/product-list.html" class="nav-subitem">
-                            <span>商品列表</span>
-                        </a>
-                        <a href="../product/product-category.html" class="nav-subitem">
-                            <span>商品分类</span>
-                        </a>
-                        <a href="../product/inventory-manage.html" class="nav-subitem">
-                            <span>库存管理</span>
-                        </a>
-                        <a href="../product/price-strategy.html" class="nav-subitem">
-                            <span>价格策略</span>
-                        </a>
-                    </div>
-                </div>
-
-                <!-- 订单管理 -->
-                <div class="nav-item">
-                    <button class="nav-group" onclick="toggleNavGroup(this)">
-                        <span class="nav-icon">📋</span>
-                        <span>订单管理</span>
-                        <span class="nav-arrow">▶</span>
-                    </button>
-                    <div class="nav-submenu">
-                        <a href="../order/order-list.html" class="nav-subitem">
-                            <span>订单列表</span>
-                        </a>
-                        <a href="../order/order-detail.html" class="nav-subitem">
-                            <span>订单详情</span>
-                        </a>
-                        <a href="../order/order-statistics.html" class="nav-subitem">
-                            <span>订单统计</span>
-                        </a>
-                        <a href="../order/return-manage.html" class="nav-subitem">
-                            <span>退货管理</span>
-                        </a>
-                    </div>
-                </div>
-            </nav>
+        <aside class="app-sidebar" id="app-sidebar">
+            <!-- 导航内容将由navigation.js动态生成 -->
         </aside>
 
-        <!-- 头部导航栏 -->
+        <!-- 顶部导航 -->
         <header class="app-header">
-            <div class="header-title">岗位管理</div>
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">组织架构</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">岗位管理</span>
+                </div>
+            </div>
             <div class="header-actions">
-                <button class="btn btn-icon" onclick="location.reload()" title="刷新">
-                    🔄
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索功能...">
+                </div>
+                <button class="notification-btn">
+                    🔔
+                    <span class="notification-badge">3</span>
                 </button>
-                <div class="user-info">
-                    <img src="https://ui-avatars.com/api/?name=Admin&background=1890ff&color=fff" 
-                         alt="用户头像" class="user-avatar">
-                    <span class="user-name">管理员</span>
+                <div class="user-menu">
+                    <div class="user-avatar">管</div>
+                    <span>管理员</span>
                 </div>
             </div>
         </header>
@@ -743,40 +896,88 @@
                 <p class="page-description">管理岗位信息，配置岗位权限和员工分配</p>
             </div>
 
-            <div class="position-page">
-                <!-- 岗位列表 -->
-                <div class="position-list-panel">
-                    <div class="panel-header">
-                        <h3 class="panel-title">岗位列表</h3>
-                        <p class="panel-subtitle">选择岗位查看详情和配置权限</p>
-                    </div>
-                    <div class="panel-body">
-                        <div class="position-search">
-                            <input type="text" class="form-control" placeholder="搜索岗位..." id="positionSearch" oninput="searchPositions()">
+            <!-- 搜索区域 -->
+            <div class="search-section">
+                <div class="search-form">
+                    <div class="search-row">
+                        <div class="search-item">
+                            <label>岗位名称：</label>
+                            <input type="text" id="searchPositionName" placeholder="请输入岗位名称" class="search-input">
                         </div>
-                        <div class="position-actions" style="margin-bottom: 16px;">
-                            <button class="btn btn-primary btn-sm" onclick="addPosition()">
-                                ➕ 新增岗位
+                        <div class="search-item">
+                            <label>所属部门：</label>
+                            <select id="searchDepartment" class="search-select">
+                                <option value="">全部部门</option>
+                                <option value="1">综合办公室</option>
+                                <option value="2">人力资源部</option>
+                                <option value="3">财务部</option>
+                                <option value="4">技术部</option>
+                                <option value="5">销售部</option>
+                                <option value="6">客服部</option>
+                            </select>
+                        </div>
+                        <div class="search-item">
+                            <label>权重等级：</label>
+                            <select id="searchLevel" class="search-select">
+                                <option value="">全部等级</option>
+                                <option value="5">高级经理级</option>
+                                <option value="4">总经理级</option>
+                                <option value="3">主管级</option>
+                                <option value="2">组长级</option>
+                                <option value="1">成员级</option>
+                            </select>
+                        </div>
+                        <div class="search-actions">
+                            <button type="button" class="btn btn-primary" onclick="searchPositions()">
+                                <i class="icon-search"></i> 查询
                             </button>
-                        </div>
-                        <div id="positionList">
-                            <!-- 岗位列表将通过JS动态生成 -->
+                            <button type="button" class="btn btn-secondary" onclick="resetSearch()">
+                                <i class="icon-reset"></i> 重置
+                            </button>
                         </div>
                     </div>
                 </div>
-                
-                <!-- 岗位详情 -->
-                <div class="position-detail-panel">
-                    <div class="panel-header">
-                        <h3 class="panel-title">岗位详情</h3>
-                        <p class="panel-subtitle">查看和编辑岗位信息</p>
+            </div>
+
+            <!-- 岗位管理主体 -->
+            <div class="position-container">
+                <!-- 工具栏 -->
+                <div class="position-toolbar">
+                    <div class="toolbar-left">
+                        <h2>岗位列表</h2>
+                        <p>管理企业岗位信息，配置岗位权限和员工分配</p>
                     </div>
-                    <div class="panel-body" id="positionDetail">
-                        <div class="empty-state" style="text-align: center; padding: 48px; color: #999;">
-                            <i style="font-size: 48px;">💼</i><br>
-                            <p style="margin-top: 16px;">请选择左侧岗位查看详情</p>
+                    <div class="toolbar-right">
+                        <div class="search-box">
+                            <input type="text" class="form-control" placeholder="搜索岗位..." id="positionSearch" oninput="searchPositions()">
                         </div>
+                        <button class="btn btn-primary" onclick="addPosition()">
+                            ➕ 新增岗位
+                        </button>
                     </div>
+                </div>
+
+                <!-- 岗位表格 -->
+                <div class="position-table-container">
+                    <table class="position-table">
+                        <thead>
+                            <tr>
+                                <th>岗位名称</th>
+                                <th>岗位简称</th>
+                                <th>当前部门</th>
+                                <th>权重等级</th>
+                                <th>是否主管</th>
+                                <th>工作职责</th>
+                                <th>分管管理</th>
+                                <th>权限管理</th>
+                                <th>修改</th>
+                                <th>删除</th>
+                            </tr>
+                        </thead>
+                        <tbody id="positionTableBody">
+                            <!-- 岗位数据将通过JS动态生成 -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </main>
@@ -785,6 +986,316 @@
         <footer class="app-footer">
             © 2024 Portal 3.0 企业管理平台. All rights reserved.
         </footer>
+    </div>
+
+    <!-- 权限管理模态框 -->
+    <div id="permissionModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content" style="width: 800px; max-width: 95vw;">
+            <div class="modal-header">
+                <h3 id="permissionModalTitle">岗位权限管理</h3>
+                <button class="modal-close" onclick="closePermissionModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="permission-info">
+                    <p><strong>岗位名称：</strong><span id="permissionPositionName"></span></p>
+                </div>
+                
+                <div class="permission-tree">
+                    <!-- 组织架构权限 -->
+                    <div class="permission-node">
+                        <div class="permission-item">
+                            <input type="checkbox" class="permission-checkbox" id="org-all" onchange="toggleAllPermissions('organization', this)">
+                            <span class="permission-icon">🏢</span>
+                            <strong>组织架构</strong>
+                        </div>
+                        <div class="permission-children">
+                            <!-- 部门管理 -->
+                            <div class="permission-node">
+                                <div class="permission-item">
+                                    <input type="checkbox" class="permission-checkbox" id="org-dept-all" onchange="toggleCategoryPermissions('organization', 'department', this)">
+                                    <span class="permission-icon">🏛️</span>
+                                    <strong>部门管理</strong>
+                                </div>
+                                <div class="permission-children">
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="organization" data-category="department" data-action="view">
+                                        <span>查看部门</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="organization" data-category="department" data-action="add">
+                                        <span>新增部门</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="organization" data-category="department" data-action="edit">
+                                        <span>编辑部门</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="organization" data-category="department" data-action="delete">
+                                        <span>删除部门</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 员工管理 -->
+                            <div class="permission-node">
+                                <div class="permission-item">
+                                    <input type="checkbox" class="permission-checkbox" id="org-emp-all" onchange="toggleCategoryPermissions('organization', 'employee', this)">
+                                    <span class="permission-icon">👥</span>
+                                    <strong>员工管理</strong>
+                                </div>
+                                <div class="permission-children">
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="organization" data-category="employee" data-action="view">
+                                        <span>查看员工</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="organization" data-category="employee" data-action="add">
+                                        <span>新增员工</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="organization" data-category="employee" data-action="edit">
+                                        <span>编辑员工</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="organization" data-category="employee" data-action="delete">
+                                        <span>删除员工</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- 岗位管理 -->
+                            <div class="permission-node">
+                                <div class="permission-item">
+                                    <input type="checkbox" class="permission-checkbox" id="org-pos-all" onchange="toggleCategoryPermissions('organization', 'position', this)">
+                                    <span class="permission-icon">💼</span>
+                                    <strong>岗位管理</strong>
+                                </div>
+                                <div class="permission-children">
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="organization" data-category="position" data-action="view">
+                                        <span>查看岗位</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="organization" data-category="position" data-action="add">
+                                        <span>新增岗位</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="organization" data-category="position" data-action="edit">
+                                        <span>编辑岗位</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="organization" data-category="position" data-action="delete">
+                                        <span>删除岗位</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- CRM权限 -->
+                    <div class="permission-node">
+                        <div class="permission-item">
+                            <input type="checkbox" class="permission-checkbox" id="crm-all" onchange="toggleAllPermissions('crm', this)">
+                            <span class="permission-icon">👥</span>
+                            <strong>客户关系管理</strong>
+                        </div>
+                        <div class="permission-children">
+                            <!-- 客户管理 -->
+                            <div class="permission-node">
+                                <div class="permission-item">
+                                    <input type="checkbox" class="permission-checkbox" id="crm-cust-all" onchange="toggleCategoryPermissions('crm', 'customer', this)">
+                                    <span class="permission-icon">👤</span>
+                                    <strong>客户管理</strong>
+                                </div>
+                                <div class="permission-children">
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="crm" data-category="customer" data-action="view">
+                                        <span>查看客户</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="crm" data-category="customer" data-action="add">
+                                        <span>新增客户</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="crm" data-category="customer" data-action="edit">
+                                        <span>编辑客户</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="crm" data-category="customer" data-action="delete">
+                                        <span>删除客户</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 产品权限 -->
+                    <div class="permission-node">
+                        <div class="permission-item">
+                            <input type="checkbox" class="permission-checkbox" id="prod-all" onchange="toggleAllPermissions('product', this)">
+                            <span class="permission-icon">📦</span>
+                            <strong>产品管理</strong>
+                        </div>
+                        <div class="permission-children">
+                            <div class="permission-node">
+                                <div class="permission-item">
+                                    <input type="checkbox" class="permission-checkbox" id="prod-cat-all" onchange="toggleCategoryPermissions('product', 'category', this)">
+                                    <span class="permission-icon">📂</span>
+                                    <strong>产品分类</strong>
+                                </div>
+                                <div class="permission-children">
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="product" data-category="category" data-action="view">
+                                        <span>查看分类</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="product" data-category="category" data-action="add">
+                                        <span>新增分类</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="product" data-category="category" data-action="edit">
+                                        <span>编辑分类</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="product" data-category="category" data-action="delete">
+                                        <span>删除分类</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="permission-node">
+                                <div class="permission-item">
+                                    <input type="checkbox" class="permission-checkbox" id="prod-prod-all" onchange="toggleCategoryPermissions('product', 'product', this)">
+                                    <span class="permission-icon">📦</span>
+                                    <strong>产品信息</strong>
+                                </div>
+                                <div class="permission-children">
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="product" data-category="product" data-action="view">
+                                        <span>查看产品</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="product" data-category="product" data-action="add">
+                                        <span>新增产品</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="product" data-category="product" data-action="edit">
+                                        <span>编辑产品</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="product" data-category="product" data-action="delete">
+                                        <span>删除产品</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 订单权限 -->
+                    <div class="permission-node">
+                        <div class="permission-item">
+                            <input type="checkbox" class="permission-checkbox" id="order-all" onchange="toggleAllPermissions('order', this)">
+                            <span class="permission-icon">📋</span>
+                            <strong>订单管理</strong>
+                        </div>
+                        <div class="permission-children">
+                            <div class="permission-node">
+                                <div class="permission-item">
+                                    <input type="checkbox" class="permission-checkbox" id="order-order-all" onchange="toggleCategoryPermissions('order', 'order', this)">
+                                    <span class="permission-icon">📄</span>
+                                    <strong>订单处理</strong>
+                                </div>
+                                <div class="permission-children">
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="order" data-category="order" data-action="view">
+                                        <span>查看订单</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="order" data-category="order" data-action="add">
+                                        <span>新增订单</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="order" data-category="order" data-action="edit">
+                                        <span>编辑订单</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="order" data-category="order" data-action="delete">
+                                        <span>删除订单</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 系统权限 -->
+                    <div class="permission-node">
+                        <div class="permission-item">
+                            <input type="checkbox" class="permission-checkbox" id="sys-all" onchange="toggleAllPermissions('system', this)">
+                            <span class="permission-icon">⚙️</span>
+                            <strong>系统管理</strong>
+                        </div>
+                        <div class="permission-children">
+                            <div class="permission-node">
+                                <div class="permission-item">
+                                    <input type="checkbox" class="permission-checkbox" id="sys-user-all" onchange="toggleCategoryPermissions('system', 'user', this)">
+                                    <span class="permission-icon">👤</span>
+                                    <strong>用户管理</strong>
+                                </div>
+                                <div class="permission-children">
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="system" data-category="user" data-action="view">
+                                        <span>查看用户</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="system" data-category="user" data-action="add">
+                                        <span>新增用户</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="system" data-category="user" data-action="edit">
+                                        <span>编辑用户</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="system" data-category="user" data-action="delete">
+                                        <span>删除用户</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="permission-node">
+                                <div class="permission-item">
+                                    <input type="checkbox" class="permission-checkbox" id="sys-menu-all" onchange="toggleCategoryPermissions('system', 'menu', this)">
+                                    <span class="permission-icon">📋</span>
+                                    <strong>菜单管理</strong>
+                                </div>
+                                <div class="permission-children">
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="system" data-category="menu" data-action="view">
+                                        <span>查看菜单</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="system" data-category="menu" data-action="add">
+                                        <span>新增菜单</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="system" data-category="menu" data-action="edit">
+                                        <span>编辑菜单</span>
+                                    </div>
+                                    <div class="permission-item">
+                                        <input type="checkbox" class="permission-checkbox" data-module="system" data-category="menu" data-action="delete">
+                                        <span>删除菜单</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-actions" style="margin-top: 24px;">
+                    <button type="button" class="btn btn-primary" onclick="savePermissions()">保存权限</button>
+                    <button type="button" class="btn btn-secondary" onclick="closePermissionModal()">取消</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="../assets/js/common.js"></script>
@@ -797,24 +1308,10 @@
         // 初始化页面
         document.addEventListener('DOMContentLoaded', function() {
             loadPositionData();
+            addSearchStyles();
         });
         
-        // 切换导航组展开/收起
-        function toggleNavGroup(element) {
-            const submenu = element.nextElementSibling;
-            const arrow = element.querySelector('.nav-arrow');
-            
-            if (submenu && submenu.classList.contains('nav-submenu')) {
-                submenu.classList.toggle('expanded');
-                element.classList.toggle('expanded');
-                
-                if (submenu.classList.contains('expanded')) {
-                    arrow.style.transform = 'rotate(90deg)';
-                } else {
-                    arrow.style.transform = 'rotate(0deg)';
-                }
-            }
-        }
+        // 导航功能将由统一导航系统提供
         
         // 加载岗位数据
         function loadPositionData() {
@@ -835,261 +1332,365 @@
         
         // 渲染岗位列表
         function renderPositionList() {
-            const listContainer = document.getElementById('positionList');
+            const tableBody = document.getElementById('positionTableBody');
             
             if (filteredPositions.length === 0) {
-                listContainer.innerHTML = `
-                    <div style="text-align: center; padding: 24px; color: #999;">
-                        <i style="font-size: 32px;">💼</i><br>
-                        暂无岗位数据
-                    </div>
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="10" style="text-align: center; padding: 48px; color: #999;">
+                            <div style="font-size: 48px; margin-bottom: 16px;">💼</div>
+                            暂无岗位数据
+                        </td>
+                    </tr>
                 `;
                 return;
             }
             
-            listContainer.innerHTML = filteredPositions.map(pos => `
-                <div class="position-item ${currentPosition === pos.id ? 'active' : ''}" onclick="selectPosition(${pos.id})">
-                    <div class="position-name">${pos.name}</div>
-                    <div class="position-meta">
-                        <span>${pos.deptName}</span>
-                        <span>${pos.employeeCount}人</span>
-                    </div>
-                    <div class="position-actions" onclick="event.stopPropagation()">
-                        <button class="btn btn-default btn-sm" onclick="editPosition(${pos.id})" title="编辑">
-                            ✏️
+            tableBody.innerHTML = filteredPositions.map(pos => `
+                <tr>
+                    <td class="position-name-cell">${pos.name}</td>
+                    <td><span class="position-short-name">${pos.shortName}</span></td>
+                    <td>${pos.deptName}</td>
+                    <td>
+                        <span class="level-badge level-${pos.level}">
+                            ${pos.level === 5 ? '高级经理级' : 
+                              pos.level === 4 ? '总经理级' : 
+                              pos.level === 3 ? '主管级' : 
+                              pos.level === 2 ? '组长级' : '成员级'}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="is-manager-badge ${pos.isPersonalManager ? 'is-manager-yes' : 'is-manager-no'}">
+                            ${pos.isPersonalManager ? '是' : '否'}
+                        </span>
+                    </td>
+                    <td class="work-content" title="${pos.workContent || pos.description}">
+                        ${(pos.workContent || pos.description || '').substring(0, 30)}${(pos.workContent || pos.description || '').length > 30 ? '...' : ''}
+                    </td>
+                    <td>
+                        <button class="action-btn action-btn-manage" onclick="assignEmployees(${pos.id})">
+                            <i class="icon-users"></i> 分管管理
                         </button>
-                        <button class="btn btn-danger btn-sm" onclick="deletePosition(${pos.id})" title="删除">
-                            🗑️
+                    </td>
+                    <td>
+                        <button class="action-btn action-btn-permission" onclick="showPermissionManagement(${pos.id})">
+                            <i class="icon-shield"></i> 岗位权限
                         </button>
-                    </div>
-                </div>
+                    </td>
+                    <td>
+                        <button class="action-btn action-btn-edit" onclick="editPosition(${pos.id})">
+                            <i class="icon-edit"></i> 修改
+                        </button>
+                    </td>
+                    <td>
+                        <button class="action-btn action-btn-delete" onclick="deletePosition(${pos.id})">
+                            <i class="icon-trash"></i> 删除
+                        </button>
+                    </td>
+                </tr>
             `).join('');
         }
         
         // 搜索岗位
         function searchPositions() {
-            const keyword = document.getElementById('positionSearch').value.trim();
+            const searchName = document.getElementById('searchPositionName').value.toLowerCase().trim();
+            const searchDept = document.getElementById('searchDepartment').value;
+            const searchLevel = document.getElementById('searchLevel').value;
             
-            if (keyword) {
-                filteredPositions = positions.filter(pos => 
-                    pos.name.includes(keyword) || pos.description?.includes(keyword)
-                );
-            } else {
-                filteredPositions = [...positions];
-            }
+            filteredPositions = positions.filter(position => {
+                // 按岗位名称过滤
+                const nameMatch = !searchName || 
+                    position.name.toLowerCase().includes(searchName) || 
+                    position.shortName.toLowerCase().includes(searchName);
+                
+                // 按部门过滤
+                const deptMatch = !searchDept || position.deptId.toString() === searchDept;
+                
+                // 按权重等级过滤
+                const levelMatch = !searchLevel || position.level.toString() === searchLevel;
+                
+                return nameMatch && deptMatch && levelMatch;
+            });
             
             renderPositionList();
         }
-        
-        // 选择岗位
-        function selectPosition(posId) {
-            currentPosition = posId;
+
+        function resetSearch() {
+            document.getElementById('searchPositionName').value = '';
+            document.getElementById('searchDepartment').value = '';
+            document.getElementById('searchLevel').value = '';
+            filteredPositions = [...positions];
             renderPositionList();
-            loadPositionDetail(posId);
         }
-        
-        // 加载岗位详情
-        function loadPositionDetail(posId) {
-            const position = positions.find(p => p.id === posId);
-            if (!position) return;
-            
-            const employees = window.MockData.employees.filter(e => e.workposition == posId);
-            
-            const detailHTML = `
-                <form class="form" id="positionDetailForm">
-                    <div class="form-section">
-                        <h4 class="section-title">基本信息</h4>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">岗位名称</label>
-                                <input type="text" name="name" class="form-control" value="${position.name}" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">所属部门</label>
-                                <input type="text" class="form-control" value="${position.deptName}" readonly>
-                            </div>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">岗位描述</label>
-                            <textarea name="description" class="form-control" rows="3" readonly>${position.description || ''}</textarea>
-                        </div>
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">岗位级别</label>
-                                <input type="text" name="level" class="form-control" value="${position.level || '普通岗位'}" readonly>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label">岗位人数</label>
-                                <input type="text" class="form-control" value="${position.employeeCount}" readonly>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-section">
-                        <h4 class="section-title">权限配置</h4>
-                        <div class="permission-tree" id="permissionTree">
-                            ${renderPermissionTree()}
-                        </div>
-                    </div>
-                    
-                    <div class="form-section">
-                        <h4 class="section-title">在职员工</h4>
-                        <div style="max-height: 200px; overflow-y: auto;">
-                            ${employees.length > 0 ? employees.map(emp => `
-                                <div class="employee-item">
-                                    <div class="employee-avatar">
-                                        ${emp.name.charAt(0)}
-                                    </div>
-                                    <div style="flex: 1;">
-                                        <div style="font-weight: 500;">${emp.name}</div>
-                                        <div style="font-size: 12px; color: #666;">${emp.empNo}</div>
-                                    </div>
-                                    <span class="badge ${emp.isLeave ? 'badge-default' : 'badge-success'}">
-                                        ${emp.isLeave ? '离职' : '在职'}
-                                    </span>
-                                </div>
-                            `).join('') : '<div style="text-align: center; color: #999; padding: 24px;">暂无员工</div>'}
-                        </div>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-primary" onclick="editPosition(${posId})">
-                            ✏️ 编辑岗位
-                        </button>
-                        <button type="button" class="btn btn-default" onclick="assignEmployees(${posId})">
-                            👥 分配员工
-                        </button>
-                        <button type="button" class="btn btn-danger" onclick="deletePosition(${posId})">
-                            🗑️ 删除岗位
-                        </button>
-                    </div>
-                </form>
-            `;
-            
-            document.getElementById('positionDetail').innerHTML = detailHTML;
-        }
-        
-        // 渲染权限树
-        function renderPermissionTree() {
-            const permissions = [
-                {
-                    id: 'organization',
-                    name: '组织架构管理',
-                    icon: '🏢',
-                    children: [
-                        { id: 'dept_view', name: '查看部门', icon: '👁️' },
-                        { id: 'dept_edit', name: '编辑部门', icon: '✏️' },
-                        { id: 'emp_view', name: '查看员工', icon: '👁️' },
-                        { id: 'emp_edit', name: '编辑员工', icon: '✏️' }
-                    ]
-                },
-                {
-                    id: 'crm',
-                    name: '客户管理',
-                    icon: '👤',
-                    children: [
-                        { id: 'customer_view', name: '查看客户', icon: '👁️' },
-                        { id: 'customer_edit', name: '编辑客户', icon: '✏️' },
-                        { id: 'follow_view', name: '查看跟进', icon: '👁️' },
-                        { id: 'follow_edit', name: '添加跟进', icon: '✏️' }
-                    ]
-                },
-                {
-                    id: 'product',
-                    name: '商品管理',
-                    icon: '📦',
-                    children: [
-                        { id: 'product_view', name: '查看商品', icon: '👁️' },
-                        { id: 'product_edit', name: '编辑商品', icon: '✏️' },
-                        { id: 'inventory_view', name: '查看库存', icon: '👁️' },
-                        { id: 'inventory_edit', name: '调整库存', icon: '✏️' }
-                    ]
-                }
-            ];
-            
-            function renderNode(node, level = 0) {
-                const hasChildren = node.children && node.children.length > 0;
-                const indent = level * 16;
-                
-                let html = `
-                    <div class="permission-node" style="margin-left: ${indent}px;">
-                        <div class="permission-item">
-                            <input type="checkbox" class="permission-checkbox" 
-                                   value="${node.id}" onchange="togglePermission('${node.id}')">
-                            <i class="permission-icon">${node.icon}</i>
-                            <span>${node.name}</span>
-                        </div>
-                `;
-                
-                if (hasChildren) {
-                    html += '<div class="permission-children">';
-                    node.children.forEach(child => {
-                        html += renderNode(child, level + 1);
-                    });
-                    html += '</div>';
-                }
-                
-                html += '</div>';
-                return html;
-            }
-            
-            return permissions.map(perm => renderNode(perm)).join('');
-        }
-        
-        // 切换权限
-        function togglePermission(permId) {
-            console.log('Toggle permission:', permId);
-            // 这里添加权限切换逻辑
-        }
-        
-        // 新增岗位
-        function addPosition() {
-            alert('新增岗位功能开发中...');
-        }
-        
-        // 编辑岗位
-        function editPosition(posId) {
-            alert(`编辑岗位 ID: ${posId} 功能开发中...`);
-        }
-        
-        // 删除岗位
-        function deletePosition(posId) {
-            const position = positions.find(p => p.id === posId);
-            if (!position) return;
-            
-            // 检查是否有员工
-            const hasEmployees = window.MockData.employees.some(e => e.workposition == posId);
-            if (hasEmployees) {
-                alert('该岗位下还有员工，无法删除');
+
+        // 权限管理 - 修复点击事件
+        function showPermissionManagement(positionId) {
+            const position = positions.find(p => p.id === positionId);
+            if (!position) {
+                showToast('岗位信息不存在！', 'error');
                 return;
             }
             
-            if (confirm(`确定要删除岗位"${position.name}"吗？`)) {
-                positions = positions.filter(p => p.id !== posId);
-                filteredPositions = filteredPositions.filter(p => p.id !== posId);
+            console.log('显示权限管理:', position.name); // 调试日志
+            
+            document.getElementById('permissionModalTitle').textContent = '岗位权限管理';
+            document.getElementById('permissionPositionName').textContent = position.name;
+            
+            // 清空所有复选框
+            const checkboxes = document.querySelectorAll('#permissionModal input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+            
+            // 根据岗位权限设置复选框
+            if (position.permissions && typeof position.permissions === 'object') {
+                Object.keys(position.permissions).forEach(module => {
+                    const modulePerms = position.permissions[module];
+                    if (modulePerms && typeof modulePerms === 'object') {
+                        Object.keys(modulePerms).forEach(category => {
+                            const categoryPerms = modulePerms[category];
+                            if (categoryPerms && typeof categoryPerms === 'object') {
+                                Object.keys(categoryPerms).forEach(action => {
+                                    if (categoryPerms[action]) {
+                                        const checkbox = document.querySelector(
+                                            `input[data-module="${module}"][data-category="${category}"][data-action="${action}"]`
+                                        );
+                                        if (checkbox) {
+                                            checkbox.checked = true;
+                                        }
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+            
+            // 存储当前编辑的岗位ID
+            document.getElementById('permissionModal').dataset.positionId = positionId;
+            document.getElementById('permissionModal').style.display = 'block';
+        }
+
+        function closePermissionModal() {
+            document.getElementById('permissionModal').style.display = 'none';
+        }
+
+        function savePermissions() {
+            const positionId = parseInt(document.getElementById('permissionModal').dataset.positionId);
+            const position = positions.find(p => p.id === positionId);
+            if (!position) {
+                showToast('岗位信息不存在！', 'error');
+                return;
+            }
+            
+            // 构建权限对象
+            const permissions = {
+                organization: {
+                    department: {},
+                    employee: {},
+                    position: {}
+                },
+                crm: {
+                    customer: {},
+                    contact: {}
+                },
+                product: {
+                    category: {},
+                    product: {}
+                },
+                order: {
+                    order: {}
+                },
+                system: {
+                    user: {},
+                    role: {},
+                    menu: {},
+                    log: {}
+                }
+            };
+            
+            // 收集所有复选框状态
+            const checkboxes = document.querySelectorAll('#permissionModal input[type="checkbox"][data-module]');
+            const functionIds = [];
+            
+            checkboxes.forEach((checkbox, index) => {
+                const module = checkbox.dataset.module;
+                const category = checkbox.dataset.category;
+                const action = checkbox.dataset.action;
                 
-                if (currentPosition === posId) {
-                    currentPosition = null;
-                    document.getElementById('positionDetail').innerHTML = `
-                        <div class="empty-state" style="text-align: center; padding: 48px; color: #999;">
-                            <i style="font-size: 48px;">💼</i><br>
-                            <p style="margin-top: 16px;">请选择左侧岗位查看详情</p>
-                        </div>
-                    `;
+                if (permissions[module] && permissions[module][category] !== undefined) {
+                    permissions[module][category][action] = checkbox.checked;
                 }
                 
-                renderPositionList();
-                alert('岗位删除成功！');
-            }
-        }
-        
-        // 分配员工
-        function assignEmployees(posId) {
-            const position = positions.find(p => p.id === posId);
-            if (!position) return;
+                if (checkbox.checked) {
+                    functionIds.push(index + 1);
+                }
+            });
             
-            alert(`分配员工到岗位"${position.name}"功能开发中...`);
+            // 更新岗位权限
+            position.permissions = permissions;
+            position.functionIDs = functionIds.join(',');
+            position.editTime = new Date().toISOString().replace('T', ' ').substring(0, 19);
+            
+            showToast(`${position.name} 权限保存成功！`, 'success');
+            closePermissionModal();
+        }
+
+        // 权限树的全选/取消全选功能
+        function toggleAllPermissions(module, checkbox) {
+            const moduleCheckboxes = document.querySelectorAll(`input[data-module="${module}"]`);
+            moduleCheckboxes.forEach(cb => {
+                if (cb.dataset.module === module) {
+                    cb.checked = checkbox.checked;
+                }
+            });
+        }
+
+        function toggleCategoryPermissions(module, category, checkbox) {
+            const categoryCheckboxes = document.querySelectorAll(`input[data-module="${module}"][data-category="${category}"]`);
+            categoryCheckboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+        }
+
+        // 占位函数
+        function assignEmployees(positionId) {
+            showToast('分管管理功能开发中...', 'info');
+        }
+
+        function editPosition(positionId) {
+            showToast('编辑岗位功能开发中...', 'info');
+        }
+
+        function deletePosition(positionId) {
+            showToast('删除岗位功能开发中...', 'info');
+        }
+
+        function addPosition() {
+            showToast('新增岗位功能开发中...', 'info');
+        }
+
+        function showToast(message, type = 'info') {
+            // 简单的消息提示
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#52c41a' : type === 'error' ? '#ff4d4f' : '#1890ff'};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 6px;
+                z-index: 10000;
+                animation: slideInRight 0.3s ease;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => document.body.removeChild(toast), 300);
+            }, 3000);
+        }
+
+        // 添加样式支持搜索功能
+        function addSearchStyles() {
+            if (document.getElementById('searchStyles')) return;
+            
+            const style = document.createElement('style');
+            style.id = 'searchStyles';
+            style.textContent = `
+                .search-section {
+                    background: #f8f9fa;
+                    padding: 20px;
+                    border-radius: 8px;
+                    margin-bottom: 20px;
+                    border: 1px solid #e9ecef;
+                }
+                
+                .search-form {
+                    margin: 0;
+                }
+                
+                .search-row {
+                    display: flex;
+                    gap: 20px;
+                    align-items: end;
+                    flex-wrap: wrap;
+                }
+                
+                .search-item {
+                    display: flex;
+                    flex-direction: column;
+                    min-width: 180px;
+                }
+                
+                .search-item label {
+                    font-weight: 500;
+                    margin-bottom: 5px;
+                    color: #495057;
+                    font-size: 14px;
+                }
+                
+                .search-input,
+                .search-select {
+                    padding: 8px 12px;
+                    border: 1px solid #ced4da;
+                    border-radius: 4px;
+                    font-size: 14px;
+                    height: 38px;
+                }
+                
+                .search-input:focus,
+                .search-select:focus {
+                    outline: none;
+                    border-color: #007bff;
+                    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+                }
+                
+                .search-actions {
+                    display: flex;
+                    gap: 10px;
+                    align-items: end;
+                }
+                
+                .icon-search::before { content: "🔍"; }
+                .icon-reset::before { content: "🔄"; }
+                
+                @keyframes slideInRight {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                
+                @keyframes slideOutRight {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+                
+                @media (max-width: 768px) {
+                    .search-row {
+                        flex-direction: column;
+                        align-items: stretch;
+                    }
+                    
+                    .search-item {
+                        min-width: auto;
+                    }
+                    
+                    .search-actions {
+                        justify-content: stretch;
+                    }
+                    
+                    .search-actions button {
+                        flex: 1;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
         }
     </script>
+    
+    <!-- 引入统一导航系统 -->
+    <script src="../assets/js/navigation.js"></script>
 </body>
 </html> 

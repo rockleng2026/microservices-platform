@@ -735,10 +735,902 @@ const chartData = {
     }
 };
 
+// 岗位数据
+const positionData = [
+    {
+        id: 1,
+        name: '总裁秘书长',
+        shortName: 'ZCMSZ',
+        deptId: 1,
+        deptName: '综合办公室',
+        isManager: true,
+        level: 5, // 权重(5 高级经理级别,4总经理级别,3主管级别,2组长级别,1成员级别)
+        description: '负责总裁办公室日常事务管理，协调各部门工作',
+        salaryRange: '15000-25000',
+        skillRequirements: '管理学、行政管理等相关专业',
+        createTime: '2024-12-01',
+        editTime: '2024-12-01 10:30:00',
+        workContent: '负责总裁办公室日常管理工作，协调公司各部门事务，处理重要文件和会议安排', // 工作职责
+        parentPositionId: null, // 上级岗位ID
+        isPersonalManager: 1, // 是否人员主管
+        // 功能权限ID列表 - 精确到页面功能点
+        functionIDs: '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,100,101,102,103,104,105,200,201,202,203,204,205,300,301,302,303,304,305',
+        // 权限配置 - 精确到页面功能点
+        permissions: {
+            // 组织管理模块
+            organization: {
+                department: {
+                    view: true,    // 查看部门
+                    add: true,     // 新增部门
+                    edit: true,    // 编辑部门
+                    delete: true,  // 删除部门
+                    assign: true   // 分配人员
+                },
+                employee: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true,
+                    import: true,  // 批量导入
+                    export: true   // 导出数据
+                },
+                position: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true,
+                    permission_manage: true  // 权限管理
+                }
+            },
+            // CRM客户管理模块
+            crm: {
+                customer: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: false,
+                    assign: true,
+                    follow: true
+                },
+                contact: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: false
+                }
+            },
+            // 产品管理模块
+            product: {
+                category: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true
+                },
+                product: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    audit: true    // 审核产品
+                }
+            },
+            // 订单管理模块
+            order: {
+                order: {
+                    view: true,
+                    add: false,
+                    edit: true,
+                    delete: false,
+                    audit: true,   // 审核订单
+                    cancel: true   // 取消订单
+                }
+            },
+            // 系统管理模块
+            system: {
+                user: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true,
+                    reset_password: true
+                },
+                role: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true
+                },
+                menu: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true
+                },
+                log: {
+                    view: true,
+                    export: true
+                }
+            }
+        }
+    },
+    {
+        id: 2,
+        name: '总裁秘书',
+        shortName: 'ZCMS',
+        deptId: 1,
+        deptName: '综合办公室',
+        isManager: false,
+        level: 2,
+        description: '协助总裁秘书长处理日常事务',
+        salaryRange: '8000-12000',
+        skillRequirements: '文秘、行政管理等相关专业',
+        createTime: '2024-12-01',
+        editTime: '2024-12-01 10:30:00',
+        workContent: '协助处理总裁办公室日常事务，文件整理，会议记录',
+        parentPositionId: 1,
+        isPersonalManager: 0,
+        functionIDs: '1,2,3,4,5,100,101,102,200,201,202',
+        permissions: {
+            organization: {
+                department: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    assign: false
+                },
+                employee: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    import: false,
+                    export: true
+                },
+                position: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    permission_manage: false
+                }
+            },
+            crm: {
+                customer: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    assign: false,
+                    follow: false
+                },
+                contact: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false
+                }
+            },
+            product: {
+                category: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                product: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    audit: false
+                }
+            },
+            order: {
+                order: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    audit: false,
+                    cancel: false
+                }
+            },
+            system: {
+                user: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    reset_password: false
+                },
+                role: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                menu: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                log: {
+                    view: false,
+                    export: false
+                }
+            }
+        }
+    },
+    {
+        id: 3,
+        name: '人力资源经理',
+        shortName: 'RLZYJL',
+        deptId: 2,
+        deptName: '人力资源部',
+        isManager: true,
+        level: 3,
+        description: '负责人力资源部门管理工作',
+        salaryRange: '12000-18000',
+        skillRequirements: '人力资源管理、心理学等相关专业',
+        createTime: '2024-12-01',
+        editTime: '2024-12-01 10:30:00',
+        workContent: '负责公司人力资源规划、招聘、培训、绩效考核、薪酬福利等工作',
+        parentPositionId: null,
+        isPersonalManager: 1,
+        functionIDs: '1,2,3,4,5,6,7,8,9,10,100,101,102,103,104,200,201,202,203',
+        permissions: {
+            organization: {
+                department: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: false,
+                    assign: true
+                },
+                employee: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: false,
+                    import: true,
+                    export: true
+                },
+                position: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: false,
+                    permission_manage: true
+                }
+            },
+            crm: {
+                customer: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    assign: false,
+                    follow: false
+                },
+                contact: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false
+                }
+            },
+            product: {
+                category: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                product: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    audit: false
+                }
+            },
+            order: {
+                order: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    audit: false,
+                    cancel: false
+                }
+            },
+            system: {
+                user: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: false,
+                    reset_password: true
+                },
+                role: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                menu: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                log: {
+                    view: true,
+                    export: true
+                }
+            }
+        }
+    },
+    {
+        id: 4,
+        name: '财务经理',
+        shortName: 'CWJL',
+        deptId: 3,
+        deptName: '财务部',
+        isManager: true,
+        level: 3,
+        description: '负责财务部门管理工作',
+        salaryRange: '12000-20000',
+        skillRequirements: '财务管理、会计学等相关专业，CPA优先',
+        createTime: '2024-12-01',
+        editTime: '2024-12-01 10:30:00',
+        workContent: '负责公司财务管理、成本控制、预算编制、财务报表等工作',
+        parentPositionId: null,
+        isPersonalManager: 1,
+        functionIDs: '1,2,3,4,5,100,101,200,201,300,301,302,303,304,305',
+        permissions: {
+            organization: {
+                department: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    assign: false
+                },
+                employee: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    import: false,
+                    export: true
+                },
+                position: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    permission_manage: false
+                }
+            },
+            crm: {
+                customer: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    assign: false,
+                    follow: false
+                },
+                contact: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false
+                }
+            },
+            product: {
+                category: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                product: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    audit: true
+                }
+            },
+            order: {
+                order: {
+                    view: true,
+                    add: false,
+                    edit: true,
+                    delete: false,
+                    audit: true,
+                    cancel: true
+                }
+            },
+            system: {
+                user: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    reset_password: false
+                },
+                role: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                menu: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                log: {
+                    view: true,
+                    export: true
+                }
+            }
+        }
+    },
+    {
+        id: 5,
+        name: '技术总监',
+        shortName: 'JSZJ',
+        deptId: 4,
+        deptName: '技术部',
+        isManager: true,
+        level: 4,
+        description: '负责公司技术架构和研发管理',
+        salaryRange: '20000-35000',
+        skillRequirements: '计算机相关专业，10年以上技术管理经验',
+        createTime: '2024-12-01',
+        editTime: '2024-12-01 10:30:00',
+        workContent: '负责公司技术发展规划、架构设计、研发团队管理等工作',
+        parentPositionId: null,
+        isPersonalManager: 1,
+        functionIDs: '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,100,101,102,103,104,105,200,201,202,203,204,205',
+        permissions: {
+            organization: {
+                department: {
+                    view: true,
+                    add: false,
+                    edit: true,
+                    delete: false,
+                    assign: true
+                },
+                employee: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: false,
+                    import: false,
+                    export: true
+                },
+                position: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: false,
+                    permission_manage: false
+                }
+            },
+            crm: {
+                customer: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    assign: false,
+                    follow: false
+                },
+                contact: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false
+                }
+            },
+            product: {
+                category: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true
+                },
+                product: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true,
+                    audit: true
+                }
+            },
+            order: {
+                order: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    audit: false,
+                    cancel: false
+                }
+            },
+            system: {
+                user: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    reset_password: false
+                },
+                role: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                menu: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: false
+                },
+                log: {
+                    view: true,
+                    export: true
+                }
+            }
+        }
+    },
+    {
+        id: 6,
+        name: '销售经理',
+        shortName: 'XSJL',
+        deptId: 5,
+        deptName: '销售部',
+        isManager: true,
+        level: 3,
+        description: '负责销售团队管理和业务拓展',
+        salaryRange: '10000-18000',
+        skillRequirements: '市场营销相关专业，5年以上销售管理经验',
+        createTime: '2024-12-01',
+        editTime: '2024-12-01 10:30:00',
+        workContent: '负责销售团队管理、客户开发、销售目标制定与执行',
+        parentPositionId: null,
+        isPersonalManager: 1,
+        functionIDs: '1,2,3,4,5,100,101,200,201,202,203',
+        permissions: {
+            organization: {
+                department: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    assign: false
+                },
+                employee: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    import: false,
+                    export: true
+                },
+                position: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    permission_manage: false
+                }
+            },
+            crm: {
+                customer: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: false,
+                    assign: true,
+                    follow: true
+                },
+                contact: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: false
+                }
+            },
+            product: {
+                category: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                product: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    audit: false
+                }
+            },
+            order: {
+                order: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: false,
+                    audit: false,
+                    cancel: true
+                }
+            },
+            system: {
+                user: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    reset_password: false
+                },
+                role: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                menu: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                log: {
+                    view: false,
+                    export: false
+                }
+            }
+        }
+    },
+    {
+        id: 7,
+        name: '客服专员',
+        shortName: 'KFZY',
+        deptId: 6,
+        deptName: '客服部',
+        isManager: false,
+        level: 1,
+        description: '负责客户服务和技术支持',
+        salaryRange: '4500-7000',
+        skillRequirements: '客服相关经验，良好的沟通能力',
+        createTime: '2024-12-01',
+        editTime: '2024-12-01 10:30:00',
+        workContent: '处理客户咨询、投诉，提供技术支持服务',
+        parentPositionId: null,
+        isPersonalManager: 0,
+        functionIDs: '1,2,3,100,101,200,201',
+        permissions: {
+            organization: {
+                department: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    assign: false
+                },
+                employee: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    import: false,
+                    export: false
+                },
+                position: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    permission_manage: false
+                }
+            },
+            crm: {
+                customer: {
+                    view: true,
+                    add: false,
+                    edit: true,
+                    delete: false,
+                    assign: false,
+                    follow: true
+                },
+                contact: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: false
+                }
+            },
+            product: {
+                category: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                product: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    audit: false
+                }
+            },
+            order: {
+                order: {
+                    view: true,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    audit: false,
+                    cancel: false
+                }
+            },
+            system: {
+                user: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false,
+                    reset_password: false
+                },
+                role: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                menu: {
+                    view: false,
+                    add: false,
+                    edit: false,
+                    delete: false
+                },
+                log: {
+                    view: false,
+                    export: false
+                }
+            }
+        }
+    },
+    {
+        id: 8,
+        name: '系统管理员',
+        shortName: 'XTGLY',
+        deptId: 4,
+        deptName: '技术部',
+        isManager: false,
+        level: 2,
+        description: '负责系统运维和管理',
+        salaryRange: '8000-12000',
+        skillRequirements: '计算机相关专业，熟悉Linux系统',
+        createTime: '2024-12-01',
+        editTime: '2024-12-01 10:30:00',
+        workContent: '负责系统运维、数据备份、安全管理等工作',
+        parentPositionId: 5,
+        isPersonalManager: 0,
+        functionIDs: '1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,100,101,102,103,104,105,200,201,202,203,204,205,300,301,302,303,304,305',
+        permissions: {
+            organization: {
+                department: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true,
+                    assign: true
+                },
+                employee: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true,
+                    import: true,
+                    export: true
+                },
+                position: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true,
+                    permission_manage: true
+                }
+            },
+            crm: {
+                customer: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true,
+                    assign: true,
+                    follow: true
+                },
+                contact: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true
+                }
+            },
+            product: {
+                category: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true
+                },
+                product: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true,
+                    audit: true
+                }
+            },
+            order: {
+                order: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true,
+                    audit: true,
+                    cancel: true
+                }
+            },
+            system: {
+                user: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true,
+                    reset_password: true
+                },
+                role: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true
+                },
+                menu: {
+                    view: true,
+                    add: true,
+                    edit: true,
+                    delete: true
+                },
+                log: {
+                    view: true,
+                    export: true
+                }
+            }
+        }
+    }
+];
+
 // 导出模拟数据
 window.MockData = {
     departments: departmentData,
     employees: employeeData,
+    positions: positionData,
     customers: customerData,
     customerFollows: customerFollowData,
     categories: categoryData,

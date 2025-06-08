@@ -1,0 +1,352 @@
+/* 权重等级徽章 */
+.level-badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    min-width: 80px;
+    display: inline-block;
+}
+
+.level-badge.level-5 {
+    background-color: #8B5CF6;
+    color: white;
+}
+
+.level-badge.level-4 {
+    background-color: #EF4444;
+    color: white;
+}
+
+.level-badge.level-3 {
+    background-color: #F59E0B;
+    color: white;
+}
+
+.level-badge.level-2 {
+    background-color: #10B981;
+    color: white;
+}
+
+.level-badge.level-1 {
+    background-color: #6B7280;
+    color: white;
+}
+
+/* 工作职责内容显示 */
+.work-content {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    cursor: help;
+}
+
+/* 表单行布局 */
+.form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.form-row .form-group {
+    flex: 1;
+}
+
+.col-md-6 {
+    flex: 0 0 48%;
+}
+
+/* 必填字段标识 */
+.required {
+    color: #dc3545;
+    margin-left: 2px;
+}
+
+/* 复选框组件样式 */
+.form-check-wrapper {
+    margin-top: 8px;
+}
+
+.form-check {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.form-check-input {
+    margin-right: 8px;
+    margin-top: 0;
+}
+
+.form-check-label {
+    margin-bottom: 0;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+/* 权限管理模态框 */
+.modal-large {
+    max-width: 900px;
+    width: 90%;
+}
+
+.permission-info {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.permission-info h4 {
+    margin: 0 0 5px 0;
+    color: #495057;
+}
+
+.permission-info .text-muted {
+    margin: 0;
+    font-size: 14px;
+}
+
+.permission-container {
+    max-height: 60vh;
+    overflow-y: auto;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+}
+
+.permission-module {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.permission-module:last-child {
+    border-bottom: none;
+}
+
+.module-header {
+    background-color: #f8f9fa;
+    padding: 12px 16px;
+    border-bottom: 1px solid #dee2e6;
+    cursor: pointer;
+    user-select: none;
+}
+
+.module-header h5 {
+    margin: 0;
+    font-size: 16px;
+    color: #495057;
+    display: flex;
+    align-items: center;
+}
+
+.module-header i {
+    margin-right: 8px;
+    font-size: 18px;
+}
+
+.module-content {
+    padding: 16px;
+}
+
+.permission-category {
+    margin-bottom: 20px;
+}
+
+.permission-category:last-child {
+    margin-bottom: 0;
+}
+
+.permission-category h6 {
+    margin: 0 0 12px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #6c757d;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.permission-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    background-color: #ffffff;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.permission-item:hover {
+    background-color: #f8f9fa;
+    border-color: #007bff;
+}
+
+.permission-item input[type="checkbox"] {
+    margin-right: 8px;
+    margin-top: 0;
+}
+
+.permission-item span {
+    font-size: 14px;
+    color: #495057;
+    user-select: none;
+}
+
+.permission-item input[type="checkbox"]:checked + span {
+    color: #007bff;
+    font-weight: 500;
+}
+
+/* 图标样式 */
+.icon-organization::before { content: "🏢"; }
+.icon-crm::before { content: "👥"; }
+.icon-product::before { content: "📦"; }
+.icon-order::before { content: "📋"; }
+.icon-system::before { content: "⚙️"; }
+.icon-users::before { content: "👥"; }
+.icon-shield::before { content: "🛡️"; }
+.icon-edit::before { content: "✏️"; }
+.icon-trash::before { content: "🗑️"; }
+
+/* 操作按钮更新 */
+.btn-action {
+    padding: 6px 12px;
+    font-size: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 2px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-action i {
+    font-size: 14px;
+}
+
+.btn-manage {
+    background-color: #17a2b8;
+    color: white;
+}
+
+.btn-manage:hover {
+    background-color: #138496;
+}
+
+.btn-permission {
+    background-color: #6f42c1;
+    color: white;
+}
+
+.btn-permission:hover {
+    background-color: #5a36a3;
+}
+
+.btn-edit {
+    background-color: #ffc107;
+    color: #212529;
+}
+
+.btn-edit:hover {
+    background-color: #e0a800;
+}
+
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #c82333;
+}
+
+/* 表格优化 */
+.positions-table th {
+    white-space: nowrap;
+    font-weight: 600;
+    background-color: #f8f9fa;
+}
+
+.positions-table td {
+    vertical-align: middle;
+    padding: 12px 8px;
+}
+
+/* 徽章样式统一 */
+.badge {
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    text-align: center;
+    min-width: 40px;
+    display: inline-block;
+}
+
+.badge-success {
+    background-color: #28a745;
+    color: white;
+}
+
+.badge-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .col-md-6 {
+        flex: 1;
+    }
+    
+    .permission-items {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-large {
+        width: 95%;
+        margin: 20px auto;
+    }
+    
+    .btn-action {
+        padding: 4px 8px;
+        font-size: 11px;
+    }
+    
+    .btn-action span {
+        display: none;
+    }
+}
+
+/* 模态框滚动条样式 */
+.permission-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.permission-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.permission-container::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.permission-container::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+} 

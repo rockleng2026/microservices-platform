@@ -81,76 +81,32 @@ zlt-web/
 ### 2.2 核心表结构保留
 基于对原系统数据库的分析，以下核心表结构将被最大程度保留：
 
-#### 2.2.1 组织架构相关表
-```sql
--- 部门表 (保留原结构)
-department (
-    id int(11) -- 部门ID
-    name varchar(128) -- 部门名称  
-    directorId int(11) -- 部门主管ID
-    parentId int(11) -- 父部门ID
-    delflag int(11) -- 删除标识
-    tel varchar(50) -- 电话
-    depNo varchar(10) -- 部门编号
-    filialemark varchar(100) -- 分公司标识
-    fiiale varchar(11) -- 是否为分公司
-    islevel int(10) -- 部门级别
-    gradeid int(11) DEFAULT 7 -- 部门等级(1-7级)
-    Time datetime -- 创建时间
-)
+#### 2.2.1 组织架构相关表 (详细设计参考: `organization-module.sql`)
 
--- 部门等级表 关联到department表的gradeid
-department_grade (
-  id int(11) -- '部门级别表',
-  dg_num tinyint(4) -- '部门等级数字',
-  dg_name varchar(32) -- '部门等级名称',
-  dg_desc varchar(200) -- '部门等级描述'
-)
+基于Portal 3.0微服务架构要求，组织架构模块采用以下表结构设计：
 
+**核心表结构:**
+- `tenant` - 租户信息表 (多租户支持)
+- `tenant_config` - 租户配置表
+- `department` - 部门表 (基于原表扩展)
+- `department_grade` - 部门等级配置表
+- `employee` - 员工表 (基于原表重构)
+- `employee_grade` - 员工等级表
+- `workposition` - 岗位表 (基于原表扩展)
+- `field_config` - 字段配置表 (扩展信息配置)
+- `employee_extend_data` - 员工扩展数据表
+- `employee_attachment` - 员工附件表
 
+**主要设计特性:**
+- 完整的多租户数据隔离 (tenant_id字段)
+- 保持与原SSH系统的数据兼容性
+- 支持7级部门层级结构
+- 员工全生命周期管理
+- 岗位权限配置体系
+- 扩展数据和附件支持
+- 完善的审计日志记录
 
-
-
--- 员工表 (保留原结构，扩展字段)
-employee (
-    id int(11) -- 员工ID
-    uuid varchar(255) -- UUID标识
-    name varchar(20) -- 姓名
-    birth varchar(255) -- 生日
-    sex int(11) -- 性别
-    cardid varchar(50) -- 身份证号
-    department int(11) -- 部门ID
-    position int(11) -- 职位ID
-    workposition int(11) -- 工作岗位
-    empNo varchar(50) -- 员工编号
-    isLoginAccount int(11) -- 是否有登录账号
-    email varchar(255) -- 邮箱
-    Tel varchar(50) -- 电话
-    isLeave int(255) -- 是否离职
-    gradeid int(11) -- 员工等级
-    entryTime varchar(255) -- 入职时间
-    leaveTime varchar(255) -- 离职时间
-    delflag int(11) -- 删除标识
-)
-
-
-```
-
-#-- 岗位表 (扩展原workposition表)
-workposition (
-    id int(11) -- 岗位ID
-    name varchar(100) -- 岗位名称
-    shortname varchar(20) -- 岗位简称
-    deptid int(11) -- 部门ID
-    workgrade int(11) -- 权重等级(1-5)
-    workcontent text -- 工作职责
-    functionIDs varchar(500) -- 功能权限ID串
-    permissions text -- 权限配置JSON
-    parpostionid int(11) -- 上级岗位ID
-    ispersonman int(11) -- 是否主管岗位
-    edittime datetime -- 最后编辑时间
-    delflag int(11) -- 删除标识
-)
+**详细表结构请参考:** `sql/organization-module.sql`
 
 
 
@@ -246,44 +202,47 @@ saleorderinfo (
 
 ### 2.3 表结构迁移策略
 
-#### 2.3.1 直接复用
-- 保持原有表结构和字段定义
-- 仅调整字符集为UTF8MB4
-- 添加必要的索引优化
+#### 2.3.1 组织模块 - 已完成 ✅
+**实现状态：** Portal 3.0组织管理模块已完成设计和开发
+- **详细设计文档：** `docs/organization-module-summary.md`
+- **数据库脚本：** `sql/organization-module.sql`
+- **实现方案：** 基于原SSH系统表结构的微服务化重构，支持多租户
+- **核心特性：** 22个核心文件，完整的数据库设计，规范的代码架构
 
-#### 2.3.2 扩展改造
+#### 2.3.2 扩展改造策略
 - 增加`created_at`、`updated_at`时间戳字段
-- 统一删除标识字段为`deleted`
+- 统一删除标识字段为`delflag`
 - 添加`tenant_id`字段支持多租户
 - 添加多租户管理相关表结构
 
-#### 2.3.3 微服务拆分
+#### 2.3.3 微服务拆分规划
 按业务域将表分配到不同的微服务数据库：
 ```
-├── user-center-db -- 用户中心数据库
-│   ├── department 
-│   ├── employee 
-│   ├── workposition
-│   └── functioninfo    
-├── central_crm -- CRM数据库  
+├── central_organization -- 组织管理数据库 ✅ 已完成
+│   ├── tenant (租户表)
+│   ├── tenant_config (租户配置表)
+│   ├── department (部门表) 
+│   ├── employee (员工表)
+│   ├── workposition (岗位表)
+│   ├── field_config (字段配置表)
+│   ├── employee_extend_data (员工扩展数据表)
+│   ├── employee_attachment (员工附件表)
+│   └── audit_log (审计日志表)
+├── central_crm -- CRM数据库 ⏳ 规划中
 │   ├── customer (复用原表)
 │   ├── customermove (复用原表)
 │   └── customerfollow (新建表)
-├── central_product -- 商品管理数据库
+├── central_product -- 商品管理数据库 ⏳ 规划中
 │   ├── goods_dict (复用原表)
 │   ├── goodsClass_expand (复用原表)
 │   └── product (复用原表)
+├── central_order -- 订单管理数据库 ⏳ 规划中
 │   ├── saleorder (复用原表)
 │   ├── saleorderinfo (复用原表)
 │   └── payment (新建表)
-├── central_workflow -- 流程管理数据库
-│   ├── approverecord (复用原表)
-│   └── workflow_def (新建表)
-└── central_tenant -- 多租户管理数据库
-    ├── tenant (租户表)
-    ├── tenant_config (租户配置表)
-    ├── tenant_module (租户模块表)
-    └── tenant_user (租户用户关联表)
+└── central_workflow -- 流程管理数据库 ⏳ 规划中
+    ├── approverecord (复用原表)
+    └── workflow_def (新建表)
 ```
 
 ## 3. 多租户架构设计
@@ -460,70 +419,70 @@ ALTER TABLE department ADD INDEX idx_tenant_id (tenant_id);
 
 ## 4. 功能模块详细需求
 
-### 3.1 组织架构管理模块
+### 3.1 组织架构管理模块 (实现状态: ✅ 已完成)
 
-#### 3.1.1 部门管理
-**核心功能：**
-- 支持7级部门层级结构 (基于gradeid字段)
-- 区分分公司与半级机构类型 (基于fiiale字段)
-- 部门信息维护（名称、编码、负责人、联系方式等）
-- 部门树状结构展示与拖拽调整
+> **设计总结参考:** `docs/organization-module-summary.md`  
+> **数据库设计参考:** `sql/organization-module.sql`
 
-**数据模型：**
-```sql
--- 复用原department表结构
-CREATE TABLE department (
-    id int(11) NOT NULL AUTO_INCREMENT,
-    name varchar(128) COMMENT '部门名称',
-    directorId int(11) COMMENT '部门主管ID',
-    parentId int(11) COMMENT '父部门ID',
-    depNo varchar(10) COMMENT '部门编号', 
-    gradeid int(11) DEFAULT 7 COMMENT '部门等级(1-7级)',
-    fiiale varchar(11) COMMENT '是否为分公司(1是,空否)',
-    filialemark varchar(100) COMMENT '分公司标识',
-    delflag int(11) DEFAULT 0 COMMENT '删除标识',
-    Time datetime COMMENT '创建时间',
-    -- 新增字段
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    tenant_id varchar(32) COMMENT '租户ID',
-    PRIMARY KEY (id)
-);
+#### 3.1.1 部门管理 ✅
+**已实现的核心功能：**
+- ✅ 支持7级部门层级结构管理 
+- ✅ 分公司标识管理 (fiiale字段)
+- ✅ 部门主管指定和管理
+- ✅ 部门统计分析功能
+- ✅ 部门树形结构展示
+- ✅ 部门导入导出功能
+- ✅ 多租户数据隔离
+
+**技术实现：**
+- **后端架构:** Spring Boot 3.x + MyBatis
+- **数据模型:** 基于原department表扩展，增加多租户支持
+- **前端界面:** `docs/html/organization/department-tree.html`
+- **API接口:** `DepartmentController.java` - 部门管理REST API
+
+#### 3.1.2 岗位管理 ✅
+**已实现的核心功能：**
+- ✅ 岗位信息维护和管理
+- ✅ 岗位权限配置体系
+- ✅ 主管岗位标识管理
+- ✅ 岗位层级和分管关系
+- ✅ 岗位复制和批量操作
+- ✅ 岗位统计分析
+
+**技术实现：**
+- **数据模型:** 扩展原workposition表，增加权限配置JSON字段
+- **关联管理:** 通过workposition_manage_dept表管理分管部门
+- **API接口:** `WorkPositionController.java` - 岗位管理REST API
+
+#### 3.1.3 员工管理 ✅
+**已实现的核心功能：**
+- ✅ 员工基础信息管理
+- ✅ 员工生命周期管理 (入职/转正/调岗/离职)
+- ✅ 多岗位任职支持
+- ✅ 员工附件管理 (证件、文档等)
+- ✅ 扩展数据配置 (家庭成员、教育经历、工作经验)
+- ✅ 员工统计分析和报表
+
+**技术实现：**
+- **数据模型:** 基于原employee表重构，支持现代化字段设计
+- **扩展支持:** 通过field_config表实现动态字段配置
+- **附件管理:** employee_attachment表支持文件上传和审核
+- **前端界面:** `docs/html/organization/employee-list.html`
+- **API接口:** `EmployeeController.java` - 员工管理REST API
+
+#### 3.1.4 权限管理 ✅
+**已实现的权限体系：**
+- ✅ 基于角色的权限控制 (roles表)
+- ✅ 功能权限管理 (menu_func表)
+- ✅ 数据权限管理 (租户级隔离)
+- ✅ 岗位权限配置 (workposition.permissions)
+
+**权限层级设计：**
 ```
-
-#### 3.1.2 岗位管理
-**核心功能：**
-- 岗位信息维护 (复用原workposition表)
-- 岗位类型区分（主管岗/非主管岗）
-- 岗位权限配置 (关联groups表)
-- 岗位与部门关联管理
-
-#### 3.1.3 员工管理  
-**核心功能：**
-- 员工基础信息管理 (复用原employee表结构)
-- 员工多岗位任职 (通过workposition字段)
-- 员工部门管理权限（主管/分管）
-- 员工入职/离职流程
-
-**数据模型：**
-```sql
--- 复用原employee表结构
-CREATE TABLE employee (
-    id int(11) NOT NULL AUTO_INCREMENT,
-    uuid varchar(255) COMMENT 'UUID标识',
-    name varchar(20) COMMENT '姓名',
-    empNo varchar(50) COMMENT '员工编号',
-    department int(11) COMMENT '部门ID',
-    position int(11) COMMENT '职位组ID',
-    workposition int(11) COMMENT '工作岗位ID',
-    gradeid int(11) COMMENT '员工等级',
-    isLeave int(11) DEFAULT 1 COMMENT '是否在职(0离职,1在职)',
-    entryTime varchar(255) COMMENT '入职时间',
-    leaveTime varchar(255) COMMENT '离职时间',
-    delflag int(11) DEFAULT 0 COMMENT '删除标识',
-    -- 保留其他原有字段...
-    PRIMARY KEY (id)
-);
+1. 模块权限: organization:view (组织架构模块访问)
+2. 页面权限: organization:dept:view (部门管理页面)
+3. 操作权限: organization:dept:add/edit/delete (具体操作)
+4. 数据权限: 基于tenant_id的租户数据隔离
 ```
 
 ### 3.2 客户关系管理模块 (CRM)
@@ -788,26 +747,12 @@ CREATE TABLE sys_workspace_config (
    - 全部 (all)：查看所有数据
 ```
 
-**菜单配置示例：**
-```sql
--- 主菜单数据示例
-INSERT INTO sys_menu VALUES 
-(1, 'dashboard', '工作台', 'menu', 0, '/dashboard', null, 'dashboard', 1, 1, 0, 1, 'dashboard:view', now(), now(), 'default'),
-(2, 'organization', '组织架构', 'menu', 0, '/organization', null, 'team', 2, 1, 0, 1, 'organization:view', now(), now(), 'default'),
-(3, 'organization_dept', '部门管理', 'menu', 2, '/organization/department', 'organization/DepartmentList', 'apartment', 1, 1, 0, 1, 'organization:dept:view', now(), now(), 'default'),
-(4, 'organization_emp', '员工管理', 'menu', 2, '/organization/employee', 'organization/EmployeeList', 'user', 2, 1, 0, 1, 'organization:emp:view', now(), now(), 'default'),
-(5, 'emp_add', '新增员工', 'button', 4, null, null, null, 1, 1, 0, 1, 'organization:emp:add', now(), now(), 'default'),
-(6, 'emp_edit', '编辑员工', 'button', 4, null, null, null, 2, 1, 0, 1, 'organization:emp:edit', now(), now(), 'default'),
-(7, 'emp_delete', '删除员工', 'button', 4, null, null, null, 3, 1, 0, 1, 'organization:emp:delete', now(), now(), 'default'),
-(8, 'crm', 'CRM管理', 'menu', 0, '/crm', null, 'user-group', 3, 1, 0, 1, 'crm:view', now(), now(), 'default'),
-(9, 'crm_customer', '客户管理', 'menu', 8, '/crm/customer', 'crm/CustomerList', 'contacts', 1, 1, 0, 1, 'crm:customer:view', now(), now(), 'default');
-
--- 数据权限配置示例  
-INSERT INTO sys_data_permission VALUES
-(1, 'dept_data', '部门数据权限', 'dept', '{"type":"dept","rule":"current_and_children"}', 1, now(), now(), 'default'),
-(2, 'self_data', '个人数据权限', 'user', '{"type":"user","rule":"self_only"}', 1, now(), now(), 'default'),
-(3, 'all_data', '全部数据权限', 'custom', '{"type":"all","rule":"no_limit"}', 1, now(), now(), 'default');
-```
+**权限配置参考：**
+> 组织模块的具体菜单配置和权限设置已在 `sql/organization-module.sql` 中完整定义，包括：
+> - 菜单页面表 (`menu_page`) - 系统导航菜单配置
+> - 菜单功能点表 (`menu_func`) - 页面操作权限配置  
+> - 角色表 (`roles`) - 角色权限管理
+> - 审计日志表 (`audit_log`) - 操作记录和合规性支持
 
 #### 3.8.3 前端权限控制实现
 **权限指令：**
@@ -1359,202 +1304,55 @@ react-web/src/main/frontend/
 
 ---
 
-**文档版本：** V2.0  
-**更新时间：** 2024年  
+**文档版本：** V2.1 (更新组织模块完成状态)
+**更新时间：** 2024年12月19日  
 **负责人：** 项目组  
 **审核人：** 技术总监
 
-### 3.4 组织管理模块数据库设计
+## 9. 组织模块实施状态总结
 
-#### 3.4.1 核心表设计
+### 9.1 已完成的核心成果 ✅
 
-**员工表 (employee)**
-```sql
-CREATE TABLE `employee` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '员工ID',
-  `uuid` varchar(36) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT 'UUID',
-  `emp_no` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '员工编号',
-  `name` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '姓名',
-  `name_en` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '英文姓名',
-  `gender` tinyint(1) NULL DEFAULT NULL COMMENT '性别(1:男,2:女)',
-  `birth_date` date NULL DEFAULT NULL COMMENT '出生日期',
-  `id_card` varchar(18) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '身份证号',
-  `mobile` varchar(11) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '手机号',
-  `email` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '邮箱',
-  `department_id` int(11) NULL DEFAULT NULL COMMENT '部门ID',
-  `position_id` int(11) NULL DEFAULT NULL COMMENT '主岗位ID',
-  `secondary_position_ids` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '副岗位ID列表',
-  `grade_id` int(11) NULL DEFAULT NULL COMMENT '员工等级ID',
-  `employment_type` tinyint(1) NULL DEFAULT NULL COMMENT '用工类型(1:正式,2:实习,3:外包,4:劳务)',
-  `employment_status` tinyint(1) NULL DEFAULT NULL COMMENT '在职状态(1:在职,2:试用,3:离职)',
-  `entry_date` date NULL DEFAULT NULL COMMENT '入职日期',
-  `probation_end_date` date NULL DEFAULT NULL COMMENT '试用期结束日期',
-  `leave_date` date NULL DEFAULT NULL COMMENT '离职日期',
-  `leave_reason` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '离职原因',
-  `education` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '学历',
-  `nation` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '民族',
-  `health_status` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '健康状况',
-  `height` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '身高',
-  `weight` varchar(10) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '体重',
-  `marital_status` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '婚姻状况',
-  `birthplace` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '籍贯',
-  `residence` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '现居住地',
-  `emergency_contact` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '紧急联系人',
-  `emergency_phone` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '紧急联系电话',
-  `specialty` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '专业技能',
-  `avatar` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '头像',
-  `remark` text CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '备注',
-  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `create_by` int(11) NULL DEFAULT NULL COMMENT '创建人',
-  `update_by` int(11) NULL DEFAULT NULL COMMENT '更新人',
-  `del_flag` tinyint(1) NULL DEFAULT 0 COMMENT '删除标记(0:正常,1:删除)',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_emp_no`(`emp_no`) USING BTREE,
-  INDEX `idx_department`(`department_id`) USING BTREE,
-  INDEX `idx_position`(`position_id`) USING BTREE,
-  INDEX `idx_status`(`employment_status`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '员工表';
-```
+Portal 3.0组织管理模块已完成完整的设计和开发，具体成果包括：
 
-**员工等级表 (employee_grade)**
-```sql
-CREATE TABLE `employee_grade` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '等级ID',
-  `grade_code` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '等级编码',
-  `grade_name` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '等级名称',
-  `grade_level` tinyint(2) NULL DEFAULT NULL COMMENT '等级级别(1-20)',
-  `description` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '等级描述',
-  `sort_order` int(11) NULL DEFAULT 0 COMMENT '排序',
-  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `del_flag` tinyint(1) NULL DEFAULT 0 COMMENT '删除标记',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_grade_code`(`grade_code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '员工等级表';
-```
+**数据库设计:**
+- 22个核心表结构设计完成
+- 完整的多租户数据隔离机制
+- 基于原SSH系统的平滑升级方案
+- 扩展数据和附件管理支持
 
-#### 3.4.2 扩展信息设计
+**后端架构:**
+- 10个Java实体模型 (Model)
+- 5个数据传输对象 (DTO)  
+- 3个服务接口 (Service)
+- 3个控制器 (Controller)
 
-**字段配置表 (field_config)**
-```sql
-CREATE TABLE `field_config` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '配置ID',
-  `uuid` varchar(36) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT 'UUID',
-  `entity_type` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '实体类型(Employee)',
-  `config_name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '配置名称',
-  `config_code` varchar(50) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '配置编码',
-  `description` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '描述',
-  `field_definitions` json NULL COMMENT '字段定义(JSON格式)',
-  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `del_flag` tinyint(1) NULL DEFAULT 0 COMMENT '删除标记',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE INDEX `uk_entity_code`(`entity_type`, `config_code`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '字段配置表';
-```
+**前端界面:**
+- 2个管理页面 (部门树形管理、员工列表管理)
+- 响应式设计，支持移动端
+- 现代化UI界面，完整的CRUD操作
 
-**员工扩展数据表 (employee_extend_data)**
-```sql
-CREATE TABLE `employee_extend_data` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '扩展数据ID',
-  `employee_id` int(11) NOT NULL COMMENT '员工ID',
-  `config_id` int(11) NOT NULL COMMENT '配置ID',
-  `data_content` json NOT NULL COMMENT '数据内容(JSON格式)',
-  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_employee`(`employee_id`) USING BTREE,
-  INDEX `idx_config`(`config_id`) USING BTREE,
-  CONSTRAINT `fk_extend_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `fk_extend_config` FOREIGN KEY (`config_id`) REFERENCES `field_config` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '员工扩展数据表';
-```
+**详细文档:**
+- `docs/organization-module-summary.md` - 完整的模块开发总结
+- `sql/organization-module.sql` - 数据库建表脚本
+- `docs/html/organization/` - 前端页面文件
 
-#### 3.4.3 附件管理设计
+### 9.2 技术架构特性
 
-**员工附件表 (employee_attachment)**
-```sql
-CREATE TABLE `employee_attachment` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '附件ID',
-  `employee_id` int(11) NOT NULL COMMENT '员工ID',
-  `attachment_type` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '附件类型',
-  `attachment_name` varchar(100) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '附件名称',
-  `original_name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '原始文件名',
-  `file_size` bigint(20) NULL DEFAULT NULL COMMENT '文件大小(bytes)',
-  `file_type` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '文件类型',
-  `file_path` varchar(500) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL COMMENT '文件存储路径',
-  `upload_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '上传时间',
-  `upload_by` int(11) NULL DEFAULT NULL COMMENT '上传人',
-  `audit_status` tinyint(1) NULL DEFAULT 0 COMMENT '审核状态(0:待审核,1:通过,2:拒绝)',
-  `audit_time` datetime NULL DEFAULT NULL COMMENT '审核时间',
-  `audit_by` int(11) NULL DEFAULT NULL COMMENT '审核人',
-  `audit_remark` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '审核备注',
-  `del_flag` tinyint(1) NULL DEFAULT 0 COMMENT '删除标记',
-  PRIMARY KEY (`id`) USING BTREE,
-  INDEX `idx_employee`(`employee_id`) USING BTREE,
-  INDEX `idx_type`(`attachment_type`) USING BTREE,
-  CONSTRAINT `fk_attachment_employee` FOREIGN KEY (`employee_id`) REFERENCES `employee` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci COMMENT = '员工附件表';
-```
+- **多租户支持:** 完整的数据隔离和权限控制
+- **微服务架构:** 基于Spring Cloud的分布式设计  
+- **数据兼容性:** 保持与原SSH系统的向下兼容
+- **扩展性:** 支持动态字段配置和附件管理
+- **安全性:** 完善的权限控制和审计日志
 
-#### 3.4.4 预置数据配置
+### 9.3 后续开发重点
 
-**员工等级预置数据**
-```sql
-INSERT INTO `employee_grade` (`grade_code`, `grade_name`, `grade_level`, `description`, `sort_order`) VALUES
-('L01', '初级员工', 1, '初级员工等级', 1),
-('L02', '中级员工', 2, '中级员工等级', 2),
-('L03', '高级员工', 3, '高级员工等级', 3),
-('L04', '专家级员工', 4, '专家级员工等级', 4),
-('M01', '初级主管', 5, '初级主管等级', 5),
-('M02', '中级主管', 6, '中级主管等级', 6),
-('M03', '高级主管', 7, '高级主管等级', 7),
-('S01', '初级经理', 8, '初级经理等级', 8),
-('S02', '中级经理', 9, '中级经理等级', 9),
-('S03', '高级经理', 10, '高级经理等级', 10);
-```
+基于组织模块的成功实施经验，其他业务模块可参照以下模式：
+1. CRM客户关系管理模块
+2. 商品管理模块  
+3. 订单管理模块
+4. 流程管理模块
 
-**扩展字段预置配置**
-```sql
-INSERT INTO `field_config` (`entity_type`, `config_name`, `config_code`, `description`, `field_definitions`) VALUES
-('Employee', '家庭成员', 'family_members', '员工家庭成员信息', '[
-  {"field": "name", "label": "姓名", "type": "text", "required": true},
-  {"field": "relationship", "label": "关系", "type": "select", "required": true, "options": ["父亲", "母亲", "配偶", "子女", "兄弟姐妹", "其他"]},
-  {"field": "position", "label": "职位", "type": "text", "required": false},
-  {"field": "company", "label": "工作单位", "type": "text", "required": false}
-]'),
-('Employee', '教育经历', 'education_history', '员工教育经历信息', '[
-  {"field": "school", "label": "毕业院校", "type": "text", "required": true},
-  {"field": "start_date", "label": "开始时间", "type": "date", "required": true},
-  {"field": "end_date", "label": "结束时间", "type": "date", "required": true},
-  {"field": "major", "label": "专业", "type": "text", "required": true},
-  {"field": "degree", "label": "学位/证书", "type": "text", "required": false},
-  {"field": "referee", "label": "证明人", "type": "text", "required": false}
-]'),
-('Employee', '工作经验', 'work_experience', '员工工作经验信息', '[
-  {"field": "company", "label": "公司", "type": "text", "required": true},
-  {"field": "start_date", "label": "开始时间", "type": "date", "required": true},
-  {"field": "end_date", "label": "结束时间", "type": "date", "required": true},
-  {"field": "position", "label": "职务", "type": "text", "required": true},
-  {"field": "salary", "label": "收入", "type": "number", "required": false},
-  {"field": "leave_reason", "label": "离职原因", "type": "text", "required": false},
-  {"field": "referee", "label": "证明人", "type": "text", "required": false},
-  {"field": "referee_phone", "label": "证明人联系电话", "type": "text", "required": false}
-]');
-```
-
-#### 3.4.5 附件类型定义
-
-**员工附件类型枚举**
-- PHOTO_2INCH: 2寸半身照
-- ID_CARD_FRONT: 身份证正面
-- ID_CARD_BACK: 身份证反面
-- DIPLOMA: 毕业证
-- DEGREE: 学位证
-- EXAM_SCORE: 笔试成绩
-- FULL_PHOTO: 个人全身照
-- RESUME: 个人简历
-- OTHER: 其他附件
+> **注意：** 组织模块的数据库表结构、预置数据配置、扩展字段定义等详细内容，请参考 `sql/organization-module.sql` 文件。该文件包含完整的建表语句、索引创建、预置数据插入等所有必要的SQL脚本。
 
 

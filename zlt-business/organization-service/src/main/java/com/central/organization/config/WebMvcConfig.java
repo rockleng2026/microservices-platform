@@ -6,7 +6,8 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Web MVC配置类
+ * Web MVC配置
+ * 注册拦截器和其他Web相关配置
  * 
  * @author Central Team
  * @since 2024-12-19
@@ -19,8 +20,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        // 注册租户拦截器
         registry.addInterceptor(tenantInterceptor)
-                .addPathPatterns("/api/**")
-                .excludePathPatterns("/api/health", "/api/swagger-ui/**", "/api/v3/api-docs/**");
+                .addPathPatterns("/api/**") // 拦截所有API请求
+                .excludePathPatterns("/api/health", "/api/actuator/**"); // 排除健康检查等
     }
 } 

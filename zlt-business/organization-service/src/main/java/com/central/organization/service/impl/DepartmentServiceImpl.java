@@ -5,7 +5,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.central.organization.config.TenantContext;
+import com.central.common.context.TenantContextHolder;
 import com.central.organization.mapper.DepartmentMapper;
 import com.central.organization.model.Department;
 import com.central.organization.model.dto.DepartmentQueryDTO;
@@ -70,7 +70,7 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
             department = new Department();
             BeanUtil.copyProperties(saveDTO, department);
             department.setId(IdUtils.generateId());
-            department.setTenantId(TenantContext.getTenantId());
+            department.setTenantId(TenantContextHolder.getTenant());
             department.setDelflag(0);
             department.setCreatedAt(LocalDateTime.now());
             department.setUpdatedAt(LocalDateTime.now());
@@ -83,8 +83,8 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
             }
             
             // 设置部门等级
-            if (department.getGradeid() == null) {
-                department.setGradeid(calculateDepartmentGrade(department.getParentId()));
+            if (department.getGradeId() == null) {
+                department.setGradeId(calculateDepartmentGrade(department.getParentId()));
             }
         }
         
@@ -98,7 +98,9 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
             return null;
         }
         
-        Department department = getById(id);
+        // 使用带租户ID的查询
+        String tenantId = TenantContextHolder.getTenant();
+        Department department = departmentMapper.selectById(id, tenantId);
         if (department != null && !department.isDeleted()) {
             // 设置统计信息
             department.setEmployeeCount(countEmployeesByDepartment(id, false));
@@ -175,7 +177,7 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         
         // 更新父部门
         department.setParentId(newParentId == null ? 0L : newParentId);
-        department.setGradeid(calculateDepartmentGrade(newParentId));
+        department.setGradeId(calculateDepartmentGrade(newParentId));
         department.setUpdatedAt(LocalDateTime.now());
         
         return updateById(department);
@@ -202,7 +204,8 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         if (departmentId == null) {
             return "";
         }
-        return departmentMapper.selectDepartmentPath(departmentId);
+        String tenantId = TenantContextHolder.getTenant();
+        return departmentMapper.selectDepartmentPath(departmentId, tenantId);
     }
     
     @Override
@@ -210,7 +213,8 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         if (departmentId == null) {
             return new ArrayList<>();
         }
-        return departmentMapper.selectDepartmentAndChildrenIds(departmentId);
+        String tenantId = TenantContextHolder.getTenant();
+        return departmentMapper.selectDepartmentAndChildrenIds(departmentId, tenantId);
     }
     
     @Override
@@ -218,7 +222,8 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         if (departmentId == null) {
             return 0;
         }
-        return departmentMapper.countEmployeesByDepartment(departmentId, includeChildren);
+        String tenantId = TenantContextHolder.getTenant();
+        return departmentMapper.countEmployeesByDepartment(departmentId, includeChildren, tenantId);
     }
     
     @Override
@@ -436,7 +441,7 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
             return 1;
         }
         
-        Integer parentGrade = parent.getGradeid();
+        Integer parentGrade = parent.getGradeId();
         return parentGrade == null ? 2 : Math.min(parentGrade + 1, 7);
     }
 } 

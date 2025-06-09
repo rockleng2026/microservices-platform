@@ -1,236 +1,228 @@
 package com.central.organization.config;
 
-import cn.hutool.core.util.StrUtil;
-import lombok.extern.slf4j.Slf4j;
-import net.sf.jsqlparser.JSQLParserException;
-import net.sf.jsqlparser.expression.Expression;
-import net.sf.jsqlparser.expression.StringValue;
-import net.sf.jsqlparser.expression.operators.conditional.AndExpression;
-import net.sf.jsqlparser.expression.operators.relational.EqualsTo;
-import net.sf.jsqlparser.parser.CCJSqlParserUtil;
-import net.sf.jsqlparser.schema.Column;
-import net.sf.jsqlparser.statement.Statement;
-import net.sf.jsqlparser.statement.delete.Delete;
-import net.sf.jsqlparser.statement.insert.Insert;
-import net.sf.jsqlparser.statement.select.PlainSelect;
-import net.sf.jsqlparser.statement.select.Select;
-import net.sf.jsqlparser.statement.update.Update;
+import com.central.common.context.TenantContextHolder;
+import org.apache.ibatis.cache.CacheKey;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
+import org.apache.ibatis.mapping.ParameterMapping;
 import org.apache.ibatis.mapping.SqlSource;
 import org.apache.ibatis.plugin.*;
 import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
-import java.util.Set;
 
 /**
- * MyBatis租户SQL拦截器
- * 自动为SQL添加租户条件，实现多租户数据隔离
+ * 多租户SQL拦截器
+ * 自动在SQL查询中添加tenant_id条件
  * 
  * @author Central Team
  * @since 2024-12-19
  */
-@Slf4j
 @Component
 @Intercepts({
-    @Signature(type = Executor.class, method = "query", args = {MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class}),
-    @Signature(type = Executor.class, method = "update", args = {MappedStatement.class, Object.class})
+    @Signature(type = Executor.class, method = "query", 
+               args = {MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class}),
+    @Signature(type = Executor.class, method = "update", 
+               args = {MappedStatement.class, Object.class})
 })
 public class TenantSqlInterceptor implements Interceptor {
     
-    /**
-     * 需要进行租户隔离的表名
-     */
-    private static final Set<String> TENANT_TABLES = new HashSet<>(Arrays.asList(
-        "department", "employee", "workposition", "tenant_config",
-        "workposition_manage_dept", "employee_extend_data", "employee_attachment",
-        "department_grade", "employee_grade", "field_config", "audit_log"
-    ));
-    
-    private static final String TENANT_ID_COLUMN = "tenant_id";
+    // 需要自动添加租户条件的表
+    private static final List<String> TENANT_TABLES = List.of(
+        "department", "employee", "workposition", "employee_grade",
+        "field_config", "employee_extend_data", "employee_attachment"
+    );
     
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
-        String tenantId = TenantContext.getTenantId();
-        if (StrUtil.isBlank(tenantId)) {
-            return invocation.proceed();
+        
+        // 获取当前租户ID
+        String tenantId = TenantContextHolder.getTenant();
+        if (tenantId == null || tenantId.trim().isEmpty()) {
+            tenantId = "default"; // 使用默认租户
         }
         
         MappedStatement mappedStatement = (MappedStatement) invocation.getArgs()[0];
         Object parameter = invocation.getArgs()[1];
         
+        // 获取原始SQL
         BoundSql boundSql = mappedStatement.getBoundSql(parameter);
         String sql = boundSql.getSql();
         
-        try {
-            String newSql = addTenantCondition(sql, tenantId);
+        // 检查SQL是否需要添加租户条件
+        if (!needTenantCondition(sql)) {
+            return invocation.proceed();
+        }
+        
+        // 添加租户条件
+        String newSql = addTenantCondition(sql, tenantId);
+        if (!newSql.equals(sql)) {
+            // 创建新的BoundSql
+            BoundSql newBoundSql = new BoundSql(mappedStatement.getConfiguration(), newSql, 
+                boundSql.getParameterMappings(), parameter);
             
-            if (!sql.equals(newSql)) {
-                // 创建新的MappedStatement
-                MappedStatement newMappedStatement = copyFromMappedStatement(mappedStatement, newSql, boundSql);
-                invocation.getArgs()[0] = newMappedStatement;
-                log.debug("Modified SQL with tenant condition: {}", newSql);
+            // 复制额外的参数
+            for (ParameterMapping mapping : boundSql.getParameterMappings()) {
+                String prop = mapping.getProperty();
+                if (boundSql.hasAdditionalParameter(prop)) {
+                    newBoundSql.setAdditionalParameter(prop, boundSql.getAdditionalParameter(prop));
+                }
             }
-        } catch (Exception e) {
-            log.warn("Failed to add tenant condition to SQL: {}, error: {}", sql, e.getMessage());
+            
+            // 创建新的MappedStatement
+            MappedStatement.Builder builder = new MappedStatement.Builder(
+                mappedStatement.getConfiguration(), mappedStatement.getId(), 
+                new BoundSqlSqlSource(newBoundSql), mappedStatement.getSqlCommandType());
+            
+            builder.resource(mappedStatement.getResource());
+            builder.fetchSize(mappedStatement.getFetchSize());
+            builder.statementType(mappedStatement.getStatementType());
+            builder.keyGenerator(mappedStatement.getKeyGenerator());
+            if (mappedStatement.getKeyProperties() != null) {
+                builder.keyProperty(String.join(",", mappedStatement.getKeyProperties()));
+            }
+            builder.timeout(mappedStatement.getTimeout());
+            builder.parameterMap(mappedStatement.getParameterMap());
+            builder.resultMaps(mappedStatement.getResultMaps());
+            builder.resultSetType(mappedStatement.getResultSetType());
+            builder.cache(mappedStatement.getCache());
+            builder.flushCacheRequired(mappedStatement.isFlushCacheRequired());
+            builder.useCache(mappedStatement.isUseCache());
+            
+            MappedStatement newMs = builder.build();
+            invocation.getArgs()[0] = newMs;
         }
         
         return invocation.proceed();
     }
     
     /**
-     * 为SQL添加租户条件
+     * 检查SQL是否需要添加租户条件
+     */
+    private boolean needTenantCondition(String sql) {
+        if (sql == null) {
+            return false;
+        }
+        
+        String lowerSql = sql.toLowerCase();
+        
+        // 如果已经包含tenant_id条件，不需要添加
+        if (lowerSql.contains("tenant_id")) {
+            return false;
+        }
+        
+        // 检查是否涉及租户表
+        for (String table : TENANT_TABLES) {
+            if (lowerSql.contains(table)) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
+    /**
+     * 在SQL中添加租户条件
      */
     private String addTenantCondition(String sql, String tenantId) {
         try {
-            Statement statement = CCJSqlParserUtil.parse(sql);
+            String lowerSql = sql.toLowerCase().trim();
             
-            if (statement instanceof Select) {
-                processSelect((Select) statement, tenantId);
-            } else if (statement instanceof Update) {
-                processUpdate((Update) statement, tenantId);
-            } else if (statement instanceof Delete) {
-                processDelete((Delete) statement, tenantId);
-            } else if (statement instanceof Insert) {
-                // INSERT语句暂不处理，由业务层在插入时设置tenant_id
-                return sql;
+            // 对于SELECT语句
+            if (lowerSql.startsWith("select")) {
+                return addTenantConditionToSelect(sql, tenantId);
+            }
+            // 对于UPDATE语句
+            else if (lowerSql.startsWith("update")) {
+                return addTenantConditionToUpdate(sql, tenantId);
+            }
+            // 对于DELETE语句
+            else if (lowerSql.startsWith("delete")) {
+                return addTenantConditionToDelete(sql, tenantId);
             }
             
-            return statement.toString();
-        } catch (JSQLParserException e) {
-            log.warn("Failed to parse SQL: {}", sql);
+            return sql;
+        } catch (Exception e) {
+            // 如果解析失败，返回原SQL
             return sql;
         }
     }
     
     /**
-     * 处理SELECT语句
+     * 为SELECT语句添加租户条件
      */
-    private void processSelect(Select select, String tenantId) {
-        if (select.getSelectBody() instanceof PlainSelect) {
-            PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
-            String tableName = extractTableName(plainSelect.getFromItem().toString());
+    private String addTenantConditionToSelect(String sql, String tenantId) {
+        String lowerSql = sql.toLowerCase();
+        
+        // 查找WHERE子句位置
+        int whereIndex = lowerSql.indexOf(" where ");
+        
+        if (whereIndex > 0) {
+            // 已有WHERE子句，添加AND条件
+            return sql.substring(0, whereIndex + 7) + 
+                   " tenant_id = '" + tenantId + "' AND " + 
+                   sql.substring(whereIndex + 7);
+        } else {
+            // 没有WHERE子句，添加WHERE条件
+            // 查找ORDER BY、GROUP BY、HAVING、LIMIT等子句
+            String[] keywords = {" order by ", " group by ", " having ", " limit "};
+            int insertIndex = sql.length();
             
-            if (TENANT_TABLES.contains(tableName)) {
-                Expression tenantCondition = new EqualsTo(
-                    new Column(TENANT_ID_COLUMN),
-                    new StringValue(tenantId)
-                );
-                
-                if (plainSelect.getWhere() == null) {
-                    plainSelect.setWhere(tenantCondition);
-                } else {
-                    plainSelect.setWhere(new AndExpression(plainSelect.getWhere(), tenantCondition));
+            for (String keyword : keywords) {
+                int index = lowerSql.indexOf(keyword);
+                if (index > 0 && index < insertIndex) {
+                    insertIndex = index;
                 }
             }
-        }
-    }
-    
-    /**
-     * 处理UPDATE语句
-     */
-    private void processUpdate(Update update, String tenantId) {
-        String tableName = extractTableName(update.getTable().getName());
-        
-        if (TENANT_TABLES.contains(tableName)) {
-            Expression tenantCondition = new EqualsTo(
-                new Column(TENANT_ID_COLUMN),
-                new StringValue(tenantId)
-            );
             
-            if (update.getWhere() == null) {
-                update.setWhere(tenantCondition);
-            } else {
-                update.setWhere(new AndExpression(update.getWhere(), tenantCondition));
-            }
+            return sql.substring(0, insertIndex) + 
+                   " WHERE tenant_id = '" + tenantId + "' " + 
+                   sql.substring(insertIndex);
         }
     }
     
     /**
-     * 处理DELETE语句
+     * 为UPDATE语句添加租户条件
      */
-    private void processDelete(Delete delete, String tenantId) {
-        String tableName = extractTableName(delete.getTable().getName());
+    private String addTenantConditionToUpdate(String sql, String tenantId) {
+        String lowerSql = sql.toLowerCase();
+        int whereIndex = lowerSql.indexOf(" where ");
         
-        if (TENANT_TABLES.contains(tableName)) {
-            Expression tenantCondition = new EqualsTo(
-                new Column(TENANT_ID_COLUMN),
-                new StringValue(tenantId)
-            );
-            
-            if (delete.getWhere() == null) {
-                delete.setWhere(tenantCondition);
-            } else {
-                delete.setWhere(new AndExpression(delete.getWhere(), tenantCondition));
-            }
+        if (whereIndex > 0) {
+            return sql.substring(0, whereIndex + 7) + 
+                   " tenant_id = '" + tenantId + "' AND " + 
+                   sql.substring(whereIndex + 7);
+        } else {
+            return sql + " WHERE tenant_id = '" + tenantId + "'";
         }
     }
     
     /**
-     * 提取表名
+     * 为DELETE语句添加租户条件
      */
-    private String extractTableName(String tableExpression) {
-        if (StrUtil.isBlank(tableExpression)) {
-            return "";
-        }
-        
-        // 移除数据库名前缀和别名
-        String tableName = tableExpression.trim();
-        if (tableName.contains(".")) {
-            tableName = tableName.substring(tableName.lastIndexOf(".") + 1);
-        }
-        if (tableName.contains(" ")) {
-            tableName = tableName.split(" ")[0];
-        }
-        
-        // 移除反引号
-        return tableName.replace("`", "");
+    private String addTenantConditionToDelete(String sql, String tenantId) {
+        return addTenantConditionToUpdate(sql, tenantId);
+    }
+    
+    @Override
+    public Object plugin(Object target) {
+        return Plugin.wrap(target, this);
+    }
+    
+    @Override
+    public void setProperties(Properties properties) {
+        // 可以从配置中读取属性
     }
     
     /**
-     * 复制MappedStatement并替换SQL
+     * 内部类：自定义SqlSource
      */
-    private MappedStatement copyFromMappedStatement(MappedStatement ms, String newSql, BoundSql boundSql) {
-        BoundSql newBoundSql = new BoundSql(ms.getConfiguration(), newSql, 
-            boundSql.getParameterMappings(), boundSql.getParameterObject());
-        
-        // 复制属性
-        for (String key : boundSql.getAdditionalParameters().keySet()) {
-            newBoundSql.setAdditionalParameter(key, boundSql.getAdditionalParameter(key));
-        }
-        
-        MappedStatement.Builder builder = new MappedStatement.Builder(
-            ms.getConfiguration(), ms.getId(), 
-            new BoundSqlSqlSource(newBoundSql), ms.getSqlCommandType());
-        
-        builder.resource(ms.getResource());
-        builder.fetchSize(ms.getFetchSize());
-        builder.statementType(ms.getStatementType());
-        builder.keyGenerator(ms.getKeyGenerator());
-        if (ms.getKeyProperties() != null && ms.getKeyProperties().length > 0) {
-            builder.keyProperty(String.join(",", ms.getKeyProperties()));
-        }
-        builder.timeout(ms.getTimeout());
-        builder.parameterMap(ms.getParameterMap());
-        builder.resultMaps(ms.getResultMaps());
-        builder.resultSetType(ms.getResultSetType());
-        builder.cache(ms.getCache());
-        builder.flushCacheRequired(ms.isFlushCacheRequired());
-        builder.useCache(ms.isUseCache());
-        
-        return builder.build();
-    }
-    
-    /**
-     * BoundSql包装器
-     */
-    public static class BoundSqlSqlSource implements SqlSource {
+    private static class BoundSqlSqlSource implements SqlSource {
         private final BoundSql boundSql;
         
         public BoundSqlSqlSource(BoundSql boundSql) {
@@ -241,15 +233,5 @@ public class TenantSqlInterceptor implements Interceptor {
         public BoundSql getBoundSql(Object parameterObject) {
             return boundSql;
         }
-    }
-    
-    @Override
-    public Object plugin(Object target) {
-        return Plugin.wrap(target, this);
-    }
-    
-    @Override
-    public void setProperties(Properties properties) {
-        // 可以从配置文件读取需要拦截的表名
     }
 } 

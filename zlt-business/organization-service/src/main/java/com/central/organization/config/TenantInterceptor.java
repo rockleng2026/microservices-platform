@@ -1,7 +1,6 @@
 package com.central.organization.config;
 
-import cn.hutool.core.util.StrUtil;
-import lombok.extern.slf4j.Slf4j;
+import com.central.common.context.TenantContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -9,73 +8,46 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 /**
- * 租户拦截器
- * 从请求中提取租户信息并设置到上下文
+ * 多租户拦截器
+ * 用于处理租户上下文，确保每个请求都有有效的租户ID
  * 
  * @author Central Team
  * @since 2024-12-19
  */
-@Slf4j
 @Component
 public class TenantInterceptor implements HandlerInterceptor {
     
-    private static final String TENANT_ID_HEADER = "X-Tenant-Id";
-    private static final String TENANT_ID_PARAM = "tenantId";
+    private static final String DEFAULT_TENANT_ID = "default";
     
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        String tenantId = extractTenantId(request);
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         
-        if (StrUtil.isNotBlank(tenantId)) {
-            TenantContext.setTenantId(tenantId);
-            log.debug("Set tenant context: {}", tenantId);
-        } else {
-            // 使用默认租户
-            TenantContext.setTenantId("default");
-            log.debug("Using default tenant");
+        // 从请求头获取租户ID
+        String tenantId = request.getHeader("tenant-id");
+        
+        // 如果没有租户ID，使用默认值
+        if (tenantId == null || tenantId.trim().isEmpty()) {
+            tenantId = DEFAULT_TENANT_ID;
         }
+        
+        // 设置租户上下文
+        TenantContextHolder.setTenant(tenantId);
         
         return true;
     }
     
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, 
-                              Object handler, Exception ex) {
-        TenantContext.clear();
+                              Object handler, Exception ex) throws Exception {
+        // 清理租户上下文
+        TenantContextHolder.clear();
     }
     
     /**
-     * 从请求中提取租户ID
-     * 优先级：Header > Parameter > Subdomain
-     * 
-     * @param request HTTP请求
-     * @return 租户ID
+     * 获取当前租户ID
      */
-    private String extractTenantId(HttpServletRequest request) {
-        // 1. 从请求头获取
-        String tenantId = request.getHeader(TENANT_ID_HEADER);
-        if (StrUtil.isNotBlank(tenantId)) {
-            return tenantId.trim();
-        }
-        
-        // 2. 从请求参数获取
-        tenantId = request.getParameter(TENANT_ID_PARAM);
-        if (StrUtil.isNotBlank(tenantId)) {
-            return tenantId.trim();
-        }
-        
-        // 3. 从子域名提取（如：tenant1.portal.com）
-        String serverName = request.getServerName();
-        if (StrUtil.isNotBlank(serverName) && serverName.contains(".")) {
-            String[] parts = serverName.split("\\.");
-            if (parts.length > 2) {
-                String subdomain = parts[0];
-                if (!"www".equals(subdomain) && !"api".equals(subdomain)) {
-                    return subdomain;
-                }
-            }
-        }
-        
-        return null;
+    public static String getCurrentTenantId() {
+        String tenantId = TenantContextHolder.getTenant();
+        return tenantId != null ? tenantId : DEFAULT_TENANT_ID;
     }
 } 

@@ -56,12 +56,12 @@ public class Department {
     /**
      * 部门等级(1-7级)
      */
-    private Integer gradeid;
+    private Integer gradeId;
     
     /**
      * 部门级别
      */
-    private Integer islevel;
+    private Integer isLevel;
     
     /**
      * 是否为分公司(1是,空否)
@@ -192,7 +192,7 @@ public class Department {
      * 是否半级部门
      */
     public Boolean isHalfLevel() {
-        return this.islevel != null && this.islevel == 1;
+        return this.isLevel != null && this.isLevel == 1;
     }
     
     /**

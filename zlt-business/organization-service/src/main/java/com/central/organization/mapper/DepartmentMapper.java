@@ -18,6 +18,14 @@ import java.util.List;
 public interface DepartmentMapper extends BaseMapper<Department> {
     
     /**
+     * 根据ID和租户ID查询部门
+     * @param id 部门ID
+     * @param tenantId 租户ID
+     * @return 部门信息
+     */
+    Department selectById(@Param("id") Long id, @Param("tenantId") String tenantId);
+    
+    /**
      * 查询部门列表（包含统计信息）
      * @param query 查询条件
      * @return 部门列表
@@ -36,25 +44,29 @@ public interface DepartmentMapper extends BaseMapper<Department> {
     /**
      * 查询部门及其所有下级部门ID
      * @param departmentId 部门ID
+     * @param tenantId 租户ID
      * @return 部门ID列表
      */
-    List<Long> selectDepartmentAndChildrenIds(@Param("departmentId") Long departmentId);
+    List<Long> selectDepartmentAndChildrenIds(@Param("departmentId") Long departmentId, @Param("tenantId") String tenantId);
     
     /**
      * 查询部门路径
      * @param departmentId 部门ID
+     * @param tenantId 租户ID
      * @return 从根部门到当前部门的路径
      */
-    String selectDepartmentPath(@Param("departmentId") Long departmentId);
+    String selectDepartmentPath(@Param("departmentId") Long departmentId, @Param("tenantId") String tenantId);
     
     /**
      * 统计部门下的员工数量
      * @param departmentId 部门ID
-     * @param includeChildren 是否包含子部门员工
+     * @param includeChildren 是否包含子部门
+     * @param tenantId 租户ID
      * @return 员工数量
      */
     Integer countEmployeesByDepartment(@Param("departmentId") Long departmentId, 
-                                     @Param("includeChildren") Boolean includeChildren);
+                                     @Param("includeChildren") Boolean includeChildren,
+                                     @Param("tenantId") String tenantId);
     
     /**
      * 统计部门下的子部门数量

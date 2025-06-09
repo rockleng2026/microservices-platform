@@ -48,7 +48,7 @@
 **技术选型：**
 - **主框架**：React + TypeScript
 - **UI组件库**：Ant Design Pro
-- **构建工具**：UmiJS v3.x
+- **构建工具**：UmiJS v4.x
 - **图表库**：Ant Design Charts
 - **兼容版本**：保留LayUI版本作为备选
 
@@ -132,13 +132,7 @@ employee (
     delflag int(11) -- 删除标识
 )
 
--- 权限组表 (基于原系统groups表)
-groups (
-    groupID int(11) -- 组ID
-    groupName varchar(50) -- 组名称
-    groupInfo varchar(500) -- 组描述
-    isDelete int(11) -- 删除标识
-)
+
 ```
 
 #-- 岗位表 (扩展原workposition表)
@@ -156,6 +150,8 @@ workposition (
     edittime datetime -- 最后编辑时间
     delflag int(11) -- 删除标识
 )
+
+
 
 ```
 
@@ -281,10 +277,9 @@ saleorderinfo (
 │   ├── customermove (复用原表)
 │   └── customerfollow (新建表)
 ├── central_product -- 商品管理数据库
-│   ├── commoditytpye (复用原表)
-│   ├── product (复用原表)
-│   ├── field (复用原表)
-│   └── supplier (复用原表)
+│   ├── goods_dict (复用原表)
+│   ├── goodsClass_expand (复用原表)
+│   └── product (复用原表)
 ├── central_order -- 订单管理数据库
 │   ├── saleorder (复用原表)
 │   ├── saleorderinfo (复用原表)

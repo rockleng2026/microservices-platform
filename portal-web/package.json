@@ -1,0 +1,62 @@
+{
+  "name": "portal-web",
+  "version": "3.0.0",
+  "description": "Portal 3.0 React Frontend Application",
+  "main": "index.js",
+  "scripts": {
+    "build": "umi build",
+    "dev": "umi dev",
+    "format": "prettier --write '**/*.{js,jsx,ts,tsx,css,md,json}'",
+    "start": "npm run dev",
+    "test": "umi test",
+    "test:coverage": "umi test --coverage",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx --format=pretty ./src",
+    "lint:fix": "eslint --fix --cache --ext .js,.jsx,.ts,.tsx --format=pretty ./src",
+    "type-check": "tsc --noEmit",
+    "analyze": "ANALYZE=1 umi build"
+  },
+  "keywords": [
+    "portal",
+    "react",
+    "typescript",
+    "antd",
+    "umi",
+    "microservices"
+  ],
+  "author": "Portal Team",
+  "license": "MIT",
+  "dependencies": {
+    "@ant-design/icons": "^4.8.0",
+    "antd": "^4.24.8",
+    "dayjs": "^1.11.7",
+    "lodash": "^4.17.21",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "umi": "^4.0.74"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.194",
+    "@types/node": "^18.15.11",
+    "@types/react": "^18.0.35",
+    "@types/react-dom": "^18.0.11",
+    "@typescript-eslint/eslint-plugin": "^5.57.1",
+    "@typescript-eslint/parser": "^5.57.1",
+    "@umijs/lint": "^4.0.74",
+    "eslint": "^8.37.0",
+    "eslint-config-prettier": "^8.8.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "prettier": "^2.8.7",
+    "typescript": "^5.0.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ]
+} 

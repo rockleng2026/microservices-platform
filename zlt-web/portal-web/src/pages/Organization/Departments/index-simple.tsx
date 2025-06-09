@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Card,
   Row,
@@ -7,15 +7,8 @@ import {
   Button,
   Space,
   Input,
-  Modal,
-  Form,
-  Select,
-  InputNumber,
-  Switch,
   Table,
-  Tooltip,
   Tag,
-  Divider,
   message,
   Popconfirm,
   Upload,
@@ -25,7 +18,6 @@ import {
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  SearchOutlined,
   DownloadOutlined,
   UploadOutlined,
   ReloadOutlined,
@@ -58,7 +50,6 @@ import DepartmentDetail from './components/DepartmentDetail';
 import DepartmentStatistics from './components/DepartmentStatistics';
 
 const { Search } = Input;
-const { Option } = Select;
 
 interface DepartmentNode extends DataNode {
   id: number;
@@ -110,15 +101,6 @@ const DepartmentManagement: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [modalTitle, setModalTitle] = useState('');
   const [modalType, setModalType] = useState<'add' | 'edit' | 'copy'>('add');
-  const [form] = Form.useForm();
-  
-  // 详情面板状态
-  const [detailVisible, setDetailVisible] = useState(false);
-  
-  // 统计面板状态
-  const [statisticsVisible, setStatisticsVisible] = useState(false);
-
-  const actionRef = useRef<any>();
 
   // 加载部门树
   const loadDepartmentTree = async (includeDisabled = false) => {
@@ -170,9 +152,9 @@ const DepartmentManagement: React.FC = () => {
       <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
         <ApartmentOutlined style={{ marginRight: 4, color: '#1890ff' }} />
         <span style={{ marginRight: 8, fontWeight: 500 }}>{dept.name}</span>
-                 <Tag color={dept.status === 1 ? 'green' : 'red'}>
-           {dept.status === 1 ? '正常' : '禁用'}
-         </Tag>
+        <Tag color={dept.status === 1 ? 'green' : 'red'}>
+          {dept.status === 1 ? '正常' : '禁用'}
+        </Tag>
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
         <Badge count={dept.employeeCount} size="small" color="#52c41a" title="员工数量">
@@ -202,7 +184,6 @@ const DepartmentManagement: React.FC = () => {
       const response = await getDepartmentDetail(id);
       if (response.success) {
         setSelectedDept(response.data);
-        setDetailVisible(true);
       } else {
         message.error(response.message || '获取部门详情失败');
       }
@@ -218,8 +199,6 @@ const DepartmentManagement: React.FC = () => {
     setModalType('add');
     setModalTitle('新增部门');
     setModalVisible(true);
-    form.resetFields();
-    form.setFieldsValue({ parentId, status: 1 });
   };
 
   // 编辑部门
@@ -231,25 +210,6 @@ const DepartmentManagement: React.FC = () => {
     setModalType('edit');
     setModalTitle('编辑部门');
     setModalVisible(true);
-    form.setFieldsValue(selectedDept);
-  };
-
-  // 复制部门
-  const handleCopy = () => {
-    if (!selectedDept) {
-      message.warning('请选择要复制的部门');
-      return;
-    }
-    setModalType('copy');
-    setModalTitle('复制部门结构');
-    setModalVisible(true);
-    form.resetFields();
-    form.setFieldsValue({ 
-      sourceId: selectedDept.id,
-      sourceName: selectedDept.name,
-      targetParentId: selectedDept.parentId,
-      includeEmployees: false
-    });
   };
 
   // 删除部门
@@ -266,35 +226,12 @@ const DepartmentManagement: React.FC = () => {
         await loadDepartmentTree();
         setSelectedDept(null);
         setSelectedKeys([]);
-        setDetailVisible(false);
       } else {
         message.error(response.message || '删除失败');
       }
     } catch (error) {
       message.error('删除失败');
       console.error('Delete department error:', error);
-    }
-  };
-
-  // 启用/禁用部门
-  const handleToggleStatus = async (status: number) => {
-    if (!selectedDept) {
-      message.warning('请选择部门');
-      return;
-    }
-    
-    try {
-      const response = await updateDepartmentStatus(selectedDept.id, status);
-      if (response.success) {
-        message.success(status === 1 ? '启用成功' : '禁用成功');
-        await loadDepartmentTree();
-        await loadDepartmentDetail(selectedDept.id);
-      } else {
-        message.error(response.message || '操作失败');
-      }
-    } catch (error) {
-      message.error('操作失败');
-      console.error('Toggle department status error:', error);
     }
   };
 
@@ -307,18 +244,11 @@ const DepartmentManagement: React.FC = () => {
         response = await createDepartment(values);
       } else if (modalType === 'edit') {
         response = await updateDepartment(selectedDept!.id, values);
-      } else if (modalType === 'copy') {
-        response = await copyDepartmentStructure(
-          values.sourceId, 
-          values.targetParentId, 
-          values.includeEmployees
-        );
       }
       
       if (response?.success) {
-        message.success(modalType === 'add' ? '新增成功' : modalType === 'edit' ? '编辑成功' : '复制成功');
+        message.success(modalType === 'add' ? '新增成功' : '编辑成功');
         setModalVisible(false);
-        form.resetFields();
         await loadDepartmentTree();
         
         if (modalType === 'edit' && selectedDept) {
@@ -333,66 +263,14 @@ const DepartmentManagement: React.FC = () => {
     }
   };
 
-  // 导出数据
-  const handleExport = async () => {
-    try {
-      const parentId = selectedKeys.length > 0 ? selectedKeys[0] as number : undefined;
-      const response = await exportDepartments({ parentId });
-      if (response.success) {
-        // 下载文件
-        const link = document.createElement('a');
-        link.href = response.data;
-        link.download = `departments_${new Date().getTime()}.xlsx`;
-        link.click();
-        message.success('导出成功');
-      } else {
-        message.error(response.message || '导出失败');
-      }
-    } catch (error) {
-      message.error('导出失败');
-      console.error('Export departments error:', error);
-    }
-  };
-
-  // 导入数据
-  const handleImport = async (file: File) => {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    try {
-      const response = await importDepartments(formData);
-      if (response.success) {
-        message.success('导入成功');
-        await loadDepartmentTree();
-      } else {
-        message.error(response.message || '导入失败');
-      }
-    } catch (error) {
-      message.error('导入失败');
-      console.error('Import departments error:', error);
-    }
-    
-    return false; // 阻止默认上传行为
-  };
-
-  // 切换视图
-  const toggleView = () => {
-    setShowTable(!showTable);
-    if (!showTable) {
-      // 切换到表格视图时加载数据
-      actionRef.current?.reload();
-    }
-  };
-
   // 表格列配置
-  const tableColumns: ProColumns<Department>[] = [
+  const tableColumns: ColumnsType<Department> = [
     {
       title: '部门名称',
       dataIndex: 'name',
       key: 'name',
       width: 200,
-      fixed: 'left',
-      render: (text, record) => (
+      render: (text: string, record: Department) => (
         <div style={{ display: 'flex', alignItems: 'center' }}>
           <ApartmentOutlined style={{ marginRight: 8, color: '#1890ff' }} />
           <span>{text}</span>
@@ -418,49 +296,28 @@ const DepartmentManagement: React.FC = () => {
       width: 100,
     },
     {
-      title: '部门主管',
-      dataIndex: 'directorName',
-      key: 'directorName',
-      width: 120,
-    },
-    {
       title: '员工数',
       dataIndex: 'employeeCount',
       key: 'employeeCount',
       width: 80,
-      render: (count) => <Badge count={count} showZero />,
-    },
-    {
-      title: '岗位数',
-      dataIndex: 'positionCount',
-      key: 'positionCount',
-      width: 80,
-      render: (count) => <Badge count={count} showZero />,
+      render: (count: number) => <Badge count={count} showZero />,
     },
     {
       title: '状态',
       dataIndex: 'status',
       key: 'status',
       width: 80,
-      render: (status) => (
+      render: (status: number) => (
         <Tag color={status === 1 ? 'green' : 'red'}>
           {status === 1 ? '正常' : '禁用'}
         </Tag>
       ),
     },
     {
-      title: '创建时间',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      width: 160,
-      valueType: 'dateTime',
-    },
-    {
       title: '操作',
       key: 'action',
       width: 200,
-      fixed: 'right',
-      render: (_, record) => (
+      render: (_: any, record: Department) => (
         <Space size="small">
           <Button
             type="link"
@@ -508,17 +365,9 @@ const DepartmentManagement: React.FC = () => {
   }, []);
 
   return (
-    <PageContainer
-      header={{
-        title: '部门管理',
-        breadcrumb: {
-          items: [
-            { title: '组织管理' },
-            { title: '部门管理' },
-          ],
-        },
-      }}
-    >
+    <div style={{ padding: 24 }}>
+      <h1>部门管理</h1>
+      
       <Row gutter={[16, 16]}>
         {/* 左侧部门树 */}
         <Col span={showTable ? 0 : 8}>
@@ -527,22 +376,18 @@ const DepartmentManagement: React.FC = () => {
             size="small"
             extra={
               <Space size="small">
-                <Tooltip title="刷新">
-                  <Button
-                    type="text"
-                    size="small"
-                    icon={<ReloadOutlined />}
-                    onClick={() => loadDepartmentTree()}
-                  />
-                </Tooltip>
-                <Tooltip title="切换到表格视图">
-                  <Button
-                    type="text"
-                    size="small"
-                    icon={<DragOutlined />}
-                    onClick={toggleView}
-                  />
-                </Tooltip>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<ReloadOutlined />}
+                  onClick={() => loadDepartmentTree()}
+                />
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<DragOutlined />}
+                  onClick={() => setShowTable(!showTable)}
+                />
               </Space>
             }
           >
@@ -562,9 +407,7 @@ const DepartmentManagement: React.FC = () => {
               onSelect={onSelectTreeNode}
               onExpand={setExpandedKeys}
               treeData={treeData}
-              loading={loading}
               height={600}
-              virtual
             />
           </Card>
         </Col>
@@ -574,53 +417,27 @@ const DepartmentManagement: React.FC = () => {
           {showTable ? (
             /* 表格视图 */
             <Card>
-              <ProTable<Department>
-                actionRef={actionRef}
+              <div style={{ marginBottom: 16 }}>
+                <Space>
+                  <Button icon={<ApartmentOutlined />} onClick={() => setShowTable(false)}>
+                    切换到树形视图
+                  </Button>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                    新增部门
+                  </Button>
+                </Space>
+              </div>
+              
+              <Table<Department>
                 columns={tableColumns}
-                request={async (params, sort, filter) => {
-                  const response = await getDepartmentPage({
-                    page: params.current,
-                    size: params.pageSize,
-                    keyword: params.name,
-                    parentId: params.parentId,
-                    gradeId: params.gradeId,
-                    status: params.status,
-                  });
-                  return {
-                    data: response.data?.list || [],
-                    success: response.success,
-                    total: response.data?.total || 0,
-                  };
-                }}
+                dataSource={tableData}
                 rowKey="id"
-                search={{
-                  labelWidth: 'auto',
-                }}
                 pagination={{
                   defaultPageSize: 20,
                   showSizeChanger: true,
                   showQuickJumper: true,
                 }}
                 scroll={{ x: 1200 }}
-                toolBarRender={() => [
-                  <Button key="tree" icon={<ApartmentOutlined />} onClick={toggleView}>
-                    切换到树形视图
-                  </Button>,
-                  <Button key="add" type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-                    新增部门
-                  </Button>,
-                  <Upload
-                    key="import"
-                    beforeUpload={handleImport}
-                    showUploadList={false}
-                    accept=".xlsx,.xls"
-                  >
-                    <Button icon={<UploadOutlined />}>导入</Button>
-                  </Upload>,
-                  <Button key="export" icon={<DownloadOutlined />} onClick={handleExport}>
-                    导出
-                  </Button>,
-                ]}
               />
             </Card>
           ) : (
@@ -628,67 +445,26 @@ const DepartmentManagement: React.FC = () => {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {/* 操作工具栏 */}
               <Card size="small">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Space>
-                    <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-                      新增部门
+                <Space>
+                  <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
+                    新增部门
+                  </Button>
+                  <Button icon={<EditOutlined />} onClick={handleEdit} disabled={!selectedDept}>
+                    编辑
+                  </Button>
+                  <Popconfirm
+                    title="确定要删除这个部门吗？"
+                    onConfirm={handleDelete}
+                    disabled={!selectedDept}
+                  >
+                    <Button icon={<DeleteOutlined />} disabled={!selectedDept} danger>
+                      删除
                     </Button>
-                    <Button icon={<EditOutlined />} onClick={handleEdit} disabled={!selectedDept}>
-                      编辑
-                    </Button>
-                    <Button icon={<CopyOutlined />} onClick={handleCopy} disabled={!selectedDept}>
-                      复制
-                    </Button>
-                    <Popconfirm
-                      title="确定要删除这个部门吗？"
-                      onConfirm={handleDelete}
-                      disabled={!selectedDept}
-                    >
-                      <Button icon={<DeleteOutlined />} disabled={!selectedDept} danger>
-                        删除
-                      </Button>
-                    </Popconfirm>
-                    
-                    <Divider type="vertical" />
-                    
-                    {selectedDept && (
-                      <Space>
-                        {selectedDept.status === 1 ? (
-                          <Button 
-                            onClick={() => handleToggleStatus(0)}
-                            size="small"
-                          >
-                            禁用
-                          </Button>
-                        ) : (
-                          <Button 
-                            onClick={() => handleToggleStatus(1)}
-                            size="small"
-                            type="primary"
-                          >
-                            启用
-                          </Button>
-                        )}
-                      </Space>
-                    )}
-                  </Space>
-
-                  <Space>
-                    <Upload
-                      beforeUpload={handleImport}
-                      showUploadList={false}
-                      accept=".xlsx,.xls"
-                    >
-                      <Button icon={<UploadOutlined />}>导入</Button>
-                    </Upload>
-                    <Button icon={<DownloadOutlined />} onClick={handleExport}>
-                      导出
-                    </Button>
-                    <Button icon={<DragOutlined />} onClick={toggleView}>
-                      表格视图
-                    </Button>
-                  </Space>
-                </div>
+                  </Popconfirm>
+                  <Button icon={<DragOutlined />} onClick={() => setShowTable(true)}>
+                    表格视图
+                  </Button>
+                </Space>
               </Card>
 
               {/* 部门详情 */}
@@ -713,15 +489,14 @@ const DepartmentManagement: React.FC = () => {
         visible={modalVisible}
         title={modalTitle}
         type={modalType}
-        initialValues={form.getFieldsValue()}
+        initialValues={selectedDept}
         onCancel={() => {
           setModalVisible(false);
-          form.resetFields();
         }}
         onSubmit={handleFormSubmit}
         treeData={treeData}
       />
-    </PageContainer>
+    </div>
   );
 };
 

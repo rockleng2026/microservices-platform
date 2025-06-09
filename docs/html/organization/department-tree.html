@@ -7,449 +7,195 @@
     <link rel="stylesheet" href="../assets/css/common.css">
     <link rel="stylesheet" href="../assets/css/navigation.css">
     <style>
-        /* 部门树管理专用样式 */
-        .department-container {
+        /* 框架布局结构 - 复制标准布局 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            grid-area: header;
             background: white;
-            border-radius: 8px;
-            padding: 24px;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
         }
 
-        .department-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #e8e8e8;
-        }
-
-        .department-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #333;
-            margin: 0;
-        }
-
-        .department-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .search-input {
-            width: 200px;
-            padding: 8px 12px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
-            font-size: 14px;
-        }
-
-        .search-input:focus {
-            border-color: #1890ff;
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-        }
-
-        .btn-action {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 6px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .btn-primary {
-            background: #1890ff;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #40a9ff;
-        }
-
-        .btn-default {
-            background: #f5f5f5;
-            color: #666;
-            border: 1px solid #d9d9d9;
-        }
-
-        .btn-default:hover {
-            background: #e6f7ff;
-            border-color: #1890ff;
-            color: #1890ff;
-        }
-
-        /* 部门树样式 */
-        .department-tree {
-            margin-top: 20px;
-        }
-
-        .tree-node {
-            border: 1px solid #e8e8e8;
-            border-radius: 6px;
-            margin-bottom: 8px;
+        .app-sidebar {
+            grid-area: sidebar;
             background: white;
-            transition: all 0.3s ease;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
         }
 
-        .tree-node:hover {
-            border-color: #1890ff;
-            box-shadow: 0 2px 8px rgba(24, 144, 255, 0.15);
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+            min-height: calc(100vh - 120px);
         }
 
-        .tree-node-header {
-            padding: 12px 16px;
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 导航样式 - 复制标准样式 */
+        .sidebar-header {
+            height: 60px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            position: relative;
+            padding: 0 20px;
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
         }
 
-        .tree-node-content {
-            display: flex;
-            align-items: center;
-            flex: 1;
-        }
-
-        .tree-node-expand {
-            width: 20px;
-            height: 20px;
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            border-radius: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: 8px;
-            cursor: pointer;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-
-        .tree-node-expand:hover {
-            background: #f5f5f5;
-        }
-
-        .tree-node-expand.expanded::before {
-            content: '📂';
-        }
-
-        .tree-node-expand.collapsed::before {
-            content: '📁';
-        }
-
-        .tree-node-expand.no-children::before {
-            content: '📄';
-            opacity: 0.5;
-        }
-
-        .dept-info {
-            display: flex;
-            align-items: center;
-            flex: 1;
-        }
-
-        .dept-name {
-            font-weight: 500;
-            color: #333;
+            color: white;
+            font-weight: bold;
             margin-right: 12px;
         }
 
-        .dept-code {
-            background: #f0f0f0;
-            color: #666;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-right: 8px;
-        }
-
-        .dept-level {
-            background: #e6f7ff;
-            color: #1890ff;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 12px;
-            margin-right: 8px;
-        }
-
-        .dept-status {
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: 500;
-        }
-
-        .status-enabled {
-            background: #f6ffed;
-            color: #52c41a;
-        }
-
-        .status-disabled {
-            background: #fff2e8;
-            color: #fa8c16;
-        }
-
-        .half-level-mark {
-            color: #fa8c16;
-            font-weight: bold;
-            margin-left: 4px;
-        }
-
-        .dept-stats {
-            display: flex;
-            gap: 12px;
-            color: #666;
-            font-size: 12px;
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .tree-actions {
-            display: flex;
-            gap: 8px;
-            margin-left: 16px;
-        }
-
-        .action-btn {
-            padding: 4px 8px;
-            border: none;
-            border-radius: 4px;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .btn-manage {
-            background: #e6f7ff;
-            color: #1890ff;
-        }
-
-        .btn-manage:hover {
-            background: #bae7ff;
-        }
-
-        .btn-edit {
-            background: #f6ffed;
-            color: #52c41a;
-        }
-
-        .btn-edit:hover {
-            background: #d9f7be;
-        }
-
-        .btn-delete {
-            background: #fff2e8;
-            color: #fa541c;
-        }
-
-        .btn-delete:hover {
-            background: #ffd8bf;
-        }
-
-        .tree-children {
-            padding: 0 0 0 40px;
-            border-top: 1px solid #f0f0f0;
-            background: #fafafa;
-            display: none;
-        }
-
-        .tree-children.expanded {
-            display: block;
-            padding: 16px 16px 16px 40px;
-        }
-
-        /* 模态框样式 */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .modal.show {
-            display: flex;
-        }
-
-        .modal-content {
-            background: white;
-            border-radius: 8px;
-            padding: 24px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 16px;
-            border-bottom: 1px solid #e8e8e8;
-        }
-
-        .modal-title {
-            font-size: 16px;
+        .brand-name {
+            font-size: 18px;
             font-weight: 600;
             color: #333;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+            list-style: none;
             margin: 0;
         }
 
-        .modal-close {
-            background: none;
-            border: none;
-            font-size: 20px;
-            color: #999;
-            cursor: pointer;
-            padding: 0;
-            width: 24px;
-            height: 24px;
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
             display: flex;
             align-items: center;
-            justify-content: center;
+            padding: 12px 20px;
+            color: #666 !important;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            width: 100%;
+            overflow: visible;
         }
 
-        .modal-close:hover {
+        .nav-link:hover {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        .nav-group {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
             color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
         }
 
-        .form-group {
-            margin-bottom: 16px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 500;
+        .nav-group:hover {
+            background: #f5f5f5;
             color: #333;
         }
 
-        .form-control {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #d9d9d9;
-            border-radius: 6px;
-            font-size: 14px;
+        .nav-group.expanded {
+            background: rgba(24, 144, 255, 0.05);
+            color: #1890ff;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #fafafa;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 10px 20px 10px 52px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
             transition: all 0.3s ease;
+            position: relative;
         }
 
-        .form-control:focus {
-            border-color: #1890ff;
-            outline: none;
-            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-        }
-
-        .modal-footer {
-            display: flex;
-            justify-content: flex-end;
-            gap: 12px;
-            margin-top: 24px;
-            padding-top: 16px;
-            border-top: 1px solid #e8e8e8;
-        }
-
-        .required {
-            color: #f5222d;
-        }
-
-        /* 空状态样式 */
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: #999;
-        }
-
-        .empty-icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
-
-        .empty-text {
-            font-size: 16px;
-            margin-bottom: 20px;
-        }
-
-        /* 加载状态 */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: #999;
-        }
-
-        .loading::before {
-            content: '';
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 2px solid #f3f3f3;
-            border-top: 2px solid #1890ff;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-right: 8px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* 响应式设计 */
-        @media (max-width: 768px) {
-            .department-header {
-                flex-direction: column;
-                gap: 16px;
-                align-items: stretch;
-            }
-
-            .department-actions {
-                justify-content: space-between;
-            }
-
-            .search-input {
-                width: 120px;
-            }
-
-            .tree-actions {
-                margin-left: 8px;
-            }
-
-            .action-btn {
-                padding: 2px 6px;
-                font-size: 11px;
-            }
-
-            .modal-content {
-                width: 95%;
-                padding: 16px;
-            }
-
-            .form-row {
-                grid-template-columns: 1fr;
-            }
+        .nav-subitem:hover {
+            background: #f0f0f0;
+            color: #333;
         }
 
         .nav-subitem.active {
@@ -1233,842 +979,710 @@
 </head>
 <body>
     <div class="app-layout">
-        <!-- 侧边栏 -->
-        <div class="app-sidebar" id="app-sidebar">
-            <!-- 侧边栏内容由navigation.js动态生成 -->
-        </div>
+        <!-- 左侧导航 -->
+        <aside class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">P3</div>
+                <div class="brand-name">Portal 3.0</div>
+            </div>
+            
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        <span>首页总览</span>
+                    </a>
+                </li>
+                
+                <!-- 工作台模块 -->
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">💼</span>
+                        <span>工作台</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../dashboard/oa-workspace.html" class="nav-subitem">OA工作台</a>
+                        <a href="../dashboard/crm-workspace.html" class="nav-subitem">CRM工作台</a>
+                        <a href="../dashboard/sales-workspace.html" class="nav-subitem">销售工作台</a>
+                        <a href="../dashboard/workspace-config.html" class="nav-subitem">工作台配置</a>
+                    </div>
+                </li>
+                
+                <!-- 组织架构模块 -->
+                <li class="nav-item">
+                    <button class="nav-group expanded" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">🏢</span>
+                        <span>组织架构</span>
+                        <span class="nav-arrow rotated">▶</span>
+                    </button>
+                    <div class="nav-submenu expanded">
+                        <a href="department-tree.html" class="nav-subitem active">部门管理</a>
+                        <a href="employee-list.html" class="nav-subitem">员工管理</a>
+                        <a href="employee-add.html" class="nav-subitem">新增员工</a>
+                        <a href="position-manage.html" class="nav-subitem">岗位管理</a>
+                        <a href="workposition-permission.html" class="nav-subitem">岗位权限</a>
+                    </div>
+                </li>
+                
+                <!-- 客户管理模块 -->
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">👥</span>
+                        <span>客户管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../crm/customer-list.html" class="nav-subitem">客户列表</a>
+                        <a href="#" class="nav-subitem">客户详情</a>
+                        <a href="#" class="nav-subitem">跟进记录</a>
+                        <a href="#" class="nav-subitem">客户转移</a>
+                    </div>
+                </li>
+                
+                <!-- 商品管理模块 -->
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">📦</span>
+                        <span>商品管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="#" class="nav-subitem">商品列表</a>
+                        <a href="#" class="nav-subitem">商品分类</a>
+                        <a href="#" class="nav-subitem">库存管理</a>
+                        <a href="#" class="nav-subitem">价格策略</a>
+                    </div>
+                </li>
+                
+                <!-- 订单管理模块 -->
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleNavGroup(this)">
+                        <span class="nav-icon">📋</span>
+                        <span>订单管理</span>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="#" class="nav-subitem">订单列表</a>
+                        <a href="#" class="nav-subitem">订单详情</a>
+                        <a href="#" class="nav-subitem">订单统计</a>
+                        <a href="#" class="nav-subitem">退货管理</a>
+                    </div>
+                </li>
+            </ul>
+        </aside>
 
-        <!-- 顶部导航 -->
-        <div class="app-header">
+        <!-- 头部区域 -->
+        <header class="app-header">
             <div class="header-left">
                 <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
-                <nav class="breadcrumb">
-                    <span>组织架构</span>
-                    <span>部门管理</span>
-                </nav>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">组织架构</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">部门管理</span>
+                </div>
             </div>
+            
             <div class="header-actions">
                 <div class="search-box">
-                    <i class="search-icon">🔍</i>
+                    <span class="search-icon">🔍</span>
                     <input type="text" class="search-input" placeholder="搜索功能...">
                 </div>
+                
+                <button class="notification-btn">
+                    🔔
+                    <span class="notification-badge">3</span>
+                </button>
+                
                 <div class="user-menu">
-                    <img src="../assets/images/avatar.jpg" alt="用户头像" class="user-avatar" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiNmNWY1ZjUiLz4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxMiIgcj0iNiIgZmlsbD0iIzk5OTk5OSIvPgo8cGF0aCBkPSJNNCAyNmMwLTYuNjI3IDUuMzczLTEyIDEyLTEyczEyIDUuMzczIDEyIDEyIiBmaWxsPSIjOTk5OTk5Ii8+Cjwvc3ZnPgo='">
+                    <div class="user-avatar">管</div>
                     <span>管理员</span>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <!-- 主内容区 -->
-        <div class="app-main">
-            <div class="department-container">
-                <!-- 页面头部 -->
-                <div class="department-header">
-                    <h1 class="department-title">部门管理</h1>
-                    <div class="department-actions">
-                        <input type="text" id="searchInput" class="search-input" placeholder="搜索部门...">
-                        <button class="btn-action btn-default" onclick="expandAllNodes()">📂 全部展开</button>
-                        <button class="btn-action btn-default" onclick="collapseAllNodes()">📁 全部折叠</button>
-                        <button class="btn-action btn-primary" onclick="showAddDepartmentModal()">➕ 新增部门</button>
-                        <button class="btn-action btn-default" onclick="showImportModal()">📥 导入</button>
-                        <button class="btn-action btn-default" onclick="exportDepartments()">📤 导出</button>
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <h1 class="page-title">🏢 部门管理</h1>
+                <p class="page-desc">管理企业组织架构，支持7级部门层级和半级部门设置</p>
+                <div class="page-actions">
+                    <button class="btn btn-primary">新增部门</button>
+                    <button class="btn">批量导入</button>
+                    <button class="btn">导出数据</button>
+                </div>
+            </div>
+
+            <!-- 内容网格 -->
+            <div class="dept-container">
+                <!-- 部门树面板 -->
+                <div class="dept-tree-panel">
+                    <div class="dept-header">
+                        <h3>组织架构</h3>
+                        <div class="dept-actions">
+                            <button class="btn-action" onclick="expandAllDepts()">📂 全部展开</button>
+                            <button class="btn-action" onclick="collapseAllDepts()">📁 全部收起</button>
+                            <button class="btn-action primary" onclick="showAddDeptForm()">➕ 新增部门</button>
+                        </div>
+                    </div>
+
+                    <div class="dept-search">
+                        <input type="text" class="search-input" placeholder="搜索部门..." onkeyup="searchDepartment(this.value)">
+                    </div>
+
+                    <div class="dept-tree" id="deptTree">
+                        <!-- 部门树结构 -->
+                        <div class="tree-node">
+                            <div class="tree-item active" onclick="selectDepartment(1)">
+                                <span class="tree-expand expanded" onclick="toggleTreeNode(this, event)">▶</span>
+                                <span class="tree-icon">🏢</span>
+                                <span class="tree-title">总经理办公室</span>
+                                <span class="tree-count">(3人)</span>
+                                <div class="tree-actions">
+                                    <button class="tree-action" title="新增子部门" onclick="addSubDept(1, event)">➕</button>
+                                    <button class="tree-action" title="编辑部门" onclick="editDept(1, event)">✏️</button>
+                                    <button class="tree-action" title="删除部门" onclick="deleteDept(1, event)">🗑️</button>
+                                </div>
+                            </div>
+                            <div class="tree-children expanded">
+                                <div class="tree-node">
+                                    <div class="tree-item" onclick="selectDepartment(2)">
+                                        <span class="tree-expand" onclick="toggleTreeNode(this, event)">▶</span>
+                                        <span class="tree-icon">👥</span>
+                                        <span class="tree-title">人力资源部</span>
+                                        <span class="tree-count">(8人)</span>
+                                        <div class="tree-actions">
+                                            <button class="tree-action" title="新增子部门" onclick="addSubDept(2, event)">➕</button>
+                                            <button class="tree-action" title="编辑部门" onclick="editDept(2, event)">✏️</button>
+                                            <button class="tree-action" title="删除部门" onclick="deleteDept(2, event)">🗑️</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tree-node">
+                                    <div class="tree-item" onclick="selectDepartment(3)">
+                                        <span class="tree-expand" onclick="toggleTreeNode(this, event)">▶</span>
+                                        <span class="tree-icon">💰</span>
+                                        <span class="tree-title">财务部</span>
+                                        <span class="tree-count">(6人)</span>
+                                        <div class="tree-actions">
+                                            <button class="tree-action" title="新增子部门" onclick="addSubDept(3, event)">➕</button>
+                                            <button class="tree-action" title="编辑部门" onclick="editDept(3, event)">✏️</button>
+                                            <button class="tree-action" title="删除部门" onclick="deleteDept(3, event)">🗑️</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="tree-node">
+                                    <div class="tree-item" onclick="selectDepartment(4)">
+                                        <span class="tree-expand expanded" onclick="toggleTreeNode(this, event)">▶</span>
+                                        <span class="tree-icon">💻</span>
+                                        <span class="tree-title">技术研发部</span>
+                                        <span class="tree-count">(25人)</span>
+                                        <div class="tree-actions">
+                                            <button class="tree-action" title="新增子部门" onclick="addSubDept(4, event)">➕</button>
+                                            <button class="tree-action" title="编辑部门" onclick="editDept(4, event)">✏️</button>
+                                            <button class="tree-action" title="删除部门" onclick="deleteDept(4, event)">🗑️</button>
+                                        </div>
+                                    </div>
+                                    <div class="tree-children expanded">
+                                        <div class="tree-node">
+                                            <div class="tree-item half-dept" onclick="selectDepartment(5)">
+                                                <span class="tree-expand" onclick="toggleTreeNode(this, event)">▶</span>
+                                                <span class="tree-icon">🎨</span>
+                                                <span class="tree-title">前端团队</span>
+                                                <span class="tree-count">(8人)</span>
+                                                <div class="tree-actions">
+                                                    <button class="tree-action" title="新增子部门" onclick="addSubDept(5, event)">➕</button>
+                                                    <button class="tree-action" title="编辑部门" onclick="editDept(5, event)">✏️</button>
+                                                    <button class="tree-action" title="删除部门" onclick="deleteDept(5, event)">🗑️</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="tree-node">
+                                            <div class="tree-item" onclick="selectDepartment(6)">
+                                                <span class="tree-expand" onclick="toggleTreeNode(this, event)">▶</span>
+                                                <span class="tree-icon">⚙️</span>
+                                                <span class="tree-title">后端团队</span>
+                                                <span class="tree-count">(12人)</span>
+                                                <div class="tree-actions">
+                                                    <button class="tree-action" title="新增子部门" onclick="addSubDept(6, event)">➕</button>
+                                                    <button class="tree-action" title="编辑部门" onclick="editDept(6, event)">✏️</button>
+                                                    <button class="tree-action" title="删除部门" onclick="deleteDept(6, event)">🗑️</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- 部门树容器 -->
-                <div class="department-tree" id="departmentTree">
-                    <div class="loading" id="loadingState">
-                        正在加载部门数据...
+                <!-- 部门详情面板 -->
+                <div class="dept-detail-panel">
+                    <!-- 部门详情视图 -->
+                    <div class="dept-detail" id="deptDetail">
+                        <div class="dept-header">
+                            <h3>总经理办公室</h3>
+                            <div class="dept-actions">
+                                <button class="btn-action" onclick="showDeptForm()">✏️ 编辑</button>
+                                <button class="btn-action" onclick="manageDeptPositions()">👥 岗位管理</button>
+                                <button class="btn-action" onclick="manageDeptPersonnel()">👤 人员管理</button>
+                            </div>
+                        </div>
+
+                        <div class="dept-stats">
+                            <div class="stat-card">
+                                <div class="stat-number">3</div>
+                                <div class="stat-label">在职员工</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">2</div>
+                                <div class="stat-label">岗位数量</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">3</div>
+                                <div class="stat-label">子部门</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-number">1</div>
+                                <div class="stat-label">部门等级</div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h4>基本信息</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">部门名称</label>
+                                    <div class="form-value">总经理办公室</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">部门编号</label>
+                                    <div class="form-value">D001</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">部门等级</label>
+                                    <div class="form-value">1级部门</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">是否分公司</label>
+                                    <div class="form-value">是</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">部门主管</label>
+                                    <div class="form-value">张总</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">联系电话</label>
+                                    <div class="form-value">010-12345678</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-section">
+                            <h4>组织关系</h4>
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label class="form-label">上级部门</label>
+                                    <div class="form-value">无（根部门）</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">子部门数量</label>
+                                    <div class="form-value">3个</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">部门路径</label>
+                                    <div class="form-value">总经理办公室</div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">排序号</label>
+                                    <div class="form-value">1</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 部门岗位管理 -->
+                        <div class="position-section">
+                            <div class="dept-header">
+                                <h4>部门岗位</h4>
+                                <div class="dept-actions">
+                                    <button class="btn-action primary btn-sm" onclick="addPosition()">➕ 新增岗位</button>
+                                </div>
+                            </div>
+                            <div class="position-list">
+                                <div class="position-item">
+                                    <div class="position-info">
+                                        <span class="position-name">总经理</span>
+                                        <span class="position-type">主管岗位</span>
+                                        <span class="position-count">1/1人</span>
+                                    </div>
+                                    <div class="position-actions">
+                                        <button class="btn-action btn-sm" onclick="managePosition(1)">👥 人员管理</button>
+                                        <button class="btn-action btn-sm" onclick="editPosition(1)">✏️ 编辑</button>
+                                    </div>
+                                </div>
+                                <div class="position-item">
+                                    <div class="position-info">
+                                        <span class="position-name">总经理助理</span>
+                                        <span class="position-type">普通岗位</span>
+                                        <span class="position-count">2/3人</span>
+                                    </div>
+                                    <div class="position-actions">
+                                        <button class="btn-action btn-sm" onclick="managePosition(2)">👥 人员管理</button>
+                                        <button class="btn-action btn-sm" onclick="editPosition(2)">✏️ 编辑</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 部门编辑表单 -->
+                    <div class="dept-form" id="deptForm">
+                        <div class="dept-header">
+                            <h3>编辑部门</h3>
+                            <div class="dept-actions">
+                                <button class="btn-action" onclick="hideDeptForm()">❌ 取消</button>
+                                <button class="btn-action primary" onclick="saveDept()">💾 保存</button>
+                            </div>
+                        </div>
+
+                        <form>
+                            <div class="form-section">
+                                <h4>基本信息</h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label class="form-label required">部门名称</label>
+                                        <input type="text" class="form-input" placeholder="请输入部门名称" value="总经理办公室">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">部门简写</label>
+                                        <input type="text" class="form-input" placeholder="请输入部门简写" value="总办">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">部门编号</label>
+                                        <input type="text" class="form-input" placeholder="请输入部门编号" value="D001">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label required">上级部门</label>
+                                        <select class="form-select">
+                                            <option value="">无（根部门）</option>
+                                            <option value="1">总经理办公室</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label required">部门等级</label>
+                                        <select class="form-select">
+                                            <option value="1" selected>1级部门</option>
+                                            <option value="2">2级部门</option>
+                                            <option value="3">3级部门</option>
+                                            <option value="4">4级部门</option>
+                                            <option value="5">5级部门</option>
+                                            <option value="6">6级部门</option>
+                                            <option value="7">7级部门</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">部门主管</label>
+                                        <select class="form-select">
+                                            <option value="">请选择部门主管</option>
+                                            <option value="1" selected>张总</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h4>部门属性</h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label class="form-label">是否分公司</label>
+                                        <select class="form-select">
+                                            <option value="1" selected>是</option>
+                                            <option value="0">否</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">是否半级部门</label>
+                                        <select class="form-select">
+                                            <option value="0" selected>否</option>
+                                            <option value="1">是</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">排序号</label>
+                                        <input type="number" class="form-input" placeholder="排序号" value="1">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">状态</label>
+                                        <select class="form-select">
+                                            <option value="1" selected>启用</option>
+                                            <option value="0">禁用</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h4>联系信息</h4>
+                                <div class="form-grid">
+                                    <div class="form-group">
+                                        <label class="form-label">联系电话</label>
+                                        <input type="tel" class="form-input" placeholder="请输入联系电话" value="010-12345678">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">办公地址</label>
+                                        <input type="text" class="form-input" placeholder="请输入办公地址" value="北京市朝阳区">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">部门描述</label>
+                                    <textarea class="form-input" rows="3" placeholder="请输入部门描述">负责公司整体战略规划和重大决策</textarea>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- 空状态 -->
+                    <div class="empty-state" id="emptyState" style="display: none;">
+                        <div class="empty-icon">📁</div>
+                        <p>请选择一个部门查看详情</p>
                     </div>
                 </div>
             </div>
-        </div>
+        </main>
 
-        <!-- 页脚 -->
-        <div class="app-footer">
-            <p>&copy; 2024 Portal 3.0. All rights reserved.</p>
-        </div>
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台 | 
+                <a href="#" style="color: #1890ff; text-decoration: none;">技术支持</a> | 
+                <a href="#" style="color: #1890ff; text-decoration: none;">帮助文档</a> | 
+                <span style="color: #999;">版本 v3.0.1</span>
+            </div>
+        </footer>
     </div>
 
-    <!-- 新增/编辑部门模态框 -->
-    <div class="modal" id="departmentModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="modalTitle">新增部门</h3>
-                <button class="modal-close" onclick="closeDepartmentModal()">×</button>
-            </div>
-            <form id="departmentForm">
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">部门名称 <span class="required">*</span></label>
-                        <input type="text" id="deptName" class="form-control" placeholder="请输入部门名称" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">部门编号</label>
-                        <input type="text" id="deptCode" class="form-control" placeholder="请输入部门编号">
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">上级部门</label>
-                        <select id="parentDept" class="form-control">
-                            <option value="">请选择上级部门</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">部门等级</label>
-                        <select id="deptGrade" class="form-control">
-                            <option value="1">集团级</option>
-                            <option value="2">公司级</option>
-                            <option value="3">事业部级</option>
-                            <option value="4">部门级</option>
-                            <option value="5">科室级</option>
-                            <option value="6">小组级</option>
-                            <option value="7">班组级</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">部门主管</label>
-                        <select id="deptDirector" class="form-control">
-                            <option value="">请选择部门主管</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">联系电话</label>
-                        <input type="text" id="deptTel" class="form-control" placeholder="请输入联系电话">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">办公地址</label>
-                    <input type="text" id="deptAddress" class="form-control" placeholder="请输入办公地址">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">部门描述</label>
-                    <textarea id="deptDescription" class="form-control" rows="3" placeholder="请输入部门描述"></textarea>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label class="form-label">是否分公司</label>
-                        <select id="isFiliale" class="form-control">
-                            <option value="">否</option>
-                            <option value="1">是</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">排序号</label>
-                        <input type="number" id="sortOrder" class="form-control" placeholder="排序号" value="0">
-                    </div>
-                </div>
-            </form>
-            <div class="modal-footer">
-                <button type="button" class="btn-action btn-default" onclick="closeDepartmentModal()">取消</button>
-                <button type="button" class="btn-action btn-primary" onclick="saveDepartment()">保存</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 导入模态框 -->
-    <div class="modal" id="importModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">导入部门数据</h3>
-                <button class="modal-close" onclick="closeImportModal()">×</button>
-            </div>
-            <div class="form-group">
-                <label class="form-label">选择文件</label>
-                <input type="file" id="importFile" class="form-control" accept=".xlsx,.xls,.csv">
-                <div style="margin-top: 8px; font-size: 12px; color: #999;">
-                    支持 Excel(.xlsx, .xls) 和 CSV 格式文件
-                </div>
-            </div>
-            <div class="form-group">
-                <a href="#" onclick="downloadTemplate()" style="color: #1890ff; text-decoration: none;">
-                    📄 下载导入模板
-                </a>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-action btn-default" onclick="closeImportModal()">取消</button>
-                <button type="button" class="btn-action btn-primary" onclick="importDepartments()">导入</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 删除确认模态框 -->
-    <div class="modal" id="deleteModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title">确认删除</h3>
-                <button class="modal-close" onclick="closeDeleteModal()">×</button>
-            </div>
-            <div style="padding: 20px 0;">
-                <p id="deleteMessage">确定要删除该部门吗？删除后将同时删除所有子部门，此操作不可恢复。</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-action btn-default" onclick="closeDeleteModal()">取消</button>
-                <button type="button" class="btn-action btn-delete" onclick="confirmDelete()">删除</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 引入脚本 -->
     <script src="../assets/js/common.js"></script>
     <script src="../assets/js/navigation.js"></script>
+    <script src="../assets/js/mock-data.js"></script>
     <script>
-        // 全局变量
-        let departmentData = [];
-        let currentEditId = null;
-        let currentDeleteId = null;
-        let expandedNodes = new Set();
+        // 部门管理页面脚本
+        let currentDept = null;
+        let isFormMode = false;
 
-        // 页面初始化
-        document.addEventListener('DOMContentLoaded', function() {
-            // 初始化导航
-            const navigation = new NavigationManager();
-            navigation.render();
-            
-            // 加载部门数据
-            loadDepartmentData();
-            
-            // 绑定搜索事件
-            const searchInput = document.getElementById('searchInput');
-            searchInput.addEventListener('input', Common.debounce(function() {
-                filterDepartments(this.value);
-            }, 300));
-        });
-
-        // 加载部门数据
-        async function loadDepartmentData() {
-            try {
-                showLoading();
-                
-                // 模拟API调用 - 实际项目中替换为真实API
-                const response = await mockApiCall('/api/organization/department/tree');
-                departmentData = response.data || [];
-                
-                renderDepartmentTree(departmentData);
-            } catch (error) {
-                console.error('加载部门数据失败:', error);
-                showError('加载部门数据失败，请重试');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // 模拟API调用
-        function mockApiCall(url, options = {}) {
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    // 模拟部门数据
-                    const mockData = [
-                        {
-                            id: 1,
-                            name: '总裁办',
-                            depNo: 'CEO',
-                            parentId: 0,
-                            gradeid: 1,
-                            directorId: 1,
-                            directorName: '张总',
-                            status: 1,
-                            employeeCount: 5,
-                            positionCount: 3,
-                            fiiale: '',
-                            children: [
-                                {
-                                    id: 11,
-                                    name: '行政部',
-                                    depNo: 'ADMIN',
-                                    parentId: 1,
-                                    gradeid: 4,
-                                    directorId: 11,
-                                    directorName: '李主管',
-                                    status: 1,
-                                    employeeCount: 8,
-                                    positionCount: 4,
-                                    fiiale: '',
-                                    children: []
-                                }
-                            ]
-                        },
-                        {
-                            id: 2,
-                            name: '技术中心',
-                            depNo: 'TECH',
-                            parentId: 0,
-                            gradeid: 2,
-                            directorId: 2,
-                            directorName: '王总监',
-                            status: 1,
-                            employeeCount: 35,
-                            positionCount: 8,
-                            fiiale: '1',
-                            children: [
-                                {
-                                    id: 21,
-                                    name: '研发部',
-                                    depNo: 'RD',
-                                    parentId: 2,
-                                    gradeid: 4,
-                                    directorId: 21,
-                                    directorName: '赵经理',
-                                    status: 1,
-                                    employeeCount: 20,
-                                    positionCount: 5,
-                                    fiiale: '',
-                                    children: [
-                                        {
-                                            id: 211,
-                                            name: '前端开发组',
-                                            depNo: 'FE',
-                                            parentId: 21,
-                                            gradeid: 6,
-                                            directorId: 211,
-                                            directorName: '前端组长',
-                                            status: 1,
-                                            employeeCount: 8,
-                                            positionCount: 2,
-                                            fiiale: '',
-                                            children: []
-                                        },
-                                        {
-                                            id: 212,
-                                            name: '后端开发组',
-                                            depNo: 'BE',
-                                            parentId: 21,
-                                            gradeid: 6,
-                                            directorId: 212,
-                                            directorName: '后端组长',
-                                            status: 1,
-                                            employeeCount: 12,
-                                            positionCount: 3,
-                                            fiiale: '',
-                                            children: []
-                                        }
-                                    ]
-                                },
-                                {
-                                    id: 22,
-                                    name: '测试部',
-                                    depNo: 'QA',
-                                    parentId: 2,
-                                    gradeid: 4,
-                                    directorId: 22,
-                                    directorName: '测试经理',
-                                    status: 1,
-                                    employeeCount: 8,
-                                    positionCount: 3,
-                                    fiiale: '',
-                                    children: []
-                                },
-                                {
-                                    id: 23,
-                                    name: '运维部*',
-                                    depNo: 'OPS',
-                                    parentId: 2,
-                                    gradeid: 4,
-                                    directorId: 23,
-                                    directorName: '运维经理',
-                                    status: 1,
-                                    employeeCount: 7,
-                                    positionCount: 2,
-                                    fiiale: '',
-                                    isHalfLevel: true,
-                                    children: []
-                                }
-                            ]
-                        },
-                        {
-                            id: 3,
-                            name: '销售中心',
-                            depNo: 'SALES',
-                            parentId: 0,
-                            gradeid: 2,
-                            directorId: 3,
-                            directorName: '销售总监',
-                            status: 1,
-                            employeeCount: 25,
-                            positionCount: 6,
-                            fiiale: '1',
-                            children: [
-                                {
-                                    id: 31,
-                                    name: '华北销售部',
-                                    depNo: 'SALES_N',
-                                    parentId: 3,
-                                    gradeid: 4,
-                                    directorId: 31,
-                                    directorName: '华北经理',
-                                    status: 1,
-                                    employeeCount: 12,
-                                    positionCount: 3,
-                                    fiiale: '',
-                                    children: []
-                                },
-                                {
-                                    id: 32,
-                                    name: '华南销售部',
-                                    depNo: 'SALES_S',
-                                    parentId: 3,
-                                    gradeid: 4,
-                                    directorId: 32,
-                                    directorName: '华南经理',
-                                    status: 1,
-                                    employeeCount: 13,
-                                    positionCount: 3,
-                                    fiiale: '',
-                                    children: []
-                                }
-                            ]
-                        }
-                    ];
-                    
-                    resolve({
-                        success: true,
-                        data: mockData
-                    });
-                }, 500);
+        // 选择部门
+        function selectDepartment(deptId) {
+            // 移除其他选中状态
+            document.querySelectorAll('.tree-item').forEach(item => {
+                item.classList.remove('active');
             });
-        }
-
-        // 渲染部门树
-        function renderDepartmentTree(data, container = null) {
-            if (!container) {
-                container = document.getElementById('departmentTree');
-            }
-
-            if (!data || data.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">📁</div>
-                        <div class="empty-text">暂无部门数据</div>
-                        <button class="btn-action btn-primary" onclick="showAddDepartmentModal()">新增部门</button>
-                    </div>
-                `;
-                return;
-            }
-
-            const html = data.map(dept => renderDepartmentNode(dept)).join('');
-            container.innerHTML = html;
-        }
-
-        // 渲染单个部门节点
-        function renderDepartmentNode(dept) {
-            const hasChildren = dept.children && dept.children.length > 0;
-            const isExpanded = expandedNodes.has(dept.id);
-            const expandClass = hasChildren ? (isExpanded ? 'expanded' : 'collapsed') : 'no-children';
-            const statusClass = dept.status === 1 ? 'status-enabled' : 'status-disabled';
-            const statusText = dept.status === 1 ? '启用' : '禁用';
-            const gradeNames = ['', '集团级', '公司级', '事业部级', '部门级', '科室级', '小组级', '班组级'];
-            const gradeName = gradeNames[dept.gradeid] || '未知';
-            const halfLevelMark = dept.isHalfLevel ? '<span class="half-level-mark">*</span>' : '';
-            const isFiliale = dept.fiiale === '1';
-
-            return `
-                <div class="tree-node" data-id="${dept.id}">
-                    <div class="tree-node-header">
-                        <div class="tree-node-content">
-                            <div class="tree-node-expand ${expandClass}" onclick="toggleNode(${dept.id})"></div>
-                            <div class="dept-info">
-                                <span class="dept-name">${dept.name}${halfLevelMark}</span>
-                                ${dept.depNo ? `<span class="dept-code">${dept.depNo}</span>` : ''}
-                                <span class="dept-level">${gradeName}</span>
-                                ${isFiliale ? '<span class="dept-level" style="background: #fff2e8; color: #fa8c16;">分公司</span>' : ''}
-                                <span class="dept-status ${statusClass}">${statusText}</span>
-                            </div>
-                        </div>
-                        <div class="dept-stats">
-                            <div class="stat-item">
-                                <span>👥</span>
-                                <span>${dept.employeeCount || 0}人</span>
-                            </div>
-                            <div class="stat-item">
-                                <span>💼</span>
-                                <span>${dept.positionCount || 0}岗</span>
-                            </div>
-                        </div>
-                        <div class="tree-actions">
-                            <button class="action-btn btn-manage" onclick="managePositions(${dept.id})" title="岗位管理">
-                                💼 岗位
-                            </button>
-                            <button class="action-btn btn-manage" onclick="manageEmployees(${dept.id})" title="人员管理">
-                                👥 人员
-                            </button>
-                            <button class="action-btn btn-edit" onclick="editDepartment(${dept.id})" title="编辑部门">
-                                ✏️ 编辑
-                            </button>
-                            <button class="action-btn btn-delete" onclick="deleteDepartment(${dept.id})" title="删除部门">
-                                🗑️ 删除
-                            </button>
-                        </div>
-                    </div>
-                    ${hasChildren ? `
-                        <div class="tree-children ${isExpanded ? 'expanded' : ''}" id="children-${dept.id}">
-                            ${dept.children.map(child => renderDepartmentNode(child)).join('')}
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        }
-
-        // 切换节点展开/折叠
-        function toggleNode(id) {
-            const childrenContainer = document.getElementById(`children-${id}`);
-            const expandButton = document.querySelector(`[data-id="${id}"] .tree-node-expand`);
             
-            if (!childrenContainer) return;
+            // 设置当前选中
+            event.target.closest('.tree-item').classList.add('active');
+            currentDept = deptId;
+            
+            // 显示部门详情
+            showDeptDetail();
+            hideDeptForm();
+        }
 
-            if (expandedNodes.has(id)) {
-                expandedNodes.delete(id);
-                childrenContainer.classList.remove('expanded');
-                expandButton.classList.remove('expanded');
-                expandButton.classList.add('collapsed');
+        // 显示部门详情
+        function showDeptDetail() {
+            document.getElementById('deptDetail').style.display = 'block';
+            document.getElementById('emptyState').style.display = 'none';
+        }
+
+        // 显示部门表单
+        function showDeptForm() {
+            document.getElementById('deptDetail').style.display = 'none';
+            document.getElementById('deptForm').style.display = 'block';
+            isFormMode = true;
+        }
+
+        // 隐藏部门表单
+        function hideDeptForm() {
+            document.getElementById('deptForm').style.display = 'none';
+            if (currentDept) {
+                document.getElementById('deptDetail').style.display = 'block';
             } else {
-                expandedNodes.add(id);
-                childrenContainer.classList.add('expanded');
-                expandButton.classList.remove('collapsed');
-                expandButton.classList.add('expanded');
+                document.getElementById('emptyState').style.display = 'block';
+            }
+            isFormMode = false;
+        }
+
+        // 切换树节点展开状态
+        function toggleTreeNode(element, event) {
+            event.stopPropagation();
+            
+            const treeItem = element.closest('.tree-node');
+            const children = treeItem.querySelector('.tree-children');
+            const expand = element;
+            
+            if (children) {
+                if (children.classList.contains('expanded')) {
+                    children.classList.remove('expanded');
+                    expand.classList.remove('expanded');
+                } else {
+                    children.classList.add('expanded');
+                    expand.classList.add('expanded');
+                }
             }
         }
 
-        // 展开所有节点
-        function expandAllNodes() {
-            const allNodes = document.querySelectorAll('.tree-node');
-            allNodes.forEach(node => {
-                const id = parseInt(node.dataset.id);
-                const childrenContainer = node.querySelector('.tree-children');
-                const expandButton = node.querySelector('.tree-node-expand');
+        // 展开所有部门
+        function expandAllDepts() {
+            document.querySelectorAll('.tree-children').forEach(children => {
+                children.classList.add('expanded');
+            });
+            document.querySelectorAll('.tree-expand').forEach(expand => {
+                expand.classList.add('expanded');
+            });
+            Message.success('已展开所有部门');
+        }
+
+        // 收起所有部门
+        function collapseAllDepts() {
+            document.querySelectorAll('.tree-children').forEach(children => {
+                children.classList.remove('expanded');
+            });
+            document.querySelectorAll('.tree-expand').forEach(expand => {
+                expand.classList.remove('expanded');
+            });
+            Message.success('已收起所有部门');
+        }
+
+        // 搜索部门
+        function searchDepartment(keyword) {
+            const treeNodes = document.querySelectorAll('.tree-item');
+            
+            treeNodes.forEach(node => {
+                const title = node.querySelector('.tree-title').textContent;
+                const parent = node.closest('.tree-node');
                 
-                if (childrenContainer && !expandButton.classList.contains('no-children')) {
-                    expandedNodes.add(id);
-                    childrenContainer.classList.add('expanded');
-                    expandButton.classList.remove('collapsed');
-                    expandButton.classList.add('expanded');
+                if (keyword === '' || title.toLowerCase().includes(keyword.toLowerCase())) {
+                    parent.style.display = 'block';
+                } else {
+                    parent.style.display = 'none';
                 }
             });
         }
 
-        // 折叠所有节点
-        function collapseAllNodes() {
-            expandedNodes.clear();
-            const childrenContainers = document.querySelectorAll('.tree-children');
-            const expandButtons = document.querySelectorAll('.tree-node-expand:not(.no-children)');
+        // 新增部门
+        function showAddDeptForm() {
+            currentDept = null;
+            showDeptForm();
             
-            childrenContainers.forEach(container => {
-                container.classList.remove('expanded');
+            // 清空表单
+            document.querySelectorAll('.form-input').forEach(input => {
+                input.value = '';
+            });
+            document.querySelectorAll('.form-select').forEach(select => {
+                select.selectedIndex = 0;
             });
             
-            expandButtons.forEach(button => {
-                button.classList.remove('expanded');
-                button.classList.add('collapsed');
-            });
+            document.querySelector('.dept-form h3').textContent = '新增部门';
         }
 
-        // 搜索过滤部门
-        function filterDepartments(keyword) {
-            if (!keyword.trim()) {
-                renderDepartmentTree(departmentData);
-                return;
+        // 新增子部门
+        function addSubDept(parentId, event) {
+            event.stopPropagation();
+            showAddDeptForm();
+            
+            // 设置父部门
+            const parentSelect = document.querySelector('select[placeholder="请选择上级部门"]');
+            if (parentSelect) {
+                parentSelect.value = parentId;
             }
-
-            const filtered = filterDepartmentData(departmentData, keyword.toLowerCase());
-            renderDepartmentTree(filtered);
-        }
-
-        // 递归过滤部门数据
-        function filterDepartmentData(data, keyword) {
-            return data.filter(dept => {
-                const matches = dept.name.toLowerCase().includes(keyword) ||
-                              (dept.depNo && dept.depNo.toLowerCase().includes(keyword)) ||
-                              (dept.directorName && dept.directorName.toLowerCase().includes(keyword));
-                
-                if (matches) {
-                    return true;
-                }
-                
-                if (dept.children && dept.children.length > 0) {
-                    const filteredChildren = filterDepartmentData(dept.children, keyword);
-                    if (filteredChildren.length > 0) {
-                        dept.children = filteredChildren;
-                        return true;
-                    }
-                }
-                
-                return false;
-            });
-        }
-
-        // 显示新增部门模态框
-        function showAddDepartmentModal(parentId = null) {
-            currentEditId = null;
-            document.getElementById('modalTitle').textContent = '新增部门';
             
-            // 重置表单
-            document.getElementById('departmentForm').reset();
-            document.getElementById('sortOrder').value = '0';
-            
-            // 加载上级部门选项
-            loadParentDepartmentOptions(parentId);
-            
-            // 显示模态框
-            document.getElementById('departmentModal').classList.add('show');
+            Message.info('正在创建子部门...');
         }
 
         // 编辑部门
-        function editDepartment(id) {
-            currentEditId = id;
-            document.getElementById('modalTitle').textContent = '编辑部门';
-            
-            // 查找部门数据
-            const dept = findDepartmentById(departmentData, id);
-            if (!dept) {
-                showError('部门数据不存在');
-                return;
-            }
-            
-            // 填充表单数据
-            document.getElementById('deptName').value = dept.name || '';
-            document.getElementById('deptCode').value = dept.depNo || '';
-            document.getElementById('deptGrade').value = dept.gradeid || '7';
-            document.getElementById('deptDirector').value = dept.directorId || '';
-            document.getElementById('deptTel').value = dept.tel || '';
-            document.getElementById('deptAddress').value = dept.address || '';
-            document.getElementById('deptDescription').value = dept.description || '';
-            document.getElementById('isFiliale').value = dept.fiiale || '';
-            document.getElementById('sortOrder').value = dept.sortOrder || '0';
-            
-            // 加载上级部门选项
-            loadParentDepartmentOptions(dept.parentId, id);
-            
-            // 显示模态框
-            document.getElementById('departmentModal').classList.add('show');
-        }
-
-        // 递归查找部门
-        function findDepartmentById(data, id) {
-            for (const dept of data) {
-                if (dept.id === id) {
-                    return dept;
-                }
-                if (dept.children && dept.children.length > 0) {
-                    const found = findDepartmentById(dept.children, id);
-                    if (found) return found;
-                }
-            }
-            return null;
-        }
-
-        // 加载上级部门选项
-        function loadParentDepartmentOptions(selectedId = null, excludeId = null) {
-            const select = document.getElementById('parentDept');
-            select.innerHTML = '<option value="">请选择上级部门</option>';
-            
-            function addOptions(data, level = 0) {
-                data.forEach(dept => {
-                    if (excludeId && dept.id === excludeId) return;
-                    
-                    const prefix = '　'.repeat(level);
-                    const option = document.createElement('option');
-                    option.value = dept.id;
-                    option.textContent = prefix + dept.name;
-                    if (selectedId && dept.id === selectedId) {
-                        option.selected = true;
-                    }
-                    select.appendChild(option);
-                    
-                    if (dept.children && dept.children.length > 0) {
-                        addOptions(dept.children, level + 1);
-                    }
-                });
-            }
-            
-            addOptions(departmentData);
-        }
-
-        // 保存部门
-        async function saveDepartment() {
-            const form = document.getElementById('departmentForm');
-            if (!form.checkValidity()) {
-                showError('请填写必填字段');
-                return;
-            }
-
-            const formData = {
-                name: document.getElementById('deptName').value,
-                depNo: document.getElementById('deptCode').value,
-                parentId: document.getElementById('parentDept').value || 0,
-                gradeid: parseInt(document.getElementById('deptGrade').value),
-                directorId: document.getElementById('deptDirector').value || null,
-                tel: document.getElementById('deptTel').value,
-                address: document.getElementById('deptAddress').value,
-                description: document.getElementById('deptDescription').value,
-                fiiale: document.getElementById('isFiliale').value,
-                sortOrder: parseInt(document.getElementById('sortOrder').value) || 0
-            };
-
-            try {
-                // 模拟API调用
-                const url = currentEditId ? 
-                    `/api/organization/department/${currentEditId}` : 
-                    '/api/organization/department';
-                const method = currentEditId ? 'PUT' : 'POST';
-                
-                const response = await mockApiCall(url, {
-                    method,
-                    body: JSON.stringify(formData)
-                });
-
-                if (response.success) {
-                    showSuccess(currentEditId ? '部门更新成功' : '部门创建成功');
-                    closeDepartmentModal();
-                    loadDepartmentData(); // 重新加载数据
-                } else {
-                    showError(response.message || '操作失败');
-                }
-            } catch (error) {
-                console.error('保存部门失败:', error);
-                showError('保存失败，请重试');
-            }
+        function editDept(deptId, event) {
+            event.stopPropagation();
+            currentDept = deptId;
+            showDeptForm();
+            document.querySelector('.dept-form h3').textContent = '编辑部门';
         }
 
         // 删除部门
-        function deleteDepartment(id) {
-            const dept = findDepartmentById(departmentData, id);
-            if (!dept) {
-                showError('部门数据不存在');
-                return;
-            }
-
-            currentDeleteId = id;
-            const hasChildren = dept.children && dept.children.length > 0;
-            const message = hasChildren ? 
-                `确定要删除部门"${dept.name}"吗？删除后将同时删除所有子部门，此操作不可恢复。` :
-                `确定要删除部门"${dept.name}"吗？此操作不可恢复。`;
+        function deleteDept(deptId, event) {
+            event.stopPropagation();
             
-            document.getElementById('deleteMessage').textContent = message;
-            document.getElementById('deleteModal').classList.add('show');
+            Modal.confirm({
+                title: '删除确认',
+                content: '确定要删除该部门吗？删除后将同时删除所有子部门，此操作不可恢复。',
+                onConfirm: () => {
+                    Message.success('部门删除成功');
+                    // 这里添加实际的删除逻辑
+                },
+                onCancel: () => {
+                    Message.info('已取消删除');
+                }
+            });
         }
 
-        // 确认删除
-        async function confirmDelete() {
-            if (!currentDeleteId) return;
-
-            try {
-                const response = await mockApiCall(`/api/organization/department/${currentDeleteId}`, {
-                    method: 'DELETE'
-                });
-
-                if (response.success) {
-                    showSuccess('部门删除成功');
-                    closeDeleteModal();
-                    loadDepartmentData(); // 重新加载数据
+        // 保存部门
+        function saveDept() {
+            // 验证表单
+            const requiredFields = document.querySelectorAll('.form-label.required');
+            let isValid = true;
+            
+            requiredFields.forEach(label => {
+                const input = label.parentNode.querySelector('.form-input, .form-select');
+                if (!input.value.trim()) {
+                    input.style.borderColor = 'var(--error-color)';
+                    isValid = false;
                 } else {
-                    showError(response.message || '删除失败');
+                    input.style.borderColor = 'var(--border-color)';
                 }
-            } catch (error) {
-                console.error('删除部门失败:', error);
-                showError('删除失败，请重试');
+            });
+            
+            if (!isValid) {
+                Message.error('请填写必填字段');
+                return;
             }
+            
+            Message.success('部门保存成功');
+            hideDeptForm();
         }
 
         // 岗位管理
-        function managePositions(id) {
-            const dept = findDepartmentById(departmentData, id);
-            if (dept) {
-                window.location.href = `position-manage.html?deptId=${id}&deptName=${encodeURIComponent(dept.name)}`;
-            }
+        function manageDeptPositions() {
+            Message.info('跳转到岗位管理页面...');
+            // window.location.href = 'position-manage.html?deptId=' + currentDept;
         }
 
         // 人员管理
-        function manageEmployees(id) {
-            const dept = findDepartmentById(departmentData, id);
-            if (dept) {
-                window.location.href = `employee-list.html?deptId=${id}&deptName=${encodeURIComponent(dept.name)}`;
-            }
+        function manageDeptPersonnel() {
+            Message.info('跳转到人员管理页面...');
+            // window.location.href = 'employee-list.html?deptId=' + currentDept;
         }
 
-        // 导入部门
-        function showImportModal() {
-            document.getElementById('importModal').classList.add('show');
+        // 新增岗位
+        function addPosition() {
+            Message.info('跳转到新增岗位页面...');
         }
 
-        function importDepartments() {
-            const fileInput = document.getElementById('importFile');
-            const file = fileInput.files[0];
-            
-            if (!file) {
-                showError('请选择要导入的文件');
-                return;
-            }
-
-            // 这里应该实现文件上传和解析逻辑
-            showInfo('导入功能开发中...');
+        // 管理岗位
+        function managePosition(positionId) {
+            Message.info(`管理岗位 ${positionId}...`);
         }
 
-        function downloadTemplate() {
-            // 创建模板数据
-            const templateData = 'data:text/csv;charset=utf-8,部门名称,部门编号,上级部门编号,部门等级,联系电话,办公地址,是否分公司\n示例部门,DEMO,CEO,4,010-12345678,北京市朝阳区,否';
-            
-            // 创建下载链接
-            const link = document.createElement('a');
-            link.href = templateData;
-            link.download = '部门导入模板.csv';
-            link.click();
+        // 编辑岗位
+        function editPosition(positionId) {
+            Message.info(`编辑岗位 ${positionId}...`);
         }
 
-        // 导出部门
-        function exportDepartments() {
-            // 模拟导出功能
-            showInfo('正在导出部门数据...');
-            
-            setTimeout(() => {
-                showSuccess('导出完成');
-            }, 1000);
-        }
-
-        // 关闭模态框
-        function closeDepartmentModal() {
-            document.getElementById('departmentModal').classList.remove('show');
-            currentEditId = null;
-        }
-
-        function closeImportModal() {
-            document.getElementById('importModal').classList.remove('show');
-            document.getElementById('importFile').value = '';
-        }
-
-        function closeDeleteModal() {
-            document.getElementById('deleteModal').classList.remove('show');
-            currentDeleteId = null;
-        }
-
-        // 工具函数
-        function showLoading() {
-            document.getElementById('loadingState').style.display = 'block';
-        }
-
-        function hideLoading() {
-            document.getElementById('loadingState').style.display = 'none';
-        }
-
-        function showSuccess(message) {
-            Message.success(message);
-        }
-
-        function showError(message) {
-            Message.error(message);
-        }
-
-        function showInfo(message) {
-            Message.info(message);
-        }
-
-        // 点击模态框外部关闭
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('modal')) {
-                e.target.classList.remove('show');
-            }
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 默认选中第一个部门
+            currentDept = 1;
+            showDeptDetail();
         });
     </script>
 </body>
-</html> 
+</html>

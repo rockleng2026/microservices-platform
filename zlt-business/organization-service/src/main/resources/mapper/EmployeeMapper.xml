@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.organization.mapper.EmployeeMapper">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="baseResultMap" type="com.central.organization.model.Employee">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="emp_no" property="empNo" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="name_en" property="nameEn" jdbcType="VARCHAR"/>
+        <result column="gender" property="gender" jdbcType="TINYINT"/>
+        <result column="birth_date" property="birthDate" jdbcType="DATE"/>
+        <result column="id_card" property="idCard" jdbcType="VARCHAR"/>
+        <result column="mobile" property="mobile" jdbcType="VARCHAR"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="avatar" property="avatar" jdbcType="VARCHAR"/>
+        <result column="department_id" property="departmentId" jdbcType="BIGINT"/>
+        <result column="department_name" property="departmentName" jdbcType="VARCHAR"/>
+        <result column="position_id" property="positionId" jdbcType="BIGINT"/>
+        <result column="position_name" property="positionName" jdbcType="VARCHAR"/>
+        <result column="secondary_position_ids" property="secondaryPositionIds" jdbcType="VARCHAR"/>
+        <result column="grade_id" property="gradeId" jdbcType="BIGINT"/>
+        <result column="employment_type" property="employmentType" jdbcType="TINYINT"/>
+        <result column="employment_status" property="employmentStatus" jdbcType="TINYINT"/>
+        <result column="entry_date" property="entryDate" jdbcType="DATE"/>
+        <result column="probation_end_date" property="probationEndDate" jdbcType="DATE"/>
+        <result column="regularization_date" property="regularizationDate" jdbcType="DATE"/>
+        <result column="leave_date" property="leaveDate" jdbcType="DATE"/>
+        <result column="leave_reason" property="leaveReason" jdbcType="VARCHAR"/>
+        <result column="work_years" property="workYears" jdbcType="INTEGER"/>
+        <result column="education_level" property="educationLevel" jdbcType="TINYINT"/>
+        <result column="graduation_school" property="graduationSchool" jdbcType="VARCHAR"/>
+        <result column="major" property="major" jdbcType="VARCHAR"/>
+        <result column="marital_status" property="maritalStatus" jdbcType="TINYINT"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
+        <result column="emergency_contact" property="emergencyContact" jdbcType="VARCHAR"/>
+        <result column="emergency_phone" property="emergencyPhone" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="delflag" property="delflag" jdbcType="TINYINT"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
+        <result column="updated_by" property="updatedBy" jdbcType="BIGINT"/>
+        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 详细信息结果映射 -->
+    <resultMap id="voResultMap" type="com.central.organization.model.vo.EmployeeVO">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="emp_no" property="empNo" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="name_en" property="nameEn" jdbcType="VARCHAR"/>
+        <result column="gender" property="gender" jdbcType="TINYINT"/>
+        <result column="birth_date" property="birthDate" jdbcType="DATE"/>
+        <result column="id_card" property="idCard" jdbcType="VARCHAR"/>
+        <result column="mobile" property="mobile" jdbcType="VARCHAR"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="avatar" property="avatar" jdbcType="VARCHAR"/>
+        <result column="department_id" property="departmentId" jdbcType="BIGINT"/>
+        <result column="department_name" property="departmentName" jdbcType="VARCHAR"/>
+        <result column="position_id" property="positionId" jdbcType="BIGINT"/>
+        <result column="position_name" property="positionName" jdbcType="VARCHAR"/>
+        <result column="secondary_position_ids" property="secondaryPositionIds" jdbcType="VARCHAR"/>
+        <result column="grade_id" property="gradeId" jdbcType="BIGINT"/>
+        <result column="grade_name" property="gradeName" jdbcType="VARCHAR"/>
+        <result column="employment_type" property="employmentType" jdbcType="TINYINT"/>
+        <result column="employment_status" property="employmentStatus" jdbcType="TINYINT"/>
+        <result column="entry_date" property="entryDate" jdbcType="DATE"/>
+        <result column="probation_end_date" property="probationEndDate" jdbcType="DATE"/>
+        <result column="regularization_date" property="regularizationDate" jdbcType="DATE"/>
+        <result column="leave_date" property="leaveDate" jdbcType="DATE"/>
+        <result column="leave_reason" property="leaveReason" jdbcType="VARCHAR"/>
+        <result column="work_years" property="workYears" jdbcType="INTEGER"/>
+        <result column="education_level" property="educationLevel" jdbcType="TINYINT"/>
+        <result column="graduation_school" property="graduationSchool" jdbcType="VARCHAR"/>
+        <result column="major" property="major" jdbcType="VARCHAR"/>
+        <result column="marital_status" property="maritalStatus" jdbcType="TINYINT"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
+        <result column="emergency_contact" property="emergencyContact" jdbcType="VARCHAR"/>
+        <result column="emergency_phone" property="emergencyPhone" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="age" property="age" jdbcType="INTEGER"/>
+        <result column="work_days" property="workDays" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
+        <result column="creator_name" property="creatorName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="baseColumns">
+        e.id, e.emp_no, e.name, e.name_en, e.gender, e.birth_date, e.id_card, e.mobile, e.email, e.avatar,
+        e.department_id, e.department_name, e.position_id, e.position_name, e.secondary_position_ids, e.grade_id,
+        e.employment_type, e.employment_status, e.entry_date, e.probation_end_date, e.regularization_date,
+        e.leave_date, e.leave_reason, e.work_years, e.education_level, e.graduation_school, e.major,
+        e.marital_status, e.address, e.emergency_contact, e.emergency_phone, e.description,
+        e.status, e.delflag, e.created_at, e.updated_at, e.created_by, e.updated_by, e.tenant_id
+    </sql>
+
+    <!-- 详细信息字段 -->
+    <sql id="voColumns">
+        e.id, e.emp_no, e.name, e.name_en, e.gender, e.birth_date, e.id_card, e.mobile, e.email, e.avatar,
+        e.department_id, e.department_name, e.position_id, e.position_name, e.secondary_position_ids, e.grade_id,
+        e.employment_type, e.employment_status, e.entry_date, e.probation_end_date, e.regularization_date,
+        e.leave_date, e.leave_reason, e.work_years, e.education_level, e.graduation_school, e.major,
+        e.marital_status, e.address, e.emergency_contact, e.emergency_phone, e.description,
+        e.status, e.created_at, e.updated_at, e.created_by,
+        eg.grade_name,
+        TIMESTAMPDIFF(YEAR, e.birth_date, CURDATE()) AS age,
+        TIMESTAMPDIFF(DAY, e.entry_date, CURDATE()) AS work_days,
+        creator.name AS creator_name
+    </sql>
+
+    <!-- 查询条件 -->
+    <sql id="whereConditions">
+        <where>
+            e.delflag = 0
+            <if test="query.keyword != null and query.keyword != ''">
+                AND (e.name LIKE CONCAT('%', #{query.keyword}, '%')
+                OR e.emp_no LIKE CONCAT('%', #{query.keyword}, '%')
+                OR e.mobile LIKE CONCAT('%', #{query.keyword}, '%'))
+            </if>
+            <if test="query.departmentId != null">
+                AND e.department_id = #{query.departmentId}
+            </if>
+            <if test="query.departmentIds != null and query.departmentIds.size() > 0">
+                AND e.department_id IN
+                <foreach collection="query.departmentIds" item="deptId" open="(" separator="," close=")">
+                    #{deptId}
+                </foreach>
+            </if>
+            <if test="query.positionId != null">
+                AND e.position_id = #{query.positionId}
+            </if>
+            <if test="query.gradeId != null">
+                AND e.grade_id = #{query.gradeId}
+            </if>
+            <if test="query.employmentType != null">
+                AND e.employment_type = #{query.employmentType}
+            </if>
+            <if test="query.employmentStatus != null">
+                AND e.employment_status = #{query.employmentStatus}
+            </if>
+            <if test="query.gender != null">
+                AND e.gender = #{query.gender}
+            </if>
+            <if test="query.educationLevel != null">
+                AND e.education_level = #{query.educationLevel}
+            </if>
+            <if test="query.status != null">
+                AND e.status = #{query.status}
+            </if>
+            <if test="query.entryDateStart != null">
+                AND e.entry_date >= #{query.entryDateStart}
+            </if>
+            <if test="query.entryDateEnd != null">
+                AND e.entry_date &lt;= #{query.entryDateEnd}
+            </if>
+        </where>
+    </sql>
+
+    <!-- 根据ID查询员工 -->
+    <select id="selectById" resultMap="baseResultMap">
+        SELECT
+        <include refid="baseColumns"/>
+        FROM employee e
+        WHERE e.id = #{id} AND e.delflag = 0
+    </select>
+
+    <!-- 根据ID查询员工详细信息 -->
+    <select id="selectDetailById" resultMap="voResultMap">
+        SELECT
+        <include refid="voColumns"/>
+        FROM employee e
+        LEFT JOIN employee_grade eg ON e.grade_id = eg.id
+        LEFT JOIN employee creator ON e.created_by = creator.id
+        WHERE e.id = #{id} AND e.delflag = 0
+    </select>
+
+    <!-- 根据员工编号查询员工 -->
+    <select id="selectByEmpNo" resultMap="baseResultMap">
+        SELECT
+        <include refid="baseColumns"/>
+        FROM employee e
+        WHERE e.emp_no = #{empNo} AND e.delflag = 0
+    </select>
+
+    <!-- 根据手机号查询员工 -->
+    <select id="selectByMobile" resultMap="baseResultMap">
+        SELECT
+        <include refid="baseColumns"/>
+        FROM employee e
+        WHERE e.mobile = #{mobile} AND e.delflag = 0
+    </select>
+
+    <!-- 根据身份证号查询员工 -->
+    <select id="selectByIdCard" resultMap="baseResultMap">
+        SELECT
+        <include refid="baseColumns"/>
+        FROM employee e
+        WHERE e.id_card = #{idCard} AND e.delflag = 0
+    </select>
+
+    <!-- 分页查询员工列表 -->
+    <select id="selectPageList" resultMap="voResultMap">
+        SELECT
+        <include refid="voColumns"/>
+        FROM employee e
+        LEFT JOIN employee_grade eg ON e.grade_id = eg.id
+        LEFT JOIN employee creator ON e.created_by = creator.id
+        <include refid="whereConditions"/>
+        ORDER BY
+        <choose>
+            <when test="query.sortField != null and query.sortField != ''">
+                ${query.sortField}
+                <if test="query.sortOrder != null and query.sortOrder != ''">
+                    ${query.sortOrder}
+                </if>
+            </when>
+            <otherwise>
+                e.entry_date DESC, e.created_at DESC
+            </otherwise>
+        </choose>
+        <if test="query.pageSize != null and query.pageSize > 0">
+            LIMIT #{query.offset}, #{query.pageSize}
+        </if>
+    </select>
+
+    <!-- 查询员工总数 -->
+    <select id="selectCount" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM employee e
+        <include refid="whereConditions"/>
+    </select>
+
+    <!-- 根据部门ID查询员工列表 -->
+    <select id="selectByDepartmentId" resultMap="voResultMap">
+        SELECT
+        <include refid="voColumns"/>
+        FROM employee e
+        LEFT JOIN employee_grade eg ON e.grade_id = eg.id
+        LEFT JOIN employee creator ON e.created_by = creator.id
+        WHERE e.delflag = 0
+        <choose>
+            <when test="includeSubDept != null and includeSubDept == true">
+                AND e.department_id IN (
+                    WITH RECURSIVE dept_tree AS (
+                        SELECT id FROM department WHERE id = #{departmentId}
+                        UNION ALL
+                        SELECT d.id FROM department d
+                        INNER JOIN dept_tree dt ON d.parent_id = dt.id
+                    )
+                    SELECT id FROM dept_tree
+                )
+            </when>
+            <otherwise>
+                AND e.department_id = #{departmentId}
+            </otherwise>
+        </choose>
+        ORDER BY e.entry_date DESC
+    </select>
+
+    <!-- 根据岗位ID查询员工列表 -->
+    <select id="selectByPositionId" resultMap="voResultMap">
+        SELECT
+        <include refid="voColumns"/>
+        FROM employee e
+        LEFT JOIN employee_grade eg ON e.grade_id = eg.id
+        LEFT JOIN employee creator ON e.created_by = creator.id
+        WHERE e.delflag = 0
+        AND (e.position_id = #{positionId}
+        OR FIND_IN_SET(#{positionId}, e.secondary_position_ids) > 0)
+        ORDER BY e.entry_date DESC
+    </select>
+
+    <!-- 查询部门下的在职员工数量 -->
+    <select id="countActiveByDepartmentId" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM employee
+        WHERE department_id = #{departmentId}
+        AND employment_status = 1
+        AND delflag = 0
+    </select>
+
+    <!-- 查询岗位下的在职员工数量 -->
+    <select id="countActiveByPositionId" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM employee
+        WHERE (position_id = #{positionId}
+        OR FIND_IN_SET(#{positionId}, secondary_position_ids) > 0)
+        AND employment_status = 1
+        AND delflag = 0
+    </select>
+
+    <!-- 查询即将到期的试用期员工 -->
+    <select id="selectProbationExpiring" resultMap="voResultMap">
+        SELECT
+        <include refid="voColumns"/>
+        FROM employee e
+        LEFT JOIN employee_grade eg ON e.grade_id = eg.id
+        LEFT JOIN employee creator ON e.created_by = creator.id
+        WHERE e.delflag = 0
+        AND e.employment_status = 2
+        AND e.probation_end_date IS NOT NULL
+        AND DATEDIFF(e.probation_end_date, CURDATE()) BETWEEN 0 AND #{days}
+        ORDER BY e.probation_end_date ASC
+    </select>
+
+    <!-- 查询员工生日列表 -->
+    <select id="selectBirthdayList" resultMap="voResultMap">
+        SELECT
+        <include refid="voColumns"/>
+        FROM employee e
+        LEFT JOIN employee_grade eg ON e.grade_id = eg.id
+        LEFT JOIN employee creator ON e.created_by = creator.id
+        WHERE e.delflag = 0
+        AND e.employment_status = 1
+        AND e.birth_date IS NOT NULL
+        <if test="month != null">
+            AND MONTH(e.birth_date) = #{month}
+        </if>
+        ORDER BY DAY(e.birth_date) ASC
+    </select>
+
+    <!-- 新增员工 -->
+    <insert id="insert" parameterType="com.central.organization.model.Employee" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO employee (
+            emp_no, name, name_en, gender, birth_date, id_card, mobile, email, avatar,
+            department_id, department_name, position_id, position_name, secondary_position_ids, grade_id,
+            employment_type, employment_status, entry_date, probation_end_date, regularization_date,
+            leave_date, leave_reason, work_years, education_level, graduation_school, major,
+            marital_status, address, emergency_contact, emergency_phone, description,
+            status, delflag, created_at, updated_at, created_by, updated_by, tenant_id
+        ) VALUES (
+            #{empNo}, #{name}, #{nameEn}, #{gender}, #{birthDate}, #{idCard}, #{mobile}, #{email}, #{avatar},
+            #{departmentId}, #{departmentName}, #{positionId}, #{positionName}, #{secondaryPositionIds}, #{gradeId},
+            #{employmentType}, #{employmentStatus}, #{entryDate}, #{probationEndDate}, #{regularizationDate},
+            #{leaveDate}, #{leaveReason}, #{workYears}, #{educationLevel}, #{graduationSchool}, #{major},
+            #{maritalStatus}, #{address}, #{emergencyContact}, #{emergencyPhone}, #{description},
+            #{status}, #{delflag}, #{createdAt}, #{updatedAt}, #{createdBy}, #{updatedBy}, #{tenantId}
+        )
+    </insert>
+
+    <!-- 更新员工信息 -->
+    <update id="updateById" parameterType="com.central.organization.model.Employee">
+        UPDATE employee
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="nameEn != null">name_en = #{nameEn},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="birthDate != null">birth_date = #{birthDate},</if>
+            <if test="idCard != null">id_card = #{idCard},</if>
+            <if test="mobile != null">mobile = #{mobile},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="departmentId != null">department_id = #{departmentId},</if>
+            <if test="departmentName != null">department_name = #{departmentName},</if>
+            <if test="positionId != null">position_id = #{positionId},</if>
+            <if test="positionName != null">position_name = #{positionName},</if>
+            <if test="secondaryPositionIds != null">secondary_position_ids = #{secondaryPositionIds},</if>
+            <if test="gradeId != null">grade_id = #{gradeId},</if>
+            <if test="employmentType != null">employment_type = #{employmentType},</if>
+            <if test="employmentStatus != null">employment_status = #{employmentStatus},</if>
+            <if test="entryDate != null">entry_date = #{entryDate},</if>
+            <if test="probationEndDate != null">probation_end_date = #{probationEndDate},</if>
+            <if test="regularizationDate != null">regularization_date = #{regularizationDate},</if>
+            <if test="leaveDate != null">leave_date = #{leaveDate},</if>
+            <if test="leaveReason != null">leave_reason = #{leaveReason},</if>
+            <if test="workYears != null">work_years = #{workYears},</if>
+            <if test="educationLevel != null">education_level = #{educationLevel},</if>
+            <if test="graduationSchool != null">graduation_school = #{graduationSchool},</if>
+            <if test="major != null">major = #{major},</if>
+            <if test="maritalStatus != null">marital_status = #{maritalStatus},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="emergencyContact != null">emergency_contact = #{emergencyContact},</if>
+            <if test="emergencyPhone != null">emergency_phone = #{emergencyPhone},</if>
+            <if test="description != null">description = #{description},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updatedBy != null">updated_by = #{updatedBy},</if>
+            updated_at = NOW()
+        </set>
+        WHERE id = #{id} AND delflag = 0
+    </update>
+
+    <!-- 更新员工状态 -->
+    <update id="updateStatus">
+        UPDATE employee
+        SET status = #{status}, updated_at = NOW()
+        WHERE id = #{id} AND delflag = 0
+    </update>
+
+    <!-- 更新员工在职状态 -->
+    <update id="updateEmploymentStatus">
+        UPDATE employee
+        SET employment_status = #{employmentStatus}, updated_at = NOW()
+        WHERE id = #{id} AND delflag = 0
+    </update>
+
+    <!-- 批量更新员工部门 -->
+    <update id="batchUpdateDepartment">
+        UPDATE employee
+        SET department_id = #{departmentId},
+        department_name = #{departmentName},
+        updated_at = NOW()
+        WHERE id IN
+        <foreach collection="employeeIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND delflag = 0
+    </update>
+
+    <!-- 批量更新员工岗位 -->
+    <update id="batchUpdatePosition">
+        UPDATE employee
+        SET position_id = #{positionId},
+        position_name = #{positionName},
+        updated_at = NOW()
+        WHERE id IN
+        <foreach collection="employeeIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND delflag = 0
+    </update>
+
+    <!-- 软删除员工 -->
+    <update id="deleteById">
+        UPDATE employee
+        SET delflag = 1, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <!-- 批量软删除员工 -->
+    <update id="batchDelete">
+        UPDATE employee
+        SET delflag = 1, updated_at = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- 生成下一个员工编号 -->
+    <select id="generateNextEmpNo" resultType="java.lang.String">
+        SELECT CONCAT(#{prefix}, #{year}, LPAD(IFNULL(MAX(CAST(SUBSTRING(emp_no, LENGTH(#{prefix}) + 5) AS UNSIGNED)), 0) + 1, 4, '0'))
+        FROM employee
+        WHERE emp_no LIKE CONCAT(#{prefix}, #{year}, '%')
+        AND delflag = 0
+    </select>
+
+    <!-- 检查员工编号是否存在 -->
+    <select id="existsEmpNo" resultType="java.lang.Boolean">
+        SELECT COUNT(1) > 0
+        FROM employee
+        WHERE emp_no = #{empNo}
+        AND delflag = 0
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+
+    <!-- 检查手机号是否存在 -->
+    <select id="existsMobile" resultType="java.lang.Boolean">
+        SELECT COUNT(1) > 0
+        FROM employee
+        WHERE mobile = #{mobile}
+        AND delflag = 0
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+
+    <!-- 检查身份证号是否存在 -->
+    <select id="existsIdCard" resultType="java.lang.Boolean">
+        SELECT COUNT(1) > 0
+        FROM employee
+        WHERE id_card = #{idCard}
+        AND delflag = 0
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+
+    <!-- 获取员工统计信息 -->
+    <select id="getStatistics" resultType="map">
+        SELECT
+        COUNT(1) AS totalCount,
+        COUNT(CASE WHEN employment_status = 1 THEN 1 END) AS activeCount,
+        COUNT(CASE WHEN employment_status = 2 THEN 1 END) AS probationCount,
+        COUNT(CASE WHEN employment_status = 3 THEN 1 END) AS leaveCount,
+        COUNT(CASE WHEN DATE_FORMAT(entry_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m') THEN 1 END) AS thisMonthJoinCount,
+        COUNT(CASE WHEN DATE_FORMAT(leave_date, '%Y-%m') = DATE_FORMAT(NOW(), '%Y-%m') AND employment_status = 3 THEN 1 END) AS thisMonthLeaveCount
+        FROM employee
+        WHERE delflag = 0
+    </select>
+
+    <!-- 获取部门员工分布统计 -->
+    <select id="getDepartmentDistribution" resultType="map">
+        SELECT
+        e.department_id AS departmentId,
+        e.department_name AS departmentName,
+        COUNT(1) AS employeeCount,
+        COUNT(CASE WHEN e.employment_status = 1 THEN 1 END) AS activeCount,
+        COUNT(CASE WHEN e.employment_status = 2 THEN 1 END) AS probationCount
+        FROM employee e
+        WHERE e.delflag = 0
+        GROUP BY e.department_id, e.department_name
+        ORDER BY employeeCount DESC
+    </select>
+
+</mapper> 

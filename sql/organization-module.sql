@@ -40,7 +40,7 @@ CREATE TABLE `tenant` (
 
 -- 租户配置表
 CREATE TABLE `tenant_config` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `tenant_id` varchar(32) NOT NULL COMMENT '租户ID',
   `config_key` varchar(100) NOT NULL COMMENT '配置键',
   `config_value` text COMMENT '配置值',
@@ -58,13 +58,13 @@ CREATE TABLE `tenant_config` (
 
 -- 部门表（复用原表结构，添加微服务字段）
 CREATE TABLE `department` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '部门ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '部门ID',
   `name` varchar(128) NOT NULL COMMENT '部门名称',
-  `directorId` int(11) COMMENT '部门主管ID',
-  `parentId` int(11) DEFAULT 0 COMMENT '父部门ID',
+  `directorId` bigint(20) COMMENT '部门主管ID',
+  `parentId` bigint(20) DEFAULT 0 COMMENT '父部门ID',
   `depNo` varchar(10) COMMENT '部门编号',
-  `gradeid` int(11) DEFAULT 7 COMMENT '部门等级(1-7级)',
-  `islevel` int(10) COMMENT '部门级别',
+  `gradeid` tinyint(1) DEFAULT 7 COMMENT '部门等级(1-7级)',
+  `islevel` tinyint(1) COMMENT '部门级别',
   `fiiale` varchar(11) COMMENT '是否为分公司(1是,空否)',
   `filialemark` varchar(100) COMMENT '分公司标识',
   `tel` varchar(50) COMMENT '电话',
@@ -77,8 +77,8 @@ CREATE TABLE `department` (
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `tenant_id` varchar(32) DEFAULT 'default' COMMENT '租户ID',
-  `created_by` int(11) COMMENT '创建人',
-  `updated_by` int(11) COMMENT '更新人',
+  `created_by` bigint(20) COMMENT '创建人',
+  `updated_by` bigint(20) COMMENT '更新人',
   PRIMARY KEY (`id`),
   KEY `idx_parent_id` (`parentId`),
   KEY `idx_director_id` (`directorId`),
@@ -88,11 +88,11 @@ CREATE TABLE `department` (
 
 -- 部门等级配置表（基于原department_grade表）
 CREATE TABLE `department_grade` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '部门级别ID',
-  `dg_num` tinyint(4) NOT NULL COMMENT '部门等级数字(1-7)',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '部门级别ID',
+  `dg_num` tinyint(1) NOT NULL COMMENT '部门等级数字(1-7)',
   `dg_name` varchar(32) NOT NULL COMMENT '部门等级名称',
   `dg_desc` varchar(200) COMMENT '部门等级描述',
-  `level_weight` int(11) DEFAULT 0 COMMENT '级别权重',
+  `level_weight` tinyint(1) DEFAULT 0 COMMENT '级别权重',
   `can_manage_lower` tinyint(1) DEFAULT 1 COMMENT '是否可管理下级(1是,0否)',
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   `tenant_id` varchar(32) DEFAULT 'default' COMMENT '租户ID',
@@ -106,11 +106,11 @@ CREATE TABLE `department_grade` (
 
 -- 岗位表（扩展原workposition表）
 CREATE TABLE `workposition` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '岗位ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '岗位ID',
   `name` varchar(100) NOT NULL COMMENT '岗位名称',
   `short_name` varchar(20) COMMENT '岗位简写',
-  `department_id` int(11) NOT NULL COMMENT '所属部门ID',
-  `position_level` int(11) DEFAULT 1 COMMENT '岗位级别',
+  `department_id` bigint(20) NOT NULL COMMENT '所属部门ID',
+  `position_level` tinyint(1) DEFAULT 1 COMMENT '岗位级别',
   `job_description` text COMMENT '岗位职责描述',
   `requirements` text COMMENT '任职要求',
   `salary_range` varchar(50) COMMENT '薪资范围',
@@ -120,12 +120,12 @@ CREATE TABLE `workposition` (
   `is_director` tinyint(1) DEFAULT 0 COMMENT '是否领导岗位(1是,0否)',
   `sort_order` int(11) DEFAULT 0 COMMENT '排序号',
   `status` tinyint(1) DEFAULT 1 COMMENT '状态(1启用,0禁用)',
-  `delflag` int(11) DEFAULT 0 COMMENT '删除标识',
+  `delflag` tinyint(1) DEFAULT 0 COMMENT '删除标识',
   -- 新增微服务字段
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `tenant_id` varchar(32) DEFAULT 'default' COMMENT '租户ID',
-  `created_by` int(11) COMMENT '创建人',
+  `created_by` bigint(20) COMMENT '创建人',
   PRIMARY KEY (`id`),
   KEY `idx_department_id` (`department_id`),
   KEY `idx_tenant_id` (`tenant_id`),
@@ -134,12 +134,12 @@ CREATE TABLE `workposition` (
 
 -- 岗位分管部门关联表
 CREATE TABLE `workposition_manage_dept` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `workposition_id` int(11) NOT NULL COMMENT '岗位ID',
-  `department_id` int(11) NOT NULL COMMENT '分管部门ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `workposition_id` bigint(20) NOT NULL COMMENT '岗位ID',
+  `department_id` bigint(20) NOT NULL COMMENT '分管部门ID',
   `manage_type` tinyint(1) DEFAULT 1 COMMENT '分管类型(1直管,2协管)',
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-  `created_by` int(11) COMMENT '创建人',
+  `created_by` bigint(20) COMMENT '创建人',
   `tenant_id` varchar(32) DEFAULT 'default' COMMENT '租户ID',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_wp_dept` (`workposition_id`, `department_id`)
@@ -151,7 +151,7 @@ CREATE TABLE `workposition_manage_dept` (
 
 -- 员工表（复用原employee表结构，添加扩展字段）
 CREATE TABLE `employee` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '员工ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '员工ID',
   `emp_no` varchar(20) NOT NULL COMMENT '员工编号',
   `name` varchar(50) NOT NULL COMMENT '姓名',
   `name_en` varchar(100) COMMENT '英文姓名',
@@ -160,17 +160,17 @@ CREATE TABLE `employee` (
   `id_card` varchar(18) COMMENT '身份证号',
   `mobile` varchar(11) COMMENT '手机号',
   `email` varchar(100) COMMENT '邮箱',
-  `department_id` int(11) COMMENT '部门ID',
-  `position_id` int(11) COMMENT '主岗位ID',
+  `department_id` bigint(20) COMMENT '部门ID',
+  `position_id`bigint(20) COMMENT '主岗位ID',
   `secondary_position_ids` varchar(200) COMMENT '副岗位ID列表',
-  `grade_id` int(11) COMMENT '员工等级ID',
+  `grade_id` tinyint(1) COMMENT '员工等级ID',
   `employment_type` tinyint(1) COMMENT '用工类型(1:正式,2:实习,3:外包,4:劳务)',
   `employment_status` tinyint(1) COMMENT '在职状态(1:在职,2:试用,3:离职)',
   `entry_date` date COMMENT '入职日期',
   `probation_end_date` date COMMENT '试用期结束日期',
   `leave_date` date COMMENT '离职日期',
   `leave_reason` varchar(500) COMMENT '离职原因',
-  `login_account_flag` int(1) COMMENT '登陆账号状态(0-无登陆账号，1-有登陆账号，2-禁止登录)',
+  `login_account_flag` tinyint(1) COMMENT '登陆账号状态(0-无登陆账号，1-有登陆账号，2-禁止登录)',
   `education` varchar(20) COMMENT '学历',
   `nation` varchar(20) COMMENT '民族',
   `health_status` varchar(20) COMMENT '健康状况',
@@ -184,13 +184,13 @@ CREATE TABLE `employee` (
   `specialty` varchar(200) COMMENT '专业技能',
   `avatar` varchar(255) COMMENT '头像',
   `remark` text COMMENT '备注',
-  `delflag` int(11) DEFAULT 0 COMMENT '删除标识',
+  `delflag` tinyint(1) DEFAULT 0 COMMENT '删除标识',
   -- 新增微服务字段
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `tenant_id` varchar(32) DEFAULT 'default' COMMENT '租户ID',
-  `created_by` int(11) COMMENT '创建人',
-  `updated_by` int(11) COMMENT '更新人',
+  `created_by` bigint(20) COMMENT '创建人',
+  `updated_by` bigint(20) COMMENT '更新人',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_emp_no` (`emp_no`, `tenant_id`),
   KEY `idx_department` (`department_id`),
@@ -201,7 +201,7 @@ CREATE TABLE `employee` (
 
 -- 员工等级表
 CREATE TABLE `employee_grade` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '等级ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '等级ID',
   `grade_code` varchar(20) NOT NULL COMMENT '等级编码',
   `grade_name` varchar(50) NOT NULL COMMENT '等级名称',
   `grade_level` tinyint(2) COMMENT '等级级别(1-20)',
@@ -217,7 +217,7 @@ CREATE TABLE `employee_grade` (
 
 -- 字段配置表（用于扩展信息配置）
 CREATE TABLE `field_config` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '配置ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '配置ID',
   `uuid` varchar(36) COMMENT 'UUID',
   `entity_type` varchar(50) NOT NULL COMMENT '实体类型(Employee)',
   `config_name` varchar(100) NOT NULL COMMENT '配置名称',
@@ -234,9 +234,9 @@ CREATE TABLE `field_config` (
 
 -- 员工扩展数据表
 CREATE TABLE `employee_extend_data` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '扩展数据ID',
-  `employee_id` int(11) NOT NULL COMMENT '员工ID',
-  `config_id` int(11) NOT NULL COMMENT '配置ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '扩展数据ID',
+  `employee_id` bigint(20) NOT NULL COMMENT '员工ID',
+  `config_id` bigint(20) NOT NULL COMMENT '配置ID',
   `data_content` json NOT NULL COMMENT '数据内容(JSON格式)',
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -249,8 +249,8 @@ CREATE TABLE `employee_extend_data` (
 
 -- 员工附件表
 CREATE TABLE `employee_attachment` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '附件ID',
-  `employee_id` int(11) NOT NULL COMMENT '员工ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '附件ID',
+  `employee_id` bigint(20) NOT NULL COMMENT '员工ID',
   `attachment_type` varchar(20) NOT NULL COMMENT '附件类型',
   `attachment_name` varchar(100) NOT NULL COMMENT '附件名称',
   `original_name` varchar(255) NOT NULL COMMENT '原始文件名',
@@ -258,10 +258,10 @@ CREATE TABLE `employee_attachment` (
   `file_type` varchar(20) COMMENT '文件类型',
   `file_path` varchar(500) NOT NULL COMMENT '文件存储路径',
   `upload_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '上传时间',
-  `upload_by` int(11) COMMENT '上传人',
+  `upload_by`bigint(20) COMMENT '上传人',
   `audit_status` tinyint(1) DEFAULT 0 COMMENT '审核状态(0:待审核,1:通过,2:拒绝)',
   `audit_time` datetime COMMENT '审核时间',
-  `audit_by` int(11) COMMENT '审核人',
+  `audit_by` bigint(20) COMMENT '审核人',
   `audit_remark` varchar(200) COMMENT '审核备注',
   `tenant_id` varchar(32) DEFAULT 'default' COMMENT '租户ID',
   `delflag` tinyint(1) DEFAULT 0 COMMENT '删除标记',
@@ -277,7 +277,7 @@ CREATE TABLE `employee_attachment` (
 
 -- 角色组表（role表-保留后面使用）
 CREATE TABLE `roles` (
-  `id` int(11) COMMENT '角色ID',
+  `id` bigint(20) COMMENT '角色ID',
   `role_name` varchar(50) NOT NULL COMMENT '角色名称',
   `role_description` varchar(500) COMMENT '角色描述',
   `role_code` varchar(50) COMMENT '角色编码',
@@ -295,23 +295,30 @@ CREATE TABLE `roles` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色组表';
 
 -- 用户登录表（基于原users表）
+
 CREATE TABLE `users` (
   `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '用户ID',
   `username` varchar(50) NOT NULL COMMENT '用户名',
-  `password` varchar(100) NOT NULL COMMENT '密码',
+  `password` varchar(100) NOT NULL COMMENT '登录密码',
   `employee_id` int(11) COMMENT '员工ID', 
-  `last_login_time` timestamp NULL COMMENT '最后登录时间',
-  `login_count` int(11) DEFAULT 0 COMMENT '登录次数',
-  `status` tinyint(1) DEFAULT 1 COMMENT '状态(1正常,0禁用)',
-  `delflag` tinyint(1) DEFAULT 0 COMMENT '删除标识',
-  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
-  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `nickname` varchar(255) DEFAULT NULL,
+  `head_img_url` varchar(1024) DEFAULT NULL,
+  `mobile` varchar(11) DEFAULT NULL,
+  `sex` tinyint(1) DEFAULT NULL,
+  `enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '状态(1正常,0禁用)',
+  `type` varchar(16) NOT NULL COMMENT '用户类型',
+  `create_time` datetime DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime DEFAULT NULL COMMENT '更新时间',
+  `company` varchar(255) DEFAULT NULL COMMENT '公司',
+  `open_id` varchar(32) DEFAULT NULL COMMENT 'open_id',
+  `is_del` tinyint(1) NOT NULL DEFAULT '0' COMMENT '删除标识',
+  `creator_id` int(11) DEFAULT NULL COMMENT '创建人id',
   `tenant_id` varchar(32) DEFAULT 'default' COMMENT '租户ID',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_username` (`username`, `tenant_id`),
-  KEY `idx_employee_id` (`employee_id`),
-  KEY `idx_tenant_id` (`tenant_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='用户登录表';
+  KEY `idx_username` (`username`),
+  KEY `idx_mobile` (`mobile`),
+  KEY `idx_open_id` (`open_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 ROW_FORMAT=DYNAMIC;
 
 -- 菜单页面表
 CREATE TABLE `menu_page` (

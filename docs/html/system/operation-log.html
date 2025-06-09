@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>操作日志 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .log-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            margin-bottom: 15px;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        
+        .stat-trend {
+            font-size: 12px;
+            margin-top: 8px;
+        }
+        
+        .trend-up { color: #27ae60; }
+        .trend-down { color: #e74c3c; }
+        
+        .filter-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .date-range-picker {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .log-table-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .table-header {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            justify-content: between;
+            align-items: center;
+        }
+        
+        .log-type-tag {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .log-type-login { background: #e3f2fd; color: #1976d2; }
+        .log-type-create { background: #e8f5e8; color: #2e7d32; }
+        .log-type-update { background: #fff3e0; color: #f57c00; }
+        .log-type-delete { background: #ffebee; color: #d32f2f; }
+        .log-type-export { background: #f3e5f5; color: #7b1fa2; }
+        
+        .status-tag {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-success { background: #e8f5e8; color: #2e7d32; }
+        .status-failed { background: #ffebee; color: #d32f2f; }
+        
+        .log-detail-modal .modal-content {
+            max-width: 800px;
+        }
+        
+        .detail-section {
+            margin-bottom: 20px;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+        
+        .detail-value {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+        }
+        
+        .export-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        /* 补充必要的表单和按钮样式 */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-control:focus {
+            border-color: #40a9ff;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #40a9ff;
+        }
+        
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+        
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .btn-info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+        
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
+        
+        .table th,
+        .table td {
+            padding: 12px 8px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+            vertical-align: middle;
+        }
+        
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .table-responsive {
+            overflow-x: auto;
+        }
+        
+        .pagination-wrapper {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #dee2e6;
+        }
+        
+        .pagination {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .page-btn {
+            padding: 6px 12px;
+            border: 1px solid #dee2e6;
+            background: white;
+            color: #495057;
+            text-decoration: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        .page-btn:hover:not(:disabled) {
+            background: #e9ecef;
+        }
+        
+        .page-btn.active {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+        
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+        }
+        
+        .modal-close {
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+        }
+        
+        .modal-body {
+            padding: 20px;
+        }
+        
+        .modal-footer {
+            padding: 20px;
+            border-top: 1px solid #dee2e6;
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+        
+        .alert {
+            padding: 12px 16px;
+            border-radius: 4px;
+            margin: 15px 0;
+        }
+        
+        .alert-warning {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+        
+        .text-muted {
+            color: #6c757d;
+        }
+        
+        @media (max-width: 768px) {
+            .log-stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .table-responsive {
+                font-size: 14px;
+            }
+            
+            .date-range-picker {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            
+            .export-options {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 左侧导航 -->
+        <aside class="app-sidebar" id="app-sidebar">
+            <!-- 导航内容将由navigation.js动态生成 -->
+        </aside>
+
+        <!-- 头部区域 -->
+        <header class="app-header">
+            <div class="header-left">
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">☰</button>
+                <div class="breadcrumb">
+                    <span class="breadcrumb-item">Portal 3.0</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">系统管理</span>
+                    <span class="breadcrumb-separator">/</span>
+                    <span class="breadcrumb-item">操作日志</span>
+                </div>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索功能...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">5</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">管</div>
+                    <span>管理员</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+                <div class="page-header">
+                    <h1><i class="fas fa-clipboard-list"></i> 操作日志</h1>
+                    <p>系统操作记录和审计追踪</p>
+                </div>
+
+                <!-- 统计概览 -->
+                <div class="log-stats">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fas fa-list-alt"></i>
+                        </div>
+                        <div class="stat-number">15,742</div>
+                        <div class="stat-label">总日志数</div>
+                        <div class="stat-trend trend-up">
+                            <i class="fas fa-arrow-up"></i> 较昨日 +12.5%
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="fas fa-calendar-day"></i>
+                        </div>
+                        <div class="stat-number">324</div>
+                        <div class="stat-label">今日操作</div>
+                        <div class="stat-trend trend-up">
+                            <i class="fas fa-arrow-up"></i> 较昨日 +8.3%
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="stat-number">15</div>
+                        <div class="stat-label">异常操作</div>
+                        <div class="stat-trend trend-down">
+                            <i class="fas fa-arrow-down"></i> 较昨日 -25.0%
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <i class="fas fa-users"></i>
+                        </div>
+                        <div class="stat-number">89</div>
+                        <div class="stat-label">活跃用户</div>
+                        <div class="stat-trend trend-up">
+                            <i class="fas fa-arrow-up"></i> 较昨日 +5.9%
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 筛选条件 -->
+                <div class="filter-section">
+                    <div class="filter-grid">
+                        <div class="form-group">
+                            <label>操作类型</label>
+                            <select class="form-control" id="operationType">
+                                <option value="">全部类型</option>
+                                <option value="login">登录</option>
+                                <option value="create">新增</option>
+                                <option value="update">修改</option>
+                                <option value="delete">删除</option>
+                                <option value="export">导出</option>
+                                <option value="import">导入</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>操作状态</label>
+                            <select class="form-control" id="operationStatus">
+                                <option value="">全部状态</option>
+                                <option value="success">成功</option>
+                                <option value="failed">失败</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>操作模块</label>
+                            <select class="form-control" id="operationModule">
+                                <option value="">全部模块</option>
+                                <option value="system">系统管理</option>
+                                <option value="user">用户管理</option>
+                                <option value="role">角色管理</option>
+                                <option value="menu">菜单管理</option>
+                                <option value="tenant">租户管理</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>操作用户</label>
+                            <input type="text" class="form-control" id="operationUser" placeholder="输入用户名">
+                        </div>
+                    </div>
+                    
+                    <div class="date-range-picker">
+                        <label>时间范围：</label>
+                        <input type="date" class="form-control" id="startDate">
+                        <span>至</span>
+                        <input type="date" class="form-control" id="endDate">
+                        <button class="btn btn-primary" onclick="searchLogs()">
+                            <i class="fas fa-search"></i> 查询
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetFilters()">
+                            <i class="fas fa-undo"></i> 重置
+                        </button>
+                    </div>
+                    
+                    <div class="export-options">
+                        <button class="btn btn-success" onclick="exportLogs('excel')">
+                            <i class="fas fa-file-excel"></i> 导出Excel
+                        </button>
+                        <button class="btn btn-info" onclick="exportLogs('csv')">
+                            <i class="fas fa-file-csv"></i> 导出CSV
+                        </button>
+                        <button class="btn btn-warning" onclick="clearOldLogs()">
+                            <i class="fas fa-trash-alt"></i> 清理旧日志
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 日志列表 -->
+                <div class="log-table-container">
+                    <div class="table-header">
+                        <h3>操作日志列表</h3>
+                        <div class="table-actions">
+                            <span class="text-muted">共 1,234 条记录</span>
+                        </div>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th>操作时间</th>
+                                    <th>操作用户</th>
+                                    <th>操作类型</th>
+                                    <th>操作模块</th>
+                                    <th>操作描述</th>
+                                    <th>IP地址</th>
+                                    <th>状态</th>
+                                    <th>耗时</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logTableBody">
+                                <!-- 日志数据将通过JavaScript动态填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 分页 -->
+                    <div class="pagination-wrapper">
+                        <div class="pagination-info">
+                            显示第 1-10 条，共 1234 条记录
+                        </div>
+                        <nav class="pagination">
+                            <button class="page-btn" disabled><i class="fas fa-chevron-left"></i></button>
+                            <button class="page-btn active">1</button>
+                            <button class="page-btn">2</button>
+                            <button class="page-btn">3</button>
+                            <span class="page-dots">...</span>
+                            <button class="page-btn">124</button>
+                            <button class="page-btn"><i class="fas fa-chevron-right"></i></button>
+                        </nav>
+                    </div>
+                </div>
+        </main>
+        
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                © 2024 Portal 3.0 企业管理平台 | 
+                <a href="#" style="color: #1890ff; text-decoration: none;">技术支持</a> | 
+                <a href="#" style="color: #1890ff; text-decoration: none;">帮助文档</a> | 
+                <span style="color: #999;">版本 v3.0.1</span>
+            </div>
+        </footer>
+    </div>
+
+    <!-- 日志详情模态框 -->
+    <div class="modal log-detail-modal" id="logDetailModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>操作日志详情</h3>
+                <span class="modal-close" onclick="closeLogDetail()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="detail-section">
+                    <div class="detail-label">基本信息</div>
+                    <div class="detail-value" id="basicInfo"></div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-label">请求参数</div>
+                    <div class="detail-value" id="requestParams"></div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-label">返回结果</div>
+                    <div class="detail-value" id="responseData"></div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-label">异常信息</div>
+                    <div class="detail-value" id="exceptionInfo"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeLogDetail()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 清理日志确认模态框 -->
+    <div class="modal" id="clearLogModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>清理旧日志</h3>
+                <span class="modal-close" onclick="closeClearModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>保留时间</label>
+                    <select class="form-control" id="retentionPeriod">
+                        <option value="30">保留30天</option>
+                        <option value="90">保留90天</option>
+                        <option value="180">保留180天</option>
+                        <option value="365">保留1年</option>
+                    </select>
+                </div>
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    此操作将删除超过保留期的所有日志记录，删除后无法恢复，请谨慎操作！
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeClearModal()">取消</button>
+                <button class="btn btn-danger" onclick="confirmClearLogs()">确认清理</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../assets/js/navigation.js"></script>
+    <script>
+        // 模拟日志数据
+        const logData = [
+            {
+                id: 1,
+                time: '2024-01-15 14:30:25',
+                user: 'admin',
+                type: 'login',
+                module: '系统管理',
+                description: '用户登录系统',
+                ip: '192.168.1.100',
+                status: 'success',
+                duration: '120ms',
+                details: {
+                    basic: '用户：admin\n时间：2024-01-15 14:30:25\nIP：192.168.1.100\n浏览器：Chrome 120.0.0.0',
+                    request: '{\n  "username": "admin",\n  "loginType": "password"\n}',
+                    response: '{\n  "code": 200,\n  "message": "登录成功",\n  "token": "eyJhbGciOiJIUzI1NiIs..."\n}',
+                    exception: '无'
+                }
+            },
+            {
+                id: 2,
+                time: '2024-01-15 14:28:15',
+                user: 'admin',
+                type: 'create',
+                module: '用户管理',
+                description: '新增用户：张三',
+                ip: '192.168.1.100',
+                status: 'success',
+                duration: '350ms',
+                details: {
+                    basic: '用户：admin\n时间：2024-01-15 14:28:15\nIP：192.168.1.100\n浏览器：Chrome 120.0.0.0',
+                    request: '{\n  "username": "zhangsan",\n  "realName": "张三",\n  "email": "zhangsan@example.com"\n}',
+                    response: '{\n  "code": 200,\n  "message": "用户创建成功",\n  "userId": 1001\n}',
+                    exception: '无'
+                }
+            },
+            {
+                id: 3,
+                time: '2024-01-15 14:25:42',
+                user: 'admin',
+                type: 'update',
+                module: '菜单管理',
+                description: '修改菜单：系统管理',
+                ip: '192.168.1.100',
+                status: 'success',
+                duration: '200ms',
+                details: {
+                    basic: '用户：admin\n时间：2024-01-15 14:25:42\nIP：192.168.1.100\n浏览器：Chrome 120.0.0.0',
+                    request: '{\n  "menuId": 100,\n  "menuName": "系统管理",\n  "menuIcon": "fas fa-cogs"\n}',
+                    response: '{\n  "code": 200,\n  "message": "菜单更新成功"\n}',
+                    exception: '无'
+                }
+            },
+            {
+                id: 4,
+                time: '2024-01-15 14:20:18',
+                user: 'operator',
+                type: 'delete',
+                module: '租户管理',
+                description: '删除租户：测试租户',
+                ip: '192.168.1.105',
+                status: 'failed',
+                duration: '850ms',
+                details: {
+                    basic: '用户：operator\n时间：2024-01-15 14:20:18\nIP：192.168.1.105\n浏览器：Firefox 121.0',
+                    request: '{\n  "tenantId": 2001,\n  "tenantCode": "test_tenant"\n}',
+                    response: '{\n  "code": 500,\n  "message": "删除失败：租户下还有用户"\n}',
+                    exception: 'BusinessException: 无法删除租户，租户下还有3个活跃用户'
+                }
+            },
+            {
+                id: 5,
+                time: '2024-01-15 14:15:33',
+                user: 'admin',
+                type: 'export',
+                module: '用户管理',
+                description: '导出用户列表',
+                ip: '192.168.1.100',
+                status: 'success',
+                duration: '2.5s',
+                details: {
+                    basic: '用户：admin\n时间：2024-01-15 14:15:33\nIP：192.168.1.100\n浏览器：Chrome 120.0.0.0',
+                    request: '{\n  "exportType": "excel",\n  "filters": {\n    "status": "active"\n  }\n}',
+                    response: '{\n  "code": 200,\n  "message": "导出成功",\n  "fileName": "users_20240115.xlsx"\n}',
+                    exception: '无'
+                }
+            }
+        ];
+
+        // 渲染日志表格
+        function renderLogTable(data = logData) {
+            const tbody = document.getElementById('logTableBody');
+            tbody.innerHTML = '';
+            
+            data.forEach((log, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${log.time}</td>
+                    <td>${log.user}</td>
+                    <td><span class="log-type-tag log-type-${log.type}">${getTypeLabel(log.type)}</span></td>
+                    <td>${log.module}</td>
+                    <td>${log.description}</td>
+                    <td>${log.ip}</td>
+                    <td><span class="status-tag status-${log.status}">${getStatusLabel(log.status)}</span></td>
+                    <td>${log.duration}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="viewLogDetail(${log.id})">
+                            <i class="fas fa-eye"></i> 详情
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // 获取操作类型标签
+        function getTypeLabel(type) {
+            const labels = {
+                login: '登录',
+                create: '新增',
+                update: '修改',
+                delete: '删除',
+                export: '导出',
+                import: '导入'
+            };
+            return labels[type] || type;
+        }
+
+        // 获取状态标签
+        function getStatusLabel(status) {
+            const labels = {
+                success: '成功',
+                failed: '失败'
+            };
+            return labels[status] || status;
+        }
+
+        // 查看日志详情
+        function viewLogDetail(logId) {
+            const log = logData.find(l => l.id === logId);
+            if (!log) return;
+            
+            document.getElementById('basicInfo').textContent = log.details.basic;
+            document.getElementById('requestParams').textContent = log.details.request;
+            document.getElementById('responseData').textContent = log.details.response;
+            document.getElementById('exceptionInfo').textContent = log.details.exception;
+            
+            document.getElementById('logDetailModal').style.display = 'flex';
+        }
+
+        // 关闭日志详情
+        function closeLogDetail() {
+            document.getElementById('logDetailModal').style.display = 'none';
+        }
+
+        // 搜索日志
+        function searchLogs() {
+            const type = document.getElementById('operationType').value;
+            const status = document.getElementById('operationStatus').value;
+            const module = document.getElementById('operationModule').value;
+            const user = document.getElementById('operationUser').value;
+            
+            let filteredData = logData;
+            
+            if (type) {
+                filteredData = filteredData.filter(log => log.type === type);
+            }
+            if (status) {
+                filteredData = filteredData.filter(log => log.status === status);
+            }
+            if (module) {
+                filteredData = filteredData.filter(log => log.module.includes(module));
+            }
+            if (user) {
+                filteredData = filteredData.filter(log => log.user.includes(user));
+            }
+            
+            renderLogTable(filteredData);
+            showToast('查询完成', 'success');
+        }
+
+        // 重置筛选条件
+        function resetFilters() {
+            document.getElementById('operationType').value = '';
+            document.getElementById('operationStatus').value = '';
+            document.getElementById('operationModule').value = '';
+            document.getElementById('operationUser').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            
+            renderLogTable();
+            showToast('筛选条件已重置', 'info');
+        }
+
+        // 导出日志
+        function exportLogs(format) {
+            showToast(`正在导出${format.toUpperCase()}格式文件...`, 'info');
+            
+            // 模拟导出过程
+            setTimeout(() => {
+                showToast('导出成功', 'success');
+            }, 2000);
+        }
+
+        // 清理旧日志
+        function clearOldLogs() {
+            document.getElementById('clearLogModal').style.display = 'flex';
+        }
+
+        // 关闭清理模态框
+        function closeClearModal() {
+            document.getElementById('clearLogModal').style.display = 'none';
+        }
+
+        // 确认清理日志
+        function confirmClearLogs() {
+            const retention = document.getElementById('retentionPeriod').value;
+            showToast(`正在清理${retention}天前的日志...`, 'info');
+            
+            // 模拟清理过程
+            setTimeout(() => {
+                closeClearModal();
+                showToast('日志清理完成', 'success');
+            }, 2000);
+        }
+
+        // 显示提示信息
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+            toast.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'info'}"></i>
+                ${message}
+            `;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 3000);
+        }
+
+        // 初始化页面
+        document.addEventListener('DOMContentLoaded', function() {
+            renderLogTable();
+            
+            // 设置默认日期范围（最近7天）
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(endDate.getDate() - 7);
+            
+            document.getElementById('startDate').value = startDate.toISOString().split('T')[0];
+            document.getElementById('endDate').value = endDate.toISOString().split('T')[0];
+        });
+
+        // 模态框点击外部关闭
+        window.onclick = function(event) {
+            const logModal = document.getElementById('logDetailModal');
+            const clearModal = document.getElementById('clearLogModal');
+            
+            if (event.target === logModal) {
+                closeLogDetail();
+            }
+            if (event.target === clearModal) {
+                closeClearModal();
+            }
+        }
+    </script>
+</body>
+</html> 

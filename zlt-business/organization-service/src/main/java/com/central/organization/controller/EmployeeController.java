@@ -1,400 +1,569 @@
 package com.central.organization.controller;
 
-import com.central.organization.service.EmployeeService;
-import com.central.organization.model.Employee;
-import com.central.organization.dto.EmployeeDetailDTO;
-import com.central.organization.dto.EmployeeSearchDTO;
-import com.central.common.annotation.LoginUser;
-import com.central.common.model.PageResult;
-import com.central.common.model.Result;
-import com.central.common.model.SysUser;
-import com.central.organization.dto.EmployeeStatisticsDTO;
-
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
+import com.central.organization.mapper.EmployeeMapper;
+import com.central.organization.model.dto.EmployeeQueryDTO;
+import com.central.organization.model.dto.EmployeeSaveDTO;
+import com.central.organization.model.vo.EmployeeVO;
+import com.central.organization.service.IEmployeeService;
+import com.central.organization.utils.IdUtils;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.Valid;
-import java.time.LocalDate;
+import jakarta.validation.Valid;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 员工管理控制器
  * 
- * @author Portal Team
- * @since 2024-01-01
+ * @author Central Team
+ * @since 2024-12-19
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/organization/employees")
-@Tag(name = "员工管理", description = "员工信息的增删改查、生命周期管理等功能")
+@RequestMapping("/api/organization/employee")
 public class EmployeeController {
 
     @Autowired
-    private EmployeeService employeeService;
+    private IEmployeeService employeeService;
 
     /**
-     * 分页查询员工
+     * 分页查询员工列表
+     * 
+     * @param query 查询条件
+     * @return 员工分页列表
      */
     @GetMapping("/page")
-    @Operation(summary = "分页查询员工", description = "支持多条件搜索的员工分页查询")
-    @PreAuthorize("hasAuthority('organization:emp:view')")
-    public Result<PageResult<Employee>> getEmployeePage(
-            @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "20") int pageSize,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Long departmentId,
-            @RequestParam(required = false) Long positionId,
-            @RequestParam(required = false) Integer employmentStatus,
-            @RequestParam(required = false) Integer employmentType,
-            @RequestParam(required = false) String entryDateStart,
-            @RequestParam(required = false) String entryDateEnd,
-            @LoginUser SysUser user) {
+    public Result<IEmployeeService.PageResult<EmployeeVO>> getEmployeePage(EmployeeQueryDTO query) {
+        // ID转换处理
+        if (query.getDepartmentId() != null) {
+            query.setDepartmentId(IdUtils.stringToLong(query.getDepartmentId().toString()));
+        }
+        if (query.getPositionId() != null) {
+            query.setPositionId(IdUtils.stringToLong(query.getPositionId().toString()));
+        }
+        if (query.getGradeId() != null) {
+            query.setGradeId(IdUtils.stringToLong(query.getGradeId().toString()));
+        }
         
-        try {
-            EmployeeSearchDTO searchDTO = new EmployeeSearchDTO()
-                .setKeyword(keyword)
-                .setDepartmentId(departmentId)
-                .setPositionId(positionId)
-                .setEmploymentStatus(employmentStatus)
-                .setEmploymentType(employmentType)
-                .setEntryDateStart(entryDateStart)
-                .setEntryDateEnd(entryDateEnd);
-                
-            PageResult<Employee> result = employeeService.getEmployeePage(pageNum, pageSize, searchDTO, user.getTenantId());
-            return Result.success(result);
-        } catch (Exception e) {
-            log.error("分页查询员工失败", e);
-            return Result.failed("查询失败：" + e.getMessage());
-        }
+        IEmployeeService.PageResult<EmployeeVO> pageResult = employeeService.getPageList(query);
+        return Result.success(pageResult);
     }
 
     /**
-     * 获取员工详情
+     * 根据ID查询员工详情
+     * 
+     * @param id 员工ID
+     * @return 员工详情
      */
-    @GetMapping("/{id}/detail")
-    @Operation(summary = "获取员工详情", description = "获取员工完整信息，包括基础信息、部门岗位、扩展数据等")
-    @PreAuthorize("hasAuthority('organization:emp:view')")
-    public Result<EmployeeDetailDTO> getEmployeeDetail(@PathVariable Long id, @LoginUser SysUser user) {
-        try {
-            EmployeeDetailDTO detail = employeeService.getEmployeeDetailById(id, user.getTenantId());
-            if (detail == null) {
-                return Result.failed("员工不存在");
-            }
-            return Result.success(detail);
-        } catch (Exception e) {
-            log.error("获取员工详情失败: {}", id, e);
-            return Result.failed("获取详情失败：" + e.getMessage());
+    @GetMapping("/{id}")
+    public Result<EmployeeVO> getEmployeeById(@PathVariable String id) {
+        Long employeeId = IdUtils.stringToLong(id);
+        EmployeeVO employee = employeeService.getById(employeeId);
+        if (employee == null) {
+            return Result.error("员工不存在");
         }
+        return Result.success(employee);
     }
 
     /**
-     * 保存员工
+     * 根据部门ID查询员工列表
+     * 
+     * @param departmentId 部门ID
+     * @param includeSubDept 是否包含子部门
+     * @return 员工列表
+     */
+    @GetMapping("/department/{departmentId}")
+    public Result<List<EmployeeVO>> getEmployeesByDepartment(
+            @PathVariable String departmentId,
+            @RequestParam(defaultValue = "false") Boolean includeSubDept) {
+        Long deptId = IdUtils.stringToLong(departmentId);
+        List<EmployeeVO> employees = employeeService.getByDepartmentId(deptId, includeSubDept);
+        return Result.success(employees);
+    }
+
+    /**
+     * 根据岗位ID查询员工列表
+     * 
+     * @param positionId 岗位ID
+     * @return 员工列表
+     */
+    @GetMapping("/position/{positionId}")
+    public Result<List<EmployeeVO>> getEmployeesByPosition(@PathVariable String positionId) {
+        Long posId = IdUtils.stringToLong(positionId);
+        List<EmployeeVO> employees = employeeService.getByPositionId(posId);
+        return Result.success(employees);
+    }
+
+    /**
+     * 查询即将到期的试用期员工
+     * 
+     * @param days 提前天数
+     * @return 试用期员工列表
+     */
+    @GetMapping("/probation-expiring")
+    public Result<List<EmployeeVO>> getProbationExpiring(@RequestParam(defaultValue = "7") Integer days) {
+        List<EmployeeVO> employees = employeeService.getProbationExpiring(days);
+        return Result.success(employees);
+    }
+
+    /**
+     * 查询员工生日列表
+     * 
+     * @param month 月份(1-12)，为空则查询当月
+     * @return 员工生日列表
+     */
+    @GetMapping("/birthday")
+    public Result<List<EmployeeVO>> getBirthdayList(@RequestParam(required = false) Integer month) {
+        List<EmployeeVO> employees = employeeService.getBirthdayList(month);
+        return Result.success(employees);
+    }
+
+    /**
+     * 保存员工信息(新增或修改)
+     * 
+     * @param saveDTO 员工保存DTO
+     * @return 员工ID
      */
     @PostMapping("/save")
-    @Operation(summary = "保存员工", description = "新增或更新员工信息")
-    @PreAuthorize("hasAuthority('organization:emp:add') or hasAuthority('organization:emp:edit')")
-    public Result<Employee> saveEmployee(@RequestBody @Valid Employee employee, @LoginUser SysUser user) {
-        try {
-            // 设置租户ID
-            employee.setTenantId(user.getTenantId());
-            
-            // 设置创建/更新人
-            if (employee.getId() == null) {
-                employee.setCreatedBy(user.getId());
-            } else {
-                employee.setUpdatedBy(user.getId());
-            }
-            
-            return employeeService.saveEmployee(employee);
-        } catch (Exception e) {
-            log.error("保存员工失败", e);
-            return Result.failed("保存失败：" + e.getMessage());
+    public Result<String> saveEmployee(@RequestBody @Valid EmployeeSaveDTO saveDTO) {
+        // ID转换处理
+        if (saveDTO.getId() != null) {
+            saveDTO.setId(IdUtils.stringToLong(saveDTO.getId().toString()));
         }
+        if (saveDTO.getDepartmentId() != null) {
+            saveDTO.setDepartmentId(IdUtils.stringToLong(saveDTO.getDepartmentId().toString()));
+        }
+        if (saveDTO.getPositionId() != null) {
+            saveDTO.setPositionId(IdUtils.stringToLong(saveDTO.getPositionId().toString()));
+        }
+        if (saveDTO.getGradeId() != null) {
+            saveDTO.setGradeId(IdUtils.stringToLong(saveDTO.getGradeId().toString()));
+        }
+        if (saveDTO.getSupervisorId() != null) {
+            saveDTO.setSupervisorId(IdUtils.stringToLong(saveDTO.getSupervisorId().toString()));
+        }
+
+        // 转换副岗位ID列表
+        if (saveDTO.getSecondaryPositionIds() != null) {
+            saveDTO.setSecondaryPositionIds(
+                saveDTO.getSecondaryPositionIds().stream()
+                    .map(idObj -> IdUtils.stringToLong(idObj.toString()))
+                    .toList()
+            );
+        }
+
+        Long employeeId = employeeService.saveEmployee(saveDTO);
+        return Result.success(IdUtils.longToString(employeeId));
     }
 
     /**
      * 员工入职
+     * 
+     * @param saveDTO 员工信息
+     * @return 员工ID
      */
-    @PostMapping("/entry")
-    @Operation(summary = "员工入职", description = "办理员工入职手续，自动生成员工编号")
-    @PreAuthorize("hasAuthority('organization:emp:entry')")
-    public Result<Employee> employeeEntry(@RequestBody @Valid Employee employee, @LoginUser SysUser user) {
-        try {
-            employee.setTenantId(user.getTenantId());
-            employee.setCreatedBy(user.getId());
-            return employeeService.employeeEntry(employee);
-        } catch (Exception e) {
-            log.error("员工入职失败", e);
-            return Result.failed("入职失败：" + e.getMessage());
+    @PostMapping("/join")
+    public Result<String> employeeJoin(@RequestBody @Valid EmployeeSaveDTO saveDTO) {
+        // ID转换处理
+        if (saveDTO.getDepartmentId() != null) {
+            saveDTO.setDepartmentId(IdUtils.stringToLong(saveDTO.getDepartmentId().toString()));
+        }
+        if (saveDTO.getPositionId() != null) {
+            saveDTO.setPositionId(IdUtils.stringToLong(saveDTO.getPositionId().toString()));
+        }
+        if (saveDTO.getGradeId() != null) {
+            saveDTO.setGradeId(IdUtils.stringToLong(saveDTO.getGradeId().toString()));
+        }
+        if (saveDTO.getSupervisorId() != null) {
+            saveDTO.setSupervisorId(IdUtils.stringToLong(saveDTO.getSupervisorId().toString()));
+        }
+
+        Long employeeId = employeeService.employeeJoin(saveDTO);
+        return Result.success(IdUtils.longToString(employeeId));
+    }
+
+    /**
+     * 员工转正
+     * 
+     * @param id 员工ID
+     * @return 操作结果
+     */
+    @PostMapping("/{id}/regular")
+    public Result<Void> employeeRegular(@PathVariable String id) {
+        Long employeeId = IdUtils.stringToLong(id);
+        boolean success = employeeService.employeeRegular(employeeId);
+        if (success) {
+            return Result.success();
+        } else {
+            return Result.error("员工转正失败");
         }
     }
 
     /**
-     * 员工调部门
+     * 员工调岗
+     * 
+     * @param id 员工ID
+     * @param transferDTO 调岗信息
+     * @return 操作结果
      */
     @PostMapping("/{id}/transfer")
-    @Operation(summary = "员工调部门", description = "调整员工部门和岗位")
-    @PreAuthorize("hasAuthority('organization:emp:transfer')")
-    public Result<Void> transferEmployee(
-            @PathVariable Long id,
-            @RequestParam Long newDepartmentId,
-            @RequestParam Long newPositionId,
-            @RequestParam String effectiveDate,
-            @RequestParam(required = false) String reason,
-            @LoginUser SysUser user) {
+    public Result<Void> employeeTransfer(@PathVariable String id, 
+                                       @RequestBody EmployeeTransferDTO transferDTO) {
+        Long employeeId = IdUtils.stringToLong(id);
+        Long newDepartmentId = IdUtils.stringToLong(transferDTO.getNewDepartmentId());
+        Long newPositionId = IdUtils.stringToLong(transferDTO.getNewPositionId());
         
-        try {
-            return employeeService.transferEmployee(id, newDepartmentId, newPositionId, effectiveDate, user.getTenantId());
-        } catch (Exception e) {
-            log.error("员工调部门失败: {}", id, e);
-            return Result.failed("调部门失败：" + e.getMessage());
+        boolean success = employeeService.employeeTransfer(employeeId, newDepartmentId, 
+                                                          newPositionId, transferDTO.getReason());
+        if (success) {
+            return Result.success();
+        } else {
+            return Result.error("员工调岗失败");
         }
     }
 
     /**
      * 员工离职
+     * 
+     * @param id 员工ID
+     * @param leaveDTO 离职信息
+     * @return 操作结果
      */
     @PostMapping("/{id}/leave")
-    @Operation(summary = "员工离职", description = "办理员工离职手续")
-    @PreAuthorize("hasAuthority('organization:emp:leave')")
-    public Result<Void> employeeLeave(
-            @PathVariable Long id,
-            @RequestParam String leaveDate,
-            @RequestParam String leaveReason,
-            @LoginUser SysUser user) {
-        
-        try {
-            return employeeService.employeeLeave(id, leaveDate, leaveReason, user.getTenantId());
-        } catch (Exception e) {
-            log.error("员工离职失败: {}", id, e);
-            return Result.failed("离职失败：" + e.getMessage());
+    public Result<Void> employeeLeave(@PathVariable String id, 
+                                    @RequestBody EmployeeLeaveDTO leaveDTO) {
+        Long employeeId = IdUtils.stringToLong(id);
+        boolean success = employeeService.employeeLeave(employeeId, leaveDTO.getLeaveDate(), 
+                                                       leaveDTO.getLeaveReason());
+        if (success) {
+            return Result.success();
+        } else {
+            return Result.error("员工离职失败");
         }
     }
 
     /**
-     * 员工试用期转正
+     * 批量调整员工部门
+     * 
+     * @param batchUpdateDTO 批量更新信息
+     * @return 操作结果
      */
-    @PostMapping("/{id}/conversion")
-    @Operation(summary = "员工转正", description = "试用期员工转正")
-    @PreAuthorize("hasAuthority('organization:emp:conversion')")
-    public Result<Void> employeeConversion(
-            @PathVariable Long id,
-            @RequestParam String conversionDate,
-            @LoginUser SysUser user) {
+    @PostMapping("/batch-update-department")
+    public Result<Void> batchUpdateDepartment(@RequestBody BatchUpdateDepartmentDTO batchUpdateDTO) {
+        List<Long> employeeIds = batchUpdateDTO.getEmployeeIds().stream()
+                .map(IdUtils::stringToLong)
+                .toList();
+        Long departmentId = IdUtils.stringToLong(batchUpdateDTO.getDepartmentId());
         
-        try {
-            return employeeService.employeeConversion(id, conversionDate, user.getTenantId());
-        } catch (Exception e) {
-            log.error("员工转正失败: {}", id, e);
-            return Result.failed("转正失败：" + e.getMessage());
+        boolean success = employeeService.batchUpdateDepartment(employeeIds, departmentId);
+        if (success) {
+            return Result.success();
+        } else {
+            return Result.error("批量调整部门失败");
+        }
+    }
+
+    /**
+     * 批量调整员工岗位
+     * 
+     * @param batchUpdateDTO 批量更新信息
+     * @return 操作结果
+     */
+    @PostMapping("/batch-update-position")
+    public Result<Void> batchUpdatePosition(@RequestBody BatchUpdatePositionDTO batchUpdateDTO) {
+        List<Long> employeeIds = batchUpdateDTO.getEmployeeIds().stream()
+                .map(IdUtils::stringToLong)
+                .toList();
+        Long positionId = IdUtils.stringToLong(batchUpdateDTO.getPositionId());
+        
+        boolean success = employeeService.batchUpdatePosition(employeeIds, positionId);
+        if (success) {
+            return Result.success();
+        } else {
+            return Result.error("批量调整岗位失败");
+        }
+    }
+
+    /**
+     * 更新员工状态
+     * 
+     * @param id 员工ID
+     * @param status 状态
+     * @return 操作结果
+     */
+    @PostMapping("/{id}/status")
+    public Result<Void> updateStatus(@PathVariable String id, @RequestParam Integer status) {
+        Long employeeId = IdUtils.stringToLong(id);
+        boolean success = employeeService.updateStatus(employeeId, status);
+        if (success) {
+            return Result.success();
+        } else {
+            return Result.error("更新状态失败");
         }
     }
 
     /**
      * 删除员工
+     * 
+     * @param id 员工ID
+     * @return 操作结果
      */
     @DeleteMapping("/{id}")
-    @Operation(summary = "删除员工", description = "删除员工信息（软删除）")
-    @PreAuthorize("hasAuthority('organization:emp:delete')")
-    public Result<Void> deleteEmployee(@PathVariable Long id, @LoginUser SysUser user) {
-        try {
-            return employeeService.deleteEmployee(id, user.getTenantId());
-        } catch (Exception e) {
-            log.error("删除员工失败: {}", id, e);
-            return Result.failed("删除失败：" + e.getMessage());
+    public Result<Void> deleteEmployee(@PathVariable String id) {
+        Long employeeId = IdUtils.stringToLong(id);
+        boolean success = employeeService.deleteById(employeeId);
+        if (success) {
+            return Result.success();
+        } else {
+            return Result.error("删除员工失败");
         }
     }
 
     /**
      * 批量删除员工
+     * 
+     * @param ids 员工ID列表
+     * @return 操作结果
      */
     @DeleteMapping("/batch")
-    @Operation(summary = "批量删除员工", description = "批量删除员工信息")
-    @PreAuthorize("hasAuthority('organization:emp:delete')")
-    public Result<Void> batchDeleteEmployees(@RequestBody List<Long> ids, @LoginUser SysUser user) {
-        try {
-            return employeeService.batchDeleteEmployees(ids, user.getTenantId());
-        } catch (Exception e) {
-            log.error("批量删除员工失败", e);
-            return Result.failed("批量删除失败：" + e.getMessage());
-        }
-    }
-
-    /**
-     * 根据部门获取员工列表
-     */
-    @GetMapping("/department/{departmentId}")
-    @Operation(summary = "部门员工列表", description = "获取指定部门的员工列表")
-    @PreAuthorize("hasAuthority('organization:emp:view')")
-    public Result<List<Employee>> getEmployeesByDepartment(
-            @PathVariable Long departmentId,
-            @RequestParam(defaultValue = "false") boolean includeSubDepts,
-            @LoginUser SysUser user) {
-        
-        try {
-            List<Employee> employees = employeeService.getEmployeesByDepartment(departmentId, includeSubDepts, user.getTenantId());
-            return Result.success(employees);
-        } catch (Exception e) {
-            log.error("获取部门员工失败: {}", departmentId, e);
-            return Result.failed("获取员工列表失败：" + e.getMessage());
-        }
-    }
-
-    /**
-     * 检查员工编号是否存在
-     */
-    @GetMapping("/check-empno")
-    @Operation(summary = "检查员工编号", description = "检查员工编号是否已存在")
-    @PreAuthorize("hasAuthority('organization:emp:view')")
-    public Result<Boolean> checkEmpNoExists(
-            @RequestParam String empNo,
-            @RequestParam(required = false) Long excludeId,
-            @LoginUser SysUser user) {
-        
-        try {
-            boolean exists = employeeService.checkEmpNoExists(empNo, excludeId, user.getTenantId());
-            return Result.success(exists);
-        } catch (Exception e) {
-            log.error("检查员工编号失败: {}", empNo, e);
-            return Result.failed("检查失败：" + e.getMessage());
+    public Result<Void> batchDeleteEmployees(@RequestBody List<String> ids) {
+        List<Long> employeeIds = ids.stream()
+                .map(IdUtils::stringToLong)
+                .toList();
+        boolean success = employeeService.batchDelete(employeeIds);
+        if (success) {
+            return Result.success();
+        } else {
+            return Result.error("批量删除员工失败");
         }
     }
 
     /**
      * 生成员工编号
+     * 
+     * @return 员工编号
      */
-    @GetMapping("/generate-empno")
-    @Operation(summary = "生成员工编号", description = "根据部门自动生成员工编号")
-    @PreAuthorize("hasAuthority('organization:emp:add')")
-    public Result<String> generateEmpNo(@RequestParam Long departmentId, @LoginUser SysUser user) {
-        try {
-            String empNo = employeeService.generateEmpNo(departmentId, user.getTenantId());
-            return Result.success(empNo);
-        } catch (Exception e) {
-            log.error("生成员工编号失败: {}", departmentId, e);
-            return Result.failed("生成编号失败：" + e.getMessage());
-        }
+    @GetMapping("/generate-emp-no")
+    public Result<String> generateEmpNo() {
+        String empNo = employeeService.generateEmpNo();
+        return Result.success(empNo);
     }
 
     /**
      * 获取员工统计信息
+     * 
+     * @return 统计信息
      */
     @GetMapping("/statistics")
-    @Operation(summary = "员工统计", description = "获取员工统计信息")
-    @PreAuthorize("hasAuthority('organization:emp:statistics')")
-    public Result<Map<String, Object>> getEmployeeStatistics(
-            @RequestParam(required = false) Long departmentId,
-            @LoginUser SysUser user) {
-        
-        try {
-            Map<String, Object> statistics = employeeService.getEmployeeStatistics(departmentId, user.getTenantId());
-            return Result.success(statistics);
-        } catch (Exception e) {
-            log.error("获取员工统计失败", e);
-            return Result.failed("获取统计失败：" + e.getMessage());
-        }
+    public Result<EmployeeStatisticsVO> getStatistics() {
+        var statistics = employeeService.getStatistics();
+        return Result.success(new EmployeeStatisticsVO(statistics));
     }
 
     /**
-     * 更新员工头像
+     * 获取部门员工分布统计
+     * 
+     * @return 部门员工分布
      */
-    @PostMapping("/{id}/avatar")
-    @Operation(summary = "更新头像", description = "更新员工头像")
-    @PreAuthorize("hasAuthority('organization:emp:edit')")
-    public Result<Void> updateEmployeeAvatar(
-            @PathVariable Long id,
-            @RequestParam("file") MultipartFile file,
-            @LoginUser SysUser user) {
-        
-        try {
-            // TODO: 上传文件到文件服务，获取URL
-            String avatarUrl = ""; // 上传后返回的URL
-            return employeeService.updateEmployeeAvatar(id, avatarUrl, user.getTenantId());
-        } catch (Exception e) {
-            log.error("更新员工头像失败: {}", id, e);
-            return Result.failed("更新头像失败：" + e.getMessage());
-        }
+    @GetMapping("/department-distribution")
+    public Result<List<DepartmentEmployeeDistributionVO>> getDepartmentDistribution() {
+        var distribution = employeeService.getDepartmentDistribution();
+        List<DepartmentEmployeeDistributionVO> result = distribution.stream()
+                .map(item -> new DepartmentEmployeeDistributionVO(
+                    IdUtils.longToString(item.getDepartmentId()),
+                    item.getDepartmentName(),
+                    item.getEmployeeCount(),
+                    item.getActiveCount(),
+                    item.getProbationCount()
+                ))
+                .toList();
+        return Result.success(result);
     }
 
     /**
-     * 我的团队
-     */
-    @GetMapping("/my-team")
-    @Operation(summary = "我的团队", description = "获取当前用户管理的团队成员")
-    @PreAuthorize("hasAuthority('organization:emp:team')")
-    public Result<List<Employee>> getMyTeam(@LoginUser SysUser user) {
-        try {
-            // TODO: 根据user获取对应的员工ID
-            Long managerId = user.getId();
-            List<Employee> team = employeeService.getMyTeam(managerId, user.getTenantId());
-            return Result.success(team);
-        } catch (Exception e) {
-            log.error("获取我的团队失败", e);
-            return Result.failed("获取团队失败：" + e.getMessage());
-        }
-    }
-
-    /**
-     * 组织架构图
-     */
-    @GetMapping("/org-chart")
-    @Operation(summary = "组织架构图", description = "获取组织架构图数据")
-    @PreAuthorize("hasAuthority('organization:emp:view')")
-    public Result<Map<String, Object>> getOrganizationChart(
-            @RequestParam(required = false) Long rootDepartmentId,
-            @LoginUser SysUser user) {
-        
-        try {
-            Map<String, Object> chartData = employeeService.getOrganizationChart(rootDepartmentId, user.getTenantId());
-            return Result.success(chartData);
-        } catch (Exception e) {
-            log.error("获取组织架构图失败", e);
-            return Result.failed("获取架构图失败：" + e.getMessage());
-        }
-    }
-
-    /**
-     * 导入员工
-     */
-    @PostMapping("/import")
-    @Operation(summary = "导入员工", description = "批量导入员工数据")
-    @PreAuthorize("hasAuthority('organization:emp:import')")
-    public Result<Map<String, Object>> importEmployees(
-            @RequestParam("file") MultipartFile file,
-            @LoginUser SysUser user) {
-        
-        try {
-            // TODO: 解析Excel文件，转换为Employee列表
-            List<Employee> employees = null;
-            return employeeService.importEmployees(employees, user.getTenantId());
-        } catch (Exception e) {
-            log.error("导入员工失败", e);
-            return Result.failed("导入失败：" + e.getMessage());
-        }
-    }
-
-    /**
-     * 导出员工
+     * 导出员工数据
+     * 
+     * @param query 查询条件
+     * @return 导出数据
      */
     @PostMapping("/export")
-    @Operation(summary = "导出员工", description = "导出员工数据到Excel")
-    @PreAuthorize("hasAuthority('organization:emp:export')")
-    public Result<String> exportEmployees(@RequestBody EmployeeSearchDTO searchDTO, @LoginUser SysUser user) {
-        try {
-            List<Employee> employees = employeeService.exportEmployees(searchDTO, user.getTenantId());
-            // TODO: 生成Excel文件，返回下载链接
-            String downloadUrl = "";
-            return Result.success(downloadUrl);
-        } catch (Exception e) {
-            log.error("导出员工失败", e);
-            return Result.failed("导出失败：" + e.getMessage());
+    public Result<List<EmployeeVO>> exportEmployees(@RequestBody EmployeeQueryDTO query) {
+        // ID转换处理
+        if (query.getDepartmentId() != null) {
+            query.setDepartmentId(IdUtils.stringToLong(query.getDepartmentId().toString()));
         }
+        if (query.getPositionId() != null) {
+            query.setPositionId(IdUtils.stringToLong(query.getPositionId().toString()));
+        }
+        if (query.getGradeId() != null) {
+            query.setGradeId(IdUtils.stringToLong(query.getGradeId().toString()));
+        }
+        
+        List<EmployeeVO> employees = employeeService.exportEmployees(query);
+        return Result.success(employees);
+    }
+
+    // 内部DTO类定义
+
+    /**
+     * 员工调岗DTO
+     */
+    public static class EmployeeTransferDTO {
+        private String newDepartmentId;
+        private String newPositionId;
+        private String reason;
+
+        // getters and setters
+        public String getNewDepartmentId() { return newDepartmentId; }
+        public void setNewDepartmentId(String newDepartmentId) { this.newDepartmentId = newDepartmentId; }
+        public String getNewPositionId() { return newPositionId; }
+        public void setNewPositionId(String newPositionId) { this.newPositionId = newPositionId; }
+        public String getReason() { return reason; }
+        public void setReason(String reason) { this.reason = reason; }
+    }
+
+    /**
+     * 员工离职DTO
+     */
+    public static class EmployeeLeaveDTO {
+        private String leaveDate;
+        private String leaveReason;
+
+        // getters and setters
+        public String getLeaveDate() { return leaveDate; }
+        public void setLeaveDate(String leaveDate) { this.leaveDate = leaveDate; }
+        public String getLeaveReason() { return leaveReason; }
+        public void setLeaveReason(String leaveReason) { this.leaveReason = leaveReason; }
+    }
+
+    /**
+     * 批量更新部门DTO
+     */
+    public static class BatchUpdateDepartmentDTO {
+        private List<String> employeeIds;
+        private String departmentId;
+
+        // getters and setters
+        public List<String> getEmployeeIds() { return employeeIds; }
+        public void setEmployeeIds(List<String> employeeIds) { this.employeeIds = employeeIds; }
+        public String getDepartmentId() { return departmentId; }
+        public void setDepartmentId(String departmentId) { this.departmentId = departmentId; }
+    }
+
+    /**
+     * 批量更新岗位DTO
+     */
+    public static class BatchUpdatePositionDTO {
+        private List<String> employeeIds;
+        private String positionId;
+
+        // getters and setters
+        public List<String> getEmployeeIds() { return employeeIds; }
+        public void setEmployeeIds(List<String> employeeIds) { this.employeeIds = employeeIds; }
+        public String getPositionId() { return positionId; }
+        public void setPositionId(String positionId) { this.positionId = positionId; }
+    }
+
+    /**
+     * 员工统计信息VO
+     */
+    public static class EmployeeStatisticsVO {
+        private Integer totalCount;
+        private Integer activeCount;
+        private Integer probationCount;
+        private Integer leaveCount;
+        private Integer thisMonthJoinCount;
+        private Integer thisMonthLeaveCount;
+
+        public EmployeeStatisticsVO(EmployeeMapper.EmployeeStatisticsVO statistics) {
+            this.totalCount = statistics.getTotalCount();
+            this.activeCount = statistics.getActiveCount();
+            this.probationCount = statistics.getProbationCount();
+            this.leaveCount = statistics.getLeaveCount();
+            this.thisMonthJoinCount = statistics.getThisMonthJoinCount();
+            this.thisMonthLeaveCount = statistics.getThisMonthLeaveCount();
+        }
+
+        // getters and setters
+        public Integer getTotalCount() { return totalCount; }
+        public void setTotalCount(Integer totalCount) { this.totalCount = totalCount; }
+        public Integer getActiveCount() { return activeCount; }
+        public void setActiveCount(Integer activeCount) { this.activeCount = activeCount; }
+        public Integer getProbationCount() { return probationCount; }
+        public void setProbationCount(Integer probationCount) { this.probationCount = probationCount; }
+        public Integer getLeaveCount() { return leaveCount; }
+        public void setLeaveCount(Integer leaveCount) { this.leaveCount = leaveCount; }
+        public Integer getThisMonthJoinCount() { return thisMonthJoinCount; }
+        public void setThisMonthJoinCount(Integer thisMonthJoinCount) { this.thisMonthJoinCount = thisMonthJoinCount; }
+        public Integer getThisMonthLeaveCount() { return thisMonthLeaveCount; }
+        public void setThisMonthLeaveCount(Integer thisMonthLeaveCount) { this.thisMonthLeaveCount = thisMonthLeaveCount; }
+    }
+
+    /**
+     * 部门员工分布VO
+     */
+    public static class DepartmentEmployeeDistributionVO {
+        private String departmentId;
+        private String departmentName;
+        private Integer employeeCount;
+        private Integer activeCount;
+        private Integer probationCount;
+
+        public DepartmentEmployeeDistributionVO(String departmentId, String departmentName, 
+                                               Integer employeeCount, Integer activeCount, Integer probationCount) {
+            this.departmentId = departmentId;
+            this.departmentName = departmentName;
+            this.employeeCount = employeeCount;
+            this.activeCount = activeCount;
+            this.probationCount = probationCount;
+        }
+
+        // getters and setters
+        public String getDepartmentId() { return departmentId; }
+        public void setDepartmentId(String departmentId) { this.departmentId = departmentId; }
+        public String getDepartmentName() { return departmentName; }
+        public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+        public Integer getEmployeeCount() { return employeeCount; }
+        public void setEmployeeCount(Integer employeeCount) { this.employeeCount = employeeCount; }
+        public Integer getActiveCount() { return activeCount; }
+        public void setActiveCount(Integer activeCount) { this.activeCount = activeCount; }
+        public Integer getProbationCount() { return probationCount; }
+        public void setProbationCount(Integer probationCount) { this.probationCount = probationCount; }
+    }
+
+    /**
+     * 统一返回结果类
+     */
+    public static class Result<T> {
+        private boolean success;
+        private String message;
+        private T data;
+
+        private Result(boolean success, String message, T data) {
+            this.success = success;
+            this.message = message;
+            this.data = data;
+        }
+
+        public static <T> Result<T> success() {
+            return new Result<>(true, "成功", null);
+        }
+
+        public static <T> Result<T> success(T data) {
+            return new Result<>(true, "成功", data);
+        }
+
+        public static <T> Result<T> error(String message) {
+            return new Result<>(false, message, null);
+        }
+
+        // getters and setters
+        public boolean isSuccess() { return success; }
+        public void setSuccess(boolean success) { this.success = success; }
+        public String getMessage() { return message; }
+        public void setMessage(String message) { this.message = message; }
+        public T getData() { return data; }
+        public void setData(T data) { this.data = data; }
     }
 } 

@@ -21,7 +21,7 @@ public class TenantProperties {
     /**
      * 是否开启多租户
      */
-    private Boolean enable = false;
+    private Boolean enable = true;
 
     /**
      * 配置不进行多租户隔离的表名

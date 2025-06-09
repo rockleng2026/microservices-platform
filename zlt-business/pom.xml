@@ -16,5 +16,7 @@
         <module>file-center</module>
         <!-- 搜索中心 -->
         <module>search-center</module>
+        <!-- 组织架构中心 -->
+        <module>organization-service</module>
     </modules>
 </project>

@@ -3,7 +3,14 @@ import { PageContainer, ProTable, ProForm, ProFormText, ProFormSelect, ProFormDa
 import { Button, Modal, message, Popconfirm, Tag, Space } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, ExportOutlined, ImportOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
-import { getEmployees, createEmployee, updateEmployee, deleteEmployee } from '@/services/organization';
+import { 
+  getEmployeePage, 
+  createEmployee, 
+  updateEmployee, 
+  deleteEmployee,
+  getEmployeesByDepartment,
+  generateEmpNo 
+} from '@/services/organization/employee';
 
 // 员工类型定义
 interface EmployeeType {
@@ -181,9 +188,11 @@ const Employees: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
+      await deleteEmployee(id);
       message.success('删除成功');
       actionRef.current?.reload();
     } catch (error) {
+      console.error('删除员工失败:', error);
       message.error('删除失败');
     }
   };
@@ -192,14 +201,17 @@ const Employees: React.FC = () => {
     try {
       if (editingRecord) {
         // 更新员工
+        await updateEmployee(editingRecord.id, values);
         message.success('更新成功');
       } else {
         // 新增员工
+        await createEmployee(values);
         message.success('新增成功');
       }
       setModalVisible(false);
       actionRef.current?.reload();
     } catch (error) {
+      console.error('保存员工失败:', error);
       message.error(editingRecord ? '更新失败' : '新增失败');
     }
   };
@@ -251,12 +263,36 @@ const Employees: React.FC = () => {
           </Button>,
         ]}
         request={async (params) => {
-          // 模拟API请求
-          return {
-            data: mockEmployees,
-            success: true,
-            total: mockEmployees.length,
-          };
+          try {
+            const response = await getEmployeePage({
+              page: params.current,
+              size: params.pageSize,
+              keyword: params.keyword,
+              departmentId: params.departmentId,
+              positionId: params.positionId,
+              status: params.employmentStatus,
+            });
+            
+            if (response.datas && response.success) {
+              return {
+                data: response.datas.records || [],
+                success: true,
+                total: response.datas.total || 0,
+              };
+            }
+            return {
+              data: [],
+              success: false,
+              total: 0,
+            };
+          } catch (error) {
+            console.error('获取员工列表失败:', error);
+            return {
+              data: [],
+              success: false,
+              total: 0,
+            };
+          }
         }}
         columns={columns}
         pagination={{

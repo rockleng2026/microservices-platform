@@ -164,4 +164,23 @@ export async function generatePositionCode(departmentId: number) {
     method: 'GET',
     params: { departmentId },
   });
+}
+
+/**
+ * 获取权限菜单树
+ */
+export async function getPermissionMenuTree() {
+  return request('/api/organization/positions/permissions/tree', {
+    method: 'GET',
+  });
+}
+
+/**
+ * 更新岗位权限
+ */
+export async function updatePositionPermissions(positionId: number, permissions: string) {
+  return request(`/api/organization/positions/${positionId}/permissions`, {
+    method: 'PUT',
+    data: { permissions },
+  });
 } 

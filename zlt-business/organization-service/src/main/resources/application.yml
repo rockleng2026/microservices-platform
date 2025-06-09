@@ -1,14 +1,8 @@
-server:
-  port: 8083
-  
 spring:
-  application:
-    name: organization-service
-  
   datasource:
     url: jdbc:mysql://127.0.0.1:3306/central_organization?useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&useSSL=false&serverTimezone=Asia/Shanghai
-    username: root
-    password: lengfeng847
+    username: ${zlt.datasource.username}
+    password: ${zlt.datasource.password}
     driver-class-name: com.mysql.cj.jdbc.Driver
     type: com.alibaba.druid.pool.DruidDataSource
     druid:
@@ -39,7 +33,7 @@ spring:
             
   redis:
     host: 127.0.0.1
-    port: 6379
+    port: 16379
     password: 
     database: 0
     timeout: 30000

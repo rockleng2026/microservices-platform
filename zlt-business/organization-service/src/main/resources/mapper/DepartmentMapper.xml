@@ -3,392 +3,212 @@
 <mapper namespace="com.central.organization.mapper.DepartmentMapper">
 
     <!-- 部门结果映射 -->
-    <resultMap id="DepartmentResult" type="com.central.organization.model.Department">
-        <id property="id" column="id" jdbcType="INTEGER"/>
-        <result property="name" column="name" jdbcType="VARCHAR"/>
-        <result property="parentId" column="parent_id" jdbcType="INTEGER"/>
-        <result property="depNo" column="dep_no" jdbcType="VARCHAR"/>
-        <result property="directorId" column="director_id" jdbcType="INTEGER"/>
-        <result property="gradeid" column="gradeid" jdbcType="INTEGER"/>
-        <result property="tel" column="tel" jdbcType="VARCHAR"/>
-        <result property="address" column="address" jdbcType="VARCHAR"/>
-        <result property="description" column="description" jdbcType="TEXT"/>
-        <result property="status" column="status" jdbcType="TINYINT"/>
-        <result property="tenantId" column="tenant_id" jdbcType="VARCHAR"/>
-        <result property="createdAt" column="created_at" jdbcType="TIMESTAMP"/>
-        <result property="updatedAt" column="updated_at" jdbcType="TIMESTAMP"/>
-        <result property="createdBy" column="created_by" jdbcType="INTEGER"/>
-        <result property="updatedBy" column="updated_by" jdbcType="INTEGER"/>
-        <result property="version" column="version" jdbcType="INTEGER"/>
-        <result property="deleted" column="deleted" jdbcType="TINYINT"/>
+    <resultMap id="DepartmentResultMap" type="com.central.organization.model.Department">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="directorId" column="directorId"/>
+        <result property="parentId" column="parentId"/>
+        <result property="depNo" column="depNo"/>
+        <result property="gradeid" column="gradeid"/>
+        <result property="islevel" column="islevel"/>
+        <result property="fiiale" column="fiiale"/>
+        <result property="filialemark" column="filialemark"/>
+        <result property="tel" column="tel"/>
+        <result property="address" column="address"/>
+        <result property="description" column="description"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="status" column="status"/>
+        <result property="delflag" column="delflag"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="tenantId" column="tenant_id"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="updatedBy" column="updated_by"/>
+        <!-- 扩展字段 -->
+        <result property="directorName" column="director_name"/>
+        <result property="parentName" column="parent_name"/>
+        <result property="employeeCount" column="employee_count"/>
+        <result property="childrenCount" column="children_count"/>
+        <result property="departmentPath" column="department_path"/>
     </resultMap>
 
-    <!-- 部门树结果映射 -->
-    <resultMap id="DepartmentTreeResult" type="com.central.organization.dto.DepartmentTreeDTO">
-        <id property="id" column="id" jdbcType="INTEGER"/>
-        <result property="name" column="name" jdbcType="VARCHAR"/>
-        <result property="parentId" column="parent_id" jdbcType="INTEGER"/>
-        <result property="depNo" column="dep_no" jdbcType="VARCHAR"/>
-        <result property="directorId" column="director_id" jdbcType="INTEGER"/>
-        <result property="directorName" column="director_name" jdbcType="VARCHAR"/>
-        <result property="employeeCount" column="employee_count" jdbcType="INTEGER"/>
-        <result property="positionCount" column="position_count" jdbcType="INTEGER"/>
-        <result property="status" column="status" jdbcType="TINYINT"/>
-        <result property="gradeid" column="gradeid" jdbcType="INTEGER"/>
-        <result property="gradeName" column="grade_name" jdbcType="VARCHAR"/>
-        <collection property="children" ofType="com.central.organization.dto.DepartmentTreeDTO" 
-                   select="selectDepartmentTree" column="{tenantId=tenant_id,parentId=id,includeDisabled=includeDisabled}"/>
-    </resultMap>
-
-    <!-- 部门统计结果映射 -->
-    <resultMap id="DepartmentStatisticsResult" type="com.central.organization.dto.DepartmentStatisticsDTO">
-        <result property="employeeCount" column="employee_count" jdbcType="INTEGER"/>
-        <result property="positionCount" column="position_count" jdbcType="INTEGER"/>
-        <result property="childDepartmentCount" column="child_department_count" jdbcType="INTEGER"/>
-        <result property="totalEmployeeCount" column="total_employee_count" jdbcType="INTEGER"/>
-        <result property="onJobEmployeeCount" column="on_job_employee_count" jdbcType="INTEGER"/>
-        <result property="probationEmployeeCount" column="probation_employee_count" jdbcType="INTEGER"/>
-        <result property="leaveEmployeeCount" column="leave_employee_count" jdbcType="INTEGER"/>
-        <result property="managerCount" column="manager_count" jdbcType="INTEGER"/>
-        <result property="averageAge" column="average_age" jdbcType="DECIMAL"/>
-        <result property="maleRatio" column="male_ratio" jdbcType="DECIMAL"/>
-        <result property="femaleRatio" column="female_ratio" jdbcType="DECIMAL"/>
-    </resultMap>
-
-    <!-- 查询部门树 -->
-    <select id="selectDepartmentTree" resultMap="DepartmentTreeResult">
+    <!-- 查询部门列表（包含统计信息） -->
+    <select id="listDepartmentsWithStats" resultMap="DepartmentResultMap">
         SELECT 
-            d.id,
-            d.name,
-            d.parent_id,
-            d.dep_no,
-            d.director_id,
+            d.*, 
             e.name as director_name,
-            d.status,
-            d.gradeid,
-            dg.name as grade_name,
-            d.tenant_id,
-            IFNULL(emp_stats.employee_count, 0) as employee_count,
-            IFNULL(pos_stats.position_count, 0) as position_count
+            p.name as parent_name,
+            (SELECT COUNT(*) FROM employee emp WHERE emp.department_id = d.id AND emp.delflag = 0 AND emp.employment_status = 1) as employee_count,
+            (SELECT COUNT(*) FROM department child WHERE child.parentId = d.id AND child.delflag = 0) as children_count
         FROM department d
-        LEFT JOIN employee e ON d.director_id = e.id AND e.deleted = 0
-        LEFT JOIN department_grade dg ON d.gradeid = dg.id AND dg.deleted = 0
-        LEFT JOIN (
-            SELECT department_id, COUNT(*) as employee_count
-            FROM employee 
-            WHERE deleted = 0 AND status IN (1, 2)
-            GROUP BY department_id
-        ) emp_stats ON d.id = emp_stats.department_id
-        LEFT JOIN (
-            SELECT department_id, COUNT(*) as position_count
-            FROM work_position 
-            WHERE deleted = 0 AND status = 1
-            GROUP BY department_id
-        ) pos_stats ON d.id = pos_stats.department_id
-        WHERE d.deleted = 0 
-        AND d.tenant_id = #{tenantId}
-        <if test="parentId != null">
-            AND d.parent_id = #{parentId}
+        LEFT JOIN employee e ON d.directorId = e.id AND e.delflag = 0
+        LEFT JOIN department p ON d.parentId = p.id AND p.delflag = 0
+        WHERE d.delflag = 0
+        <if test="query.id != null">
+            AND d.id = #{query.id}
         </if>
-        <if test="parentId == null">
-            AND d.parent_id = 0
+        <if test="query.parentId != null">
+            AND d.parentId = #{query.parentId}
         </if>
+        <if test="query.name != null and query.name != ''">
+            AND d.name LIKE CONCAT('%', #{query.name}, '%')
+        </if>
+        <if test="query.depNo != null and query.depNo != ''">
+            AND d.depNo = #{query.depNo}
+        </if>
+        <if test="query.directorId != null">
+            AND d.directorId = #{query.directorId}
+        </if>
+        <if test="query.gradeid != null">
+            AND d.gradeid = #{query.gradeid}
+        </if>
+        <if test="query.fiiale != null and query.fiiale != ''">
+            AND d.fiiale = #{query.fiiale}
+        </if>
+        <if test="query.status != null">
+            AND d.status = #{query.status}
+        </if>
+        <if test="query.includeDisabled != null and !query.includeDisabled">
+            AND d.status = 1
+        </if>
+        <if test="query.keyword != null and query.keyword != ''">
+            AND (d.name LIKE CONCAT('%', #{query.keyword}, '%') 
+                OR d.depNo LIKE CONCAT('%', #{query.keyword}, '%')
+                OR d.description LIKE CONCAT('%', #{query.keyword}, '%'))
+        </if>
+        <if test="query.rootOnly != null and query.rootOnly">
+            AND d.parentId = 0
+        </if>
+        ORDER BY d.sort_order ASC, d.id ASC
+    </select>
+
+    <!-- 根据父部门ID查询子部门 -->
+    <select id="selectByParentId" resultMap="DepartmentResultMap">
+        SELECT 
+            d.*, 
+            e.name as director_name,
+            (SELECT COUNT(*) FROM employee emp WHERE emp.department_id = d.id AND emp.delflag = 0 AND emp.employment_status = 1) as employee_count,
+            (SELECT COUNT(*) FROM department child WHERE child.parentId = d.id AND child.delflag = 0) as children_count
+        FROM department d
+        LEFT JOIN employee e ON d.directorId = e.id AND e.delflag = 0
+        WHERE d.delflag = 0 
+            AND d.parentId = #{parentId}
         <if test="includeDisabled != null and !includeDisabled">
             AND d.status = 1
         </if>
-        ORDER BY d.gradeid, d.created_at
+        ORDER BY d.sort_order ASC, d.id ASC
     </select>
 
-    <!-- 分页查询部门列表（带统计） -->
-    <select id="selectDepartmentPageWithStats" resultMap="DepartmentResult">
-        SELECT 
-            d.*,
-            pd.name as parent_name,
-            dg.name as grade_name,
-            e.name as director_name,
-            IFNULL(emp_stats.employee_count, 0) as employee_count,
-            IFNULL(pos_stats.position_count, 0) as position_count
-        FROM department d
-        LEFT JOIN department pd ON d.parent_id = pd.id AND pd.deleted = 0
-        LEFT JOIN department_grade dg ON d.gradeid = dg.id AND dg.deleted = 0
-        LEFT JOIN employee e ON d.director_id = e.id AND e.deleted = 0
-        LEFT JOIN (
-            SELECT department_id, COUNT(*) as employee_count
-            FROM employee 
-            WHERE deleted = 0 AND status IN (1, 2)
-            GROUP BY department_id
-        ) emp_stats ON d.id = emp_stats.department_id
-        LEFT JOIN (
-            SELECT department_id, COUNT(*) as position_count
-            FROM work_position 
-            WHERE deleted = 0 AND status = 1
-            GROUP BY department_id
-        ) pos_stats ON d.id = pos_stats.department_id
-        WHERE d.deleted = 0 
-        AND d.tenant_id = #{tenantId}
-        <if test="keyword != null and keyword != ''">
-            AND (d.name LIKE CONCAT('%', #{keyword}, '%') 
-                 OR d.dep_no LIKE CONCAT('%', #{keyword}, '%'))
-        </if>
-        <if test="parentId != null">
-            AND d.parent_id = #{parentId}
-        </if>
-        <if test="gradeId != null">
-            AND d.gradeid = #{gradeId}
-        </if>
-        <if test="status != null">
-            AND d.status = #{status}
-        </if>
-        ORDER BY d.gradeid, d.created_at DESC
-    </select>
-
-    <!-- 根据ID查询部门详情 -->
-    <select id="selectDepartmentDetailById" resultMap="DepartmentResult">
-        SELECT 
-            d.*,
-            pd.name as parent_name,
-            dg.name as grade_name,
-            e.name as director_name,
-            IFNULL(emp_stats.employee_count, 0) as employee_count,
-            IFNULL(pos_stats.position_count, 0) as position_count
-        FROM department d
-        LEFT JOIN department pd ON d.parent_id = pd.id AND pd.deleted = 0
-        LEFT JOIN department_grade dg ON d.gradeid = dg.id AND dg.deleted = 0
-        LEFT JOIN employee e ON d.director_id = e.id AND e.deleted = 0
-        LEFT JOIN (
-            SELECT department_id, COUNT(*) as employee_count
-            FROM employee 
-            WHERE deleted = 0 AND status IN (1, 2)
-            GROUP BY department_id
-        ) emp_stats ON d.id = emp_stats.department_id
-        LEFT JOIN (
-            SELECT department_id, COUNT(*) as position_count
-            FROM work_position 
-            WHERE deleted = 0 AND status = 1
-            GROUP BY department_id
-        ) pos_stats ON d.id = pos_stats.department_id
-        WHERE d.id = #{id} AND d.tenant_id = #{tenantId} AND d.deleted = 0
-    </select>
-
-    <!-- 查询子部门列表 -->
-    <select id="selectChildrenByParentId" resultMap="DepartmentResult">
-        SELECT * FROM department 
-        WHERE parent_id = #{parentId} AND tenant_id = #{tenantId} AND deleted = 0
-        ORDER BY gradeid, created_at
-    </select>
-
-    <!-- 查询部门下的员工数量 -->
-    <select id="selectEmployeeCountByDepartment" resultType="java.lang.Integer">
-        SELECT COUNT(*) FROM employee 
-        WHERE department_id = #{departmentId} AND tenant_id = #{tenantId} AND deleted = 0
-    </select>
-
-    <!-- 批量软删除部门 -->
-    <update id="batchSoftDelete">
-        UPDATE department SET 
-            deleted = 1,
-            updated_by = #{userId},
-            updated_at = NOW()
-        WHERE id IN 
-        <foreach collection="ids" item="id" open="(" separator="," close=")">
-            #{id}
-        </foreach>
-        AND tenant_id = #{tenantId} AND deleted = 0
-    </update>
-
-    <!-- 更新部门状态 -->
-    <update id="updateDepartmentStatus">
-        UPDATE department SET 
-            status = #{status},
-            updated_by = #{userId},
-            updated_at = NOW()
-        WHERE id = #{id} AND tenant_id = #{tenantId} AND deleted = 0
-    </update>
-
-    <!-- 查询部门及其所有子部门ID -->
-    <select id="selectDepartmentAndChildrenIds" resultType="java.lang.Integer">
+    <!-- 查询部门及其所有下级部门ID -->
+    <select id="selectDepartmentAndChildrenIds" resultType="java.lang.Long">
         WITH RECURSIVE dept_tree AS (
-            SELECT id FROM department 
-            WHERE id = #{departmentId} AND tenant_id = #{tenantId} AND deleted = 0
+            SELECT id, parentId FROM department WHERE id = #{departmentId} AND delflag = 0
             UNION ALL
-            SELECT d.id FROM department d
-            INNER JOIN dept_tree dt ON d.parent_id = dt.id
-            WHERE d.tenant_id = #{tenantId} AND d.deleted = 0
+            SELECT d.id, d.parentId 
+            FROM department d 
+            INNER JOIN dept_tree dt ON d.parentId = dt.id 
+            WHERE d.delflag = 0
         )
         SELECT id FROM dept_tree
     </select>
 
-    <!-- 查询部门统计信息 -->
-    <select id="selectDepartmentStatistics" resultMap="DepartmentStatisticsResult">
-        SELECT 
-            -- 基础统计
-            IFNULL(direct_emp.employee_count, 0) as employee_count,
-            IFNULL(pos_count.position_count, 0) as position_count,
-            IFNULL(child_dept.child_department_count, 0) as child_department_count,
-            
-            -- 包含子部门的员工统计
-            IFNULL(all_emp.total_employee_count, 0) as total_employee_count,
-            IFNULL(status_stats.on_job_employee_count, 0) as on_job_employee_count,
-            IFNULL(status_stats.probation_employee_count, 0) as probation_employee_count,
-            IFNULL(status_stats.leave_employee_count, 0) as leave_employee_count,
-            IFNULL(manager_stats.manager_count, 0) as manager_count,
-            
-            -- 年龄和性别统计
-            IFNULL(age_gender.average_age, 0) as average_age,
-            IFNULL(age_gender.male_ratio, 0) as male_ratio,
-            IFNULL(age_gender.female_ratio, 0) as female_ratio
-        FROM department d
-        
-        -- 直属员工数量
-        LEFT JOIN (
-            SELECT department_id, COUNT(*) as employee_count
-            FROM employee 
-            WHERE department_id = #{departmentId} AND deleted = 0
-            GROUP BY department_id
-        ) direct_emp ON d.id = direct_emp.department_id
-        
-        -- 岗位数量
-        LEFT JOIN (
-            SELECT department_id, COUNT(*) as position_count
-            FROM work_position 
-            WHERE department_id = #{departmentId} AND deleted = 0 AND status = 1
-            GROUP BY department_id
-        ) pos_count ON d.id = pos_count.department_id
-        
-        -- 子部门数量
-        LEFT JOIN (
-            SELECT parent_id, COUNT(*) as child_department_count
-            FROM department 
-            WHERE parent_id = #{departmentId} AND deleted = 0
-            GROUP BY parent_id
-        ) child_dept ON d.id = child_dept.parent_id
-        
-        -- 总员工数量（包含子部门）
-        LEFT JOIN (
-            WITH RECURSIVE dept_tree AS (
-                SELECT id FROM department 
-                WHERE id = #{departmentId} AND tenant_id = #{tenantId} AND deleted = 0
-                UNION ALL
-                SELECT dept.id FROM department dept
-                INNER JOIN dept_tree dt ON dept.parent_id = dt.id
-                WHERE dept.tenant_id = #{tenantId} AND dept.deleted = 0
-            )
-            SELECT COUNT(*) as total_employee_count
-            FROM employee e
-            INNER JOIN dept_tree dt ON e.department_id = dt.id
-            WHERE e.deleted = 0
-        ) all_emp ON 1=1
-        
-        -- 员工状态统计
-        LEFT JOIN (
-            WITH RECURSIVE dept_tree AS (
-                SELECT id FROM department 
-                WHERE id = #{departmentId} AND tenant_id = #{tenantId} AND deleted = 0
-                UNION ALL
-                SELECT dept.id FROM department dept
-                INNER JOIN dept_tree dt ON dept.parent_id = dt.id
-                WHERE dept.tenant_id = #{tenantId} AND dept.deleted = 0
-            )
-            SELECT 
-                SUM(CASE WHEN e.status = 1 THEN 1 ELSE 0 END) as on_job_employee_count,
-                SUM(CASE WHEN e.status = 2 THEN 1 ELSE 0 END) as probation_employee_count,
-                SUM(CASE WHEN e.status = 3 THEN 1 ELSE 0 END) as leave_employee_count
-            FROM employee e
-            INNER JOIN dept_tree dt ON e.department_id = dt.id
-            WHERE e.deleted = 0
-        ) status_stats ON 1=1
-        
-        -- 管理人员统计
-        LEFT JOIN (
-            WITH RECURSIVE dept_tree AS (
-                SELECT id FROM department 
-                WHERE id = #{departmentId} AND tenant_id = #{tenantId} AND deleted = 0
-                UNION ALL
-                SELECT dept.id FROM department dept
-                INNER JOIN dept_tree dt ON dept.parent_id = dt.id
-                WHERE dept.tenant_id = #{tenantId} AND dept.deleted = 0
-            )
-            SELECT COUNT(*) as manager_count
-            FROM employee e
-            INNER JOIN dept_tree dt ON e.department_id = dt.id
-            INNER JOIN work_position wp ON e.position_id = wp.id
-            WHERE e.deleted = 0 AND e.status IN (1, 2) 
-            AND wp.is_manager = 1 AND wp.deleted = 0
-        ) manager_stats ON 1=1
-        
-        -- 年龄和性别统计
-        LEFT JOIN (
-            WITH RECURSIVE dept_tree AS (
-                SELECT id FROM department 
-                WHERE id = #{departmentId} AND tenant_id = #{tenantId} AND deleted = 0
-                UNION ALL
-                SELECT dept.id FROM department dept
-                INNER JOIN dept_tree dt ON dept.parent_id = dt.id
-                WHERE dept.tenant_id = #{tenantId} AND dept.deleted = 0
-            )
-            SELECT 
-                AVG(YEAR(NOW()) - YEAR(e.birth_date)) as average_age,
-                ROUND(SUM(CASE WHEN e.gender = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) as male_ratio,
-                ROUND(SUM(CASE WHEN e.gender = 2 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1) as female_ratio
-            FROM employee e
-            INNER JOIN dept_tree dt ON e.department_id = dt.id
-            WHERE e.deleted = 0 AND e.status IN (1, 2)
-        ) age_gender ON 1=1
-        
-        WHERE d.id = #{departmentId} AND d.tenant_id = #{tenantId} AND d.deleted = 0
-    </select>
-
     <!-- 查询部门路径 -->
-    <select id="selectDepartmentPath" resultMap="DepartmentResult">
+    <select id="selectDepartmentPath" resultType="java.lang.String">
         WITH RECURSIVE dept_path AS (
-            SELECT id, name, parent_id, 1 as level
+            SELECT id, parentId, name, CAST(name AS CHAR(1000)) as path
             FROM department 
-            WHERE id = #{departmentId} AND tenant_id = #{tenantId} AND deleted = 0
+            WHERE id = #{departmentId} AND delflag = 0
+            
             UNION ALL
-            SELECT d.id, d.name, d.parent_id, dp.level + 1
+            
+            SELECT d.id, d.parentId, d.name, CONCAT(d.name, ' > ', dp.path) as path
             FROM department d
-            INNER JOIN dept_path dp ON d.id = dp.parent_id
-            WHERE d.tenant_id = #{tenantId} AND d.deleted = 0
+            INNER JOIN dept_path dp ON d.id = dp.parentId
+            WHERE d.delflag = 0
         )
-        SELECT id, name, parent_id FROM dept_path ORDER BY level DESC
+        SELECT path FROM dept_path WHERE parentId = 0 OR parentId IS NULL
+        LIMIT 1
     </select>
 
-    <!-- 查询用户可管理的部门 -->
-    <select id="selectUserManageableDepartments" resultMap="DepartmentResult">
-        SELECT DISTINCT d.*
-        FROM department d
-        INNER JOIN user_department_role udr ON d.id = udr.department_id
-        WHERE udr.user_id = #{userId} 
-        AND udr.role_type IN ('MANAGER', 'ADMIN')
-        AND d.tenant_id = #{tenantId} 
-        AND d.deleted = 0
-        ORDER BY d.gradeid, d.created_at
+    <!-- 统计部门下的员工数量 -->
+    <select id="countEmployeesByDepartment" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM employee e
+        WHERE e.delflag = 0 
+            AND e.employment_status = 1
+        <choose>
+            <when test="includeChildren != null and includeChildren">
+                AND e.department_id IN (
+                    WITH RECURSIVE dept_tree AS (
+                        SELECT id FROM department WHERE id = #{departmentId} AND delflag = 0
+                        UNION ALL
+                        SELECT d.id 
+                        FROM department d 
+                        INNER JOIN dept_tree dt ON d.parentId = dt.id 
+                        WHERE d.delflag = 0
+                    )
+                    SELECT id FROM dept_tree
+                )
+            </when>
+            <otherwise>
+                AND e.department_id = #{departmentId}
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 统计部门下的子部门数量 -->
+    <select id="countChildrenByParentId" resultType="java.lang.Integer">
+        SELECT COUNT(*)
+        FROM department
+        WHERE parentId = #{parentId} AND delflag = 0
     </select>
 
     <!-- 检查部门编号是否存在 -->
-    <select id="checkDepNoExists" resultType="int">
-        SELECT COUNT(*) FROM department 
-        WHERE dep_no = #{depNo} 
-        AND tenant_id = #{tenantId} 
-        AND deleted = 0
+    <select id="existsByDepNo" resultType="java.lang.Boolean">
+        SELECT COUNT(*) > 0
+        FROM department
+        WHERE depNo = #{depNo} 
+            AND delflag = 0
         <if test="excludeId != null">
             AND id != #{excludeId}
         </if>
     </select>
 
-    <!-- 验证部门层级 -->
-    <select id="validateDepartmentLevel" resultType="java.lang.Boolean">
-        SELECT CASE 
-            WHEN #{parentId} = 0 THEN 1  -- 根部门
-            WHEN EXISTS (
-                SELECT 1 FROM department 
-                WHERE id = #{parentId} 
-                AND tenant_id = #{tenantId} 
-                AND deleted = 0
-                AND gradeid = #{gradeId} - 1
-            ) THEN 1
-            ELSE 0
-        END as valid
+    <!-- 检查部门名称在同级部门中是否存在 -->
+    <select id="existsByNameAndParentId" resultType="java.lang.Boolean">
+        SELECT COUNT(*) > 0
+        FROM department
+        WHERE name = #{name} 
+            AND parentId = #{parentId}
+            AND delflag = 0
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
     </select>
+
+    <!-- 更新部门状态 -->
+    <update id="updateStatus">
+        UPDATE department 
+        SET status = #{status}, updated_at = NOW()
+        WHERE id = #{departmentId} AND delflag = 0
+    </update>
+
+    <!-- 软删除部门 -->
+    <update id="softDelete">
+        UPDATE department 
+        SET delflag = 1, updated_at = NOW()
+        WHERE id = #{departmentId}
+    </update>
+
+    <!-- 批量更新部门的父部门ID -->
+    <update id="batchUpdateParentId">
+        UPDATE department 
+        SET parentId = #{newParentId}, updated_at = NOW()
+        WHERE id IN
+        <foreach collection="departmentIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND delflag = 0
+    </update>
 
 </mapper> 

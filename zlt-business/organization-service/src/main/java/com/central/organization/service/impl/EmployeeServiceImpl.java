@@ -1,409 +1,476 @@
 package com.central.organization.service.impl;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.central.common.model.PageResult;
-import com.central.common.model.Result;
-import com.central.organization.dto.EmployeeDetailDTO;
-import com.central.organization.dto.EmployeeImportDTO;
-import com.central.organization.dto.EmployeeStatisticsDTO;
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.util.StrUtil;
 import com.central.organization.mapper.EmployeeMapper;
+import com.central.organization.mapper.DepartmentMapper;
 import com.central.organization.model.Employee;
-import com.central.organization.service.EmployeeService;
+import com.central.organization.model.Department;
+import com.central.organization.model.dto.EmployeeQueryDTO;
+import com.central.organization.model.dto.EmployeeSaveDTO;
+import com.central.organization.model.vo.EmployeeVO;
+import com.central.organization.service.IEmployeeService;
+import com.central.organization.utils.IdUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDate;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
- * 员工管理服务实现
+ * 员工服务实现类
  * 
- * @author Portal Team
+ * @author Central Team
  * @since 2024-12-19
  */
 @Slf4j
 @Service
-public class EmployeeServiceImpl extends ServiceImpl<EmployeeMapper, Employee> implements EmployeeService {
+public class EmployeeServiceImpl implements IEmployeeService {
 
     @Autowired
     private EmployeeMapper employeeMapper;
 
-    // TODO: 获取当前租户ID
-    private String getCurrentTenantId() {
-        return "default";
-    }
-
-    // TODO: 获取当前用户ID
-    private Integer getCurrentUserId() {
-        return 1;
-    }
+    @Autowired
+    private DepartmentMapper departmentMapper;
 
     @Override
-    public PageResult<Employee> getEmployeePage(Integer page, Integer size, String keyword, 
-                                              Integer departmentId, Integer positionId, 
-                                              Integer status, String employmentType) {
-        String tenantId = getCurrentTenantId();
-        Page<Employee> pageParam = new Page<>(page, size);
-        
-        IPage<Employee> result = employeeMapper.selectEmployeePageWithDetails(
-            pageParam, tenantId, keyword, departmentId, positionId, status, employmentType);
-        
-        return PageResult.<Employee>builder()
-                .list(result.getRecords())
-                .total(result.getTotal())
-                .page(page)
-                .size(size)
-                .build();
-    }
-
-    @Override
-    public EmployeeDetailDTO getEmployeeDetail(Integer id) {
-        String tenantId = getCurrentTenantId();
-        return employeeMapper.selectEmployeeDetailById(id, tenantId);
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Result<Employee> createEmployee(Employee employee) {
-        try {
-            // 设置租户信息
-            employee.setTenantId(getCurrentTenantId());
-            employee.setCreatedBy(getCurrentUserId());
-            
-            // 验证工号唯一性
-            if (StringUtils.hasText(employee.getEmpNo())) {
-                if (!isEmpNoAvailable(employee.getEmpNo(), null)) {
-                    return Result.failed("工号已存在");
-                }
-            } else {
-                // 自动生成工号
-                employee.setEmpNo(generateEmpNo(employee.getDepartmentId()));
-            }
-            
-            // 验证身份证号唯一性
-            if (StringUtils.hasText(employee.getIdCardNo())) {
-                if (!isIdCardNoAvailable(employee.getIdCardNo(), null)) {
-                    return Result.failed("身份证号已存在");
-                }
-            }
-            
-            // 验证手机号唯一性
-            if (StringUtils.hasText(employee.getPhoneNumber())) {
-                if (!isPhoneNumberAvailable(employee.getPhoneNumber(), null)) {
-                    return Result.failed("手机号已存在");
-                }
-            }
-            
-            // 验证邮箱唯一性
-            if (StringUtils.hasText(employee.getEmail())) {
-                if (!isEmailAvailable(employee.getEmail(), null)) {
-                    return Result.failed("邮箱已存在");
-                }
-            }
-            
-            // 计算年龄
-            if (employee.getBirthDate() != null) {
-                employee.setAge(calculateAge(employee.getBirthDate()));
-            }
-            
-            // 保存员工
-            boolean success = save(employee);
-            if (success) {
-                return Result.succeed(employee, "创建成功");
-            } else {
-                return Result.failed("创建失败");
-            }
-        } catch (Exception e) {
-            log.error("创建员工失败", e);
-            return Result.failed("创建失败：" + e.getMessage());
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Result<Employee> updateEmployee(Employee employee) {
-        try {
-            // 设置更新信息
-            employee.setUpdatedBy(getCurrentUserId());
-            
-            // 验证工号唯一性
-            if (StringUtils.hasText(employee.getEmpNo())) {
-                if (!isEmpNoAvailable(employee.getEmpNo(), employee.getId())) {
-                    return Result.failed("工号已存在");
-                }
-            }
-            
-            // 验证身份证号唯一性
-            if (StringUtils.hasText(employee.getIdCardNo())) {
-                if (!isIdCardNoAvailable(employee.getIdCardNo(), employee.getId())) {
-                    return Result.failed("身份证号已存在");
-                }
-            }
-            
-            // 验证手机号唯一性
-            if (StringUtils.hasText(employee.getPhoneNumber())) {
-                if (!isPhoneNumberAvailable(employee.getPhoneNumber(), employee.getId())) {
-                    return Result.failed("手机号已存在");
-                }
-            }
-            
-            // 验证邮箱唯一性
-            if (StringUtils.hasText(employee.getEmail())) {
-                if (!isEmailAvailable(employee.getEmail(), employee.getId())) {
-                    return Result.failed("邮箱已存在");
-                }
-            }
-            
-            // 重新计算年龄
-            if (employee.getBirthDate() != null) {
-                employee.setAge(calculateAge(employee.getBirthDate()));
-            }
-            
-            // 更新员工
-            boolean success = updateById(employee);
-            if (success) {
-                return Result.succeed(employee, "更新成功");
-            } else {
-                return Result.failed("更新失败");
-            }
-        } catch (Exception e) {
-            log.error("更新员工失败", e);
-            return Result.failed("更新失败：" + e.getMessage());
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Result<Void> deleteEmployee(Integer id) {
-        try {
-            String tenantId = getCurrentTenantId();
-            
-            // 检查员工是否为部门负责人
-            Integer managedDeptCount = employeeMapper.selectManagedDepartmentCount(id, tenantId);
-            if (managedDeptCount != null && managedDeptCount > 0) {
-                return Result.failed("该员工是部门负责人，无法删除");
-            }
-            
-            // 软删除员工
-            List<Integer> ids = List.of(id);
-            int result = employeeMapper.batchSoftDelete(ids, tenantId, getCurrentUserId());
-            
-            if (result > 0) {
-                return Result.succeed("删除成功");
-            } else {
-                return Result.failed("删除失败");
-            }
-        } catch (Exception e) {
-            log.error("删除员工失败", e);
-            return Result.failed("删除失败：" + e.getMessage());
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Result<Void> deleteEmployees(List<Integer> ids) {
-        try {
-            String tenantId = getCurrentTenantId();
-            
-            // 批量检查是否为部门负责人
-            for (Integer id : ids) {
-                Integer managedDeptCount = employeeMapper.selectManagedDepartmentCount(id, tenantId);
-                if (managedDeptCount != null && managedDeptCount > 0) {
-                    return Result.failed("员工ID " + id + " 是部门负责人，无法删除");
-                }
-            }
-            
-            // 批量软删除
-            int result = employeeMapper.batchSoftDelete(ids, tenantId, getCurrentUserId());
-            
-            if (result > 0) {
-                return Result.succeed("批量删除成功");
-            } else {
-                return Result.failed("批量删除失败");
-            }
-        } catch (Exception e) {
-            log.error("批量删除员工失败", e);
-            return Result.failed("批量删除失败：" + e.getMessage());
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Result<Void> updateEmployeeStatus(Integer id, Integer status) {
-        try {
-            String tenantId = getCurrentTenantId();
-            int result = employeeMapper.updateEmployeeStatus(id, status, tenantId, getCurrentUserId());
-            
-            if (result > 0) {
-                return Result.succeed("状态更新成功");
-            } else {
-                return Result.failed("状态更新失败");
-            }
-        } catch (Exception e) {
-            log.error("更新员工状态失败", e);
-            return Result.failed("状态更新失败：" + e.getMessage());
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Result<Void> transferEmployee(Integer id, Integer newDepartmentId, Integer newPositionId) {
-        try {
-            String tenantId = getCurrentTenantId();
-            int result = employeeMapper.transferEmployee(id, newDepartmentId, newPositionId, 
-                                                       tenantId, getCurrentUserId());
-            
-            if (result > 0) {
-                return Result.succeed("调动成功");
-            } else {
-                return Result.failed("调动失败");
-            }
-        } catch (Exception e) {
-            log.error("员工调动失败", e);
-            return Result.failed("调动失败：" + e.getMessage());
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Result<Void> confirmEmployee(Integer id) {
-        try {
-            String tenantId = getCurrentTenantId();
-            int result = employeeMapper.confirmEmployee(id, tenantId, getCurrentUserId());
-            
-            if (result > 0) {
-                return Result.succeed("转正成功");
-            } else {
-                return Result.failed("转正失败");
-            }
-        } catch (Exception e) {
-            log.error("员工转正失败", e);
-            return Result.failed("转正失败：" + e.getMessage());
-        }
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public Result<Void> resignEmployee(Integer id, LocalDate leaveDate, String leaveReason) {
-        try {
-            String tenantId = getCurrentTenantId();
-            int result = employeeMapper.resignEmployee(id, leaveDate, leaveReason, 
-                                                     tenantId, getCurrentUserId());
-            
-            if (result > 0) {
-                return Result.succeed("离职办理成功");
-            } else {
-                return Result.failed("离职办理失败");
-            }
-        } catch (Exception e) {
-            log.error("员工离职失败", e);
-            return Result.failed("离职办理失败：" + e.getMessage());
-        }
-    }
-
-    @Override
-    public List<Employee> getEmployeesByDepartment(Integer departmentId, Boolean includeSubDepartments) {
-        String tenantId = getCurrentTenantId();
-        if (includeSubDepartments) {
-            return employeeMapper.selectEmployeesByDepartmentTree(departmentId, tenantId);
-        } else {
-            return employeeMapper.selectEmployeesByDepartment(departmentId, tenantId);
-        }
-    }
-
-    @Override
-    public List<Employee> getEmployeesByPosition(Integer positionId) {
-        String tenantId = getCurrentTenantId();
-        return employeeMapper.selectEmployeesByPosition(positionId, tenantId);
-    }
-
-    @Override
-    public EmployeeStatisticsDTO getEmployeeStatistics(Integer departmentId) {
-        String tenantId = getCurrentTenantId();
-        return employeeMapper.selectEmployeeStatistics(departmentId, tenantId);
-    }
-
-    @Override
-    public List<Employee> getExpiringProbationEmployees(Integer days) {
-        String tenantId = getCurrentTenantId();
-        return employeeMapper.selectExpiringProbationEmployees(days, tenantId);
-    }
-
-    @Override
-    public List<Employee> getBirthdayEmployees(LocalDate startDate, LocalDate endDate) {
-        String tenantId = getCurrentTenantId();
-        return employeeMapper.selectBirthdayEmployees(startDate, endDate, tenantId);
-    }
-
-    @Override
-    public Boolean isEmpNoAvailable(String empNo, Integer excludeId) {
-        String tenantId = getCurrentTenantId();
-        int count = employeeMapper.checkEmpNoExists(empNo, excludeId, tenantId);
-        return count == 0;
-    }
-
-    @Override
-    public Boolean isIdCardNoAvailable(String idCardNo, Integer excludeId) {
-        String tenantId = getCurrentTenantId();
-        int count = employeeMapper.checkIdCardNoExists(idCardNo, excludeId, tenantId);
-        return count == 0;
-    }
-
-    @Override
-    public Boolean isPhoneNumberAvailable(String phoneNumber, Integer excludeId) {
-        String tenantId = getCurrentTenantId();
-        int count = employeeMapper.checkPhoneNumberExists(phoneNumber, excludeId, tenantId);
-        return count == 0;
-    }
-
-    @Override
-    public Boolean isEmailAvailable(String email, Integer excludeId) {
-        String tenantId = getCurrentTenantId();
-        int count = employeeMapper.checkEmailExists(email, excludeId, tenantId);
-        return count == 0;
-    }
-
-    @Override
-    public Result<String> importEmployees(MultipartFile file) {
-        try {
-            // TODO: 实现Excel导入逻辑
-            return Result.succeed("导入成功");
-        } catch (Exception e) {
-            log.error("导入员工失败", e);
-            return Result.failed("导入失败：" + e.getMessage());
-        }
-    }
-
-    @Override
-    public Result<String> exportEmployees(Integer departmentId) {
-        try {
-            // TODO: 实现Excel导出逻辑
-            return Result.succeed("/downloads/employees.xlsx");
-        } catch (Exception e) {
-            log.error("导出员工失败", e);
-            return Result.failed("导出失败：" + e.getMessage());
-        }
-    }
-
-    @Override
-    public String generateEmpNo(Integer departmentId) {
-        // TODO: 实现工号生成逻辑
-        return "EMP" + System.currentTimeMillis();
-    }
-
-    /**
-     * 计算年龄
-     */
-    private Integer calculateAge(LocalDate birthDate) {
-        if (birthDate == null) {
+    public EmployeeVO getById(Long id) {
+        if (id == null) {
             return null;
         }
-        return LocalDate.now().getYear() - birthDate.getYear();
+        return employeeMapper.selectDetailById(id);
+    }
+
+    @Override
+    public Employee getByEmpNo(String empNo) {
+        if (StrUtil.isBlank(empNo)) {
+            return null;
+        }
+        return employeeMapper.selectByEmpNo(empNo);
+    }
+
+    @Override
+    public PageResult<EmployeeVO> getPageList(EmployeeQueryDTO query) {
+        if (query == null) {
+            query = new EmployeeQueryDTO();
+        }
+
+        // 设置默认值
+        if (query.getPage() == null || query.getPage() < 1) {
+            query.setPage(1);
+        }
+        if (query.getSize() == null || query.getSize() < 1) {
+            query.setSize(20);
+        }
+
+        // 查询数据
+        List<EmployeeVO> records = employeeMapper.selectPageList(query);
+        Long total = employeeMapper.selectCount(query);
+
+        // 构建分页结果
+        PageResult<EmployeeVO> pageResult = new PageResult<>();
+        pageResult.setRecords(records);
+        pageResult.setTotal(total);
+        pageResult.setPage(query.getPage());
+        pageResult.setSize(query.getSize());
+        pageResult.setPages((int) Math.ceil((double) total / query.getSize()));
+
+        return pageResult;
+    }
+
+    @Override
+    public List<EmployeeVO> getByDepartmentId(Long departmentId, Boolean includeSubDept) {
+        if (departmentId == null) {
+            return Collections.emptyList();
+        }
+        return employeeMapper.selectByDepartmentId(departmentId, includeSubDept);
+    }
+
+    @Override
+    public List<EmployeeVO> getByPositionId(Long positionId) {
+        if (positionId == null) {
+            return Collections.emptyList();
+        }
+        return employeeMapper.selectByPositionId(positionId);
+    }
+
+    @Override
+    public List<EmployeeVO> getProbationExpiring(Integer days) {
+        if (days == null || days < 0) {
+            days = 7; // 默认7天
+        }
+        return employeeMapper.selectProbationExpiring(days);
+    }
+
+    @Override
+    public List<EmployeeVO> getBirthdayList(Integer month) {
+        if (month == null) {
+            month = DateUtil.thisMonth() + 1; // 当前月份
+        }
+        return employeeMapper.selectBirthdayList(month);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long saveEmployee(EmployeeSaveDTO saveDTO) {
+        // 验证数据
+        ValidationResult validation = validateEmployee(saveDTO);
+        if (!validation.isValid()) {
+            throw new IllegalArgumentException(validation.getMessage());
+        }
+
+        Employee employee = new Employee();
+        BeanUtil.copyProperties(saveDTO, employee);
+
+        LocalDateTime now = LocalDateTime.now();
+        if (employee.getId() == null) {
+            // 新增
+            employee.setId(IdUtils.nextId());
+            if (StrUtil.isBlank(employee.getEmpNo())) {
+                employee.setEmpNo(generateEmpNo());
+            }
+            employee.setCreatedAt(now);
+            employee.setStatus(1);
+            employee.setDelflag(0);
+            
+            // 处理副岗位ID列表
+            if (CollUtil.isNotEmpty(saveDTO.getSecondaryPositionIds())) {
+                employee.setSecondaryPositionIds(
+                    saveDTO.getSecondaryPositionIds().stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(","))
+                );
+            }
+            
+            employeeMapper.insert(employee);
+        } else {
+            // 修改
+            employee.setUpdatedAt(now);
+            
+            // 处理副岗位ID列表
+            if (CollUtil.isNotEmpty(saveDTO.getSecondaryPositionIds())) {
+                employee.setSecondaryPositionIds(
+                    saveDTO.getSecondaryPositionIds().stream()
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(","))
+                );
+            }
+            
+            employeeMapper.updateById(employee);
+        }
+
+        return employee.getId();
+    }
+
+    @Override
+    public Boolean updateStatus(Long id, Integer status) {
+        if (id == null || status == null) {
+            return false;
+        }
+        return employeeMapper.updateStatus(id, status) > 0;
+    }
+
+    @Override
+    public Boolean updateEmploymentStatus(Long id, Integer employmentStatus) {
+        if (id == null || employmentStatus == null) {
+            return false;
+        }
+        return employeeMapper.updateEmploymentStatus(id, employmentStatus) > 0;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long employeeJoin(EmployeeSaveDTO saveDTO) {
+        // 设置为试用状态
+        saveDTO.setEmploymentStatus(2);
+        if (saveDTO.getEntryDate() == null) {
+            saveDTO.setEntryDate(new Date());
+        }
+        
+        Long employeeId = saveEmployee(saveDTO);
+        
+        log.info("员工入职成功: empNo={}, name={}", saveDTO.getEmpNo(), saveDTO.getName());
+        return employeeId;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean employeeRegular(Long id) {
+        if (id == null) {
+            return false;
+        }
+
+        Employee employee = employeeMapper.selectById(id);
+        if (employee == null) {
+            throw new IllegalArgumentException("员工不存在");
+        }
+
+        if (!employee.isProbation()) {
+            throw new IllegalArgumentException("员工不在试用期，无法转正");
+        }
+
+        // 更新为正式员工状态
+        employee.setEmploymentStatus(1);
+        employee.setRegularDate(new Date());
+        employee.setUpdatedAt(LocalDateTime.now());
+
+        boolean success = employeeMapper.updateById(employee) > 0;
+        
+        if (success) {
+            log.info("员工转正成功: empNo={}, name={}", employee.getEmpNo(), employee.getName());
+        }
+        
+        return success;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean employeeTransfer(Long id, Long newDepartmentId, Long newPositionId, String reason) {
+        if (id == null || newDepartmentId == null || newPositionId == null) {
+            return false;
+        }
+
+        Employee employee = employeeMapper.selectById(id);
+        if (employee == null) {
+            throw new IllegalArgumentException("员工不存在");
+        }
+
+        // 验证新部门
+        Department newDepartment = departmentMapper.selectById(newDepartmentId);
+        if (newDepartment == null) {
+            throw new IllegalArgumentException("目标部门不存在");
+        }
+
+        // 记录原部门和岗位信息
+        Long oldDepartmentId = employee.getDepartmentId();
+        Long oldPositionId = employee.getPositionId();
+
+        // 更新员工信息
+        employee.setDepartmentId(newDepartmentId);
+        employee.setDepartmentName(newDepartment.getName());
+        employee.setPositionId(newPositionId);
+        employee.setUpdatedAt(LocalDateTime.now());
+
+        boolean success = employeeMapper.updateById(employee) > 0;
+        
+        if (success) {
+            log.info("员工调岗成功: empNo={}, name={}, 从部门[{}]调到部门[{}], 原因: {}", 
+                employee.getEmpNo(), employee.getName(), oldDepartmentId, newDepartmentId, reason);
+        }
+        
+        return success;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean employeeLeave(Long id, String leaveDate, String leaveReason) {
+        if (id == null) {
+            return false;
+        }
+
+        Employee employee = employeeMapper.selectById(id);
+        if (employee == null) {
+            throw new IllegalArgumentException("员工不存在");
+        }
+
+        if (employee.getEmploymentStatus() == 3) {
+            throw new IllegalArgumentException("员工已离职");
+        }
+
+        // 更新离职信息
+        employee.setEmploymentStatus(3);
+        employee.setLeaveDate(StrUtil.isNotBlank(leaveDate) ? DateUtil.parse(leaveDate) : new Date());
+        employee.setLeaveReason(leaveReason);
+        employee.setUpdatedAt(LocalDateTime.now());
+
+        boolean success = employeeMapper.updateById(employee) > 0;
+        
+        if (success) {
+            log.info("员工离职成功: empNo={}, name={}, 离职原因: {}", 
+                employee.getEmpNo(), employee.getName(), leaveReason);
+        }
+        
+        return success;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean batchUpdateDepartment(List<Long> employeeIds, Long departmentId) {
+        if (CollUtil.isEmpty(employeeIds) || departmentId == null) {
+            return false;
+        }
+
+        Department department = departmentMapper.selectById(departmentId);
+        if (department == null) {
+            throw new IllegalArgumentException("目标部门不存在");
+        }
+
+        return employeeMapper.batchUpdateDepartment(employeeIds, departmentId, department.getName()) > 0;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean batchUpdatePosition(List<Long> employeeIds, Long positionId) {
+        if (CollUtil.isEmpty(employeeIds) || positionId == null) {
+            return false;
+        }
+
+        // 这里需要从岗位服务获取岗位信息，暂时使用positionId作为名称
+        return employeeMapper.batchUpdatePosition(employeeIds, positionId, "岗位" + positionId) > 0;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean deleteById(Long id) {
+        if (id == null) {
+            return false;
+        }
+
+        Employee employee = employeeMapper.selectById(id);
+        if (employee == null) {
+            return false;
+        }
+
+        boolean success = employeeMapper.deleteById(id) > 0;
+        
+        if (success) {
+            log.info("删除员工成功: empNo={}, name={}", employee.getEmpNo(), employee.getName());
+        }
+        
+        return success;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean batchDelete(List<Long> ids) {
+        if (CollUtil.isEmpty(ids)) {
+            return false;
+        }
+        return employeeMapper.batchDelete(ids) > 0;
+    }
+
+    @Override
+    public String generateEmpNo() {
+        String prefix = "EMP";
+        Integer year = DateUtil.thisYear();
+        return employeeMapper.generateNextEmpNo(prefix, year);
+    }
+
+    @Override
+    public ValidationResult validateEmployee(EmployeeSaveDTO saveDTO) {
+        ValidationResult result = new ValidationResult();
+        List<String> errors = new ArrayList<>();
+
+        if (saveDTO == null) {
+            result.setValid(false);
+            result.setMessage("员工信息不能为空");
+            return result;
+        }
+
+        // 验证必填字段
+        if (StrUtil.isBlank(saveDTO.getName())) {
+            errors.add("姓名不能为空");
+        }
+
+        if (StrUtil.isBlank(saveDTO.getMobile())) {
+            errors.add("手机号不能为空");
+        }
+
+        if (saveDTO.getDepartmentId() == null) {
+            errors.add("部门不能为空");
+        }
+
+        if (saveDTO.getPositionId() == null) {
+            errors.add("岗位不能为空");
+        }
+
+        // 验证唯一性
+        if (StrUtil.isNotBlank(saveDTO.getEmpNo())) {
+            Boolean exists = employeeMapper.existsEmpNo(saveDTO.getEmpNo(), saveDTO.getId());
+            if (Boolean.TRUE.equals(exists)) {
+                errors.add("员工编号已存在");
+            }
+        }
+
+        if (StrUtil.isNotBlank(saveDTO.getMobile())) {
+            Boolean exists = employeeMapper.existsMobile(saveDTO.getMobile(), saveDTO.getId());
+            if (Boolean.TRUE.equals(exists)) {
+                errors.add("手机号已存在");
+            }
+        }
+
+        if (StrUtil.isNotBlank(saveDTO.getIdCard())) {
+            Boolean exists = employeeMapper.existsIdCard(saveDTO.getIdCard(), saveDTO.getId());
+            if (Boolean.TRUE.equals(exists)) {
+                errors.add("身份证号已存在");
+            }
+        }
+
+        result.setValid(errors.isEmpty());
+        result.setErrors(errors);
+        if (!errors.isEmpty()) {
+            result.setMessage(String.join(", ", errors));
+        }
+
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ImportResult importEmployees(List<EmployeeSaveDTO> employeeList) {
+        ImportResult result = new ImportResult();
+        result.setTotalCount(employeeList.size());
+        
+        List<String> errorMessages = new ArrayList<>();
+        int successCount = 0;
+
+        for (int i = 0; i < employeeList.size(); i++) {
+            EmployeeSaveDTO employee = employeeList.get(i);
+            try {
+                ValidationResult validation = validateEmployee(employee);
+                if (validation.isValid()) {
+                    saveEmployee(employee);
+                    successCount++;
+                } else {
+                    errorMessages.add(String.format("第%d行: %s", i + 1, validation.getMessage()));
+                }
+            } catch (Exception e) {
+                errorMessages.add(String.format("第%d行: %s", i + 1, e.getMessage()));
+                log.error("导入员工失败: 第{}行, 错误: {}", i + 1, e.getMessage(), e);
+            }
+        }
+
+        result.setSuccessCount(successCount);
+        result.setFailCount(employeeList.size() - successCount);
+        result.setErrorMessages(errorMessages);
+
+        return result;
+    }
+
+    @Override
+    public List<EmployeeVO> exportEmployees(EmployeeQueryDTO query) {
+        if (query == null) {
+            query = new EmployeeQueryDTO();
+        }
+        // 导出时不分页，获取所有数据
+        query.setPage(1);
+        query.setSize(Integer.MAX_VALUE);
+        
+        return employeeMapper.selectPageList(query);
+    }
+
+    @Override
+    public EmployeeMapper.EmployeeStatisticsVO getStatistics() {
+        return employeeMapper.getStatistics();
+    }
+
+    @Override
+    public List<EmployeeMapper.DepartmentEmployeeDistributionVO> getDepartmentDistribution() {
+        return employeeMapper.getDepartmentDistribution();
     }
 } 

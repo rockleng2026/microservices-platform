@@ -123,49 +123,6 @@ CREATE TABLE department_grade (
 ### 3.1 功能概述
 基于原有`workposition`和`groups`表结构，提供岗位信息管理、权限配置和分管关系设置。
 
-### 3.2 数据模型
-```sql
--- 岗位表（扩展原workposition表）
-CREATE TABLE workposition (
-    id int(11) NOT NULL AUTO_INCREMENT COMMENT '岗位ID',
-    name varchar(100) NOT NULL COMMENT '岗位名称',
-    short_name varchar(20) COMMENT '岗位简写',
-    department_id int(11) NOT NULL COMMENT '所属部门ID',
-    position_level int(11) DEFAULT 1 COMMENT '岗位级别',
-    is_manager tinyint(1) DEFAULT 0 COMMENT '是否主管岗位(1是,0否)',
-    is_director tinyint(1) DEFAULT 0 COMMENT '是否领导岗位(1是,0否)',
-    job_description text COMMENT '岗位职责描述',
-    requirements text COMMENT '任职要求',
-    salary_range varchar(50) COMMENT '薪资范围',
-    max_employees int(11) DEFAULT 1 COMMENT '最大任职人数',
-    menu_page_ids text COMMENT '页面菜单ID串，用逗号分隔',
-    function_ids text COMMENT '功能权限ID串，用逗号分隔',
-    status tinyint(1) DEFAULT 1 COMMENT '状态(1启用,0禁用)',
-    sort_order int(11) DEFAULT 0 COMMENT '排序号',
-    delflag int(11) DEFAULT 0 COMMENT '删除标识',
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-    updated_at timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    tenant_id varchar(32) COMMENT '租户ID',
-    created_by int(11) COMMENT '创建人',
-    PRIMARY KEY (id),
-    KEY idx_department_id (department_id),
-    KEY idx_tenant_id (tenant_id)
-) COMMENT='岗位表';
-
-
--- 岗位分管部门关联表
-CREATE TABLE workposition_manage_dept (
-    id int(11) NOT NULL AUTO_INCREMENT,
-    workposition_id int(11) NOT NULL COMMENT '岗位ID',
-    department_id int(11) NOT NULL COMMENT '分管部门ID',
-    manage_type tinyint(1) DEFAULT 1 COMMENT '分管类型(1直管,2协管)',
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-    created_by int(11) COMMENT '创建人',
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_wp_dept (workposition_id, department_id)
-) COMMENT='岗位分管部门表';
-
-```
 
 ### 3.3 界面功能
 
@@ -721,48 +678,6 @@ function savePermissions() {
 用户 → 员工 → 岗位 → 功能权限
      ↘    ↘         ↗
        个人权限 ← 权限授权
-```
-
-#### 5.1.2 数据模型
-```sql
-
--- 菜单页面表
-CREATE TABLE menu_page (
-    id int(11) NOT NULL AUTO_INCREMENT COMMENT '菜单ID',    
-    name varchar(255) NOT NULL COMMENT '菜单名称',
-    parent_id int(11) NOT NULL COMMENT '父级id',
-    link_url varchar(100) DEFAULT NULL COMMENT '链接功能页面',
-    description varchar(255) COMMENT '权限描述',
-    image_path varchar(50) DEFAULT NULL COMMENT '图片路径',
-    delflag int(11) DEFAULT NULL COMMENT '删除标识',
-    sort_order int(11) DEFAULT 0 COMMENT '排序号',
-    icon varchar(50) COMMENT '图标',
-    status tinyint(1) DEFAULT 1 COMMENT '状态(1启用,0禁用)',
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-    tenant_id varchar(32) COMMENT '租户ID',
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_perm_code (id, tenant_id),
-    KEY idx_parent_id (parent_id)
-) COMMENT='菜单页面表';
-
--- 菜单页面功能点表
-CREATE TABLE menu_func (
-    id int(11) NOT NULL AUTO_INCREMENT COMMENT '权限ID',
-    perm_code varchar(100) NOT NULL COMMENT '权限代码',
-    perm_name varchar(100) NOT NULL COMMENT '权限名称',
-    perm_type tinyint(1) DEFAULT 1 COMMENT '权限类型(1按钮,2数据)',
-    menu_page_id int(11) DEFAULT 0 COMMENT '父权限ID',
-    sort_order int(11) DEFAULT 0 COMMENT '排序号',
-    icon varchar(50) COMMENT '图标',
-    description varchar(255) COMMENT '权限描述',
-    created_at timestamp DEFAULT CURRENT_TIMESTAMP,
-    tenant_id varchar(32) COMMENT '租户ID',
-    PRIMARY KEY (id),
-    UNIQUE KEY uk_perm_code (perm_code, tenant_id),
-    KEY idx_parent_id (menu_page_id)
-) COMMENT='菜单页面功能点表';
-
-
 ```
 
 ### 5.2 数据权限管理

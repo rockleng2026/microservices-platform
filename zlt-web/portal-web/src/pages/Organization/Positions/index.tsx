@@ -52,6 +52,7 @@ import {
   WorkPositionPageParams
 } from '@/services/organization/position';
 import { getDepartmentTree } from '@/services/organization/department';
+import PositionPermissions from './PositionPermissions';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -88,6 +89,10 @@ const WorkPositionManagement: React.FC = () => {
   const [detailVisible, setDetailVisible] = useState(false);
   const [positionDetail, setPositionDetail] = useState<WorkPositionDetail | null>(null);
 
+  // 权限配置模态框
+  const [permissionVisible, setPermissionVisible] = useState(false);
+  const [permissionPosition, setPermissionPosition] = useState<{ id: number; name: string } | null>(null);
+
   // 表格列配置
   const columns: ColumnsType<WorkPosition> = [
     {
@@ -100,7 +105,7 @@ const WorkPositionManagement: React.FC = () => {
             <SettingOutlined style={{ marginRight: 8, color: '#1890ff' }} />
             {record.name}
             {record.isManager && (
-              <Tag color="red" size="small" style={{ marginLeft: 8 }}>
+              <Tag color="red" style={{ marginLeft: 8, fontSize: '12px' }}>
                 管理岗
               </Tag>
             )}
@@ -212,6 +217,14 @@ const WorkPositionManagement: React.FC = () => {
               onClick={() => handleCopy(record)}
             />
           </Tooltip>
+          <Tooltip title="权限配置">
+            <Button
+              type="link"
+              size="small"
+              icon={<SettingOutlined />}
+              onClick={() => handlePermissionConfig(record)}
+            />
+          </Tooltip>
           <Popconfirm
             title="确定要删除这个岗位吗？"
             onConfirm={() => handleDelete(record.id)}
@@ -312,6 +325,15 @@ const WorkPositionManagement: React.FC = () => {
       name: position.name + '_副本',
       positionCode: '',
     });
+  };
+
+  // 权限配置
+  const handlePermissionConfig = (position: WorkPosition) => {
+    setPermissionPosition({
+      id: position.id,
+      name: position.name
+    });
+    setPermissionVisible(true);
   };
 
   // 删除岗位
@@ -714,6 +736,20 @@ const WorkPositionManagement: React.FC = () => {
           </div>
         )}
       </Modal>
+
+      {/* 权限配置弹窗 */}
+      {permissionPosition && (
+        <PositionPermissions
+          visible={permissionVisible}
+          positionId={permissionPosition.id}
+          positionName={permissionPosition.name}
+          onClose={() => setPermissionVisible(false)}
+          onSuccess={() => {
+            message.success('权限配置成功');
+            setPermissionVisible(false);
+          }}
+        />
+      )}
     </div>
   );
 };

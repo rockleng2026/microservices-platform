@@ -1,0 +1,11 @@
+server:
+  port: 7002
+
+spring:
+  application:
+    name: organization-service
+#  cloud:
+#    nacos:
+#      discovery:
+#        metadata:
+#          version: zlt 

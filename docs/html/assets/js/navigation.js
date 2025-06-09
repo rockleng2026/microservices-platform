@@ -3,111 +3,99 @@
 // 说明: 统一管理所有页面的导航菜单结构
 
 // 导航菜单数据结构
-const navigationData = {
-    // 菜单项配置
-    menuItems: [
-        {
-            id: 'home',
-            icon: '🏠',
-            label: '首页总览',
-            type: 'link',
-            url: 'index.html',
-            active: false
-        },
-        {
-            id: 'workspace',
-            icon: '💼',
-            label: '工作台',
-            type: 'group',
-            expanded: false,
-            children: [
-                { id: 'oa-workspace', label: 'OA工作台', url: 'dashboard/oa-workspace.html' },
-                { id: 'crm-workspace', label: 'CRM工作台', url: 'dashboard/crm-workspace.html' },
-                { id: 'sales-workspace', label: '销售工作台', url: 'dashboard/sales-workspace.html' },
-                { id: 'workspace-config', label: '工作台配置', url: 'dashboard/workspace-config.html' }
-            ]
-        },
-        {
-            id: 'organization',
-            icon: '🏢',
-            label: '组织架构',
-            type: 'group',
-            expanded: false,
-            children: [
-                { id: 'department-tree', label: '部门管理', url: 'organization/department-tree.html' },
-                { id: 'employee-list', label: '员工管理', url: 'organization/employee-list.html' },
-                { id: 'employee-add', label: '新增员工', url: 'organization/employee-add.html' },
-                { id: 'position-manage', label: '岗位管理', url: 'organization/position-manage.html' },
-                { id: 'workposition-permission', label: '岗位权限', url: 'organization/workposition-permission.html' }
-            ]
-        },
-        {
-            id: 'crm',
-            icon: '👥',
-            label: '客户管理',
-            type: 'group',
-            expanded: false,
-            children: [
-                { id: 'customer-list', label: '客户列表', url: 'crm/customer-list.html' },
-                { id: 'customer-detail', label: '客户详情', url: 'crm/customer-detail.html' },
-                { id: 'follow-record', label: '跟进记录', url: 'crm/follow-record.html' },
-                { id: 'customer-transfer', label: '客户转移', url: 'crm/customer-transfer.html' }
-            ]
-        },
-        {
-            id: 'product',
-            icon: '📦',
-            label: '商品管理',
-            type: 'group',
-            expanded: false,
-            children: [
-                { id: 'product-list', label: '商品列表', url: 'product/product-list.html' },
-                { id: 'category-manage', label: '商品分类', url: 'product/category-manage.html' },
-                { id: 'product-form', label: '商品编辑', url: 'product/product-form.html' },
-                { id: 'inventory-monitor', label: '库存管理', url: 'product/inventory-monitor.html' }
-            ]
-        },
-        {
-            id: 'order',
-            icon: '📋',
-            label: '订单管理',
-            type: 'group',
-            expanded: false,
-            children: [
-                { id: 'order-dashboard', label: '订单工作台', url: 'order/order-dashboard.html' },
-                { id: 'order-list', label: '订单列表', url: 'order/order-list.html' },
-                { id: 'order-detail', label: '订单详情', url: 'order/order-detail.html' },
-                { id: 'order-create', label: '创建订单', url: 'order/order-create.html' }
-            ]
-        },
-        {
-            id: 'service',
-            icon: '🎧',
-            label: '客服中心',
-            type: 'group',
-            expanded: false,
-            children: [
-                { id: 'service-dashboard', label: '客服工作台', url: 'service/service-dashboard.html' },
-                { id: 'ticket-list', label: '工单管理', url: 'service/ticket-list.html' },
-                { id: 'ticket-detail', label: '工单详情', url: 'service/ticket-detail.html' },
-                { id: 'knowledge-base', label: '知识库', url: 'service/knowledge-base.html' }
-            ]
-        },
-        {
-            id: 'operations',
-            icon: '⚙️',
-            label: '运维管理',
-            type: 'group',
-            expanded: false,
-            children: [
-                { id: 'task-board', label: '任务看板', url: 'operations/task-board.html' },
-                { id: 'schedule-calendar', label: '日程日历', url: 'operations/schedule-calendar.html' },
-                { id: 'work-log', label: '工作日志', url: 'operations/work-log.html' },
-                { id: 'report-center', label: '报表中心', url: 'operations/report-center.html' }
-            ]
-        }
-    ]
-};
+const menuData = [
+    {
+        id: 'dashboard',
+        name: '工作台',
+        icon: 'fas fa-tachometer-alt',
+        children: [
+            { id: 'oa-workspace', name: 'OA工作台', url: 'dashboard/oa-workspace.html' },
+            { id: 'crm-workspace', name: 'CRM工作台', url: 'dashboard/crm-workspace.html' },
+            { id: 'sales-workspace', name: '销售工作台', url: 'dashboard/sales-workspace.html' },
+            { id: 'workspace-config', name: '工作台配置', url: 'dashboard/workspace-config.html' }
+        ]
+    },
+    {
+        id: 'organization',
+        name: '组织架构',
+        icon: 'fas fa-sitemap',
+        children: [
+            { id: 'dept-tree', name: '部门管理', url: 'organization/department-tree.html' },
+            { id: 'employee-list', name: '员工管理', url: 'organization/employee-list.html' },
+            { id: 'employee-add', name: '新增员工', url: 'organization/employee-add.html' },
+            { id: 'position-manage', name: '岗位管理', url: 'organization/position-manage.html' },
+            { id: 'workposition-permission', name: '岗位权限', url: 'organization/workposition-permission.html' }
+        ]
+    },
+    {
+        id: 'crm',
+        name: '客户管理',
+        icon: 'fas fa-users',
+        children: [
+            { id: 'customer-list', name: '客户列表', url: 'crm/customer-list.html' },
+            { id: 'customer-detail', name: '客户详情', url: 'crm/customer-detail.html' },
+            { id: 'follow-record', name: '跟进记录', url: 'crm/follow-record.html' },
+            { id: 'customer-transfer', name: '客户交接', url: 'crm/customer-transfer.html' }
+        ]
+    },
+    {
+        id: 'product',
+        name: '商品管理',
+        icon: 'fas fa-box',
+        children: [
+            { id: 'category-manage', name: '类目管理', url: 'product/category-manage.html' },
+            { id: 'product-list', name: '商品列表', url: 'product/product-list.html' },
+            { id: 'product-form', name: '商品编辑', url: 'product/product-form.html' },
+            { id: 'inventory-monitor', name: '库存监控', url: 'product/inventory-monitor.html' }
+        ]
+    },
+    {
+        id: 'order',
+        name: '订单管理',
+        icon: 'fas fa-shopping-cart',
+        children: [
+            { id: 'order-dashboard', name: '订单工作台', url: 'order/order-dashboard.html' },
+            { id: 'order-list', name: '订单列表', url: 'order/order-list.html' },
+            { id: 'order-detail', name: '订单详情', url: 'order/order-detail.html' },
+            { id: 'order-create', name: '创建订单', url: 'order/order-create.html' }
+        ]
+    },
+    {
+        id: 'service',
+        name: '客服中心',
+        icon: 'fas fa-headset',
+        children: [
+            { id: 'service-dashboard', name: '客服工作台', url: 'service/service-dashboard.html' },
+            { id: 'ticket-list', name: '工单列表', url: 'service/ticket-list.html' },
+            { id: 'ticket-detail', name: '工单详情', url: 'service/ticket-detail.html' },
+            { id: 'knowledge-base', name: '知识库', url: 'service/knowledge-base.html' }
+        ]
+    },
+    {
+        id: 'operations',
+        name: '运维管理',
+        icon: 'fas fa-tools',
+        children: [
+            { id: 'task-board', name: '任务看板', url: 'operations/task-board.html' },
+            { id: 'schedule-calendar', name: '日程管理', url: 'operations/schedule-calendar.html' },
+            { id: 'work-log', name: '工作日志', url: 'operations/work-log.html' },
+            { id: 'report-center', name: '报表中心', url: 'operations/report-center.html' }
+        ]
+    },
+    {
+        id: 'system',
+        name: '系统管理',
+        icon: 'fas fa-cogs',
+        children: [
+            { id: 'tenant-list', name: '租户管理', url: 'system/tenant-list.html' },
+            { id: 'tenant-config', name: '租户配置', url: 'system/tenant-config.html' },
+            { id: 'menu-manage', name: '菜单管理', url: 'system/menu-manage.html' },
+            { id: 'menu-function', name: '功能点管理', url: 'system/menu-function.html' },
+            { id: 'user-manage', name: '用户管理', url: 'system/user-manage.html' },
+            { id: 'operation-log', name: '操作日志', url: 'system/operation-log.html' }
+        ]
+    }
+];
 
 // 导航菜单生成器
 class NavigationManager {
@@ -152,14 +140,16 @@ class NavigationManager {
             <ul class="nav-menu">
         `;
 
-        navigationData.menuItems.forEach(item => {
-            if (item.type === 'link') {
+        menuData.forEach(item => {
+            if (item.children && item.children.length > 0) {
+                // 有子菜单的分组
+                const groupState = this.getGroupState(item);
+                html += this.generateGroupItem(item, groupState);
+            } else {
+                // 单个链接项
                 const isActive = this.isPageActive(item.url);
                 const url = this.resolveUrl(item.url);
                 html += this.generateLinkItem(item, url, isActive);
-            } else if (item.type === 'group') {
-                const groupState = this.getGroupState(item);
-                html += this.generateGroupItem(item, groupState);
             }
         });
 
@@ -172,8 +162,8 @@ class NavigationManager {
         return `
             <li class="nav-item">
                 <a href="${url}" class="nav-link ${isActive ? 'active' : ''}">
-                    <span class="nav-icon">${item.icon}</span>
-                    <span>${item.label}</span>
+                    <span class="nav-icon"><i class="${item.icon}"></i></span>
+                    <span>${item.name}</span>
                 </a>
             </li>
         `;
@@ -186,8 +176,8 @@ class NavigationManager {
         let html = `
             <li class="nav-item">
                 <button class="nav-group ${isExpanded ? 'expanded' : ''}" onclick="toggleNavGroup(this)">
-                    <span class="nav-icon">${item.icon}</span>
-                    <span>${item.label}</span>
+                    <span class="nav-icon"><i class="${item.icon}"></i></span>
+                    <span>${item.name}</span>
                     <span class="nav-arrow ${isExpanded ? 'rotated' : ''}">▶</span>
                 </button>
                 <div class="nav-submenu ${isExpanded ? 'expanded' : ''}">
@@ -196,7 +186,7 @@ class NavigationManager {
         item.children.forEach(child => {
             const isActive = this.isPageActive(child.url);
             const url = this.resolveUrl(child.url);
-            html += `<a href="${url}" class="nav-subitem ${isActive ? 'active' : ''}">${child.label}</a>`;
+            html += `<a href="${url}" class="nav-subitem ${isActive ? 'active' : ''}">${child.name}</a>`;
         });
 
         html += `
@@ -225,18 +215,30 @@ class NavigationManager {
         if (url === 'index.html') {
             return this.basePath + 'index.html';
         }
+        
+        // 如果当前在根目录（index.html），直接使用相对路径
+        if (this.currentPath === 'index.html' || this.basePath === './') {
+            return url;
+        }
+        
+        // 如果在子目录，需要回到根目录
         return this.basePath + url;
     }
 
     // 渲染导航菜单
     render(containerId = 'app-sidebar') {
         const container = document.getElementById(containerId) || document.querySelector('.app-sidebar');
+        console.log('Navigation render - looking for container:', containerId);
+        console.log('Container found:', container);
         if (container) {
             const html = this.generateNavigationHTML();
-            console.log('Rendering navigation HTML to container');
+            console.log('Generated navigation HTML:', html.substring(0, 200) + '...');
             container.innerHTML = html;
+            console.log('Navigation rendered successfully');
         } else {
             console.error('Navigation container not found:', containerId);
+            console.log('Available elements with class app-sidebar:', document.querySelectorAll('.app-sidebar'));
+            console.log('Available elements with id app-sidebar:', document.getElementById('app-sidebar'));
         }
     }
 
@@ -307,7 +309,7 @@ document.addEventListener('click', function(e) {
 
 // 添加菜单项的工具函数
 window.addMenuItem = function(parentId, newItem) {
-    const parent = navigationData.menuItems.find(item => item.id === parentId);
+    const parent = menuData.find(item => item.id === parentId);
     if (parent && parent.children) {
         parent.children.push(newItem);
         // 重新渲染导航
@@ -317,7 +319,7 @@ window.addMenuItem = function(parentId, newItem) {
 
 // 删除菜单项的工具函数
 window.removeMenuItem = function(parentId, itemId) {
-    const parent = navigationData.menuItems.find(item => item.id === parentId);
+    const parent = menuData.find(item => item.id === parentId);
     if (parent && parent.children) {
         parent.children = parent.children.filter(child => child.id !== itemId);
         // 重新渲染导航

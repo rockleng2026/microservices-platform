@@ -57,7 +57,7 @@
 
 ### 3. 前端页面 ✅
 
-**文件位置**: `zlt-web/layui-web/src/main/resources/static/`
+**文件位置**: `docs/html/organization`
 
 - **department-tree.html** - 部门树形管理页面
 - **employee-list.html** - 员工列表管理页面
@@ -309,7 +309,7 @@ GET    /api/organization/work-positions/{id}/permissions # 获取权限
 **技术栈：**
 - 后端：Spring Boot 3.x + Spring Cloud + MyBatis
 - 前端：HTML5 + CSS3 + LayUI + JavaScript
-- 数据库：MySQL 8.0
+- 数据库：MySQL 5.7
 - 缓存：Redis
 - 认证：Spring Security + OAuth2
 

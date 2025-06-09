@@ -57,6 +57,7 @@
 zlt-web/
 ├── react-web -- React主前端[8066]
 │   └── src/main/frontend -- 前端源码(Ant Design Pro)
+├── portal-web -- 新系统前段[8001]│   
 └── layui-web -- LayUI备选前端[8066]
     └── src/main/resources/static -- 前端源码
 ```
@@ -196,15 +197,7 @@ customermove (
 ```
 
 #### 2.2.3 商品管理相关表
-```sql
--- 商品类型表 (保留原结构)
-commoditytpye (
-    id int(11) -- 类型ID
-    typename varchar(100) -- 类型名称
-    parentid int(11) -- 父类型ID
-    delflag int(11) -- 删除标识
-    fieldid int(11) -- 字段配置ID
-)
+
 
 -- 产品表 (保留原结构)  
 product (
@@ -280,7 +273,6 @@ saleorderinfo (
 │   ├── goods_dict (复用原表)
 │   ├── goodsClass_expand (复用原表)
 │   └── product (复用原表)
-├── central_order -- 订单管理数据库
 │   ├── saleorder (复用原表)
 │   ├── saleorderinfo (复用原表)
 │   └── payment (新建表)
@@ -656,25 +648,7 @@ CREATE TABLE saleorder (
 #### 3.8.1 角色权限  
 **数据模型：**
 ```sql
--- 复用原groups表作为角色表
-CREATE TABLE groups (
-    groupID int(11) NOT NULL AUTO_INCREMENT,
-    groupName varchar(50) COMMENT '角色名称',
-    groupInfo varchar(500) COMMENT '角色描述', 
-    isDelete int(11) DEFAULT 0,
-    PRIMARY KEY (groupID)
-);
 
--- 复用原users表作为用户登录表
-CREATE TABLE users (
-    id int(11) NOT NULL AUTO_INCREMENT,
-    username varchar(50) COMMENT '用户名',
-    password varchar(100) COMMENT '密码',
-    employee_id int(11) COMMENT '员工ID',
-    groupID int(11) COMMENT '角色ID',
-    isDelete int(11) DEFAULT 0,
-    PRIMARY KEY (id)
-);
 ```
 
 #### 3.8.2 动态菜单权限控制
@@ -1269,11 +1243,9 @@ public class PermissionCacheService {
 │   ├── customermove (复用原表)
 │   └── customerfollow (新建表)
 ├── central_product -- 商品管理数据库
-│   ├── commoditytpye (复用原表)
-│   ├── product (复用原表)
-│   ├── field (复用原表)
-│   └── supplier (复用原表)
-├── central_order -- 订单管理数据库
+│   ├── goods_dict (复用原表)
+│   ├── goodsClass_expand (复用原表)
+│   └── product (复用原表)
 │   ├── saleorder (复用原表)
 │   ├── saleorderinfo (复用原表)
 │   └── payment (新建表)

@@ -99,15 +99,16 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         }
         
         // 使用带租户ID的查询
-        String tenantId = TenantContextHolder.getTenant();
-        Department department = departmentMapper.selectById(id, tenantId);
+        Department department = departmentMapper.selectById(id);
         if (department != null && !department.isDeleted()) {
-            // 设置统计信息
-            department.setEmployeeCount(countEmployeesByDepartment(id, false));
-            department.setChildrenCount(departmentMapper.countChildrenByParentId(id));
-            department.setDepartmentPath(getDepartmentPath(id));
+            // 获取部门路径
+            String path = getDepartmentPath(id);
+            department.setDepartmentPath(path);
+            
+            return department;
         }
-        return department;
+        
+        return null;
     }
     
     @Override
@@ -204,8 +205,7 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         if (departmentId == null) {
             return "";
         }
-        String tenantId = TenantContextHolder.getTenant();
-        return departmentMapper.selectDepartmentPath(departmentId, tenantId);
+        return departmentMapper.selectDepartmentPath(departmentId);
     }
     
     @Override
@@ -213,8 +213,7 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         if (departmentId == null) {
             return new ArrayList<>();
         }
-        String tenantId = TenantContextHolder.getTenant();
-        return departmentMapper.selectDepartmentAndChildrenIds(departmentId, tenantId);
+        return departmentMapper.selectDepartmentAndChildrenIds(departmentId);
     }
     
     @Override
@@ -222,8 +221,7 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         if (departmentId == null) {
             return 0;
         }
-        String tenantId = TenantContextHolder.getTenant();
-        return departmentMapper.countEmployeesByDepartment(departmentId, includeChildren, tenantId);
+        return departmentMapper.countEmployeesByDepartment(departmentId, includeChildren);
     }
     
     @Override

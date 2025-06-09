@@ -18,12 +18,11 @@ import java.util.List;
 public interface DepartmentMapper extends BaseMapper<Department> {
     
     /**
-     * 根据ID和租户ID查询部门
+     * 根据ID查询部门（含租户隔离）
      * @param id 部门ID
-     * @param tenantId 租户ID
      * @return 部门信息
      */
-    Department selectById(@Param("id") Long id, @Param("tenantId") String tenantId);
+    Department selectById(@Param("id") Long id);
     
     /**
      * 查询部门列表（包含统计信息）
@@ -35,7 +34,7 @@ public interface DepartmentMapper extends BaseMapper<Department> {
     /**
      * 根据父部门ID查询子部门
      * @param parentId 父部门ID
-     * @param includeDisabled 是否包含禁用的部门
+     * @param includeDisabled 是否包含禁用部门
      * @return 子部门列表
      */
     List<Department> selectByParentId(@Param("parentId") Long parentId, 
@@ -44,29 +43,25 @@ public interface DepartmentMapper extends BaseMapper<Department> {
     /**
      * 查询部门及其所有下级部门ID
      * @param departmentId 部门ID
-     * @param tenantId 租户ID
      * @return 部门ID列表
      */
-    List<Long> selectDepartmentAndChildrenIds(@Param("departmentId") Long departmentId, @Param("tenantId") String tenantId);
+    List<Long> selectDepartmentAndChildrenIds(@Param("departmentId") Long departmentId);
     
     /**
      * 查询部门路径
      * @param departmentId 部门ID
-     * @param tenantId 租户ID
      * @return 从根部门到当前部门的路径
      */
-    String selectDepartmentPath(@Param("departmentId") Long departmentId, @Param("tenantId") String tenantId);
+    String selectDepartmentPath(@Param("departmentId") Long departmentId);
     
     /**
      * 统计部门下的员工数量
      * @param departmentId 部门ID
      * @param includeChildren 是否包含子部门
-     * @param tenantId 租户ID
      * @return 员工数量
      */
     Integer countEmployeesByDepartment(@Param("departmentId") Long departmentId, 
-                                     @Param("includeChildren") Boolean includeChildren,
-                                     @Param("tenantId") String tenantId);
+                                     @Param("includeChildren") Boolean includeChildren);
     
     /**
      * 统计部门下的子部门数量

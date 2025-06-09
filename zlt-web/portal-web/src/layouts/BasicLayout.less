@@ -1,0 +1,281 @@
+/* 基于原型图的框架布局样式 */
+.app-layout {
+  display: grid;
+  grid-template-areas: 
+    "sidebar header"
+    "sidebar main"
+    "sidebar footer";
+  grid-template-columns: 240px 1fr;
+  grid-template-rows: 60px 1fr auto;
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+
+/* 左侧导航区域 */
+.app-sidebar {
+  grid-area: sidebar;
+  background: white;
+  border-right: 1px solid #e8e8e8;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.06);
+  position: relative;
+  z-index: 100;
+}
+
+.sidebar-header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1890ff;
+}
+
+.logo-icon {
+  font-size: 24px;
+  margin-right: 8px;
+}
+
+.logo-text {
+  color: #333;
+}
+
+.sidebar-menu {
+  height: calc(100vh - 60px);
+  overflow-y: auto;
+  
+  .ant-menu {
+    height: 100%;
+    
+    .ant-menu-item {
+      margin: 4px 8px;
+      border-radius: 6px;
+      
+      &:hover {
+        background: #f0f9ff;
+      }
+      
+      &.ant-menu-item-selected {
+        background: #e6f7ff;
+        border-color: #1890ff;
+        
+        &::after {
+          border-right-color: #1890ff;
+        }
+      }
+    }
+    
+    .ant-menu-submenu {
+      margin: 4px 8px;
+      border-radius: 6px;
+      
+      .ant-menu-submenu-title {
+        border-radius: 6px;
+        
+        &:hover {
+          background: #f0f9ff;
+        }
+      }
+    }
+  }
+}
+
+/* 头部区域 */
+.app-header {
+  grid-area: header;
+  background: white;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.mobile-menu-toggle {
+  display: none;
+  border: none;
+  background: none;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  
+  &:hover {
+    background: #f5f5f5;
+  }
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  color: #666;
+  font-size: 14px;
+}
+
+.breadcrumb-item {
+  margin-right: 4px;
+}
+
+.breadcrumb-separator {
+  margin: 0 8px;
+  color: #d9d9d9;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.search-box {
+  .search-input {
+    background: #fafafa;
+    border-radius: 6px;
+    
+    &:hover, &:focus {
+      background: white;
+    }
+  }
+}
+
+.notification-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  &:hover {
+    background: #f5f5f5;
+  }
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  
+  &:hover {
+    background: #f5f5f5;
+  }
+}
+
+.user-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #1890ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.user-name {
+  font-size: 14px;
+  color: #333;
+}
+
+.logout-btn {
+  font-size: 12px;
+  color: #666;
+  
+  &:hover {
+    color: #1890ff;
+  }
+}
+
+/* 主内容区域 */
+.app-main {
+  grid-area: main;
+  padding: 24px;
+  overflow-y: auto;
+  min-height: calc(100vh - 120px);
+  background: #f5f5f5;
+}
+
+/* 底部页脚 */
+.app-footer {
+  grid-area: footer;
+  background: white;
+  border-top: 1px solid #e8e8e8;
+  padding: 16px 24px;
+  color: #666;
+  font-size: 14px;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .app-layout {
+    grid-template-areas: 
+      "header"
+      "main"
+      "footer";
+    grid-template-columns: 1fr;
+    grid-template-rows: 60px 1fr auto;
+  }
+  
+  .app-sidebar {
+    position: fixed;
+    top: 0;
+    left: -240px;
+    width: 240px;
+    height: 100vh;
+    z-index: 1000;
+    transition: left 0.3s ease;
+    
+    &.mobile-open {
+      left: 0;
+    }
+  }
+  
+  .mobile-menu-toggle {
+    display: block !important;
+  }
+  
+  .app-main {
+    padding: 16px;
+  }
+  
+  .header-actions {
+    gap: 8px;
+    
+    .search-box {
+      display: none;
+    }
+    
+    .user-name {
+      display: none;
+    }
+  }
+} 

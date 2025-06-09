@@ -68,11 +68,6 @@ export default defineConfig({
     },
   },
 
-  // 开发服务器配置
-  devServer: {
-    port: 8066,
-  },
-
   // 构建输出配置
   outputPath: 'dist',
   hash: true,
@@ -83,12 +78,6 @@ export default defineConfig({
   // 忽略moment.js国际化包
   ignoreMomentLocale: true,
 
-  // TypeScript 配置
-  mfsu: {},
-  
-  // Antd 配置
-  antd: {},
-
   // 快速刷新
   fastRefresh: true,
 
@@ -96,4 +85,6 @@ export default defineConfig({
   define: {
     API_BASE_URL: process.env.NODE_ENV === 'development' ? 'http://localhost:9900' : '',
   },
+
+
 }); 

@@ -27,6 +27,8 @@
   "license": "MIT",
   "dependencies": {
     "@ant-design/icons": "^4.8.0",
+    "@ant-design/pro-components": "^2.8.7",
+    "@umijs/plugins": "^4.4.11",
     "antd": "^4.24.8",
     "dayjs": "^1.11.7",
     "lodash": "^4.17.21",
@@ -41,7 +43,7 @@
     "@types/react-dom": "^18.0.11",
     "@typescript-eslint/eslint-plugin": "^5.57.1",
     "@typescript-eslint/parser": "^5.57.1",
-    "@umijs/lint": "^4.0.74",
+    "@umijs/lint": "^4.4.11",
     "eslint": "^8.37.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^4.2.1",
@@ -59,4 +61,4 @@
     "not dead",
     "not ie 11"
   ]
-} 
+}

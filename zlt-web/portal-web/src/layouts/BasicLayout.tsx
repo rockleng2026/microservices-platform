@@ -1,9 +1,18 @@
 import React from 'react';
-import { Layout, Menu, Button } from 'antd';
+import { Layout, Menu, Button, Input, Badge } from 'antd';
 import { Outlet, Link, useLocation } from 'umi';
-import { DashboardOutlined, TeamOutlined, CustomerServiceOutlined, LogoutOutlined } from '@ant-design/icons';
+import { 
+  DashboardOutlined, 
+  TeamOutlined, 
+  CustomerServiceOutlined, 
+  LogoutOutlined,
+  SearchOutlined,
+  BellOutlined,
+  MenuOutlined
+} from '@ant-design/icons';
+import './BasicLayout.less';
 
-const { Header, Sider, Content } = Layout;
+const { Header, Sider, Content, Footer } = Layout;
 
 const BasicLayout: React.FC = () => {
   const location = useLocation();
@@ -51,51 +60,100 @@ const BasicLayout: React.FC = () => {
     window.location.href = '/login';
   };
 
+  // 获取当前页面标题
+  const getCurrentPageTitle = () => {
+    const pathTitleMap: { [key: string]: string } = {
+      '/dashboard': '工作台',
+      '/organization/departments': '部门管理',
+      '/organization/employees': '员工管理',
+      '/organization/positions': '岗位管理',
+      '/crm/customers': '客户管理',
+    };
+    return pathTitleMap[location.pathname] || '工作台';
+  };
+
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider collapsible>
-        <div style={{ 
-          height: 64, 
-          padding: '16px', 
-          color: 'white', 
-          fontSize: '18px',
-          fontWeight: 'bold',
-          textAlign: 'center'
-        }}>
-          Portal 3.0
-        </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          selectedKeys={[location.pathname]}
-          defaultOpenKeys={['/organization', '/crm']}
-          items={menuItems}
-        />
-      </Sider>
-      <Layout>
-        <Header style={{ 
-          background: '#fff', 
-          padding: '0 24px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center'
-        }}>
-          <div style={{ fontSize: '16px', fontWeight: 'bold' }}>
-            现代化企业管理系统
+    <div className="app-layout">
+      {/* 左侧导航 */}
+      <aside className="app-sidebar">
+        <div className="sidebar-header">
+          <div className="logo">
+            <span className="logo-icon">🏢</span>
+            <span className="logo-text">Portal 3.0</span>
           </div>
-          <Button 
-            type="primary" 
-            icon={<LogoutOutlined />}
-            onClick={handleLogout}
-          >
-            退出登录
-          </Button>
-        </Header>
-        <Content style={{ margin: '24px 16px', padding: 24, background: '#fff' }}>
-          <Outlet />
-        </Content>
-      </Layout>
-    </Layout>
+        </div>
+        <div className="sidebar-menu">
+          <Menu
+            theme="light"
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            defaultOpenKeys={['/organization', '/crm']}
+            items={menuItems}
+            style={{ border: 'none' }}
+          />
+        </div>
+      </aside>
+
+      {/* 头部区域 */}
+      <header className="app-header">
+        <div className="header-left">
+          <button className="mobile-menu-toggle">
+            <MenuOutlined />
+          </button>
+          <div className="breadcrumb">
+            <span className="breadcrumb-item">Portal 3.0</span>
+            <span className="breadcrumb-separator">/</span>
+            <span className="breadcrumb-item">{getCurrentPageTitle()}</span>
+          </div>
+        </div>
+        
+        <div className="header-actions">
+          <div className="search-box">
+            <Input
+              className="search-input"
+              placeholder="搜索功能..."
+              prefix={<SearchOutlined className="search-icon" />}
+              style={{ width: 200 }}
+            />
+          </div>
+          
+          <Badge count={5} size="small">
+            <Button 
+              className="notification-btn"
+              type="text" 
+              icon={<BellOutlined />}
+            />
+          </Badge>
+          
+          <div className="user-menu">
+            <div className="user-avatar">管</div>
+            <span className="user-name">管理员</span>
+            <Button 
+              type="text" 
+              icon={<LogoutOutlined />}
+              onClick={handleLogout}
+              className="logout-btn"
+            >
+              退出
+            </Button>
+          </div>
+        </div>
+      </header>
+
+      {/* 主内容区域 */}
+      <main className="app-main">
+        <Outlet />
+      </main>
+
+      {/* 底部页脚 */}
+      <footer className="app-footer">
+        <div className="footer-content">
+          <span>© 2024 Portal 3.0 企业管理平台</span>
+          <span>|</span>
+          <span>技术支持</span>
+        </div>
+      </footer>
+    </div>
   );
 };
 

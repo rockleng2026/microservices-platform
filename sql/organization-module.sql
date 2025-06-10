@@ -115,7 +115,8 @@ CREATE TABLE `workposition` (
   `requirements` text COMMENT '任职要求',
   `salary_range` varchar(50) COMMENT '薪资范围',
   `max_employees` int(11) DEFAULT 1 COMMENT '最大任职人数',
-  `permissions` text COMMENT '权限配置JSON',
+  `menu_ids` text COMMENT '菜单页面id集合，用逗号分割',
+  `menu_func_ids` text COMMENT '菜单页面功能点id集合，用逗号分割',
   `is_manager` tinyint(1) DEFAULT 0 COMMENT '是否主管岗位(1是,0否)',
   `is_director` tinyint(1) DEFAULT 0 COMMENT '是否领导岗位(1是,0否)',
   `sort_order` int(11) DEFAULT 0 COMMENT '排序号',
@@ -276,6 +277,7 @@ CREATE TABLE `employee_attachment` (
 -- ===================================================================
 
 -- 角色组表（role表-保留后面使用）
+/**
 CREATE TABLE `roles` (
   `id` bigint(20) COMMENT '角色ID',
   `role_name` varchar(50) NOT NULL COMMENT '角色名称',
@@ -293,7 +295,7 @@ CREATE TABLE `roles` (
   UNIQUE KEY `uk_role_code` (`role_code`, `tenant_id`),
   KEY `idx_tenant_id` (`tenant_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='角色组表';
-
+*/
 -- 用户登录表（基于原users表）
 
 CREATE TABLE `users` (

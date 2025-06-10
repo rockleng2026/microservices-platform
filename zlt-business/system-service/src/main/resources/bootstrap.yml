@@ -1,9 +1,11 @@
 server:
-  port: 7002
+  port: 7001
+  servlet:
+    context-path: /system
 
 spring:
   application:
-    name: organization-service
+    name: system-service
 #  cloud:
 #    nacos:
 #      discovery:

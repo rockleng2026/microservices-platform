@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.system.mapper.SysRoleMapper">
+
+    <!-- 角色基本信息映射 -->
+    <resultMap id="BaseResultMap" type="com.central.system.model.SysRole">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="role_name" property="roleName" jdbcType="VARCHAR"/>
+        <result column="role_description" property="roleDescription" jdbcType="VARCHAR"/>
+        <result column="role_code" property="roleCode" jdbcType="VARCHAR"/>
+        <result column="role_type" property="roleType" jdbcType="INTEGER"/>
+        <result column="permissions" property="permissions" jdbcType="LONGVARCHAR"/>
+        <result column="sort_order" property="sortOrder" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="delflag" property="delflag" jdbcType="INTEGER"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, role_name, role_description, role_code, role_type, permissions, 
+        sort_order, status, delflag, created_at, updated_at, tenant_id
+    </sql>
+
+    <!-- 分页查询角色 -->
+    <select id="selectRolePage" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM roles
+        <where>
+            delflag = 0
+            <if test="roleName != null and roleName != ''">
+                AND role_name LIKE CONCAT('%', #{roleName}, '%')
+            </if>
+            <if test="roleCode != null and roleCode != ''">
+                AND role_code LIKE CONCAT('%', #{roleCode}, '%')
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+            <if test="roleType != null">
+                AND role_type = #{roleType}
+            </if>
+        </where>
+        ORDER BY sort_order ASC, created_at DESC
+    </select>
+
+    <!-- 根据角色编码查询角色 -->
+    <select id="selectByRoleCode" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM roles
+        WHERE role_code = #{roleCode} AND delflag = 0
+        LIMIT 1
+    </select>
+
+    <!-- 批量更新角色状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE roles
+        SET status = #{status}, updated_at = NOW()
+        WHERE id IN
+        <foreach collection="roleIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND delflag = 0
+    </update>
+
+
+
+    <!-- 统计角色类型分布 -->
+    <select id="countByType" resultType="java.util.Map">
+        SELECT 
+            role_type,
+            COUNT(*) as count
+        FROM roles
+        WHERE delflag = 0
+        GROUP BY role_type
+    </select>
+
+    <!-- 查询所有启用的角色 -->
+    <select id="selectEnabledRoles" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM roles
+        WHERE status = 1 AND delflag = 0
+        ORDER BY sort_order ASC, role_name ASC
+    </select>
+
+</mapper> 

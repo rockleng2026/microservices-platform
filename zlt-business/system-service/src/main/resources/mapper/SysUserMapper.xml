@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.system.mapper.SysUserMapper">
+
+    <!-- 用户基本信息映射 -->
+    <resultMap id="BaseResultMap" type="com.central.system.model.SysUser">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="username" property="username" jdbcType="VARCHAR"/>
+        <result column="password" property="password" jdbcType="VARCHAR"/>
+        <result column="nickname" property="nickname" jdbcType="VARCHAR"/>
+        <result column="mobile" property="mobile" jdbcType="VARCHAR"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="employee_id" property="employeeId" jdbcType="BIGINT"/>
+        <result column="sex" property="sex" jdbcType="INTEGER"/>
+        <result column="enabled" property="enabled" jdbcType="INTEGER"/>
+        <result column="head_img_url" property="headImgUrl" jdbcType="VARCHAR"/>
+        <result column="company" property="company" jdbcType="VARCHAR"/>
+        <result column="open_id" property="openId" jdbcType="VARCHAR"/>
+        <result column="type" property="type" jdbcType="VARCHAR"/>
+        <result column="is_del" property="isDel" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="creator_id" property="creatorId" jdbcType="BIGINT"/>
+        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 用户详细信息映射（包含部门、员工信息） -->
+    <resultMap id="UserDetailResultMap" type="com.central.system.model.SysUser" extends="BaseResultMap">
+        <result column="employee_name" property="employeeName" jdbcType="VARCHAR"/>
+        <result column="department_name" property="departmentName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, username, password, nickname, mobile, employee_id, sex, enabled, type, 
+        create_time, update_time, company, open_id, is_del, creator_id, tenant_id, head_img_url
+    </sql>
+
+    <!-- 详细信息字段 -->
+    <sql id="Detail_Column_List">
+        u.id, u.username, u.password, u.nickname, u.mobile, u.employee_id, u.sex, u.enabled, u.type, 
+        u.create_time, u.update_time, u.company, u.open_id, u.is_del, u.creator_id, u.tenant_id, u.head_img_url,
+        e.name as employee_name,
+        d.name as department_name
+    </sql>
+
+    <!-- 分页查询用户 -->
+    <select id="selectUserPage" resultMap="UserDetailResultMap">
+        SELECT
+        <include refid="Detail_Column_List"/>
+        FROM users u
+        LEFT JOIN employee e ON u.employee_id = e.id AND e.delflag = 0
+        LEFT JOIN department d ON e.department_id = d.id AND d.delflag = 0
+        <where>
+            u.is_del = 0
+            <if test="username != null and username != ''">
+                AND u.username LIKE CONCAT('%', #{username}, '%')
+            </if>
+            <if test="employeeName != null and employeeName != ''">
+                AND e.name LIKE CONCAT('%', #{employeeName}, '%')
+            </if>
+            <if test="departmentId != null">
+                AND e.department_id = #{departmentId}
+            </if>
+            <if test="status != null">
+                AND u.enabled = #{status}
+            </if>
+        </where>
+        ORDER BY u.create_time DESC
+    </select>
+
+    <!-- 根据用户名查询用户 -->
+    <select id="selectByUsername" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM users
+        WHERE username = #{username} AND is_del = 0
+        LIMIT 1
+    </select>
+
+    <!-- 根据员工ID查询用户 -->
+    <select id="selectByEmployeeId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM users
+        WHERE employee_id = #{employeeId} AND is_del = 0
+        LIMIT 1
+    </select>
+
+    <!-- 根据手机号查询用户 -->
+    <select id="selectByMobile" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM users
+        WHERE mobile = #{mobile} AND is_del = 0
+        LIMIT 1
+    </select>
+
+    <!-- 批量更新用户状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE users
+        SET enabled = #{status}, update_time = NOW()
+        WHERE id IN
+        <foreach collection="userIds" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND is_del = 0
+    </update>
+
+    <!-- 统计部门用户数量 -->
+    <select id="countByDepartment" resultType="int">
+        SELECT COUNT(*)
+        FROM users u
+        INNER JOIN employee e ON u.employee_id = e.id
+        WHERE e.department_id = #{departmentId} AND u.is_del = 0 AND e.delflag = 0
+    </select>
+
+
+
+</mapper> 

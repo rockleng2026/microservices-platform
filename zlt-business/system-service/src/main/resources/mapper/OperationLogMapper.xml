@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.system.mapper.OperationLogMapper">
+
+    <!-- 操作日志基本信息映射 -->
+    <resultMap id="BaseResultMap" type="com.central.system.model.OperationLog">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="user_name" property="userName" jdbcType="VARCHAR"/>
+        <result column="module" property="module" jdbcType="VARCHAR"/>
+        <result column="operation" property="operation" jdbcType="VARCHAR"/>
+        <result column="target_type" property="targetType" jdbcType="VARCHAR"/>
+        <result column="target_id" property="targetId" jdbcType="VARCHAR"/>
+        <result column="target_name" property="targetName" jdbcType="VARCHAR"/>
+        <result column="operation_desc" property="operationDesc" jdbcType="VARCHAR"/>
+        <result column="old_value" property="oldValue" jdbcType="LONGVARCHAR"/>
+        <result column="new_value" property="newValue" jdbcType="LONGVARCHAR"/>
+        <result column="ip_address" property="ipAddress" jdbcType="VARCHAR"/>
+        <result column="user_agent" property="userAgent" jdbcType="VARCHAR"/>
+        <result column="operation_time" property="operationTime" jdbcType="TIMESTAMP"/>
+        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 操作日志详细信息映射（包含用户信息） -->
+    <resultMap id="DetailResultMap" type="com.central.system.model.OperationLog" extends="BaseResultMap">
+        <result column="user_nickname" property="userNickname" jdbcType="VARCHAR"/>
+        <result column="department_name" property="departmentName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, user_id, user_name, module, operation, target_type, target_id, target_name,
+        operation_desc, old_value, new_value, ip_address, user_agent, operation_time, tenant_id
+    </sql>
+
+    <!-- 详细信息字段 -->
+    <sql id="Detail_Column_List">
+        ol.id, ol.user_id, ol.user_name, ol.module, ol.operation, ol.target_type, ol.target_id, ol.target_name,
+        ol.operation_desc, ol.old_value, ol.new_value, ol.ip_address, ol.user_agent, ol.operation_time, ol.tenant_id,
+        u.nickname as user_nickname,
+        d.name as department_name
+    </sql>
+
+    <!-- 分页查询操作日志 -->
+    <select id="selectLogPage" resultMap="DetailResultMap">
+        SELECT
+        <include refid="Detail_Column_List"/>
+        FROM audit_log ol
+        LEFT JOIN users u ON ol.user_id = u.id AND u.is_del = 0
+        LEFT JOIN employee e ON u.employee_id = e.id AND e.delflag = 0
+        LEFT JOIN department d ON e.department_id = d.id AND d.delflag = 0
+        <where>
+            <if test="userName != null and userName != ''">
+                AND ol.user_name LIKE CONCAT('%', #{userName}, '%')
+            </if>
+            <if test="module != null and module != ''">
+                AND ol.module = #{module}
+            </if>
+            <if test="operation != null and operation != ''">
+                AND ol.operation = #{operation}
+            </if>
+            <if test="startTime != null">
+                AND ol.operation_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND ol.operation_time &lt;= #{endTime}
+            </if>
+            <if test="ipAddress != null and ipAddress != ''">
+                AND ol.ip_address = #{ipAddress}
+            </if>
+            <if test="targetType != null and targetType != ''">
+                AND ol.target_type = #{targetType}
+            </if>
+        </where>
+        ORDER BY ol.operation_time DESC
+    </select>
+
+    <!-- 根据用户ID查询操作日志 -->
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM audit_log
+        WHERE user_id = #{userId}
+        ORDER BY operation_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 统计操作类型分布 -->
+    <select id="countByOperation" resultType="java.util.Map">
+        SELECT 
+            operation,
+            COUNT(*) as count
+        FROM audit_log
+        <where>
+            <if test="startTime != null">
+                AND operation_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND operation_time &lt;= #{endTime}
+            </if>
+        </where>
+        GROUP BY operation
+        ORDER BY count DESC
+    </select>
+
+    <!-- 统计模块操作分布 -->
+    <select id="countByModule" resultType="java.util.Map">
+        SELECT 
+            module,
+            COUNT(*) as count
+        FROM audit_log
+        <where>
+            <if test="startTime != null">
+                AND operation_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND operation_time &lt;= #{endTime}
+            </if>
+        </where>
+        GROUP BY module
+        ORDER BY count DESC
+    </select>
+
+    <!-- 查询访问量最高的IP -->
+    <select id="getTopIpAddresses" resultType="java.util.Map">
+        SELECT 
+            ip_address,
+            COUNT(*) as access_count
+        FROM audit_log
+        <where>
+            <if test="startTime != null">
+                AND operation_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND operation_time &lt;= #{endTime}
+            </if>
+        </where>
+        GROUP BY ip_address
+        ORDER BY access_count DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 查询最活跃的用户 -->
+    <select id="getTopActiveUsers" resultType="java.util.Map">
+        SELECT 
+            ol.user_name,
+            u.nickname,
+            COUNT(*) as operation_count
+        FROM audit_log ol
+        LEFT JOIN users u ON ol.user_id = u.id AND u.is_del = 0
+        <where>
+            <if test="startTime != null">
+                AND ol.operation_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND ol.operation_time &lt;= #{endTime}
+            </if>
+        </where>
+        GROUP BY ol.user_name, u.nickname
+        ORDER BY operation_count DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 按时间维度统计操作量 -->
+    <select id="getOperationTrend" resultType="java.util.Map">
+        SELECT 
+            DATE_FORMAT(operation_time, #{dateFormat}) as date_key,
+            COUNT(*) as operation_count
+        FROM audit_log
+        <where>
+            <if test="startTime != null">
+                AND operation_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND operation_time &lt;= #{endTime}
+            </if>
+        </where>
+        GROUP BY DATE_FORMAT(operation_time, #{dateFormat})
+        ORDER BY date_key ASC
+    </select>
+
+    <!-- 删除过期日志 -->
+    <delete id="deleteExpiredLogs">
+        DELETE FROM audit_log
+        WHERE operation_time &lt; #{expireTime}
+    </delete>
+
+    <!-- 清理指定天数前的日志 -->
+    <delete id="cleanLogsByDays">
+        DELETE FROM audit_log
+        WHERE operation_time &lt; DATE_SUB(NOW(), INTERVAL #{days} DAY)
+    </delete>
+
+    <!-- 统计指定时间范围内的操作总数 -->
+    <select id="countOperations" resultType="long">
+        SELECT COUNT(*)
+        FROM audit_log
+        <where>
+            <if test="startTime != null">
+                AND operation_time >= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND operation_time &lt;= #{endTime}
+            </if>
+            <if test="module != null and module != ''">
+                AND module = #{module}
+            </if>
+        </where>
+    </select>
+
+</mapper> 

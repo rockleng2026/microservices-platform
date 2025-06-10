@@ -18,5 +18,7 @@
         <module>search-center</module>
         <!-- 组织架构中心 -->
         <module>organization-service</module>
+        <!-- 系统管理中心 -->
+        <module>system-service</module>
     </modules>
 </project>

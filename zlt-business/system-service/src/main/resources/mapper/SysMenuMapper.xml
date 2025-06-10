@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.system.mapper.SysMenuMapper">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="BaseResultMap" type="com.central.system.model.SysMenu">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="parent_id" property="parentId" />
+        <result column="link_url" property="linkUrl" />
+        <result column="description" property="description" />
+        <result column="image_path" property="imagePath" />
+        <result column="icon" property="icon" />
+        <result column="sort_order" property="sortOrder" />
+        <result column="status" property="status" />
+        <result column="delflag" property="delflag" />
+        <result column="created_at" property="createdAt" />
+        <result column="tenant_id" property="tenantId" />
+    </resultMap>
+
+    <!-- 菜单树结果映射 -->
+    <resultMap id="MenuTreeResultMap" type="com.central.system.model.dto.SysMenuTreeDTO">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="parent_id" property="parentId" />
+        <result column="link_url" property="linkUrl" />
+        <result column="icon" property="icon" />
+        <result column="sort_order" property="sortOrder" />
+        <result column="status" property="status" />
+        <result column="level" property="level" />
+        <result column="has_children" property="hasChildren" />
+    </resultMap>
+
+    <!-- 获取菜单树形结构 -->
+    <select id="getMenuTree" resultMap="MenuTreeResultMap">
+        SELECT 
+            m.id,
+            m.name,
+            m.parent_id,
+            m.link_url,
+            m.icon,
+            m.sort_order,
+            m.status,
+            0 as level,
+            CASE WHEN COUNT(c.id) > 0 THEN 1 ELSE 0 END as has_children
+        FROM menu_page m
+        LEFT JOIN menu_page c ON c.parent_id = m.id AND c.delflag = 0
+        WHERE m.delflag = 0 
+        AND m.status = 1
+        <if test="parentId != null">
+            AND m.parent_id = #{parentId}
+        </if>
+        GROUP BY m.id, m.name, m.parent_id, m.link_url, m.icon, m.sort_order, m.status
+        ORDER BY m.sort_order ASC, m.id ASC
+    </select>
+
+
+
+    <!-- 根据菜单ID获取子菜单数量 -->
+    <select id="getChildrenCount" resultType="int">
+        SELECT COUNT(*)
+        FROM menu_page
+        WHERE parent_id = #{menuId}
+        AND delflag = 0
+    </select>
+
+    <!-- 批量更新菜单状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE menu_page 
+        SET status = #{status}
+        WHERE id IN
+        <foreach collection="menuIds" item="menuId" open="(" separator="," close=")">
+            #{menuId}
+        </foreach>
+    </update>
+
+</mapper> 

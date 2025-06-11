@@ -16,4 +16,8 @@ public interface ServiceNameConstants {
      * 搜索中心服务
      */
     String SEARCH_SERVICE = "search-center";
+    /**
+     * 组织架构服务
+     */
+    String ORGANIZATION_SERVICE = "organization-service";
 }

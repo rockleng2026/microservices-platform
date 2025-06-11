@@ -473,10 +473,10 @@ ALTER TABLE department ADD INDEX idx_tenant_id (tenant_id);
 
 #### 3.1.4 权限管理 ✅
 **已实现的权限体系：**
-- ✅ 基于角色的权限控制 (roles表)
-- ✅ 功能权限管理 (menu_func表)
+- ✅ 基于岗位的权限控制 (workpositon表、workposition_manage_dept表)
+- ✅ 功能权限管理 (menu_page、menu_func表)
 - ✅ 数据权限管理 (租户级隔离)
-- ✅ 岗位权限配置 (workposition.permissions)
+- ✅ 岗位权限配置 (workposition.menu_ids,workposition.menu_func_ids)
 
 **权限层级设计：**
 ```

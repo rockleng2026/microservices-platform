@@ -1,8 +1,8 @@
 import React from 'react';
 import { Card, Form, Input, Button, Checkbox, message, Typography } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { history, useModel } from 'umi';
-import { login } from '@/services/user';
+import { history } from 'umi';
+import { login, getCurrentUser, getCurrentUserMenus } from '@/services/auth';
 
 const { Title, Text } = Typography;
 
@@ -13,18 +13,56 @@ const Login: React.FC = () => {
   const handleSubmit = async (values: any) => {
     try {
       setLoading(true);
-      // 模拟登录请求
-      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      // 保存token
-      localStorage.setItem('access_token', 'demo-token');
+      // 调用Portal登录接口
+      const loginData = {
+        grant_type: 'password',
+        username: values.username,
+        password: values.password,
+        client_id: 'portal-web',
+        client_secret: 'portal-secret',
+        account_type: 'portal'
+      };
       
-      message.success('登录成功');
+      console.log('开始Portal用户登录，用户名:', values.username);
+      const loginResult = await login(loginData);
       
-      // 跳转到工作台
-      history.push('/dashboard');
-    } catch (error) {
-      message.error('登录失败，请检查网络连接');
+      if (loginResult.access_token) {
+        // 保存token
+        localStorage.setItem('access_token', loginResult.access_token);
+        localStorage.setItem('refresh_token', loginResult.refresh_token || '');
+        
+        console.log('Portal用户登录成功，Token:', loginResult.access_token.substring(0, 20) + '...');
+        
+        // 获取用户信息
+        try {
+          const userInfo = await getCurrentUser();
+          console.log('获取用户信息:', userInfo);
+          localStorage.setItem('user_info', JSON.stringify(userInfo));
+        } catch (userError) {
+          console.warn('获取用户信息失败:', userError);
+        }
+        
+        // 获取菜单权限
+        try {
+          const menus = await getCurrentUserMenus();
+          console.log('获取菜单权限:', menus);
+          localStorage.setItem('user_menus', JSON.stringify(menus));
+        } catch (menuError) {
+          console.warn('获取菜单权限失败:', menuError);
+        }
+        
+        message.success('登录成功');
+        
+        // 跳转到工作台
+        history.push('/dashboard');
+      } else {
+        throw new Error('登录失败：未获取到访问令牌');
+      }
+    } catch (error: any) {
+      console.error('Portal用户登录失败:', error);
+      const errorMessage = error.message || error.error_description || '登录失败，请检查用户名和密码';
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -51,6 +89,10 @@ const Login: React.FC = () => {
           onFinish={handleSubmit}
           autoComplete="off"
           size="large"
+          initialValues={{
+            username: 'admin',
+            password: 'admin123'
+          }}
         >
           <Form.Item
             name="username"
@@ -99,7 +141,7 @@ const Login: React.FC = () => {
 
         <div style={{ textAlign: 'center', marginTop: 16 }}>
           <Text type="secondary">
-            演示账号: admin / 123456
+            Portal用户账号: admin / admin123
           </Text>
         </div>
       </Card>

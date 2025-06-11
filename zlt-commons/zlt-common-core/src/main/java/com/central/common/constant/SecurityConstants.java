@@ -192,6 +192,11 @@ public interface SecurityConstants {
     String DEF_ACCOUNT_TYPE = "admin";
 
     /**
+     * portal账号类型
+     */
+    String PORTAL_ACCOUNT_TYPE = "portal";
+
+    /**
      * 账号类型参数名
      */
     String ACCOUNT_TYPE_PARAM_NAME = "account_type";

@@ -64,10 +64,12 @@ public class PasswordCodeAuthenticationProvider extends BaseAuthenticationProvid
         String password = authToken.getCredentials();
         UserDetails userDetails;
         try {
-            userDetails = userDetailsServiceFactory.getService(authToken).loadUserByUsername(username);
+                userDetails = userDetailsServiceFactory.getService(authToken).loadUserByUsername(username);
         } catch (AuthenticationException e) {
             throw new CustomOAuth2AuthenticationException(e.getMessage());
         }
+        String encodeStr = passwordEncoder.encode(password);
+        System.out.println("加密前的字符串="+password+",加密后的字符串="+encodeStr);
         if (userDetails == null || !passwordEncoder.matches(password, userDetails.getPassword())) {
             throw new CustomOAuth2AuthenticationException("用户名或密码错误");
         }

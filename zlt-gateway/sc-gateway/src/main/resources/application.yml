@@ -49,6 +49,12 @@ spring:
             - Path=/api-user/**
           filters:
             - StripPrefix=1
+        - id: portal-org
+          uri: lb://organization-service
+          predicates:
+            - Path=/api-portal/**
+          filters:
+            - StripPrefix=1
         - id: file
           uri: lb://file-center
           predicates:
@@ -125,7 +131,9 @@ zlt:
         #配置只进行登录认证，不进行url权限认证的api
         ignoreUrls: >
           /api-user/menus/current,
+          /api-portal/menus/current,
           /api-user/users/current,
+          /api-portal/users/current,
           /api-log/requestStat
         #白名单
         includeClientIds:

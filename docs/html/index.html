@@ -689,19 +689,90 @@
 
     <script src="assets/js/common.js"></script>
     <script src="assets/js/mock-data.js"></script>
+    <script src="assets/js/navigation.js"></script>
     <script>
         // 页面初始化
         document.addEventListener('DOMContentLoaded', function() {
-            // 初始化页面数据
+            // 首先初始化权限系统
+            initializePermissionSystem();
+            
+            // 然后初始化页面数据
             initializeDashboard();
         });
+
+        // 初始化权限系统
+        function initializePermissionSystem() {
+            if (window.Portal && window.Portal.PermissionManager) {
+                // 初始化权限管理器
+                window.Portal.PermissionManager.init();
+                
+                // 初始化带权限控制的导航菜单
+                if (window.navigationManager) {
+                    window.navigationManager.initWithPermissions();
+                }
+                
+                console.log('权限系统初始化完成');
+            }
+        }
 
         // 初始化仪表板
         function initializeDashboard() {
             // 可以在这里加载实时数据更新统计数字
             console.log('Portal 3.0 首页已加载');
             showMessage('欢迎使用 Portal 3.0 企业管理平台！', 'success');
+            
+            // 显示当前岗位信息
+            const currentPosition = window.Portal.PermissionManager.getCurrentPosition();
+            if (currentPosition) {
+                console.log(`当前岗位: ${currentPosition.name}`);
+            }
+            
+            // 根据权限控制模块卡片显示
+            applyModulePermissions();
         }
+
+        // 应用模块权限控制
+        function applyModulePermissions() {
+            const moduleCards = document.querySelectorAll('.module-card');
+            
+            moduleCards.forEach(card => {
+                const cardClasses = card.className;
+                let hasPermission = false;
+                
+                // 根据卡片类名判断对应的权限
+                if (cardClasses.includes('oa')) {
+                    hasPermission = window.Portal.PermissionManager.hasPermission('oa-workspace');
+                } else if (cardClasses.includes('crm')) {
+                    hasPermission = window.Portal.PermissionManager.hasPermission('crm-workspace');
+                } else if (cardClasses.includes('sales')) {
+                    hasPermission = window.Portal.PermissionManager.hasPermission('sales-workspace');
+                } else if (cardClasses.includes('org')) {
+                    hasPermission = window.Portal.PermissionManager.hasPermission('organization');
+                } else if (cardClasses.includes('product')) {
+                    hasPermission = window.Portal.PermissionManager.hasPermission('product');
+                } else if (cardClasses.includes('service')) {
+                    hasPermission = window.Portal.PermissionManager.hasPermission('service');
+                }
+                
+                // 根据权限显示或隐藏卡片
+                if (!hasPermission) {
+                    card.style.display = 'none';
+                } else {
+                    card.style.display = 'block';
+                }
+            });
+        }
+
+        // 监听岗位切换事件
+        document.addEventListener('positionChanged', function(event) {
+            console.log('岗位已切换:', event.detail.position);
+            
+            // 重新应用模块权限
+            applyModulePermissions();
+            
+            // 可以在这里添加其他需要在岗位切换时执行的逻辑
+            // 比如更新统计数据、刷新页面内容等
+        });
 
         // 导航功能将由统一导航系统提供
 

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.organization.mapper.UserPersonalConfigMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.central.organization.model.UserPersonalConfig">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="default_position_id" property="defaultPositionId" jdbcType="BIGINT"/>
+        <result column="theme" property="theme" jdbcType="VARCHAR"/>
+        <result column="layout_config" property="layoutConfig" jdbcType="LONGTEXT"/>
+        <result column="language" property="language" jdbcType="VARCHAR"/>
+        <result column="timezone" property="timezone" jdbcType="VARCHAR"/>
+        <result column="home_page" property="homePage" jdbcType="VARCHAR"/>
+        <result column="notification_config" property="notificationConfig" jdbcType="LONGTEXT"/>
+        <result column="extend_config" property="extendConfig" jdbcType="LONGTEXT"/>
+        <result column="enabled" property="enabled" jdbcType="TINYINT"/>
+        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
+        <result column="updated_by" property="updatedBy" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, user_id, default_position_id, theme, layout_config, language, timezone,
+        home_page, notification_config, extend_config, enabled, tenant_id,
+        created_at, updated_at, created_by, updated_by
+    </sql>
+
+    <!-- 根据用户ID查询个性化配置 -->
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user_personal_config
+        WHERE user_id = #{userId}
+        AND tenant_id = #{tenantId}
+        AND enabled = 1
+        LIMIT 1
+    </select>
+
+    <!-- 根据用户ID删除配置 -->
+    <delete id="deleteByUserId">
+        DELETE FROM user_personal_config
+        WHERE user_id = #{userId}
+        AND tenant_id = #{tenantId}
+    </delete>
+
+    <!-- 初始化用户默认配置 -->
+    <insert id="insertDefaultConfig" parameterType="com.central.organization.model.UserPersonalConfig">
+        INSERT INTO user_personal_config (
+            user_id, default_position_id, theme, layout_config, language, timezone,
+            home_page, notification_config, extend_config, enabled, tenant_id,
+            created_at, updated_at, created_by, updated_by
+        ) VALUES (
+            #{userId}, #{defaultPositionId}, #{theme}, #{layoutConfig}, #{language}, #{timezone},
+            #{homePage}, #{notificationConfig}, #{extendConfig}, #{enabled}, #{tenantId},
+            #{createdAt}, #{updatedAt}, #{createdBy}, #{updatedBy}
+        )
+    </insert>
+
+</mapper> 

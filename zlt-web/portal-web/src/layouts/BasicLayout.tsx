@@ -5,11 +5,11 @@ import {
   DashboardOutlined, 
   TeamOutlined, 
   CustomerServiceOutlined, 
-  LogoutOutlined,
   SearchOutlined,
   BellOutlined,
   MenuOutlined
 } from '@ant-design/icons';
+import LogoutConfirm from '../components/LogoutConfirm';
 import './BasicLayout.less';
 
 const { Header, Sider, Content, Footer } = Layout;
@@ -54,11 +54,6 @@ const BasicLayout: React.FC = () => {
       ],
     },
   ];
-
-  const handleLogout = () => {
-    localStorage.removeItem('access_token');
-    window.location.href = '/login';
-  };
 
   // 获取当前页面标题
   const getCurrentPageTitle = () => {
@@ -128,14 +123,17 @@ const BasicLayout: React.FC = () => {
           <div className="user-menu">
             <div className="user-avatar">管</div>
             <span className="user-name">管理员</span>
-            <Button 
-              type="text" 
-              icon={<LogoutOutlined />}
-              onClick={handleLogout}
+            <LogoutConfirm 
+              buttonType="text"
+              buttonText="退出"
               className="logout-btn"
-            >
-              退出
-            </Button>
+              onLogoutSuccess={() => {
+                console.log('用户已成功退出登录');
+              }}
+              onLogoutError={(error) => {
+                console.error('退出登录时发生错误:', error);
+              }}
+            />
           </div>
         </div>
       </header>

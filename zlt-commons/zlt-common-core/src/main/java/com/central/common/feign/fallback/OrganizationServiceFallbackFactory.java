@@ -4,6 +4,7 @@ import com.central.common.feign.OrganizationService;
 import com.central.common.model.Result;
 import com.central.common.model.SysUser;
 import org.springframework.cloud.openfeign.FallbackFactory;
+import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Map;
  * @author zlt
  */
 @Slf4j
+@Component
 public class OrganizationServiceFallbackFactory implements FallbackFactory<OrganizationService> {
     
     @Override

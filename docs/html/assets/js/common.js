@@ -495,11 +495,353 @@ function initTableSort() {
     });
 }
 
+// 权限控制管理器
+const PermissionManager = {
+    // 获取当前用户信息
+    getCurrentUser() {
+        return currentUserData;
+    },
+
+    // 获取当前岗位
+    getCurrentPosition() {
+        const user = this.getCurrentUser();
+        const currentPositionId = user.currentWorkPositionId;
+        return user.workPositions.find(pos => pos.id === currentPositionId);
+    },
+
+    // 切换岗位
+    switchPosition(positionId) {
+        const user = this.getCurrentUser();
+        const position = user.workPositions.find(pos => pos.id === positionId);
+        
+        if (position) {
+            user.currentWorkPositionId = positionId;
+            // 保存到本地存储
+            Utils.storage.set('currentWorkPositionId', positionId);
+            
+            // 重新加载菜单
+            this.refreshMenu();
+            
+            // 发送岗位切换事件
+            document.dispatchEvent(new CustomEvent('positionChanged', {
+                detail: { position }
+            }));
+            
+            Message.success(`已切换到${position.name}岗位`);
+            return true;
+        }
+        
+        Message.error('岗位切换失败');
+        return false;
+    },
+
+    // 检查当前岗位是否有权限访问指定菜单
+    hasPermission(menuId) {
+        const currentPosition = this.getCurrentPosition();
+        if (!currentPosition) return false;
+        
+        const menu = menuPermissionData.find(m => m.id === menuId);
+        if (!menu) return false;
+        
+        return menu.permissions.includes(currentPosition.code);
+    },
+
+    // 根据当前岗位权限过滤菜单
+    getFilteredMenus() {
+        const currentPosition = this.getCurrentPosition();
+        if (!currentPosition) return [];
+        
+        // 获取有权限的一级菜单
+        const rootMenus = menuPermissionData
+            .filter(menu => menu.level === 1 && menu.permissions.includes(currentPosition.code))
+            .sort((a, b) => a.sort - b.sort);
+        
+        // 为每个一级菜单添加有权限的子菜单
+        return rootMenus.map(rootMenu => {
+            const children = menuPermissionData
+                .filter(menu => menu.parentId === rootMenu.id && menu.permissions.includes(currentPosition.code))
+                .sort((a, b) => a.sort - b.sort);
+            
+            return {
+                ...rootMenu,
+                children: children.length > 0 ? children : undefined
+            };
+        }).filter(menu => {
+            // 如果是分组菜单但没有子菜单，则过滤掉
+            return menu.path || (menu.children && menu.children.length > 0);
+        });
+    },
+
+    // 刷新菜单显示
+    refreshMenu() {
+        const navigationManager = window.navigationManager;
+        if (navigationManager) {
+            navigationManager.updateMenuData(this.getFilteredMenus());
+            navigationManager.render();
+        }
+    },
+
+    // 初始化权限系统
+    init() {
+        // 从本地存储恢复岗位选择
+        const savedPositionId = Utils.storage.get('currentWorkPositionId');
+        if (savedPositionId) {
+            const user = this.getCurrentUser();
+            const position = user.workPositions.find(pos => pos.id === savedPositionId);
+            if (position) {
+                user.currentWorkPositionId = savedPositionId;
+            }
+        }
+        
+        // 初始化岗位切换组件
+        this.initPositionSwitcher();
+    },
+
+    // 初始化岗位切换组件
+    initPositionSwitcher() {
+        const user = this.getCurrentUser();
+        const currentPosition = this.getCurrentPosition();
+        
+        // 创建岗位切换下拉菜单HTML
+        const positionSwitcherHtml = `
+            <div class="position-switcher">
+                <div class="current-position" onclick="togglePositionDropdown()">
+                    <span class="position-icon">👔</span>
+                    <span class="position-name">${currentPosition.name}</span>
+                    <span class="position-arrow">▼</span>
+                </div>
+                <div class="position-dropdown" id="positionDropdown">
+                    <div class="position-dropdown-header">
+                        <span>切换岗位</span>
+                    </div>
+                    <div class="position-list">
+                        ${user.workPositions.map(pos => `
+                            <div class="position-item ${pos.id === currentPosition.id ? 'active' : ''}" 
+                                 onclick="switchToPosition(${pos.id})">
+                                <div class="position-info">
+                                    <div class="position-title">${pos.name}</div>
+                                    <div class="position-dept">${pos.department}</div>
+                                </div>
+                                <div class="position-badge">
+                                    ${pos.isMain ? '<span class="main-badge">主岗</span>' : '<span class="vice-badge">兼职</span>'}
+                                </div>
+                                ${pos.id === currentPosition.id ? '<div class="position-check">✓</div>' : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // 查找用户菜单区域并插入岗位切换组件
+        const userMenu = document.querySelector('.user-menu');
+        if (userMenu) {
+            // 在用户名前插入岗位切换组件
+            userMenu.insertAdjacentHTML('afterbegin', positionSwitcherHtml);
+        }
+        
+        // 添加样式
+        this.addPositionSwitcherStyles();
+    },
+
+    // 添加岗位切换组件样式
+    addPositionSwitcherStyles() {
+        const style = document.createElement('style');
+        style.textContent = `
+            .position-switcher {
+                position: relative;
+                margin-right: 16px;
+            }
+            
+            .current-position {
+                display: flex;
+                align-items: center;
+                padding: 6px 12px;
+                background: #f0f2f5;
+                border-radius: 6px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                min-width: 120px;
+            }
+            
+            .current-position:hover {
+                background: #e6f7ff;
+            }
+            
+            .position-icon {
+                margin-right: 6px;
+                font-size: 14px;
+            }
+            
+            .position-name {
+                flex: 1;
+                font-size: 14px;
+                color: #333;
+            }
+            
+            .position-arrow {
+                margin-left: 6px;
+                font-size: 10px;
+                color: #999;
+                transition: transform 0.3s ease;
+            }
+            
+            .position-switcher.open .position-arrow {
+                transform: rotate(180deg);
+            }
+            
+            .position-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                border: 1px solid #e8e8e8;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 1000;
+                display: none;
+                margin-top: 4px;
+                min-width: 260px;
+            }
+            
+            .position-switcher.open .position-dropdown {
+                display: block;
+            }
+            
+            .position-dropdown-header {
+                padding: 12px 16px;
+                border-bottom: 1px solid #f0f0f0;
+                font-weight: 500;
+                color: #333;
+                font-size: 14px;
+            }
+            
+            .position-list {
+                max-height: 300px;
+                overflow-y: auto;
+            }
+            
+            .position-item {
+                display: flex;
+                align-items: center;
+                padding: 12px 16px;
+                cursor: pointer;
+                transition: background 0.3s ease;
+                position: relative;
+            }
+            
+            .position-item:hover {
+                background: #f8f9fa;
+            }
+            
+            .position-item.active {
+                background: #e6f7ff;
+                border-left: 3px solid #1890ff;
+            }
+            
+            .position-info {
+                flex: 1;
+            }
+            
+            .position-title {
+                font-size: 14px;
+                font-weight: 500;
+                color: #333;
+                margin-bottom: 2px;
+            }
+            
+            .position-dept {
+                font-size: 12px;
+                color: #999;
+            }
+            
+            .position-badge {
+                margin-left: 8px;
+            }
+            
+            .main-badge {
+                background: #52c41a;
+                color: white;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+            }
+            
+            .vice-badge {
+                background: #faad14;
+                color: white;
+                padding: 2px 6px;
+                border-radius: 3px;
+                font-size: 10px;
+            }
+            
+            .position-check {
+                position: absolute;
+                right: 16px;
+                color: #1890ff;
+                font-weight: bold;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+};
+
+// 全局函数 - 岗位切换相关
+function togglePositionDropdown() {
+    const switcher = document.querySelector('.position-switcher');
+    if (switcher) {
+        switcher.classList.toggle('open');
+    }
+    
+    // 点击外部关闭下拉菜单
+    document.addEventListener('click', function closeDropdown(e) {
+        if (!switcher.contains(e.target)) {
+            switcher.classList.remove('open');
+            document.removeEventListener('click', closeDropdown);
+        }
+    });
+}
+
+function switchToPosition(positionId) {
+    PermissionManager.switchPosition(positionId);
+    
+    // 关闭下拉菜单
+    const switcher = document.querySelector('.position-switcher');
+    if (switcher) {
+        switcher.classList.remove('open');
+    }
+    
+    // 更新当前岗位显示
+    const currentPosition = PermissionManager.getCurrentPosition();
+    const positionNameEl = document.querySelector('.position-name');
+    if (positionNameEl && currentPosition) {
+        positionNameEl.textContent = currentPosition.name;
+    }
+    
+    // 更新岗位列表中的active状态
+    document.querySelectorAll('.position-item').forEach(item => {
+        item.classList.remove('active');
+        const checkEl = item.querySelector('.position-check');
+        if (checkEl) {
+            checkEl.remove();
+        }
+    });
+    
+    // 设置新的active状态
+    const targetItem = document.querySelector(`[onclick="switchToPosition(${positionId})"]`);
+    if (targetItem) {
+        targetItem.classList.add('active');
+        targetItem.insertAdjacentHTML('beforeend', '<div class="position-check">✓</div>');
+    }
+}
+
 // 导出全局对象
 window.Portal = {
     Utils,
     Message,
     Modal,
     Table,
-    Validator
+    Validator,
+    PermissionManager
 }; 

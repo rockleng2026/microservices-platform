@@ -1,8 +1,8 @@
 // Portal 3.0 统一导航菜单系统
 // 版本: v1.0
-// 说明: 统一管理所有页面的导航菜单结构
+// 说明: 统一管理所有页面的导航菜单结构，支持基于岗位的权限控制
 
-// 导航菜单数据结构
+// 导航菜单数据结构（兼容原有结构）
 const menuData = [
     {
         id: 'dashboard',
@@ -102,6 +102,12 @@ class NavigationManager {
     constructor() {
         this.currentPath = this.getCurrentPath();
         this.basePath = this.getBasePath();
+        this.menuData = menuData; // 默认使用原始菜单数据
+    }
+
+    // 更新菜单数据（支持权限过滤后的菜单）
+    updateMenuData(newMenuData) {
+        this.menuData = newMenuData;
     }
 
     // 获取当前页面路径
@@ -140,7 +146,7 @@ class NavigationManager {
             <ul class="nav-menu">
         `;
 
-        menuData.forEach(item => {
+        this.menuData.forEach(item => {
             if (item.children && item.children.length > 0) {
                 // 有子菜单的分组
                 const groupState = this.getGroupState(item);
@@ -184,8 +190,8 @@ class NavigationManager {
         `;
 
         item.children.forEach(child => {
-            const isActive = this.isPageActive(child.url);
-            const url = this.resolveUrl(child.url);
+            const isActive = this.isPageActive(child.path || child.url);
+            const url = this.resolveUrl(child.path || child.url);
             html += `<a href="${url}" class="nav-subitem ${isActive ? 'active' : ''}">${child.name}</a>`;
         });
 
@@ -199,13 +205,14 @@ class NavigationManager {
 
     // 检查页面是否激活
     isPageActive(url) {
+        if (!url) return false;
         const fileName = url.substring(url.lastIndexOf('/') + 1);
         return fileName === this.currentPath;
     }
 
     // 获取分组状态
     getGroupState(group) {
-        const hasActiveChild = group.children.some(child => this.isPageActive(child.url));
+        const hasActiveChild = group.children.some(child => this.isPageActive(child.path || child.url));
         const isExpanded = hasActiveChild;
         return { isExpanded, hasActiveChild };
     }
@@ -248,14 +255,24 @@ class NavigationManager {
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', () => {
                 console.log('Navigation init - current path:', this.currentPath);
-                console.log('Navigation init - base path:', this.basePath);
                 this.render();
             });
         } else {
-            console.log('Navigation init - current path:', this.currentPath);
-            console.log('Navigation init - base path:', this.basePath);
             this.render();
         }
+    }
+
+    // 初始化权限控制的导航菜单
+    initWithPermissions() {
+        // 等待权限管理器就绪
+        if (window.Portal && window.Portal.PermissionManager) {
+            // 获取过滤后的菜单数据
+            const filteredMenus = window.Portal.PermissionManager.getFilteredMenus();
+            this.updateMenuData(filteredMenus);
+        }
+        
+        // 初始化普通导航
+        this.init();
     }
 }
 

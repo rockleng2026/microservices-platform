@@ -279,6 +279,741 @@ const employeeData = [
     }
 ];
 
+// 岗位数据
+const workPositionData = [
+    {
+        id: 1,
+        name: '总经理',
+        code: 'CEO',
+        department: 1,
+        level: 1,
+        description: '公司最高管理者，拥有所有权限',
+        createTime: '2023-01-01'
+    },
+    {
+        id: 2,
+        name: '人力资源经理',
+        code: 'HR_MANAGER',
+        department: 2,
+        level: 2,
+        description: '人力资源部门负责人',
+        createTime: '2023-01-01'
+    },
+    {
+        id: 3,
+        name: '财务经理',
+        code: 'FINANCE_MANAGER',
+        department: 3,
+        level: 2,
+        description: '财务部门负责人',
+        createTime: '2023-01-01'
+    },
+    {
+        id: 4,
+        name: '技术总监',
+        code: 'CTO',
+        department: 4,
+        level: 2,
+        description: '技术部门最高负责人',
+        createTime: '2023-01-01'
+    },
+    {
+        id: 5,
+        name: '前端主管',
+        code: 'FRONTEND_LEAD',
+        department: 5,
+        level: 3,
+        description: '前端开发团队负责人',
+        createTime: '2023-01-01'
+    },
+    {
+        id: 6,
+        name: '后端主管',
+        code: 'BACKEND_LEAD',
+        department: 6,
+        level: 3,
+        description: '后端开发团队负责人',
+        createTime: '2023-01-01'
+    },
+    {
+        id: 7,
+        name: '设计主管',
+        code: 'DESIGN_LEAD',
+        department: 7,
+        level: 3,
+        description: '产品设计团队负责人',
+        createTime: '2023-01-01'
+    },
+    {
+        id: 8,
+        name: '销售经理',
+        code: 'SALES_MANAGER',
+        department: 8,
+        level: 2,
+        description: '销售部门负责人',
+        createTime: '2023-01-01'
+    },
+    {
+        id: 9,
+        name: '客服经理',
+        code: 'SERVICE_MANAGER',
+        department: 9,
+        level: 2,
+        description: '客服部门负责人',
+        createTime: '2023-01-01'
+    },
+    {
+        id: 10,
+        name: '前端工程师',
+        code: 'FRONTEND_DEV',
+        department: 5,
+        level: 4,
+        description: '前端开发工程师',
+        createTime: '2023-01-01'
+    },
+    {
+        id: 11,
+        name: '后端工程师',
+        code: 'BACKEND_DEV',
+        department: 6,
+        level: 4,
+        description: '后端开发工程师',
+        createTime: '2023-01-01'
+    },
+    {
+        id: 12,
+        name: 'UI设计师',
+        code: 'UI_DESIGNER',
+        department: 7,
+        level: 4,
+        description: 'UI界面设计师',
+        createTime: '2023-01-01'
+    },
+    {
+        id: 13,
+        name: '销售专员',
+        code: 'SALES_SPECIALIST',
+        department: 8,
+        level: 4,
+        description: '销售业务专员',
+        createTime: '2023-01-01'
+    },
+    {
+        id: 14,
+        name: '客服专员',
+        code: 'SERVICE_SPECIALIST',
+        department: 9,
+        level: 4,
+        description: '客服业务专员',
+        createTime: '2023-01-01'
+    }
+];
+
+// 用户岗位关联数据（一个用户可以有多个岗位）
+const userWorkPositionData = [
+    {
+        id: 1,
+        userId: 1,
+        workPositionId: 1,
+        isMain: true, // 是否主岗位
+        status: 1, // 1-启用 0-禁用
+        createTime: '2023-01-01'
+    },
+    {
+        id: 2,
+        userId: 2,
+        workPositionId: 2,
+        isMain: true,
+        status: 1,
+        createTime: '2023-01-01'
+    },
+    {
+        id: 3,
+        userId: 3,
+        workPositionId: 3,
+        isMain: true,
+        status: 1,
+        createTime: '2023-01-01'
+    },
+    {
+        id: 4,
+        userId: 4,
+        workPositionId: 4,
+        isMain: true,
+        status: 1,
+        createTime: '2023-01-01'
+    },
+    {
+        id: 5,
+        userId: 5,
+        workPositionId: 5,
+        isMain: true,
+        status: 1,
+        createTime: '2023-01-01'
+    },
+    {
+        id: 6,
+        userId: 6,
+        workPositionId: 6,
+        isMain: true,
+        status: 1,
+        createTime: '2023-01-01'
+    },
+    {
+        id: 7,
+        userId: 7,
+        workPositionId: 7,
+        isMain: true,
+        status: 1,
+        createTime: '2023-01-01'
+    },
+    {
+        id: 8,
+        userId: 8,
+        workPositionId: 8,
+        isMain: true,
+        status: 1,
+        createTime: '2023-01-01'
+    },
+    {
+        id: 9,
+        userId: 9,
+        workPositionId: 9,
+        isMain: true,
+        status: 1,
+        createTime: '2023-01-01'
+    },
+    {
+        id: 10,
+        userId: 10,
+        workPositionId: 10,
+        isMain: true,
+        status: 1,
+        createTime: '2023-01-01'
+    },
+    // 张总同时担任技术总监（兼职）
+    {
+        id: 11,
+        userId: 1,
+        workPositionId: 4,
+        isMain: false,
+        status: 1,
+        createTime: '2023-06-01'
+    },
+    // 刘架构师同时担任前端主管（兼职）
+    {
+        id: 12,
+        userId: 4,
+        workPositionId: 5,
+        isMain: false,
+        status: 1,
+        createTime: '2023-08-01'
+    }
+];
+
+// 菜单权限数据
+const menuPermissionData = [
+    {
+        id: 'dashboard',
+        name: '工作台',
+        icon: 'fas fa-tachometer-alt',
+        parentId: null,
+        level: 1,
+        sort: 1,
+        type: 'menu', // menu-菜单 button-按钮 function-功能
+        path: null,
+        permissions: ['CEO', 'HR_MANAGER', 'FINANCE_MANAGER', 'CTO', 'SALES_MANAGER', 'SERVICE_MANAGER', 'FRONTEND_LEAD', 'BACKEND_LEAD', 'DESIGN_LEAD']
+    },
+    {
+        id: 'oa-workspace',
+        name: 'OA工作台',
+        icon: '',
+        parentId: 'dashboard',
+        level: 2,
+        sort: 1,
+        type: 'menu',
+        path: 'dashboard/oa-workspace.html',
+        permissions: ['CEO', 'HR_MANAGER', 'CTO', 'FRONTEND_LEAD', 'BACKEND_LEAD', 'DESIGN_LEAD', 'FRONTEND_DEV', 'BACKEND_DEV', 'UI_DESIGNER']
+    },
+    {
+        id: 'crm-workspace',
+        name: 'CRM工作台',
+        icon: '',
+        parentId: 'dashboard',
+        level: 2,
+        sort: 2,
+        type: 'menu',
+        path: 'dashboard/crm-workspace.html',
+        permissions: ['CEO', 'SALES_MANAGER', 'SALES_SPECIALIST', 'SERVICE_MANAGER', 'SERVICE_SPECIALIST']
+    },
+    {
+        id: 'sales-workspace',
+        name: '销售工作台',
+        icon: '',
+        parentId: 'dashboard',
+        level: 2,
+        sort: 3,
+        type: 'menu',
+        path: 'dashboard/sales-workspace.html',
+        permissions: ['CEO', 'SALES_MANAGER', 'SALES_SPECIALIST']
+    },
+    {
+        id: 'workspace-config',
+        name: '工作台配置',
+        icon: '',
+        parentId: 'dashboard',
+        level: 2,
+        sort: 4,
+        type: 'menu',
+        path: 'dashboard/workspace-config.html',
+        permissions: ['CEO', 'CTO']
+    },
+    {
+        id: 'organization',
+        name: '组织架构',
+        icon: 'fas fa-sitemap',
+        parentId: null,
+        level: 1,
+        sort: 2,
+        type: 'menu',
+        path: null,
+        permissions: ['CEO', 'HR_MANAGER', 'CTO']
+    },
+    {
+        id: 'dept-tree',
+        name: '部门管理',
+        icon: '',
+        parentId: 'organization',
+        level: 2,
+        sort: 1,
+        type: 'menu',
+        path: 'organization/department-tree.html',
+        permissions: ['CEO', 'HR_MANAGER']
+    },
+    {
+        id: 'employee-list',
+        name: '员工管理',
+        icon: '',
+        parentId: 'organization',
+        level: 2,
+        sort: 2,
+        type: 'menu',
+        path: 'organization/employee-list.html',
+        permissions: ['CEO', 'HR_MANAGER']
+    },
+    {
+        id: 'employee-add',
+        name: '新增员工',
+        icon: '',
+        parentId: 'organization',
+        level: 2,
+        sort: 3,
+        type: 'menu',
+        path: 'organization/employee-add.html',
+        permissions: ['CEO', 'HR_MANAGER']
+    },
+    {
+        id: 'position-manage',
+        name: '岗位管理',
+        icon: '',
+        parentId: 'organization',
+        level: 2,
+        sort: 4,
+        type: 'menu',
+        path: 'organization/position-manage.html',
+        permissions: ['CEO', 'HR_MANAGER']
+    },
+    {
+        id: 'workposition-permission',
+        name: '岗位权限',
+        icon: '',
+        parentId: 'organization',
+        level: 2,
+        sort: 5,
+        type: 'menu',
+        path: 'organization/workposition-permission.html',
+        permissions: ['CEO']
+    },
+    {
+        id: 'crm',
+        name: '客户管理',
+        icon: 'fas fa-users',
+        parentId: null,
+        level: 1,
+        sort: 3,
+        type: 'menu',
+        path: null,
+        permissions: ['CEO', 'SALES_MANAGER', 'SALES_SPECIALIST', 'SERVICE_MANAGER', 'SERVICE_SPECIALIST']
+    },
+    {
+        id: 'customer-list',
+        name: '客户列表',
+        icon: '',
+        parentId: 'crm',
+        level: 2,
+        sort: 1,
+        type: 'menu',
+        path: 'crm/customer-list.html',
+        permissions: ['CEO', 'SALES_MANAGER', 'SALES_SPECIALIST', 'SERVICE_MANAGER', 'SERVICE_SPECIALIST']
+    },
+    {
+        id: 'customer-detail',
+        name: '客户详情',
+        icon: '',
+        parentId: 'crm',
+        level: 2,
+        sort: 2,
+        type: 'menu',
+        path: 'crm/customer-detail.html',
+        permissions: ['CEO', 'SALES_MANAGER', 'SALES_SPECIALIST', 'SERVICE_MANAGER', 'SERVICE_SPECIALIST']
+    },
+    {
+        id: 'follow-record',
+        name: '跟进记录',
+        icon: '',
+        parentId: 'crm',
+        level: 2,
+        sort: 3,
+        type: 'menu',
+        path: 'crm/follow-record.html',
+        permissions: ['CEO', 'SALES_MANAGER', 'SALES_SPECIALIST']
+    },
+    {
+        id: 'customer-transfer',
+        name: '客户交接',
+        icon: '',
+        parentId: 'crm',
+        level: 2,
+        sort: 4,
+        type: 'menu',
+        path: 'crm/customer-transfer.html',
+        permissions: ['CEO', 'SALES_MANAGER']
+    },
+    {
+        id: 'product',
+        name: '商品管理',
+        icon: 'fas fa-box',
+        parentId: null,
+        level: 1,
+        sort: 4,
+        type: 'menu',
+        path: null,
+        permissions: ['CEO', 'SALES_MANAGER']
+    },
+    {
+        id: 'category-manage',
+        name: '类目管理',
+        icon: '',
+        parentId: 'product',
+        level: 2,
+        sort: 1,
+        type: 'menu',
+        path: 'product/category-manage.html',
+        permissions: ['CEO', 'SALES_MANAGER']
+    },
+    {
+        id: 'product-list',
+        name: '商品列表',
+        icon: '',
+        parentId: 'product',
+        level: 2,
+        sort: 2,
+        type: 'menu',
+        path: 'product/product-list.html',
+        permissions: ['CEO', 'SALES_MANAGER']
+    },
+    {
+        id: 'product-form',
+        name: '商品编辑',
+        icon: '',
+        parentId: 'product',
+        level: 2,
+        sort: 3,
+        type: 'menu',
+        path: 'product/product-form.html',
+        permissions: ['CEO', 'SALES_MANAGER']
+    },
+    {
+        id: 'inventory-monitor',
+        name: '库存监控',
+        icon: '',
+        parentId: 'product',
+        level: 2,
+        sort: 4,
+        type: 'menu',
+        path: 'product/inventory-monitor.html',
+        permissions: ['CEO', 'SALES_MANAGER']
+    },
+    {
+        id: 'order',
+        name: '订单管理',
+        icon: 'fas fa-shopping-cart',
+        parentId: null,
+        level: 1,
+        sort: 5,
+        type: 'menu',
+        path: null,
+        permissions: ['CEO', 'SALES_MANAGER', 'SALES_SPECIALIST', 'SERVICE_MANAGER']
+    },
+    {
+        id: 'order-dashboard',
+        name: '订单工作台',
+        icon: '',
+        parentId: 'order',
+        level: 2,
+        sort: 1,
+        type: 'menu',
+        path: 'order/order-dashboard.html',
+        permissions: ['CEO', 'SALES_MANAGER', 'SALES_SPECIALIST', 'SERVICE_MANAGER']
+    },
+    {
+        id: 'order-list',
+        name: '订单列表',
+        icon: '',
+        parentId: 'order',
+        level: 2,
+        sort: 2,
+        type: 'menu',
+        path: 'order/order-list.html',
+        permissions: ['CEO', 'SALES_MANAGER', 'SALES_SPECIALIST', 'SERVICE_MANAGER']
+    },
+    {
+        id: 'order-detail',
+        name: '订单详情',
+        icon: '',
+        parentId: 'order',
+        level: 2,
+        sort: 3,
+        type: 'menu',
+        path: 'order/order-detail.html',
+        permissions: ['CEO', 'SALES_MANAGER', 'SALES_SPECIALIST', 'SERVICE_MANAGER']
+    },
+    {
+        id: 'order-create',
+        name: '创建订单',
+        icon: '',
+        parentId: 'order',
+        level: 2,
+        sort: 4,
+        type: 'menu',
+        path: 'order/order-create.html',
+        permissions: ['CEO', 'SALES_MANAGER', 'SALES_SPECIALIST']
+    },
+    {
+        id: 'service',
+        name: '客服中心',
+        icon: 'fas fa-headset',
+        parentId: null,
+        level: 1,
+        sort: 6,
+        type: 'menu',
+        path: null,
+        permissions: ['CEO', 'SERVICE_MANAGER', 'SERVICE_SPECIALIST']
+    },
+    {
+        id: 'service-dashboard',
+        name: '客服工作台',
+        icon: '',
+        parentId: 'service',
+        level: 2,
+        sort: 1,
+        type: 'menu',
+        path: 'service/service-dashboard.html',
+        permissions: ['CEO', 'SERVICE_MANAGER', 'SERVICE_SPECIALIST']
+    },
+    {
+        id: 'ticket-list',
+        name: '工单列表',
+        icon: '',
+        parentId: 'service',
+        level: 2,
+        sort: 2,
+        type: 'menu',
+        path: 'service/ticket-list.html',
+        permissions: ['CEO', 'SERVICE_MANAGER', 'SERVICE_SPECIALIST']
+    },
+    {
+        id: 'ticket-detail',
+        name: '工单详情',
+        icon: '',
+        parentId: 'service',
+        level: 2,
+        sort: 3,
+        type: 'menu',
+        path: 'service/ticket-detail.html',
+        permissions: ['CEO', 'SERVICE_MANAGER', 'SERVICE_SPECIALIST']
+    },
+    {
+        id: 'knowledge-base',
+        name: '知识库',
+        icon: '',
+        parentId: 'service',
+        level: 2,
+        sort: 4,
+        type: 'menu',
+        path: 'service/knowledge-base.html',
+        permissions: ['CEO', 'SERVICE_MANAGER', 'SERVICE_SPECIALIST']
+    },
+    {
+        id: 'operations',
+        name: '运维管理',
+        icon: 'fas fa-tools',
+        parentId: null,
+        level: 1,
+        sort: 7,
+        type: 'menu',
+        path: null,
+        permissions: ['CEO', 'CTO', 'FRONTEND_LEAD', 'BACKEND_LEAD', 'DESIGN_LEAD']
+    },
+    {
+        id: 'task-board',
+        name: '任务看板',
+        icon: '',
+        parentId: 'operations',
+        level: 2,
+        sort: 1,
+        type: 'menu',
+        path: 'operations/task-board.html',
+        permissions: ['CEO', 'CTO', 'FRONTEND_LEAD', 'BACKEND_LEAD', 'DESIGN_LEAD', 'FRONTEND_DEV', 'BACKEND_DEV', 'UI_DESIGNER']
+    },
+    {
+        id: 'schedule-calendar',
+        name: '日程管理',
+        icon: '',
+        parentId: 'operations',
+        level: 2,
+        sort: 2,
+        type: 'menu',
+        path: 'operations/schedule-calendar.html',
+        permissions: ['CEO', 'CTO', 'FRONTEND_LEAD', 'BACKEND_LEAD', 'DESIGN_LEAD', 'FRONTEND_DEV', 'BACKEND_DEV', 'UI_DESIGNER']
+    },
+    {
+        id: 'work-log',
+        name: '工作日志',
+        icon: '',
+        parentId: 'operations',
+        level: 2,
+        sort: 3,
+        type: 'menu',
+        path: 'operations/work-log.html',
+        permissions: ['CEO', 'CTO', 'FRONTEND_LEAD', 'BACKEND_LEAD', 'DESIGN_LEAD', 'FRONTEND_DEV', 'BACKEND_DEV', 'UI_DESIGNER']
+    },
+    {
+        id: 'report-center',
+        name: '报表中心',
+        icon: '',
+        parentId: 'operations',
+        level: 2,
+        sort: 4,
+        type: 'menu',
+        path: 'operations/report-center.html',
+        permissions: ['CEO', 'CTO', 'FRONTEND_LEAD', 'BACKEND_LEAD', 'DESIGN_LEAD']
+    },
+    {
+        id: 'system',
+        name: '系统管理',
+        icon: 'fas fa-cogs',
+        parentId: null,
+        level: 1,
+        sort: 8,
+        type: 'menu',
+        path: null,
+        permissions: ['CEO']
+    },
+    {
+        id: 'tenant-list',
+        name: '租户管理',
+        icon: '',
+        parentId: 'system',
+        level: 2,
+        sort: 1,
+        type: 'menu',
+        path: 'system/tenant-list.html',
+        permissions: ['CEO']
+    },
+    {
+        id: 'tenant-config',
+        name: '租户配置',
+        icon: '',
+        parentId: 'system',
+        level: 2,
+        sort: 2,
+        type: 'menu',
+        path: 'system/tenant-config.html',
+        permissions: ['CEO']
+    },
+    {
+        id: 'menu-manage',
+        name: '菜单管理',
+        icon: '',
+        parentId: 'system',
+        level: 2,
+        sort: 3,
+        type: 'menu',
+        path: 'system/menu-manage.html',
+        permissions: ['CEO']
+    },
+    {
+        id: 'menu-function',
+        name: '功能点管理',
+        icon: '',
+        parentId: 'system',
+        level: 2,
+        sort: 4,
+        type: 'menu',
+        path: 'system/menu-function.html',
+        permissions: ['CEO']
+    },
+    {
+        id: 'user-manage',
+        name: '用户管理',
+        icon: '',
+        parentId: 'system',
+        level: 2,
+        sort: 5,
+        type: 'menu',
+        path: 'system/user-manage.html',
+        permissions: ['CEO']
+    },
+    {
+        id: 'operation-log',
+        name: '操作日志',
+        icon: '',
+        parentId: 'system',
+        level: 2,
+        sort: 6,
+        type: 'menu',
+        path: 'system/operation-log.html',
+        permissions: ['CEO']
+    }
+];
+
+// 当前登录用户信息（模拟）
+const currentUserData = {
+    id: 1,
+    name: '张总',
+    empNo: 'E001',
+    email: 'zhangzong@company.com',
+    avatar: '',
+    currentWorkPositionId: 1, // 当前选择的岗位ID
+    workPositions: [ // 用户拥有的所有岗位
+        {
+            id: 1,
+            name: '总经理',
+            code: 'CEO',
+            department: '总经理办公室',
+            isMain: true
+        },
+        {
+            id: 4,
+            name: '技术总监',
+            code: 'CTO',
+            department: '技术研发部',
+            isMain: false
+        }
+    ]
+};
+
 // 客户数据
 const customerData = [
     {

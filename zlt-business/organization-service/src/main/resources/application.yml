@@ -18,19 +18,6 @@ spring:
       pool-prepared-statements: true
       max-pool-prepared-statement-per-connection-size: 20
       
-  cloud:
-    nacos:
-      discovery:
-        server-addr: 127.0.0.1:8848
-        namespace: microservices-platform
-      config:
-        server-addr: 127.0.0.1:8848
-        namespace: microservices-platform
-        file-extension: yml
-        shared-configs:
-          - data-id: common.yml
-            refresh: true
-
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
   type-aliases-package: com.central.organization.model

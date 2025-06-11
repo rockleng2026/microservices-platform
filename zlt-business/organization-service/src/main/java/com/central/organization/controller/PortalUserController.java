@@ -3,7 +3,10 @@ package com.central.organization.controller;
 import com.central.common.annotation.LoginUser;
 import com.central.common.model.Result;
 import com.central.common.model.SysUser;
+import com.central.organization.model.MenuPermission;
+import com.central.organization.model.PortalUser;
 import com.central.organization.model.UserPersonalConfig;
+import com.central.organization.model.Workposition;
 import com.central.organization.service.PortalUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -29,6 +32,33 @@ public class PortalUserController {
 
     @Autowired
     private PortalUserService portalUserService;
+    
+    /**
+     * 获取当前用户ID的辅助方法
+     */
+    private Long getUserId(SysUser currentUser) {
+        Long userId = null;
+        if (currentUser != null && currentUser.getId() != null) {
+            userId = currentUser.getId();
+        } else {
+            // 尝试从安全上下文获取用户ID
+            try {
+                com.central.common.model.LoginAppUser loginAppUser = com.central.common.utils.LoginUserUtils.getCurrentUser(false);
+                if (loginAppUser != null) {
+                    userId = loginAppUser.getId();
+                } else {
+                    // 尝试从当前上下文获取SysUser
+                    SysUser sysUser = com.central.common.utils.LoginUserUtils.getCurrentSysUser();
+                    if (sysUser != null) {
+                        userId = sysUser.getId();
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("从上下文获取用户信息失败", e);
+            }
+        }
+        return userId;
+    }
 
     /**
      * 根据用户名查询用户信息（用于登录认证，无需token）
@@ -65,13 +95,19 @@ public class PortalUserController {
      */
     @Operation(summary = "获取当前用户信息", description = "获取当前登录用户的详细信息，包括员工、部门、岗位、权限、个性化配置等")
     @GetMapping("/current")
-    public Result<Map<String, Object>> getCurrentUser(@LoginUser SysUser currentUser) {
-        log.info("获取当前用户信息，用户ID: {}", currentUser.getId());
+    public Result<PortalUser> getCurrentUser(@LoginUser SysUser currentUser) {
+        Long userId = getUserId(currentUser);
+        if (userId == null) {
+            return Result.failed("用户未登录或登录信息已过期");
+        }
+        
+        log.info("获取当前用户信息，用户ID: {}", userId);
+        
         try {
-            Map<String, Object> userInfo = portalUserService.getCurrentUserInfo(currentUser.getId());
+            PortalUser userInfo = portalUserService.getCurrentUserInfo(userId);
             return Result.succeed(userInfo, "获取用户信息成功");
         } catch (Exception e) {
-            log.error("获取当前用户信息失败，用户ID: {}", currentUser.getId(), e);
+            log.error("获取当前用户信息失败，用户ID: {}", userId, e);
             return Result.failed("获取用户信息失败: " + e.getMessage());
         }
     }
@@ -81,19 +117,20 @@ public class PortalUserController {
      */
     @Operation(summary = "切换用户岗位", description = "切换当前用户的工作岗位")
     @PostMapping("/switch-position")
-    public Result<Map<String, Object>> switchPosition(
+    public Result<PortalUser> switchPosition(
             @LoginUser SysUser currentUser,
             @Parameter(description = "目标岗位ID") @RequestParam("positionId") Long positionId) {
-        log.info("用户 {} 切换到岗位: {}", currentUser.getId(), positionId);
+        Long userId = getUserId(currentUser);
+        if (userId == null) {
+            return Result.failed("用户未登录或登录信息已过期");
+        }
+        
+        log.info("用户 {} 切换到岗位: {}", userId, positionId);
         try {
-            Map<String, Object> result = portalUserService.switchUserPosition(currentUser.getId(), positionId);
-            if ((Boolean) result.get("success")) {
-                return Result.succeed(result, (String) result.get("message"));
-            } else {
-                return Result.failed((String) result.get("message"));
-            }
+            PortalUser result = portalUserService.switchUserPosition(userId, positionId);
+            return Result.succeed(result, "岗位切换成功");
         } catch (Exception e) {
-            log.error("岗位切换失败，用户ID: {}, 岗位ID: {}", currentUser.getId(), positionId, e);
+            log.error("岗位切换失败，用户ID: {}, 岗位ID: {}", userId, positionId, e);
             return Result.failed("岗位切换失败: " + e.getMessage());
         }
     }
@@ -103,13 +140,18 @@ public class PortalUserController {
      */
     @Operation(summary = "获取用户岗位列表", description = "获取当前用户的所有岗位信息")
     @GetMapping("/positions")
-    public Result<List<Map<String, Object>>> getUserPositions(@LoginUser SysUser currentUser) {
-        log.info("获取用户岗位列表，用户ID: {}", currentUser.getId());
+    public Result<List<Workposition>> getUserPositions(@LoginUser SysUser currentUser) {
+        Long userId = getUserId(currentUser);
+        if (userId == null) {
+            return Result.failed("用户未登录或登录信息已过期");
+        }
+        
+        log.info("获取用户岗位列表，用户ID: {}", userId);
         try {
-            List<Map<String, Object>> positions = portalUserService.getUserPositions(currentUser.getId());
+            List<Workposition> positions = portalUserService.getUserPositions(userId);
             return Result.succeed(positions, "获取岗位列表成功");
         } catch (Exception e) {
-            log.error("获取用户岗位列表失败，用户ID: {}", currentUser.getId(), e);
+            log.error("获取用户岗位列表失败，用户ID: {}", userId, e);
             return Result.failed("获取岗位列表失败: " + e.getMessage());
         }
     }
@@ -119,13 +161,18 @@ public class PortalUserController {
      */
     @Operation(summary = "获取用户菜单权限", description = "获取当前用户当前岗位的菜单权限树")
     @GetMapping("/menus")
-    public Result<List<Map<String, Object>>> getCurrentUserMenus(@LoginUser SysUser currentUser) {
-        log.info("获取用户菜单权限，用户ID: {}", currentUser.getId());
+    public Result<List<MenuPermission>> getCurrentUserMenus(@LoginUser SysUser currentUser) {
+        Long userId = getUserId(currentUser);
+        if (userId == null) {
+            return Result.failed("用户未登录或登录信息已过期");
+        }
+        
+        log.info("获取用户菜单权限，用户ID: {}", userId);
         try {
-            List<Map<String, Object>> menus = portalUserService.getCurrentUserMenus(currentUser.getId());
+            List<MenuPermission> menus = portalUserService.getCurrentUserMenus(userId);
             return Result.succeed(menus, "获取菜单权限成功");
         } catch (Exception e) {
-            log.error("获取用户菜单权限失败，用户ID: {}", currentUser.getId(), e);
+            log.error("获取用户菜单权限失败，用户ID: {}", userId, e);
             return Result.failed("获取菜单权限失败: " + e.getMessage());
         }
     }
@@ -136,12 +183,17 @@ public class PortalUserController {
     @Operation(summary = "获取用户个性化配置", description = "获取当前用户的个性化配置信息")
     @GetMapping("/personal-config")
     public Result<UserPersonalConfig> getUserPersonalConfig(@LoginUser SysUser currentUser) {
-        log.info("获取用户个性化配置，用户ID: {}", currentUser.getId());
+        Long userId = getUserId(currentUser);
+        if (userId == null) {
+            return Result.failed("用户未登录或登录信息已过期");
+        }
+        
+        log.info("获取用户个性化配置，用户ID: {}", userId);
         try {
-            UserPersonalConfig config = portalUserService.getUserPersonalConfig(currentUser.getId());
+            UserPersonalConfig config = portalUserService.getUserPersonalConfig(userId);
             return Result.succeed(config, "获取个性化配置成功");
         } catch (Exception e) {
-            log.error("获取用户个性化配置失败，用户ID: {}", currentUser.getId(), e);
+            log.error("获取用户个性化配置失败，用户ID: {}", userId, e);
             return Result.failed("获取个性化配置失败: " + e.getMessage());
         }
     }
@@ -154,11 +206,16 @@ public class PortalUserController {
     public Result<String> saveUserPersonalConfig(
             @LoginUser SysUser currentUser,
             @Valid @RequestBody UserPersonalConfig config) {
-        log.info("保存用户个性化配置，用户ID: {}", currentUser.getId());
+        Long userId = getUserId(currentUser);
+        if (userId == null) {
+            return Result.failed("用户未登录或登录信息已过期");
+        }
+        
+        log.info("保存用户个性化配置，用户ID: {}", userId);
         try {
             // 确保配置属于当前用户
-            config.setUserId(currentUser.getId());
-            config.setUpdatedBy(currentUser.getId());
+            config.setUserId(userId);
+            config.setUpdatedBy(userId);
             
             boolean success = portalUserService.saveUserPersonalConfig(config);
             if (success) {
@@ -167,7 +224,7 @@ public class PortalUserController {
                 return Result.failed("个性化配置保存失败");
             }
         } catch (Exception e) {
-            log.error("保存用户个性化配置失败，用户ID: {}", currentUser.getId(), e);
+            log.error("保存用户个性化配置失败，用户ID: {}", userId, e);
             return Result.failed("个性化配置保存失败: " + e.getMessage());
         }
     }
@@ -180,16 +237,21 @@ public class PortalUserController {
     public Result<String> updateDefaultPosition(
             @LoginUser SysUser currentUser,
             @Parameter(description = "默认岗位ID") @RequestParam("positionId") Long positionId) {
-        log.info("更新用户默认岗位，用户ID: {}, 岗位ID: {}", currentUser.getId(), positionId);
+        Long userId = getUserId(currentUser);
+        if (userId == null) {
+            return Result.failed("用户未登录或登录信息已过期");
+        }
+        
+        log.info("更新用户默认岗位，用户ID: {}, 岗位ID: {}", userId, positionId);
         try {
-            boolean success = portalUserService.updateDefaultPosition(currentUser.getId(), positionId);
+            boolean success = portalUserService.updateDefaultPosition(userId, positionId);
             if (success) {
                 return Result.succeed("默认岗位更新成功");
             } else {
                 return Result.failed("默认岗位更新失败");
             }
         } catch (Exception e) {
-            log.error("更新用户默认岗位失败，用户ID: {}, 岗位ID: {}", currentUser.getId(), positionId, e);
+            log.error("更新用户默认岗位失败，用户ID: {}, 岗位ID: {}", userId, positionId, e);
             return Result.failed("默认岗位更新失败: " + e.getMessage());
         }
     }

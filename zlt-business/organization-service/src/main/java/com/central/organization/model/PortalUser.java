@@ -1,8 +1,13 @@
 package com.central.organization.model;
 
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.central.common.model.SysRole;
 import com.central.common.model.SysUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * Portal用户模型（扩展SysUser）
@@ -27,6 +32,44 @@ public class PortalUser extends SysUser {
      * 公司名称
      */
     private String company;
+
+    // ===== 扩展字段：员工信息 =====
+    
+    /**
+     * 员工信息
+     */
+    @TableField(exist = false)
+    private Employee employee;
+    
+    /**
+     * 用户拥有的所有岗位
+     */
+    @TableField(exist = false)
+    private List<Workposition> positions;
+    
+    /**
+     * 当前生效的岗位
+     */
+    @TableField(exist = false)
+    private Workposition currentPosition;
+    
+    /**
+     * 用户的菜单权限树
+     */
+    @TableField(exist = false)
+    private List<MenuPermission> menus;
+    
+    /**
+     * 个性化配置
+     */
+    @TableField(exist = false)
+    private UserPersonalConfig personalConfig;
+    
+    /**
+     * 租户信息（暂时保留Map，后续可优化为Tenant对象）
+     */
+    @TableField(exist = false)
+    private Map<String, Object> tenant;
 
     /**
      * 从SysUser构建PortalUser

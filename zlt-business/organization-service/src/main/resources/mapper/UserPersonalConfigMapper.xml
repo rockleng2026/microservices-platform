@@ -8,12 +8,12 @@
         <result column="user_id" property="userId" jdbcType="BIGINT"/>
         <result column="default_position_id" property="defaultPositionId" jdbcType="BIGINT"/>
         <result column="theme" property="theme" jdbcType="VARCHAR"/>
-        <result column="layout_config" property="layoutConfig" jdbcType="LONGTEXT"/>
+        <result column="layout_config" property="layoutConfig" jdbcType="CLOB"/>
         <result column="language" property="language" jdbcType="VARCHAR"/>
         <result column="timezone" property="timezone" jdbcType="VARCHAR"/>
         <result column="home_page" property="homePage" jdbcType="VARCHAR"/>
-        <result column="notification_config" property="notificationConfig" jdbcType="LONGTEXT"/>
-        <result column="extend_config" property="extendConfig" jdbcType="LONGTEXT"/>
+        <result column="notification_config" property="notificationConfig" jdbcType="CLOB"/>
+        <result column="extend_config" property="extendConfig" jdbcType="CLOB"/>
         <result column="enabled" property="enabled" jdbcType="TINYINT"/>
         <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
         <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>

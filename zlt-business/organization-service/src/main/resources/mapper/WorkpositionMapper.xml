@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.organization.mapper.WorkpositionMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.central.organization.model.Workposition">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="short_name" property="shortName" jdbcType="VARCHAR"/>
+        <result column="department_id" property="departmentId" jdbcType="BIGINT"/>
+        <result column="position_level" property="positionLevel" jdbcType="INTEGER"/>
+        <result column="job_description" property="jobDescription" jdbcType="CLOB"/>
+        <result column="requirements" property="requirements" jdbcType="CLOB"/>
+        <result column="salary_range" property="salaryRange" jdbcType="VARCHAR"/>
+        <result column="max_employees" property="maxEmployees" jdbcType="INTEGER"/>
+        <result column="menu_ids" property="menuIds" jdbcType="CLOB"/>
+        <result column="menu_func_ids" property="menuFuncIds" jdbcType="CLOB"/>
+        <result column="is_manager" property="isManager" jdbcType="TINYINT"/>
+        <result column="is_director" property="isDirector" jdbcType="TINYINT"/>
+        <result column="sort_order" property="sortOrder" jdbcType="INTEGER"/>
+        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
+        <result column="updated_by" property="updatedBy" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, name, short_name, department_id, position_level, job_description, requirements,
+        salary_range, max_employees, menu_ids, menu_func_ids, is_manager, is_director,
+        sort_order, tenant_id, created_at, updated_at, created_by, updated_by
+    </sql>
+
+    <!-- 根据部门ID查询岗位列表 -->
+    <select id="selectByDepartmentId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM workposition
+        WHERE department_id = #{departmentId}
+        AND tenant_id = #{tenantId}
+        ORDER BY sort_order ASC
+    </select>
+
+    <!-- 根据员工ID查询岗位列表（通过员工关联） -->
+    <select id="selectByEmployeeId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM workposition wp
+        WHERE EXISTS (
+            SELECT 1 FROM employee e 
+            WHERE e.id = #{employeeId} 
+            AND e.position_id = wp.id
+            AND e.tenant_id = #{tenantId}
+        )
+        AND wp.tenant_id = #{tenantId}
+        ORDER BY wp.sort_order ASC
+    </select>
+
+    <!-- 根据用户ID查询岗位列表（通过用户-员工-岗位关联） -->
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM workposition wp
+        WHERE EXISTS (
+            SELECT 1 FROM employee e
+            INNER JOIN users u ON u.employee_id = e.id
+            WHERE u.id = #{userId}
+            AND e.position_id = wp.id
+            AND u.tenant_id = #{tenantId}
+        )
+        AND wp.tenant_id = #{tenantId}
+        ORDER BY wp.sort_order ASC
+    </select>
+
+    <!-- 查询管理岗位列表 -->
+    <select id="selectManagerPositions" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM workposition
+        WHERE (is_manager = 1 OR is_director = 1)
+        AND tenant_id = #{tenantId}
+        ORDER BY position_level ASC, sort_order ASC
+    </select>
+
+</mapper> 

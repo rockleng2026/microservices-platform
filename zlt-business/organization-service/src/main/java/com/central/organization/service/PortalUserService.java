@@ -1,7 +1,10 @@
 package com.central.organization.service;
 
 import com.central.common.model.SysUser;
+import com.central.organization.model.MenuPermission;
+import com.central.organization.model.PortalUser;
 import com.central.organization.model.UserPersonalConfig;
+import com.central.organization.model.Workposition;
 
 import java.util.List;
 import java.util.Map;
@@ -50,7 +53,7 @@ public interface PortalUserService {
      *         - 当前岗位的菜单权限
      *         - 个性化配置
      */
-    Map<String, Object> getCurrentUserInfo(Long userId);
+    PortalUser getCurrentUserInfo(Long userId);
 
     /**
      * 切换用户岗位
@@ -59,7 +62,7 @@ public interface PortalUserService {
      * @param positionId 新岗位ID
      * @return 切换结果（包含新的权限信息）
      */
-    Map<String, Object> switchUserPosition(Long userId, Long positionId);
+    PortalUser switchUserPosition(Long userId, Long positionId);
 
     /**
      * 获取用户的所有岗位信息
@@ -67,7 +70,7 @@ public interface PortalUserService {
      * @param userId 用户ID
      * @return 岗位列表
      */
-    List<Map<String, Object>> getUserPositions(Long userId);
+    List<Workposition> getUserPositions(Long userId);
 
     /**
      * 获取用户当前岗位的菜单权限
@@ -75,7 +78,7 @@ public interface PortalUserService {
      * @param userId 用户ID
      * @return 菜单权限树
      */
-    List<Map<String, Object>> getCurrentUserMenus(Long userId);
+    List<MenuPermission> getCurrentUserMenus(Long userId);
 
     /**
      * 获取用户个性化配置

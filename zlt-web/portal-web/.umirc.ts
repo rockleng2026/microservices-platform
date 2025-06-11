@@ -81,10 +81,11 @@ export default defineConfig({
   // 快速刷新
   fastRefresh: true,
 
+
+
   // 构建配置
   define: {
     API_BASE_URL: process.env.NODE_ENV === 'development' ? 'http://localhost:9900' : '',
   },
-
 
 }); 

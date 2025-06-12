@@ -1,7 +1,6 @@
 package com.central.organization.model;
 
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.central.common.model.SysRole;
 import com.central.common.model.SysUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

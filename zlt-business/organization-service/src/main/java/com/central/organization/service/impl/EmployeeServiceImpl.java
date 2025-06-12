@@ -135,32 +135,12 @@ public class EmployeeServiceImpl implements IEmployeeService {
                 employee.setEmpNo(generateEmpNo());
             }
             employee.setCreatedAt(now);
-            employee.setStatus(1);
             employee.setDelflag(0);
-            
-            // 处理副岗位ID列表
-            if (CollUtil.isNotEmpty(saveDTO.getSecondaryPositionIds())) {
-                employee.setSecondaryPositionIds(
-                    saveDTO.getSecondaryPositionIds().stream()
-                        .map(String::valueOf)
-                        .collect(Collectors.joining(","))
-                );
-            }
             
             employeeMapper.insert(employee);
         } else {
             // 修改
             employee.setUpdatedAt(now);
-            
-            // 处理副岗位ID列表
-            if (CollUtil.isNotEmpty(saveDTO.getSecondaryPositionIds())) {
-                employee.setSecondaryPositionIds(
-                    saveDTO.getSecondaryPositionIds().stream()
-                        .map(String::valueOf)
-                        .collect(Collectors.joining(","))
-                );
-            }
-            
             employeeMapper.updateById(employee);
         }
 
@@ -216,7 +196,6 @@ public class EmployeeServiceImpl implements IEmployeeService {
 
         // 更新为正式员工状态
         employee.setEmploymentStatus(1);
-        employee.setRegularDate(new Date());
         employee.setUpdatedAt(LocalDateTime.now());
 
         boolean success = employeeMapper.updateById(employee) > 0;

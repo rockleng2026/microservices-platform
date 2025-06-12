@@ -17,7 +17,18 @@ public interface MenuPermissionService {
      * @param userId 用户ID
      * @return 菜单权限列表
      */
-    List<Map<String, Object>> getCurrentUserMenus(Long userId);
+    List<Map<String, Object>> getCurrentUserAllMenus(Long userId);
+
+
+    /**
+     * 获取用户的岗位的权限菜单
+     * 逻辑是按岗位查询，positionId可选参数，传入了就查询指定用户岗位的ID，没传就查询该用户下默认岗位的id
+     *
+     * @param userId 用户ID
+     * @param positionId 岗位ID
+     * @return 菜单权限列表
+     */
+    List<Map<String, Object>> getCurrentUserPositionMenus(Long userId, Long positionId);
 
     /**
      * 根据岗位ID获取权限菜单

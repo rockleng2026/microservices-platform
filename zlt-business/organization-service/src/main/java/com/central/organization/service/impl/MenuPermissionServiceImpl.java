@@ -1,10 +1,13 @@
 package com.central.organization.service.impl;
 
+import com.central.common.context.TenantContextHolder;
 import com.central.organization.mapper.EmployeeMapper;
 import com.central.organization.mapper.MenuMapper;
+import com.central.organization.mapper.UserPersonalConfigMapper;
 import com.central.organization.mapper.UsersMapper;
 import com.central.organization.model.Employee;
 import com.central.organization.model.PortalUser;
+import com.central.organization.model.UserPersonalConfig;
 import com.central.organization.service.MenuPermissionService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,8 +35,11 @@ public class MenuPermissionServiceImpl implements MenuPermissionService {
     @Autowired
     private MenuMapper menuMapper;
 
+    @Autowired
+    private UserPersonalConfigMapper userPersonalConfigMapper;
+
     @Override
-    public List<Map<String, Object>> getCurrentUserMenus(Long userId) {
+    public List<Map<String, Object>> getCurrentUserAllMenus(Long userId) {
         log.info("获取用户权限菜单，用户ID: {}", userId);
         
         try {
@@ -64,6 +70,23 @@ public class MenuPermissionServiceImpl implements MenuPermissionService {
             log.error("获取用户权限菜单失败，用户ID: {}", userId, e);
             return Collections.emptyList();
         }
+    }
+
+    @Override
+    public List<Map<String, Object>> getCurrentUserPositionMenus(Long userId, Long positionId) {
+        // 1. 获取用户信息
+        String tenantId = TenantContextHolder.getTenant();
+        if (positionId == null) {
+            UserPersonalConfig userPersonalConfig = userPersonalConfigMapper.selectByUserId(userId, tenantId);
+            positionId = userPersonalConfig.getDefaultPositionId();
+        }
+
+        List<Map<String, Object>> menus = getMenusByPositionId(positionId);
+        // 4. 构建菜单树
+        List<Map<String, Object>> menuTree = buildMenuTree(menus);
+
+        log.info("用户 {} 获取到 {} 个菜单权限", userId, menuTree.size());
+        return menuTree;
     }
 
     @Override

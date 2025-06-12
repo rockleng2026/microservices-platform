@@ -127,6 +127,7 @@ CREATE TABLE `workposition` (
   `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   `tenant_id` varchar(32) DEFAULT 'default' COMMENT '租户ID',
   `created_by` bigint(20) COMMENT '创建人',
+  `updated_by` bigint(20) COMMENT '更新人',
   PRIMARY KEY (`id`),
   KEY `idx_department_id` (`department_id`),
   KEY `idx_tenant_id` (`tenant_id`),
@@ -324,9 +325,9 @@ CREATE TABLE `users` (
 
 -- 菜单页面表
 CREATE TABLE `menu_page` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '菜单ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '菜单ID',
   `name` varchar(255) NOT NULL COMMENT '菜单名称',
-  `parent_id` int(11) NOT NULL DEFAULT 0 COMMENT '父级id',
+  `parent_id` bigint(20) NOT NULL DEFAULT 0 COMMENT '父级id',
   `link_url` varchar(100) COMMENT '链接功能页面',
   `description` varchar(255) COMMENT '权限描述',
   `image_path` varchar(50) COMMENT '图片路径',
@@ -343,7 +344,7 @@ CREATE TABLE `menu_page` (
 
 -- 菜单页面功能点表
 CREATE TABLE `menu_func` (
-  `id` int(11) NOT NULL AUTO_INCREMENT COMMENT '权限ID',
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '权限ID',
   `perm_code` varchar(100) NOT NULL COMMENT '权限代码',
   `perm_name` varchar(100) NOT NULL COMMENT '权限名称',
   `perm_type` tinyint(1) DEFAULT 1 COMMENT '权限类型(1按钮,2数据)',

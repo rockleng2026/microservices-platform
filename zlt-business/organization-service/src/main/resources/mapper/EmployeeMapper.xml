@@ -8,41 +8,25 @@
         <result column="emp_no" property="empNo" jdbcType="VARCHAR"/>
         <result column="name" property="name" jdbcType="VARCHAR"/>
         <result column="name_en" property="nameEn" jdbcType="VARCHAR"/>
-        <result column="gender" property="gender" jdbcType="TINYINT"/>
         <result column="birth_date" property="birthDate" jdbcType="DATE"/>
+        <result column="gender" property="gender" jdbcType="TINYINT"/>
         <result column="id_card" property="idCard" jdbcType="VARCHAR"/>
         <result column="mobile" property="mobile" jdbcType="VARCHAR"/>
         <result column="email" property="email" jdbcType="VARCHAR"/>
-        <result column="avatar" property="avatar" jdbcType="VARCHAR"/>
         <result column="department_id" property="departmentId" jdbcType="BIGINT"/>
         <result column="department_name" property="departmentName" jdbcType="VARCHAR"/>
         <result column="position_id" property="positionId" jdbcType="BIGINT"/>
         <result column="position_name" property="positionName" jdbcType="VARCHAR"/>
-        <result column="secondary_position_ids" property="secondaryPositionIds" jdbcType="VARCHAR"/>
         <result column="grade_id" property="gradeId" jdbcType="BIGINT"/>
         <result column="employment_type" property="employmentType" jdbcType="TINYINT"/>
         <result column="employment_status" property="employmentStatus" jdbcType="TINYINT"/>
         <result column="entry_date" property="entryDate" jdbcType="DATE"/>
-        <result column="probation_end_date" property="probationEndDate" jdbcType="DATE"/>
-        <result column="regularization_date" property="regularizationDate" jdbcType="DATE"/>
-        <result column="leave_date" property="leaveDate" jdbcType="DATE"/>
-        <result column="leave_reason" property="leaveReason" jdbcType="VARCHAR"/>
-        <result column="work_years" property="workYears" jdbcType="INTEGER"/>
-        <result column="education_level" property="educationLevel" jdbcType="TINYINT"/>
-        <result column="graduation_school" property="graduationSchool" jdbcType="VARCHAR"/>
-        <result column="major" property="major" jdbcType="VARCHAR"/>
-        <result column="marital_status" property="maritalStatus" jdbcType="TINYINT"/>
-        <result column="address" property="address" jdbcType="VARCHAR"/>
-        <result column="emergency_contact" property="emergencyContact" jdbcType="VARCHAR"/>
-        <result column="emergency_phone" property="emergencyPhone" jdbcType="VARCHAR"/>
-        <result column="description" property="description" jdbcType="VARCHAR"/>
-        <result column="status" property="status" jdbcType="TINYINT"/>
-        <result column="delflag" property="delflag" jdbcType="TINYINT"/>
+        <result column="education" property="education" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
         <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
         <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
         <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
         <result column="updated_by" property="updatedBy" jdbcType="BIGINT"/>
-        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
     </resultMap>
 
     <!-- 详细信息结果映射 -->
@@ -91,18 +75,17 @@
 
     <!-- 基础字段 -->
     <sql id="baseColumns">
-        e.id, e.emp_no, e.name, e.name_en, e.gender, e.birth_date, e.id_card, e.mobile, e.email, e.avatar,
-        e.department_id, e.department_name, e.position_id, e.position_name, e.secondary_position_ids, e.grade_id,
-        e.employment_type, e.employment_status, e.entry_date, e.probation_end_date, e.regularization_date,
-        e.leave_date, e.leave_reason, e.work_years, e.education_level, e.graduation_school, e.major,
-        e.marital_status, e.address, e.emergency_contact, e.emergency_phone, e.description,
-        e.status, e.delflag, e.created_at, e.updated_at, e.created_by, e.updated_by, e.tenant_id
+        e.id, e.emp_no, e.name, e.name_en, e.birth_date, e.gender, e.id_card, 
+        e.mobile, e.email, e.department_id, d.name as department_name, 
+        e.position_id, p.name as position_name, e.grade_id,
+        e.employment_type, e.employment_status, e.entry_date, e.education,
+        e.tenant_id, e.created_at, e.updated_at, e.created_by, e.updated_by
     </sql>
 
     <!-- 详细信息字段 -->
     <sql id="voColumns">
         e.id, e.emp_no, e.name, e.name_en, e.gender, e.birth_date, e.id_card, e.mobile, e.email, e.avatar,
-        e.department_id, e.department_name, e.position_id, e.position_name, e.secondary_position_ids, e.grade_id,
+        e.department_id, d.name as department_name, e.position_id, p.name as position_name, e.secondary_position_ids, e.grade_id,
         e.employment_type, e.employment_status, e.entry_date, e.probation_end_date, e.regularization_date,
         e.leave_date, e.leave_reason, e.work_years, e.education_level, e.graduation_school, e.major,
         e.marital_status, e.address, e.emergency_contact, e.emergency_phone, e.description,
@@ -166,17 +149,9 @@
         SELECT
         <include refid="baseColumns"/>
         FROM employee e
-        WHERE e.id = #{id} AND e.delflag = 0
-    </select>
-
-    <!-- 根据ID查询员工详细信息 -->
-    <select id="selectDetailById" resultMap="voResultMap">
-        SELECT
-        <include refid="voColumns"/>
-        FROM employee e
-        LEFT JOIN employee_grade eg ON e.grade_id = eg.id
-        LEFT JOIN employee creator ON e.created_by = creator.id
-        WHERE e.id = #{id} AND e.delflag = 0
+        LEFT JOIN department d ON e.department_id = d.id
+        LEFT JOIN workposition p ON e.position_id = p.id
+        WHERE e.id = #{id}
     </select>
 
     <!-- 根据员工编号查询员工 -->
@@ -184,7 +159,9 @@
         SELECT
         <include refid="baseColumns"/>
         FROM employee e
-        WHERE e.emp_no = #{empNo} AND e.delflag = 0
+        LEFT JOIN department d ON e.department_id = d.id
+        LEFT JOIN workposition p ON e.position_id = p.id
+        WHERE e.emp_no = #{empNo}
     </select>
 
     <!-- 根据手机号查询员工 -->
@@ -192,7 +169,9 @@
         SELECT
         <include refid="baseColumns"/>
         FROM employee e
-        WHERE e.mobile = #{mobile} AND e.delflag = 0
+        LEFT JOIN department d ON e.department_id = d.id
+        LEFT JOIN workposition p ON e.position_id = p.id
+        WHERE e.mobile = #{mobile}
     </select>
 
     <!-- 根据身份证号查询员工 -->
@@ -200,7 +179,9 @@
         SELECT
         <include refid="baseColumns"/>
         FROM employee e
-        WHERE e.id_card = #{idCard} AND e.delflag = 0
+        LEFT JOIN department d ON e.department_id = d.id
+        LEFT JOIN workposition p ON e.position_id = p.id
+        WHERE e.id_card = #{idCard}
     </select>
 
     <!-- 分页查询员工列表 -->
@@ -208,6 +189,8 @@
         SELECT
         <include refid="voColumns"/>
         FROM employee e
+        LEFT JOIN department d ON e.department_id = d.id
+        LEFT JOIN workposition p ON e.position_id = p.id
         LEFT JOIN employee_grade eg ON e.grade_id = eg.id
         LEFT JOIN employee creator ON e.created_by = creator.id
         <include refid="whereConditions"/>
@@ -236,42 +219,24 @@
     </select>
 
     <!-- 根据部门ID查询员工列表 -->
-    <select id="selectByDepartmentId" resultMap="voResultMap">
+    <select id="selectByDepartmentId" resultMap="baseResultMap">
         SELECT
-        <include refid="voColumns"/>
+        <include refid="baseColumns"/>
         FROM employee e
-        LEFT JOIN employee_grade eg ON e.grade_id = eg.id
-        LEFT JOIN employee creator ON e.created_by = creator.id
-        WHERE e.delflag = 0
-        <choose>
-            <when test="includeSubDept != null and includeSubDept == true">
-                AND e.department_id IN (
-                    WITH RECURSIVE dept_tree AS (
-                        SELECT id FROM department WHERE id = #{departmentId}
-                        UNION ALL
-                        SELECT d.id FROM department d
-                        INNER JOIN dept_tree dt ON d.parent_id = dt.id
-                    )
-                    SELECT id FROM dept_tree
-                )
-            </when>
-            <otherwise>
-                AND e.department_id = #{departmentId}
-            </otherwise>
-        </choose>
+        LEFT JOIN department d ON e.department_id = d.id
+        LEFT JOIN workposition p ON e.position_id = p.id
+        WHERE e.department_id = #{departmentId}
         ORDER BY e.entry_date DESC
     </select>
 
     <!-- 根据岗位ID查询员工列表 -->
-    <select id="selectByPositionId" resultMap="voResultMap">
+    <select id="selectByPositionId" resultMap="baseResultMap">
         SELECT
-        <include refid="voColumns"/>
+        <include refid="baseColumns"/>
         FROM employee e
-        LEFT JOIN employee_grade eg ON e.grade_id = eg.id
-        LEFT JOIN employee creator ON e.created_by = creator.id
-        WHERE e.delflag = 0
-        AND (e.position_id = #{positionId}
-        OR FIND_IN_SET(#{positionId}, e.secondary_position_ids) > 0)
+        LEFT JOIN department d ON e.department_id = d.id
+        LEFT JOIN workposition p ON e.position_id = p.id
+        WHERE e.position_id = #{positionId}
         ORDER BY e.entry_date DESC
     </select>
 
@@ -299,6 +264,8 @@
         SELECT
         <include refid="voColumns"/>
         FROM employee e
+        LEFT JOIN department d ON e.department_id = d.id
+        LEFT JOIN workposition p ON e.position_id = p.id
         LEFT JOIN employee_grade eg ON e.grade_id = eg.id
         LEFT JOIN employee creator ON e.created_by = creator.id
         WHERE e.delflag = 0
@@ -313,6 +280,8 @@
         SELECT
         <include refid="voColumns"/>
         FROM employee e
+        LEFT JOIN department d ON e.department_id = d.id
+        LEFT JOIN workposition p ON e.position_id = p.id
         LEFT JOIN employee_grade eg ON e.grade_id = eg.id
         LEFT JOIN employee creator ON e.created_by = creator.id
         WHERE e.delflag = 0
@@ -327,19 +296,13 @@
     <!-- 新增员工 -->
     <insert id="insert" parameterType="com.central.organization.model.Employee" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO employee (
-            emp_no, name, name_en, gender, birth_date, id_card, mobile, email, avatar,
-            department_id, department_name, position_id, position_name, secondary_position_ids, grade_id,
-            employment_type, employment_status, entry_date, probation_end_date, regularization_date,
-            leave_date, leave_reason, work_years, education_level, graduation_school, major,
-            marital_status, address, emergency_contact, emergency_phone, description,
-            status, delflag, created_at, updated_at, created_by, updated_by, tenant_id
+            emp_no, name, name_en, birth_date, gender, id_card, mobile, email,
+            department_id, position_id, grade_id, employment_type, employment_status, 
+            entry_date, education, tenant_id, created_at, updated_at, created_by, updated_by
         ) VALUES (
-            #{empNo}, #{name}, #{nameEn}, #{gender}, #{birthDate}, #{idCard}, #{mobile}, #{email}, #{avatar},
-            #{departmentId}, #{departmentName}, #{positionId}, #{positionName}, #{secondaryPositionIds}, #{gradeId},
-            #{employmentType}, #{employmentStatus}, #{entryDate}, #{probationEndDate}, #{regularizationDate},
-            #{leaveDate}, #{leaveReason}, #{workYears}, #{educationLevel}, #{graduationSchool}, #{major},
-            #{maritalStatus}, #{address}, #{emergencyContact}, #{emergencyPhone}, #{description},
-            #{status}, #{delflag}, #{createdAt}, #{updatedAt}, #{createdBy}, #{updatedBy}, #{tenantId}
+            #{empNo}, #{name}, #{nameEn}, #{birthDate}, #{gender}, #{idCard}, #{mobile}, #{email},
+            #{departmentId}, #{positionId}, #{gradeId}, #{employmentType}, #{employmentStatus}, 
+            #{entryDate}, #{education}, #{tenantId}, #{createdAt}, #{updatedAt}, #{createdBy}, #{updatedBy}
         )
     </insert>
 
@@ -349,97 +312,28 @@
         <set>
             <if test="name != null">name = #{name},</if>
             <if test="nameEn != null">name_en = #{nameEn},</if>
-            <if test="gender != null">gender = #{gender},</if>
             <if test="birthDate != null">birth_date = #{birthDate},</if>
+            <if test="gender != null">gender = #{gender},</if>
             <if test="idCard != null">id_card = #{idCard},</if>
             <if test="mobile != null">mobile = #{mobile},</if>
             <if test="email != null">email = #{email},</if>
-            <if test="avatar != null">avatar = #{avatar},</if>
             <if test="departmentId != null">department_id = #{departmentId},</if>
-            <if test="departmentName != null">department_name = #{departmentName},</if>
             <if test="positionId != null">position_id = #{positionId},</if>
-            <if test="positionName != null">position_name = #{positionName},</if>
-            <if test="secondaryPositionIds != null">secondary_position_ids = #{secondaryPositionIds},</if>
             <if test="gradeId != null">grade_id = #{gradeId},</if>
             <if test="employmentType != null">employment_type = #{employmentType},</if>
             <if test="employmentStatus != null">employment_status = #{employmentStatus},</if>
             <if test="entryDate != null">entry_date = #{entryDate},</if>
-            <if test="probationEndDate != null">probation_end_date = #{probationEndDate},</if>
-            <if test="regularizationDate != null">regularization_date = #{regularizationDate},</if>
-            <if test="leaveDate != null">leave_date = #{leaveDate},</if>
-            <if test="leaveReason != null">leave_reason = #{leaveReason},</if>
-            <if test="workYears != null">work_years = #{workYears},</if>
-            <if test="educationLevel != null">education_level = #{educationLevel},</if>
-            <if test="graduationSchool != null">graduation_school = #{graduationSchool},</if>
-            <if test="major != null">major = #{major},</if>
-            <if test="maritalStatus != null">marital_status = #{maritalStatus},</if>
-            <if test="address != null">address = #{address},</if>
-            <if test="emergencyContact != null">emergency_contact = #{emergencyContact},</if>
-            <if test="emergencyPhone != null">emergency_phone = #{emergencyPhone},</if>
-            <if test="description != null">description = #{description},</if>
-            <if test="status != null">status = #{status},</if>
+            <if test="education != null">education = #{education},</if>
             <if test="updatedBy != null">updated_by = #{updatedBy},</if>
             updated_at = NOW()
         </set>
-        WHERE id = #{id} AND delflag = 0
-    </update>
-
-    <!-- 更新员工状态 -->
-    <update id="updateStatus">
-        UPDATE employee
-        SET status = #{status}, updated_at = NOW()
-        WHERE id = #{id} AND delflag = 0
-    </update>
-
-    <!-- 更新员工在职状态 -->
-    <update id="updateEmploymentStatus">
-        UPDATE employee
-        SET employment_status = #{employmentStatus}, updated_at = NOW()
-        WHERE id = #{id} AND delflag = 0
-    </update>
-
-    <!-- 批量更新员工部门 -->
-    <update id="batchUpdateDepartment">
-        UPDATE employee
-        SET department_id = #{departmentId},
-        department_name = #{departmentName},
-        updated_at = NOW()
-        WHERE id IN
-        <foreach collection="employeeIds" item="id" open="(" separator="," close=")">
-            #{id}
-        </foreach>
-        AND delflag = 0
-    </update>
-
-    <!-- 批量更新员工岗位 -->
-    <update id="batchUpdatePosition">
-        UPDATE employee
-        SET position_id = #{positionId},
-        position_name = #{positionName},
-        updated_at = NOW()
-        WHERE id IN
-        <foreach collection="employeeIds" item="id" open="(" separator="," close=")">
-            #{id}
-        </foreach>
-        AND delflag = 0
-    </update>
-
-    <!-- 软删除员工 -->
-    <update id="deleteById">
-        UPDATE employee
-        SET delflag = 1, updated_at = NOW()
         WHERE id = #{id}
     </update>
 
-    <!-- 批量软删除员工 -->
-    <update id="batchDelete">
-        UPDATE employee
-        SET delflag = 1, updated_at = NOW()
-        WHERE id IN
-        <foreach collection="ids" item="id" open="(" separator="," close=")">
-            #{id}
-        </foreach>
-    </update>
+    <!-- 删除员工 -->
+    <delete id="deleteById">
+        DELETE FROM employee WHERE id = #{id}
+    </delete>
 
     <!-- 生成下一个员工编号 -->
     <select id="generateNextEmpNo" resultType="java.lang.String">

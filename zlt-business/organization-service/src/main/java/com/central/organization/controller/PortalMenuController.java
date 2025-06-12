@@ -1,6 +1,7 @@
 package com.central.organization.controller;
 
 import com.central.common.annotation.LoginUser;
+import com.central.common.context.LoginUserContextHolder;
 import com.central.common.model.Result;
 import com.central.common.model.SysUser;
 import com.central.organization.service.MenuPermissionService;
@@ -28,14 +29,15 @@ public class PortalMenuController {
     private MenuPermissionService menuPermissionService;
 
     /**
-     * 获取当前用户的权限菜单
+     * 获取当前用户的权限菜单-逻辑是按岗位查询，positionId可选参数，传入了就查询指定用户岗位的ID，没传就查询该用户下默认岗位的id
      */
     @Operation(summary = "获取当前用户权限菜单", description = "根据用户岗位获取对应的菜单权限列表")
     @GetMapping("/current")
-    public Result<List<Map<String, Object>>> getCurrentUserMenus(@LoginUser SysUser currentUser) {
+    public Result<List<Map<String, Object>>> getCurrentUserPositionMenus(@LoginUser SysUser currentUser, Long positionId) {
         log.info("获取用户权限菜单，用户ID: {}", currentUser.getId());
         try {
-            List<Map<String, Object>> menus = menuPermissionService.getCurrentUserMenus(currentUser.getId());
+
+            List<Map<String, Object>> menus = menuPermissionService.getCurrentUserPositionMenus(LoginUserContextHolder.getUser().getId(), positionId);
             return Result.succeed(menus, "获取菜单权限成功");
         } catch (Exception e) {
             log.error("获取用户权限菜单失败，用户ID: {}", currentUser.getId(), e);

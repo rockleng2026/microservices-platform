@@ -7,6 +7,7 @@ import com.central.organization.mapper.UserPersonalConfigMapper;
 import com.central.organization.mapper.WorkpositionMapper;
 import com.central.organization.mapper.DepartmentMapper;
 import com.central.organization.model.Employee;
+import com.central.organization.model.MenuPermission;
 import com.central.organization.model.PortalUser;
 import com.central.organization.model.UserPersonalConfig;
 import com.central.organization.model.Workposition;
@@ -100,9 +101,8 @@ public class PortalUserServiceImpl implements PortalUserService {
     }
 
     @Override
-    public Map<String, Object> getCurrentUserInfo(Long userId) {
+    public PortalUser getCurrentUserInfo(Long userId) {
         log.info("获取用户详细信息: {}", userId);
-        Map<String, Object> result = new HashMap<>();
         
         try {
             // 1. 获取用户基本信息
@@ -111,32 +111,19 @@ public class PortalUserServiceImpl implements PortalUserService {
                 throw new RuntimeException("用户不存在");
             }
 
-            // 构建用户基本信息
-            Map<String, Object> userInfo = new HashMap<>();
-            userInfo.put("id", user.getId());
-            userInfo.put("username", user.getUsername());
-            userInfo.put("nickname", user.getNickname());
-            userInfo.put("mobile", user.getMobile());
-            userInfo.put("headImgUrl", user.getHeadImgUrl());
-            userInfo.put("enabled", user.getEnabled());
-            userInfo.put("type", "portal");
-            userInfo.put("tenantId", user.getTenantId());
-            
-            result.put("user", userInfo);
+            // 设置基本信息
+            user.setType("portal");
             
             // 2. 获取员工信息
             Employee employee = null;
             if (user.getEmployeeId() != null) {
                 employee = employeeMapper.selectById(user.getEmployeeId());
-                if (employee != null) {
-                    Map<String, Object> employeeInfo = buildEmployeeInfo(employee);
-                    result.put("employee", employeeInfo);
-                }
+                user.setEmployee(employee);
             }
             
             // 3. 获取用户的所有岗位列表
-            List<Map<String, Object>> positions = getUserPositions(userId);
-            result.put("positions", positions);
+            List<Workposition> positions = getUserPositions(userId);
+            user.setPositions(positions);
             
             // 4. 获取用户个性化配置
             UserPersonalConfig personalConfig = getUserPersonalConfig(userId);
@@ -146,12 +133,12 @@ public class PortalUserServiceImpl implements PortalUserService {
                 if (employee != null && employee.getPositionId() != null) {
                     defaultPositionId = employee.getPositionId();
                 } else if (!positions.isEmpty()) {
-                    defaultPositionId = (Long) positions.get(0).get("id");
+                    defaultPositionId = positions.get(0).getId();
                 }
                 initUserDefaultConfig(userId, defaultPositionId);
                 personalConfig = getUserPersonalConfig(userId);
             }
-            result.put("personalConfig", personalConfig);
+            user.setPersonalConfig(personalConfig);
             
             // 5. 确定当前生效的岗位
             Long currentPositionId = null;
@@ -163,21 +150,17 @@ public class PortalUserServiceImpl implements PortalUserService {
                 currentPositionId = employee.getPositionId();
             } else if (!positions.isEmpty()) {
                 // 使用第一个可用岗位
-                currentPositionId = (Long) positions.get(0).get("id");
+                currentPositionId = positions.get(0).getId();
             }
             
             // 6. 获取当前岗位详细信息
             if (currentPositionId != null) {
                 Workposition currentPosition = workpositionMapper.selectById(currentPositionId);
-                if (currentPosition != null) {
-                    Map<String, Object> currentPositionInfo = buildPositionInfo(currentPosition);
-                    result.put("currentPosition", currentPositionInfo);
-                    
-                    // 7. 获取当前岗位的菜单权限
-                    List<Map<String, Object>> menus = menuPermissionService.getMenusByPositionId(currentPositionId);
-                    List<Map<String, Object>> menuTree = menuPermissionService.buildMenuTree(menus);
-                    result.put("menus", menuTree);
-                }
+                user.setCurrentPosition(currentPosition);
+                
+                // 7. 获取当前岗位的菜单权限--这个不需要关联-菜单信息留给菜单功能接口查询
+                // 注List<MenuPermission> menus = getCurrentUserMenus(userId);
+                // 注user.setMenus(menus);
             }
             
             // 8. 租户信息
@@ -185,9 +168,9 @@ public class PortalUserServiceImpl implements PortalUserService {
             tenant.put("id", user.getTenantId() != null ? user.getTenantId() : "default");
             tenant.put("name", "Portal企业");
             tenant.put("code", "PORTAL");
-            result.put("tenant", tenant);
+            user.setTenant(tenant);
             
-            return result;
+            return user;
         } catch (Exception e) {
             log.error("获取用户详细信息失败: {}", userId, e);
             throw new RuntimeException("获取用户信息失败: " + e.getMessage());
@@ -195,7 +178,7 @@ public class PortalUserServiceImpl implements PortalUserService {
     }
 
     @Override
-    public List<Map<String, Object>> getUserPositions(Long userId) {
+    public List<Workposition> getUserPositions(Long userId) {
         log.info("获取用户岗位列表: {}", userId);
         try {
             PortalUser user = usersMapper.selectByPrimaryKey(userId);
@@ -208,15 +191,13 @@ public class PortalUserServiceImpl implements PortalUserService {
                 return new ArrayList<>();
             }
 
-            List<Map<String, Object>> positions = new ArrayList<>();
+            List<Workposition> positions = new ArrayList<>();
             
             // 获取主岗位
             if (employee.getPositionId() != null) {
                 Workposition mainPosition = workpositionMapper.selectById(employee.getPositionId());
                 if (mainPosition != null) {
-                    Map<String, Object> positionInfo = buildPositionInfo(mainPosition);
-                    positionInfo.put("isMain", true);
-                    positions.add(positionInfo);
+                    positions.add(mainPosition);
                 }
             }
             
@@ -231,8 +212,41 @@ public class PortalUserServiceImpl implements PortalUserService {
     }
 
     @Override
-    public List<Map<String, Object>> getCurrentUserMenus(Long userId) {
-        return menuPermissionService.getCurrentUserMenus(userId);
+    public List<MenuPermission> getCurrentUserMenus(Long userId) {
+        // 临时实现：将Map转换为MenuPermission对象
+        List<Map<String, Object>> menuMaps = menuPermissionService.getCurrentUserAllMenus(userId);
+        return convertToMenuPermissions(menuMaps);
+    }
+    
+    /**
+     * 将Map形式的菜单转换为MenuPermission对象
+     */
+    private List<MenuPermission> convertToMenuPermissions(List<Map<String, Object>> menuMaps) {
+        List<MenuPermission> menuPermissions = new ArrayList<>();
+        for (Map<String, Object> menuMap : menuMaps) {
+            MenuPermission menu = new MenuPermission();
+            menu.setId((Long) menuMap.get("id"));
+            menu.setName((String) menuMap.get("name"));
+            menu.setCode((String) menuMap.get("code"));
+            menu.setParentId((Long) menuMap.get("parentId"));
+            menu.setPath((String) menuMap.get("path"));
+            menu.setComponent((String) menuMap.get("component"));
+            menu.setIcon((String) menuMap.get("icon"));
+            menu.setMenuType((Integer) menuMap.get("menuType"));
+            menu.setSortOrder((Integer) menuMap.get("sortOrder"));
+            menu.setVisible((Boolean) menuMap.get("visible"));
+            menu.setEnabled((Boolean) menuMap.get("enabled"));
+            
+            // 处理子菜单
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> children = (List<Map<String, Object>>) menuMap.get("children");
+            if (children != null) {
+                menu.setChildren(convertToMenuPermissions(children));
+            }
+            
+            menuPermissions.add(menu);
+        }
+        return menuPermissions;
     }
 
     @Override
@@ -327,9 +341,8 @@ public class PortalUserServiceImpl implements PortalUserService {
     }
 
     @Override
-    public Map<String, Object> switchUserPosition(Long userId, Long positionId) {
+    public PortalUser switchUserPosition(Long userId, Long positionId) {
         log.info("切换用户岗位: 用户ID={}, 岗位ID={}", userId, positionId);
-        Map<String, Object> result = new HashMap<>();
         
         try {
             // 验证用户和岗位
@@ -344,9 +357,9 @@ public class PortalUserServiceImpl implements PortalUserService {
             }
             
             // 验证用户是否有权限使用该岗位
-            List<Map<String, Object>> userPositions = getUserPositions(userId);
+            List<Workposition> userPositions = getUserPositions(userId);
             boolean hasPermission = userPositions.stream()
-                    .anyMatch(p -> positionId.equals(p.get("id")));
+                    .anyMatch(p -> positionId.equals(p.getId()));
             
             if (!hasPermission) {
                 throw new RuntimeException("您没有权限使用该岗位");
@@ -358,25 +371,13 @@ public class PortalUserServiceImpl implements PortalUserService {
                 throw new RuntimeException("岗位切换失败");
             }
             
-            // 获取新岗位信息
-            Map<String, Object> newPosition = buildPositionInfo(position);
-            
-            // 获取新岗位的菜单权限
-            List<Map<String, Object>> menus = menuPermissionService.getMenusByPositionId(positionId);
-            List<Map<String, Object>> menuTree = menuPermissionService.buildMenuTree(menus);
-            
-            result.put("success", true);
-            result.put("message", "岗位切换成功");
-            result.put("position", newPosition);
-            result.put("menus", menuTree);
-            
             log.info("用户 {} 成功切换到岗位 {}", userId, positionId);
-            return result;
+            
+            // 返回更新后的用户信息
+            return getCurrentUserInfo(userId);
         } catch (Exception e) {
             log.error("岗位切换失败: userId={}, positionId={}", userId, positionId, e);
-            result.put("success", false);
-            result.put("message", e.getMessage());
-            return result;
+            throw new RuntimeException("岗位切换失败: " + e.getMessage());
         }
     }
 

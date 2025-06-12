@@ -7,18 +7,17 @@
         SELECT DISTINCT
             m.id,
             m.name,
-            m.code,
             m.parent_id as parentId,
-            m.path,
-            m.component,
+            m.link_url as path,
+            m.link_url as component,
             m.icon,
-            m.menu_type as menuType,
             m.sort_order as sortOrder,
-            m.visible,
-            m.enabled,
+            m.status as visible,
+            m.status as enabled,
             m.tenant_id as tenantId
-        FROM menu m
-        WHERE m.enabled = 1
+        FROM menu_page m
+        WHERE m.status = 1
+        AND m.delflag = 0
         AND m.tenant_id = 'default'
         AND (
             -- 通过岗位的menu_ids字段匹配
@@ -26,11 +25,10 @@
                 SELECT 1 FROM workposition wp
                 WHERE wp.id = #{positionId}
                 AND wp.tenant_id = 'default'
+                AND wp.status = 1
+                AND wp.delflag = 0
                 AND FIND_IN_SET(m.id, wp.menu_ids) > 0
             )
-            OR 
-            -- 基础菜单，所有用户都可见
-            m.code IN ('profile')
         )
         ORDER BY m.parent_id ASC, m.sort_order ASC
     </select>
@@ -39,16 +37,15 @@
     <select id="selectFunctionsByMenuId" resultType="java.util.Map">
         SELECT DISTINCT
             mf.id,
-            mf.menu_id as menuId,
-            mf.name,
-            mf.code,
+            mf.menu_page_id as menuId,
+            mf.perm_name as name,
+            mf.perm_code as code,
             mf.description,
             mf.sort_order as sortOrder,
-            mf.enabled,
+            1 as enabled,
             mf.tenant_id as tenantId
-        FROM menu_function mf
-        WHERE mf.menu_id = #{menuId}
-        AND mf.enabled = 1
+        FROM menu_func mf
+        WHERE mf.menu_page_id = #{menuId}
         AND mf.tenant_id = 'default'
         ORDER BY mf.sort_order ASC
     </select>
@@ -58,18 +55,17 @@
         SELECT
             id,
             name,
-            code,
             parent_id as parentId,
-            path,
-            component,
+            link_url as path,
+            link_url as component,
             icon,
-            menu_type as menuType,
             sort_order as sortOrder,
-            visible,
-            enabled,
+            status as visible,
+            status as enabled,
             tenant_id as tenantId
-        FROM menu
-        WHERE enabled = 1
+        FROM menu_page
+        WHERE status = 1
+        AND delflag = 0
         AND tenant_id = 'default'
         ORDER BY parent_id ASC, sort_order ASC
     </select>
@@ -79,19 +75,17 @@
         SELECT
             id,
             name,
-            code,
             parent_id as parentId,
-            path,
-            component,
+            link_url as path,
+            link_url as component,
             icon,
-            menu_type as menuType,
             sort_order as sortOrder,
-            visible,
-            enabled,
+            status as visible,
+            status as enabled,
             tenant_id as tenantId,
             created_at as createdAt,
-            updated_at as updatedAt
-        FROM menu
+            created_at as updatedAt
+        FROM menu_page
         WHERE id = #{id}
         AND tenant_id = 'default'
     </select>

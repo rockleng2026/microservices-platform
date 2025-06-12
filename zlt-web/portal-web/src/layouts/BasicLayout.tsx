@@ -18,7 +18,8 @@ const BasicLayout: React.FC = () => {
   const [menus, setMenus] = useState<MenuPermission[]>([]);
 
   // 处理菜单更新
-  const handleMenuUpdate = (newMenus: MenuPermission[]) => {
+  const handleMenuUpdate = (newMenus: any[]) => {
+    console.log('BasicLayout: 接收到菜单数据:', newMenus);
     setMenus(newMenus);
   };
 

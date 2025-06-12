@@ -14,7 +14,7 @@ import {
 import { MenuPermission } from '../../services/portal';
 
 interface DynamicMenuProps {
-  menus: MenuPermission[];
+  menus: any[]; // 改为any[]以适配后端数据格式
   mode?: 'inline' | 'horizontal' | 'vertical';
   theme?: 'light' | 'dark';
   collapsed?: boolean;
@@ -45,19 +45,19 @@ const DynamicMenu: React.FC<DynamicMenuProps> = ({
 }) => {
   const location = useLocation();
 
-  // 将菜单权限转换为Antd Menu所需的格式
-  const convertMenusToAntdMenus = (menuList: MenuPermission[]): any[] => {
+  // 将菜单权限转换为Antd Menu所需的格式 - 适配后端数据格式
+  const convertMenusToAntdMenus = (menuList: any[]): any[] => {
     return menuList
-      .filter(menu => menu.isVisible && menu.menuStatus)
-      .sort((a, b) => a.sortOrder - b.sortOrder)
+      .filter(menu => menu.visible !== false && menu.enabled !== false)
+      .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
       .map(menu => {
         const menuItem: any = {
-          key: menu.menuPath || `menu-${menu.id}`,
-          icon: iconMap[menu.menuIcon || ''] || <AppstoreOutlined />,
-          label: menu.menuPath ? (
-            <Link to={menu.menuPath}>{menu.menuName}</Link>
+          key: menu.path || `menu-${menu.id}`,
+          icon: iconMap[menu.icon || ''] || <AppstoreOutlined />,
+          label: menu.path ? (
+            <Link to={menu.path}>{menu.name}</Link>
           ) : (
-            menu.menuName
+            menu.name
           ),
         };
 
@@ -72,7 +72,10 @@ const DynamicMenu: React.FC<DynamicMenuProps> = ({
 
   // 生成菜单项
   const menuItems = useMemo(() => {
+    console.log('DynamicMenu: 原始菜单数据:', menus);
+    
     if (!menus || menus.length === 0) {
+      console.log('DynamicMenu: 使用默认菜单');
       // 默认菜单结构（当没有权限菜单时）
       return [
         {
@@ -83,7 +86,9 @@ const DynamicMenu: React.FC<DynamicMenuProps> = ({
       ];
     }
     
-    return convertMenusToAntdMenus(menus);
+    const convertedMenus = convertMenusToAntdMenus(menus);
+    console.log('DynamicMenu: 转换后的菜单:', convertedMenus);
+    return convertedMenus;
   }, [menus]);
 
   // 获取当前选中的菜单keys

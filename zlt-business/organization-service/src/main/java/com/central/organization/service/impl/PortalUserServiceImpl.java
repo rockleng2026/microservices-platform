@@ -203,7 +203,8 @@ public class PortalUserServiceImpl implements PortalUserService {
             
             // TODO: 获取副岗位（后续实现多岗位关联表）
             // 暂时只返回主岗位
-            
+
+
             return positions;
         } catch (Exception e) {
             log.error("获取用户岗位列表失败: {}", userId, e);

@@ -1,12 +1,22 @@
-// 基础请求函数，暂时简化处理
+// 基础请求函数，自动携带认证Token
 export async function request<T = any>(url: string, options: any = {}): Promise<T> {
   const { method = 'GET', data, params, ...rest } = options;
+  
+  // 自动添加认证Token
+  const token = localStorage.getItem('access_token');
+  const defaultHeaders: any = {
+    'Content-Type': 'application/json',
+  };
+  
+  if (token) {
+    defaultHeaders['Authorization'] = `Bearer ${token}`;
+  }
   
   let requestUrl = url;
   const requestOptions: RequestInit = {
     method,
     headers: {
-      'Content-Type': 'application/json',
+      ...defaultHeaders,
       ...rest.headers,
     },
     ...rest,

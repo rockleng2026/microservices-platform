@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dropdown, Space, Avatar, Button, Menu, message } from 'antd';
-import { UserOutlined, DownOutlined, SettingOutlined, LogoutOutlined } from '@ant-design/icons';
-import { PortalUser, WorkPosition, getCurrentUserInfo } from '../../services/portal';
-import PositionSelector from '../PositionSelector';
+import { UserOutlined, DownOutlined, SettingOutlined, LogoutOutlined, SwapOutlined } from '@ant-design/icons';
+import { getCurrentUser, getCurrentUserMenus } from '../../services/auth';
 import LogoutConfirm from '../LogoutConfirm';
 import './index.less';
 
@@ -10,56 +9,78 @@ interface UserMenuProps {
   onMenuUpdate?: (menus: any[]) => void;
 }
 
-const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
-  const [userInfo, setUserInfo] = useState<PortalUser | null>(null);
-  const [loading, setLoading] = useState(true);
+interface UserInfo {
+  user?: any;
+  employee?: any;
+  positions?: any[];
+  currentPosition?: any;
+}
 
-  // 加载用户信息
-  const loadUserInfo = async () => {
+const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
+  console.log('UserMenu: 组件被渲染, onMenuUpdate:', onMenuUpdate);
+  
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [initialized, setInitialized] = useState(false);
+
+    // 加载用户信息和菜单权限
+  const loadUserData = async () => {
+    if (initialized) {
+      console.log('UserMenu: 已初始化，跳过重复调用');
+      return; // 防止重复调用
+    }
+    
+    console.log('UserMenu: 开始加载用户数据...');
     setLoading(true);
     try {
-      const response = await getCurrentUserInfo();
-      if (response.success && response.data) {
-        setUserInfo(response.data);
+      // 获取用户信息
+      const userResponse = await getCurrentUser();
+      console.log('UserMenu: 获取用户信息响应:', userResponse);
+      
+      // 获取菜单权限  
+      const menuResponse = await getCurrentUserMenus();
+      console.log('UserMenu: 获取菜单权限响应:', menuResponse);
+      
+      if (userResponse && userResponse.resp_code === 0) {
+        console.log('UserMenu: 设置用户信息:', userResponse.datas);
+        setUserInfo(userResponse.datas);
+        setInitialized(true);
+        
         // 通知父组件更新菜单
-        onMenuUpdate?.(response.data.menus);
+        if (menuResponse && menuResponse.resp_code === 0) {
+          console.log('UserMenu: 准备传递菜单数据给父组件:', menuResponse.datas);
+          console.log('UserMenu: onMenuUpdate回调函数存在:', !!onMenuUpdate);
+          if (onMenuUpdate) {
+            onMenuUpdate(menuResponse.datas);
+            console.log('UserMenu: 已调用onMenuUpdate');
+          } else {
+            console.log('UserMenu: onMenuUpdate回调函数为空');
+          }
+        } else {
+          console.log('UserMenu: 菜单数据为空或获取失败', menuResponse);
+        }
       } else {
-        message.error(response.message || '获取用户信息失败');
+        console.log('UserMenu: 用户信息获取失败', userResponse);
+        message.error(userResponse?.resp_msg || '获取用户信息失败');
       }
     } catch (error) {
-      console.error('获取用户信息失败:', error);
-      message.error('获取用户信息失败，请重试');
+      console.error('UserMenu: 加载用户数据失败:', error);
+      message.error('加载用户数据失败，请重试');
     } finally {
+      console.log('UserMenu: 设置loading为false');
       setLoading(false);
     }
   };
 
   // 组件初始化时加载用户信息
   useEffect(() => {
-    loadUserInfo();
-  }, []);
-
-  // 处理岗位切换
-  const handlePositionChange = (position: WorkPosition) => {
-    if (userInfo) {
-      const updatedUserInfo = {
-        ...userInfo,
-        currentPosition: position,
-        employee: {
-          ...userInfo.employee,
-          positionId: position.id,
-          positionName: position.name,
-        },
-      };
-      setUserInfo(updatedUserInfo);
+    console.log('UserMenu: useEffect被调用, initialized:', initialized, 'loading:', loading);
+    // 只要没有初始化就加载数据
+    if (!initialized) {
+      console.log('UserMenu: 调用loadUserData');
+      loadUserData();
     }
-  };
-
-  // 处理菜单更新
-  const handleMenuUpdate = () => {
-    // 重新加载用户信息以获取最新的菜单权限
-    loadUserInfo();
-  };
+  }, []); // 空依赖数组，只在组件挂载时执行一次
 
   // 生成用户头像
   const getUserAvatar = () => {
@@ -92,7 +113,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
           onLogoutSuccess={() => {
             message.success('已成功退出登录');
           }}
-          onLogoutError={(error) => {
+          onLogoutError={(error: any) => {
             console.error('退出登录失败:', error);
             message.error('退出登录失败，请重试');
           }}
@@ -115,7 +136,10 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
   if (!userInfo) {
     return (
       <div className="user-menu error">
-        <Button type="link" onClick={loadUserInfo}>
+        <Button type="link" onClick={() => {
+          setInitialized(false);
+          loadUserData();
+        }}>
           重新加载
         </Button>
       </div>
@@ -125,13 +149,15 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
   return (
     <div className="user-menu">
       <Space size={16}>
-        {/* 岗位选择器 */}
-        <PositionSelector
-          currentPosition={userInfo.currentPosition}
-          positions={userInfo.positions}
-          onPositionChange={handlePositionChange}
-          onMenuUpdate={handleMenuUpdate}
-        />
+        {/* 简化的岗位显示 - 暂时不支持切换 */}
+        {userInfo.currentPosition && (
+          <Space>
+            <SwapOutlined style={{ color: '#666' }} />
+            <span style={{ fontSize: '14px', color: '#666' }}>
+              {userInfo.currentPosition.name}
+            </span>
+          </Space>
+        )}
         
         {/* 用户信息下拉菜单 */}
         <Dropdown overlay={userDropdownMenu} placement="bottomRight">
@@ -140,7 +166,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
               {getUserAvatar()}
               <div className="user-details">
                 <div className="user-name">
-                  {userInfo.user.nickname || userInfo.employee.name || userInfo.user.username}
+                  {userInfo.user?.nickname || userInfo.employee?.name || userInfo.user?.username}
                 </div>
                 <div className="user-position">
                   {userInfo.currentPosition?.name}

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Select, Space, Avatar, message } from 'antd';
 import { UserOutlined, SwapOutlined } from '@ant-design/icons';
-import { WorkPosition, switchUserPosition, getUserPositions } from '../../services/portal';
+import { WorkPosition } from '../../services/portal';
 import './index.less';
 
 interface PositionSelectorProps {
@@ -21,22 +21,10 @@ const PositionSelector: React.FC<PositionSelectorProps> = ({
   const [selectedPosition, setSelectedPosition] = useState<WorkPosition | undefined>(currentPosition);
   const [loading, setLoading] = useState(false);
 
-  // 加载岗位列表
-  const loadPositions = async () => {
-    try {
-      const response = await getUserPositions();
-      if (response.success && response.data) {
-        setPositions(response.data);
-      }
-    } catch (error) {
-      console.error('加载岗位列表失败:', error);
-    }
-  };
-
-  // 初始化时加载岗位列表
+  // 使用传入的岗位列表，不再单独加载
   useEffect(() => {
-    if (!initialPositions || initialPositions.length === 0) {
-      loadPositions();
+    if (initialPositions && initialPositions.length > 0) {
+      setPositions(initialPositions);
     }
   }, [initialPositions]);
 
@@ -61,27 +49,41 @@ const PositionSelector: React.FC<PositionSelectorProps> = ({
 
     setLoading(true);
     try {
-      const response = await switchUserPosition(positionId);
-      if (response.success && response.data) {
+      console.log('PositionSelector: 开始切换岗位', positionId);
+      
+      // 直接调用菜单接口，传入positionId参数
+      const { getCurrentUserMenus } = await import('../../services/auth');
+      const menuResponse = await getCurrentUserMenus(positionId);
+      
+      console.log('PositionSelector: 获取岗位菜单响应', menuResponse);
+      
+      if (menuResponse && menuResponse.resp_code === 0) {
         setSelectedPosition(targetPosition);
         message.success(`已切换到岗位：${targetPosition.name}`);
         
         // 通知父组件岗位已切换
         onPositionChange?.(targetPosition);
         
-        // 触发菜单更新
-        onMenuUpdate?.();
-        
-        // 触发全局岗位切换事件
+        // 触发全局岗位切换事件，携带菜单数据
         const event = new CustomEvent('positionChanged', {
-          detail: { position: targetPosition }
+          detail: { 
+            position: targetPosition,
+            menus: menuResponse.datas,
+            timestamp: new Date().toISOString()
+          }
         });
         window.dispatchEvent(event);
+        
+        // 菜单数据已通过事件传递，不需要单独的onMenuUpdate调用
+        
+        console.log('PositionSelector: 岗位切换成功，已触发全局事件');
       } else {
-        message.error(response.message || '岗位切换失败');
+        const errorMsg = menuResponse?.resp_msg || '岗位切换失败';
+        console.error('PositionSelector: 岗位切换失败', menuResponse);
+        message.error(errorMsg);
       }
     } catch (error) {
-      console.error('岗位切换失败:', error);
+      console.error('PositionSelector: 岗位切换异常:', error);
       message.error('岗位切换失败，请重试');
     } finally {
       setLoading(false);

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Form, Input, Button, Checkbox, message, Typography } from 'antd';
 import { UserOutlined, LockOutlined, SafetyOutlined, ReloadOutlined } from '@ant-design/icons';
 import { history } from 'umi';
-import { login, getCaptcha, getCurrentUser, getCurrentUserMenus } from '@/services/auth';
+import { login, getCaptcha } from '@/services/auth';
 
 const { Title, Text } = Typography;
 
@@ -72,24 +72,6 @@ const Login: React.FC = () => {
         localStorage.setItem('refresh_token', loginResult.datas.refresh_token || '');
         
         console.log('Portal用户登录成功，Token:', loginResult.datas.access_token.substring(0, 20) + '...');
-        
-        // 获取用户信息
-        try {
-          const userInfo = await getCurrentUser();
-          console.log('获取用户信息:', userInfo);
-          localStorage.setItem('user_info', JSON.stringify(userInfo));
-        } catch (userError) {
-          console.warn('获取用户信息失败:', userError);
-        }
-        
-        // 获取菜单权限
-        try {
-          const menus = await getCurrentUserMenus();
-          console.log('获取菜单权限:', menus);
-          localStorage.setItem('user_menus', JSON.stringify(menus));
-        } catch (menuError) {
-          console.warn('获取菜单权限失败:', menuError);
-        }
         
         message.success('登录成功');
         

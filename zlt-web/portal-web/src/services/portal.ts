@@ -114,6 +114,9 @@ export async function getUserPositions(options?: { [key: string]: any }) {
   return adaptResponse<WorkPosition[]>(response);
 }
 
+// 注意：用户岗位信息（包含主岗位+分管岗位）现在通过getCurrentUserInfo接口返回
+// 前端组件应该从用户信息的positions字段获取岗位列表，而不是单独调用岗位接口
+
 /**
  * 切换用户岗位
  */

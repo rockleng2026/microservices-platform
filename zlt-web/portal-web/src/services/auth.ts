@@ -118,10 +118,15 @@ export async function getCurrentUser() {
 
 /**
  * 获取当前用户菜单权限
+ * @param positionId 可选的岗位ID，用于获取特定岗位的菜单权限
  */
-export async function getCurrentUserMenus() {
+export async function getCurrentUserMenus(positionId?: number) {
   const token = localStorage.getItem('access_token');
-  return request(`${API_BASE}/api-portal/menus/current`, {
+  const url = positionId 
+    ? `${API_BASE}/api-portal/menus/current?positionId=${positionId}`
+    : `${API_BASE}/api-portal/menus/current`;
+  
+  return request(url, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,

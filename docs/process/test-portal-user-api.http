@@ -1,0 +1,96 @@
+### Portal用户管理API测试文件
+
+###
+# 注意: 请先确保organization-service服务已启动 (默认端口: 8800)
+# 在测试前，请先获取有效的access_token
+
+### 1. 获取当前用户信息 (重构后的接口)
+GET http://localhost:8800/users/current
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+### 2. 获取用户岗位列表
+GET http://localhost:8800/users/positions
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+### 3. 获取当前用户菜单权限
+GET http://localhost:8800/users/menus
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+### 4. 切换用户当前岗位
+POST http://localhost:8800/users/switch-position
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "positionId": 1
+}
+
+### 5. 获取用户个性化配置
+GET http://localhost:8800/users/personal-config
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+### 6. 更新用户个性化配置
+PUT http://localhost:8800/users/personal-config
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "defaultPositionId": 1,
+  "theme": "dark",
+  "language": "zh_CN",
+  "menuCollapsed": false,
+  "pageSize": 20,
+  "preferences": {
+    "autoSave": true,
+    "notifications": true
+  }
+}
+
+### 7. 创建用户个性化配置
+POST http://localhost:8800/users/personal-config
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+{
+  "defaultPositionId": 1,
+  "theme": "light",
+  "language": "zh_CN",
+  "menuCollapsed": false,
+  "pageSize": 10,
+  "preferences": {
+    "autoSave": false,
+    "notifications": true,
+    "darkMode": false
+  }
+}
+
+### 8. 删除用户个性化配置
+DELETE http://localhost:8800/users/personal-config
+Authorization: Bearer {{access_token}}
+Content-Type: application/json
+
+### ==========================================
+### 测试说明
+### ==========================================
+
+### 测试步骤:
+### 1. 首先确保服务已启动
+### 2. 通过Portal登录接口获取access_token
+### 3. 替换上方{{access_token}}为实际token
+### 4. 按顺序执行测试用例
+
+### 预期结果:
+### 1. /current: 返回完整的PortalUser对象，包含员工信息、岗位列表、菜单权限等
+### 2. /positions: 返回用户的所有岗位信息
+### 3. /menus: 返回当前岗位的菜单权限树
+### 4. /switch-position: 切换岗位成功，返回更新后的用户信息
+### 5. /personal-config: CRUD操作用户个性化配置
+
+### 注意事项:
+### - 确保数据库中有对应的测试数据
+### - 用户必须已认证并拥有有效token
+### - 岗位ID和配置值需要根据实际数据调整 

@@ -138,7 +138,8 @@ CREATE TABLE `workposition` (
 CREATE TABLE `workposition_manage_dept` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `workposition_id` bigint(20) NOT NULL COMMENT '岗位ID',
-  `department_id` bigint(20) NOT NULL COMMENT '分管部门ID',
+  `charge_department_id` bigint(20) NOT NULL COMMENT '分管部门ID',
+  `charge_workposition_id` bigint(20) NOT NULL COMMENT '分管岗位ID',
   `manage_type` tinyint(1) DEFAULT 1 COMMENT '分管类型(1直管,2协管)',
   `created_at` timestamp DEFAULT CURRENT_TIMESTAMP,
   `created_by` bigint(20) COMMENT '创建人',
@@ -164,7 +165,6 @@ CREATE TABLE `employee` (
   `email` varchar(100) COMMENT '邮箱',
   `department_id` bigint(20) COMMENT '部门ID',
   `position_id` bigint(20) COMMENT '主岗位ID',
-  `secondary_position_ids` varchar(200) COMMENT '副岗位ID列表',
   `grade_id` tinyint(1) COMMENT '员工等级ID',
   `employment_type` tinyint(1) COMMENT '用工类型(1:正式,2:实习,3:外包,4:劳务)',
   `employment_status` tinyint(1) COMMENT '在职状态(1:在职,2:试用,3:离职)',

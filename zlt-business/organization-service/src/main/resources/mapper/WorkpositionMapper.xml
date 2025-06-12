@@ -83,4 +83,35 @@
         ORDER BY position_level ASC, sort_order ASC
     </select>
 
+    <!-- 根据岗位ID查询分管岗位列表（从workposition_manage_dept表获取） -->
+    <select id="selectSubPositionsByPositionId" resultMap="BaseResultMap">
+        SELECT wp.id,
+               wp.name,
+               wp.short_name,
+               wp.department_id,
+               wp.position_level,
+               wp.job_description,
+               wp.requirements,
+               wp.salary_range,
+               wp.max_employees,
+               wp.menu_ids,
+               wp.menu_func_ids,
+               wp.is_manager,
+               wp.is_director,
+               wp.sort_order,
+               wp.tenant_id,
+               wp.created_at,
+               wp.updated_at,
+               wp.created_by,
+               wp.updated_by
+        FROM workposition wp
+        where wp.id in (select charge_workposition_id
+                        from workposition_manage_dept wmd
+                        WHERE wmd.workposition_id = #{positionId}
+                          AND wmd.tenant_id = #{tenantId}
+                          AND wp.status = 1
+                          AND wp.delflag = 0)
+        ORDER BY wp.sort_order ASC
+    </select>
+
 </mapper> 

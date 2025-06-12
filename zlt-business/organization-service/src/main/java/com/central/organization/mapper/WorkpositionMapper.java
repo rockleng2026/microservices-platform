@@ -50,4 +50,13 @@ public interface WorkpositionMapper extends BaseMapper<Workposition> {
      * @return 管理岗位列表
      */
     List<Workposition> selectManagerPositions(@Param("tenantId") String tenantId);
+
+    /**
+     * 根据岗位ID查询分管岗位列表（从workposition_manage_dept表获取）
+     * 
+     * @param positionId 岗位ID
+     * @param tenantId 租户ID
+     * @return 分管岗位列表
+     */
+    List<Workposition> selectSubPositionsByPositionId(@Param("positionId") Long positionId, @Param("tenantId") String tenantId);
 } 

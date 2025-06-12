@@ -1,0 +1,137 @@
+请求URL: {{BASE_URL}}/api-portal/users/current
+请求方法：GET
+请求关键头部: 
+	Authorization--token信息
+	x-tenant-header--租户信息
+请求参数: 无
+正确响应：
+{
+    "datas": {
+        "id": 1,
+        "createTime": "2025-06-10T06:58:46.000+00:00",
+        "updateTime": "2025-06-10T06:58:46.000+00:00",
+        "username": "admin",
+        "password": "{bcrypt}$2a$10$TtxVJn2ut/IlJqbmkkuR0uoYoqeQX0wVF2t5MDrh.OiACzDymTuxi",
+        "nickname": "张总",
+        "headImgUrl": null,
+        "mobile": "13800001001",
+        "sex": 1,
+        "enabled": true,
+        "type": "portal",
+        "openId": null,
+        "creatorId": null,
+        "roles": null,
+        "roleId": null,
+        "oldPassword": null,
+        "newPassword": null,
+        "permissions": null,
+        "employeeId": 1,
+        "tenantId": "default",
+        "company": null,
+        "employee": {
+            "id": "1",
+            "empNo": "EMP20240001",
+            "name": "张伟强",
+            "nameEn": "Zhang Weiqiang",
+            "birthDate": "1975-03-14",
+            "gender": 1,
+            "idCard": "110101197503156789",
+            "mobile": "13800001001",
+            "email": "zhangwq@portal.com",
+            "departmentId": "1",
+            "departmentName": "Portal科技公司",
+            "positionId": "1",
+            "positionName": "总经理",
+            "gradeId": "10",
+            "employmentType": 1,
+            "employmentStatus": 1,
+            "entryDate": "2019-12-31",
+            "education": "硕士",
+            "delflag": 0,
+            "leaveDate": null,
+            "leaveReason": null,
+            "tenantId": "default",
+            "createdAt": "2025-06-10 14:58:46",
+            "updatedAt": "2025-06-10 14:58:46",
+            "createdBy": null,
+            "updatedBy": null,
+            "probation": false,
+            "employmentTypeName": "正式员工",
+            "employmentStatusName": "在职",
+            "genderName": "男",
+            "active": true
+        },
+        "positions": [
+            {
+                "id": 1,
+                "name": "总经理",
+                "shortName": "总经理",
+                "departmentId": 1,
+                "positionLevel": 1,
+                "jobDescription": "负责公司整体战略规划和经营管理",
+                "requirements": "10年以上管理经验，具备战略思维",
+                "salaryRange": "面议",
+                "maxEmployees": 1,
+                "menuIds": "1,2,3,4,5,6,7,8,9,10",
+                "menuFuncIds": "1,2,3,4,5,6,7,8,9,10,11,12,13",
+                "isManager": true,
+                "isDirector": true,
+                "sortOrder": 1,
+                "tenantId": "default",
+                "createdAt": "2025-06-10 14:58:46",
+                "updatedAt": "2025-06-10 14:58:46",
+                "createdBy": null,
+                "updatedBy": null
+            }
+        ],
+        "currentPosition": {
+            "id": 1,
+            "name": "总经理",
+            "shortName": "总经理",
+            "departmentId": 1,
+            "positionLevel": 1,
+            "jobDescription": "负责公司整体战略规划和经营管理",
+            "requirements": "10年以上管理经验，具备战略思维",
+            "salaryRange": "面议",
+            "maxEmployees": 1,
+            "menuIds": "1,2,3,4,5,6,7,8,9,10",
+            "menuFuncIds": "1,2,3,4,5,6,7,8,9,10,11,12,13",
+            "isManager": true,
+            "isDirector": true,
+            "sortOrder": 1,
+            "tenantId": "default",
+            "createdAt": "2025-06-10 14:58:46",
+            "updatedAt": "2025-06-10 14:58:46",
+            "createdBy": null,
+            "updatedBy": null
+        },        
+        "personalConfig": {
+            "id": 1,
+            "userId": 1,
+            "defaultPositionId": 1,
+            "theme": "light",
+            "layoutConfig": "{\"sidebarCollapsed\": false, \"showBreadcrumb\": true}",
+            "language": "zh-CN",
+            "timezone": "Asia/Shanghai",
+            "homePage": "/dashboard",
+            "notificationConfig": "{\"email\": true, \"push\": true, \"sms\": false}",
+            "extendConfig": "{}",
+            "enabled": true,
+            "tenantId": "default",
+            "createdAt": "2025-06-11 23:19:13",
+            "updatedAt": "2025-06-11 23:19:13",
+            "createdBy": 1,
+            "updatedBy": 1
+        },
+        "tenant": {
+            "code": "PORTAL",
+            "name": "Portal企业",
+            "id": "default"
+        },
+        "del": false
+    },
+    "resp_code": 0,
+    "resp_msg": "获取用户信息成功"
+}
+错误响应：
+	暂无

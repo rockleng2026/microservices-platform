@@ -201,8 +201,12 @@ public class PortalUserServiceImpl implements PortalUserService {
                 }
             }
             
-            // TODO: 获取副岗位（后续实现多岗位关联表）
-            // 暂时只返回主岗位
+            // 获取分管岗位（实现多岗位关联表）
+            if (employee.getPositionId() != null) {
+                List<Workposition> subPositions = workpositionMapper.selectSubPositionsByPositionId(employee.getPositionId(), user.getTenantId() != null ? user.getTenantId() : "default");
+                positions.addAll(subPositions);
+            }
+
 
 
             return positions;

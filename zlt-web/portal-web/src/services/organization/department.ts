@@ -32,10 +32,12 @@ export interface CreateDepartmentParams {
   address?: string;
   description?: string;
   status: number;
+  operationType?: 'add' | 'edit'; // 操作类型标识
 }
 
 export interface UpdateDepartmentParams extends CreateDepartmentParams {
   id: number;
+  operationType: 'edit'; // 编辑操作必须有此标识
 }
 
 export interface ExportDepartmentsParams {
@@ -45,7 +47,7 @@ export interface ExportDepartmentsParams {
 /**
  * 获取部门树
  */
-export async function getDepartmentTree(params: DepartmentTreeParams) {
+export async function getDepartmentTree(params: DepartmentTreeParams = {}) {
   return request(`${API_PREFIX}/tree`, {
     method: 'GET',
     params,
@@ -65,7 +67,7 @@ export async function getDepartmentPage(params: DepartmentPageParams) {
 /**
  * 获取部门详情
  */
-export async function getDepartmentDetail(id: number) {
+export async function getDepartmentDetail(id: number | string) {
   return request(`${API_PREFIX}/${id}`, {
     method: 'GET',
   });
@@ -75,7 +77,7 @@ export async function getDepartmentDetail(id: number) {
  * 创建部门
  */
 export async function createDepartment(data: CreateDepartmentParams) {
-  return request(`${API_PREFIX}`, {
+  return request(`${API_PREFIX}/save`, {
     method: 'POST',
     data,
   });
@@ -84,9 +86,9 @@ export async function createDepartment(data: CreateDepartmentParams) {
 /**
  * 更新部门
  */
-export async function updateDepartment(id: number, data: Partial<CreateDepartmentParams>) {
-  return request(`${API_PREFIX}/${id}`, {
-    method: 'PUT',
+export async function updateDepartment(data: UpdateDepartmentParams) {
+  return request(`${API_PREFIX}/save`, {
+    method: 'POST',
     data,
   });
 }
@@ -94,7 +96,7 @@ export async function updateDepartment(id: number, data: Partial<CreateDepartmen
 /**
  * 删除部门
  */
-export async function deleteDepartment(id: number) {
+export async function deleteDepartment(id: number | string) {
   return request(`${API_PREFIX}/${id}`, {
     method: 'DELETE',
   });
@@ -103,7 +105,7 @@ export async function deleteDepartment(id: number) {
 /**
  * 批量删除部门
  */
-export async function deleteDepartments(ids: number[]) {
+export async function deleteDepartments(ids: (number | string)[]) {
   return request(`${API_PREFIX}/batch`, {
     method: 'DELETE',
     data: ids,
@@ -113,7 +115,7 @@ export async function deleteDepartments(ids: number[]) {
 /**
  * 更新部门状态
  */
-export async function updateDepartmentStatus(id: number, status: number) {
+export async function updateDepartmentStatus(id: number | string, status: number) {
   return request(`${API_PREFIX}/${id}/status`, {
     method: 'PUT',
     params: { status },
@@ -123,7 +125,7 @@ export async function updateDepartmentStatus(id: number, status: number) {
 /**
  * 移动部门
  */
-export async function moveDepartment(id: number, newParentId: number) {
+export async function moveDepartment(id: number | string, newParentId: number | string) {
   return request(`${API_PREFIX}/${id}/move`, {
     method: 'PUT',
     params: { newParentId },
@@ -133,17 +135,17 @@ export async function moveDepartment(id: number, newParentId: number) {
 /**
  * 复制部门结构
  */
-export async function copyDepartmentStructure(sourceId: number, targetParentId: number, includeEmployees: boolean) {
+export async function copyDepartmentStructure(sourceId: number | string, targetParentId: number | string) {
   return request(`${API_PREFIX}/${sourceId}/copy`, {
     method: 'POST',
-    params: { targetParentId, includeEmployees },
+    params: { targetParentId },
   });
 }
 
 /**
  * 获取部门统计信息
  */
-export async function getDepartmentStatistics(id: number) {
+export async function getDepartmentStatistics(id: number | string) {
   return request(`${API_PREFIX}/${id}/statistics`, {
     method: 'GET',
   });
@@ -152,7 +154,7 @@ export async function getDepartmentStatistics(id: number) {
 /**
  * 获取部门路径
  */
-export async function getDepartmentPath(id: number) {
+export async function getDepartmentPath(id: number | string) {
   return request(`${API_PREFIX}/${id}/path`, {
     method: 'GET',
   });
@@ -170,10 +172,20 @@ export async function getUserManageableDepartments() {
 /**
  * 检查部门编号可用性
  */
-export async function checkDepartmentNoAvailable(depNo: string, excludeId?: number) {
+export async function checkDepartmentNoAvailable(depNo: string, excludeId?: number | string) {
   return request(`${API_PREFIX}/check-depno`, {
     method: 'GET',
     params: { depNo, excludeId },
+  });
+}
+
+/**
+ * 检查部门名称是否可用
+ */
+export async function checkDepartmentNameAvailable(name: string, parentId: number | string, excludeId?: number | string) {
+  return request(`${API_PREFIX}/check-name`, {
+    method: 'GET',
+    params: { name, parentId, excludeId },
   });
 }
 
@@ -184,14 +196,13 @@ export async function importDepartments(data: FormData) {
   return request(`${API_PREFIX}/import`, {
     method: 'POST',
     data,
-    requestType: 'form',
   });
 }
 
 /**
  * 导出部门数据
  */
-export async function exportDepartments(params: ExportDepartmentsParams) {
+export async function exportDepartments(params: ExportDepartmentsParams = {}) {
   return request(`${API_PREFIX}/export`, {
     method: 'GET',
     params,
@@ -199,9 +210,9 @@ export async function exportDepartments(params: ExportDepartmentsParams) {
 }
 
 /**
- * 验证部门层级
+ * 验证部门级别
  */
-export async function validateDepartmentLevel(parentId?: number, gradeId?: number) {
+export async function validateDepartmentLevel(parentId?: number | string, gradeId?: number) {
   return request(`${API_PREFIX}/validate-level`, {
     method: 'GET',
     params: { parentId, gradeId },

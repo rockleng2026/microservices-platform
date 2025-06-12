@@ -90,4 +90,11 @@ public class DepartmentSaveDTO {
      * 状态(1启用,0禁用)
      */
     private Integer status = 1;
+    
+    /**
+     * 操作类型标识(前端传递，用于区分新增和编辑操作)
+     * add: 新增操作
+     * edit: 编辑操作
+     */
+    private String operationType;
 } 

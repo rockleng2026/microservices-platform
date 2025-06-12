@@ -14,9 +14,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 部门管理Controller
@@ -65,6 +67,10 @@ public class DepartmentController {
     @PostMapping("/save")
     public Result<Department> saveDepartment(@Valid @RequestBody DepartmentSaveDTO saveDTO) {
         try {
+            // 记录请求信息
+            log.info("接收到部门保存请求 - 操作类型: {}, ID: {}, 部门名称: {}, 部门编号: {}", 
+                     saveDTO.getOperationType(), saveDTO.getId(), saveDTO.getName(), saveDTO.getDepNo());
+            
             // 处理ID转换
             if (saveDTO.getId() != null) {
                 saveDTO.setId(IdUtils.toIdLong(IdUtils.toIdString(saveDTO.getId())));
@@ -77,9 +83,12 @@ public class DepartmentController {
             }
             
             Department department = departmentService.saveDepartment(saveDTO);
+            
+            log.info("部门保存成功 - ID: {}, 名称: {}", department.getId(), department.getName());
             return Result.succeed(department);
         } catch (Exception e) {
-            log.error("保存部门失败", e);
+            log.error("保存部门失败 - 操作类型: {}, ID: {}, 错误: {}", 
+                      saveDTO.getOperationType(), saveDTO.getId(), e.getMessage(), e);
             return Result.failed("保存部门失败：" + e.getMessage());
         }
     }
@@ -198,9 +207,9 @@ public class DepartmentController {
             @Parameter(description = "部门编号") @RequestParam String depNo,
             @Parameter(description = "排除的部门ID") @RequestParam(required = false) String excludeId) {
         try {
-            Long excludeIdLong = IdUtils.toIdLong(excludeId);
+            Long excludeIdLong = excludeId != null ? IdUtils.toIdLong(excludeId) : null;
             Boolean exists = departmentService.existsByDepNo(depNo, excludeIdLong);
-            return Result.succeed(exists);
+            return Result.succeed(!exists); // 返回是否可用（即不存在）
         } catch (Exception e) {
             log.error("检查部门编号失败", e);
             return Result.failed("检查部门编号失败：" + e.getMessage());
@@ -215,9 +224,9 @@ public class DepartmentController {
             @Parameter(description = "排除的部门ID") @RequestParam(required = false) String excludeId) {
         try {
             Long parentIdLong = IdUtils.toIdLong(parentId);
-            Long excludeIdLong = IdUtils.toIdLong(excludeId);
+            Long excludeIdLong = excludeId != null ? IdUtils.toIdLong(excludeId) : null;
             Boolean exists = departmentService.existsByNameAndParentId(name, parentIdLong, excludeIdLong);
-            return Result.succeed(exists);
+            return Result.succeed(!exists); // 返回是否可用（即不存在）
         } catch (Exception e) {
             log.error("检查部门名称失败", e);
             return Result.failed("检查部门名称失败：" + e.getMessage());
@@ -264,6 +273,66 @@ public class DepartmentController {
         } catch (Exception e) {
             log.error("获取部门层级失败", e);
             return Result.failed("获取部门层级失败：" + e.getMessage());
+        }
+    }
+    
+    @Operation(summary = "批量导入部门", description = "通过Excel文件批量导入部门数据")
+    @PostMapping("/import")
+    public Result<Map<String, Object>> importDepartments(
+            @Parameter(description = "Excel文件") @RequestParam("file") MultipartFile file) {
+        try {
+            // TODO: 实现导入功能
+            Map<String, Object> result = Map.of(
+                    "success", true,
+                    "message", "导入功能开发中",
+                    "total", 0,
+                    "successCount", 0,
+                    "failCount", 0
+            );
+            return Result.succeed(result);
+        } catch (Exception e) {
+            log.error("导入部门失败", e);
+            return Result.failed("导入部门失败：" + e.getMessage());
+        }
+    }
+    
+    @Operation(summary = "导出部门数据", description = "导出部门数据到Excel文件")
+    @GetMapping("/export")
+    public Result<String> exportDepartments(DepartmentQueryDTO query) {
+        try {
+            // TODO: 实现导出功能
+            return Result.succeed("导出功能开发中");
+        } catch (Exception e) {
+            log.error("导出部门失败", e);
+            return Result.failed("导出部门失败：" + e.getMessage());
+        }
+    }
+    
+    @Operation(summary = "获取可管理的部门", description = "获取当前用户可管理的部门列表")
+    @GetMapping("/manageable")
+    public Result<List<DepartmentTreeVO>> getUserManageableDepartments() {
+        try {
+            // TODO: 根据用户权限返回可管理的部门
+            DepartmentQueryDTO query = new DepartmentQueryDTO();
+            List<DepartmentTreeVO> tree = departmentService.getDepartmentTree(query);
+            return Result.succeed(tree);
+        } catch (Exception e) {
+            log.error("获取可管理部门失败", e);
+            return Result.failed("获取可管理部门失败：" + e.getMessage());
+        }
+    }
+    
+    @Operation(summary = "验证部门级别", description = "验证部门级别设置是否合理")
+    @GetMapping("/validate-level")
+    public Result<Boolean> validateDepartmentLevel(
+            @Parameter(description = "父部门ID") @RequestParam(required = false) String parentId,
+            @Parameter(description = "部门等级") @RequestParam(required = false) Integer gradeId) {
+        try {
+            // TODO: 实现级别验证逻辑
+            return Result.succeed(true);
+        } catch (Exception e) {
+            log.error("验证部门级别失败", e);
+            return Result.failed("验证部门级别失败：" + e.getMessage());
         }
     }
 } 

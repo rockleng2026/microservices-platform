@@ -38,19 +38,19 @@ const DepartmentDetail: React.FC<DepartmentDetailProps> = ({ department, onRefre
           </Space>
         </Descriptions.Item>
         
-        <Descriptions.Item label="部门编号">
+        <Descriptions.Item label="部门编号" span={1}>
           {department.depNo || '-'}
         </Descriptions.Item>
         
-        <Descriptions.Item label="部门等级">
+        <Descriptions.Item label="部门等级" span={1}>
           {department.gradeName || '-'}
         </Descriptions.Item>
         
-        <Descriptions.Item label="上级部门">
+        <Descriptions.Item label="上级部门" span={1}>
           {department.parentName || '无'}
         </Descriptions.Item>
         
-        <Descriptions.Item label="部门主管">
+        <Descriptions.Item label="部门主管" span={1}>
           {department.directorName ? (
             <Space>
               <Avatar size="small" icon={<UserOutlined />} />
@@ -61,15 +61,15 @@ const DepartmentDetail: React.FC<DepartmentDetailProps> = ({ department, onRefre
           )}
         </Descriptions.Item>
         
-        <Descriptions.Item label="员工数量">
+        <Descriptions.Item label="员工数量" span={1}>
           <Tag color="blue">{department.employeeCount || 0}人</Tag>
         </Descriptions.Item>
         
-        <Descriptions.Item label="岗位数量">
+        <Descriptions.Item label="岗位数量" span={1}>
           <Tag color="cyan">{department.positionCount || 0}个</Tag>
         </Descriptions.Item>
         
-        <Descriptions.Item label="联系电话">
+        <Descriptions.Item label="联系电话" span={1}>
           {department.tel ? (
             <Space>
               <PhoneOutlined style={{ color: '#1890ff' }} />
@@ -80,7 +80,7 @@ const DepartmentDetail: React.FC<DepartmentDetailProps> = ({ department, onRefre
           )}
         </Descriptions.Item>
         
-        <Descriptions.Item label="办公地址" span={2}>
+        <Descriptions.Item label="办公地址" span={1}>
           {department.address ? (
             <Space>
               <EnvironmentOutlined style={{ color: '#52c41a' }} />
@@ -99,11 +99,11 @@ const DepartmentDetail: React.FC<DepartmentDetailProps> = ({ department, onRefre
           {department.description || '-'}
         </Descriptions.Item>
         
-        <Descriptions.Item label="创建时间">
+        <Descriptions.Item label="创建时间" span={1}>
           {department.createdAt || '-'}
         </Descriptions.Item>
         
-        <Descriptions.Item label="更新时间">
+        <Descriptions.Item label="更新时间" span={1}>
           {department.updatedAt || '-'}
         </Descriptions.Item>
       </Descriptions>

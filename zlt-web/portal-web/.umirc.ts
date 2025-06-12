@@ -57,13 +57,19 @@ export default defineConfig({
     },
   ],
 
-  // 代理配置
+  // 基础路径配置 - 通过网关访问 (仅在生产环境使用)
+  base: process.env.NODE_ENV === 'production' ? '/api-portal/' : '/',
+  publicPath: process.env.NODE_ENV === 'production' ? '/api-portal/' : '/',
+
+  // 代理配置 - 开发环境所有API请求代理到网关
   proxy: {
     '/api': {
-      target: 'http://localhost:9900',
+      target: 'http://127.0.0.1:9900',
       changeOrigin: true,
+      secure: false,
+      logLevel: 'debug',
       pathRewrite: {
-        '^/api': '/api',
+        '^/api': '/api-portal/api',
       },
     },
   },
@@ -85,7 +91,7 @@ export default defineConfig({
 
   // 构建配置
   define: {
-    API_BASE_URL: process.env.NODE_ENV === 'development' ? 'http://localhost:9900' : '',
+    API_BASE_URL: process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:9900' : '',
   },
 
 }); 

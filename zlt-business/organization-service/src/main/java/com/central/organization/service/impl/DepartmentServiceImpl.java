@@ -370,10 +370,31 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
             throw new RuntimeException("部门名称不能为空");
         }
         
+        // 根据操作类型和ID判断是新增还是编辑
+        boolean isEdit = saveDTO.getId() != null || "edit".equals(saveDTO.getOperationType());
+        
+        log.info("验证部门数据 - 操作类型: {}, ID: {}, 是否编辑: {}", 
+                 saveDTO.getOperationType(), saveDTO.getId(), isEdit);
+        
         // 检查部门编号是否重复
-        if (StrUtil.isNotBlank(saveDTO.getDepNo()) && 
-            existsByDepNo(saveDTO.getDepNo(), saveDTO.getId())) {
-            throw new RuntimeException("部门编号已存在");
+        if (StrUtil.isNotBlank(saveDTO.getDepNo())) {
+            if (isEdit) {
+                // 编辑操作：检查除当前部门外是否有相同编号
+                if (existsByDepNo(saveDTO.getDepNo(), saveDTO.getId())) {
+                    log.warn("编辑部门时部门编号重复 - 编号: {}, 排除ID: {}", 
+                             saveDTO.getDepNo(), saveDTO.getId());
+                    throw new RuntimeException("部门编号已存在");
+                }
+                log.info("编辑部门编号验证通过 - 编号: {}, 排除ID: {}", 
+                         saveDTO.getDepNo(), saveDTO.getId());
+            } else {
+                // 新增操作：检查是否有任何部门使用此编号
+                if (existsByDepNo(saveDTO.getDepNo(), null)) {
+                    log.warn("新增部门时部门编号重复 - 编号: {}", saveDTO.getDepNo());
+                    throw new RuntimeException("部门编号已存在");
+                }
+                log.info("新增部门编号验证通过 - 编号: {}", saveDTO.getDepNo());
+            }
         }
         
         // 检查同级部门名称是否重复

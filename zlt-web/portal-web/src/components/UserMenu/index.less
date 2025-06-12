@@ -1,0 +1,91 @@
+.user-menu {
+  display: flex;
+  align-items: center;
+
+  &.loading {
+    opacity: 0.6;
+  }
+
+  &.error {
+    color: #ff4d4f;
+  }
+
+  .user-info {
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: #f5f5f5;
+    }
+
+    .user-details {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+      margin: 0 8px;
+
+      .user-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: #333;
+        line-height: 1.2;
+        margin-bottom: 2px;
+      }
+
+      .user-position {
+        font-size: 12px;
+        color: #999;
+        line-height: 1.2;
+      }
+    }
+  }
+}
+
+// 下拉菜单样式
+:global {
+  .ant-dropdown-menu {
+    .ant-dropdown-menu-item {
+      padding: 8px 16px;
+
+      &:hover {
+        background: #f5f5f5;
+      }
+
+      .anticon {
+        margin-right: 8px;
+        color: #666;
+      }
+    }
+  }
+}
+
+// 移动端适配
+@media (max-width: 768px) {
+  .user-menu {
+    .user-info {
+      .user-details {
+        display: none; // 移动端隐藏用户详细信息
+      }
+    }
+  }
+}
+
+// 紧凑模式
+.user-menu-compact {
+  .user-info {
+    padding: 2px 4px;
+
+    .user-details {
+      margin: 0 4px;
+
+      .user-name {
+        font-size: 13px;
+      }
+
+      .user-position {
+        font-size: 11px;
+      }
+    }
+  }
+} 

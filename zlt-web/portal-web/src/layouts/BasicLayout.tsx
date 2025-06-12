@@ -1,59 +1,26 @@
-import React from 'react';
-import { Layout, Menu, Button, Input, Badge } from 'antd';
-import { Outlet, Link, useLocation } from 'umi';
+import React, { useState } from 'react';
+import { Layout, Button, Input, Badge } from 'antd';
+import { Outlet, useLocation } from 'umi';
 import { 
-  DashboardOutlined, 
-  TeamOutlined, 
-  CustomerServiceOutlined, 
   SearchOutlined,
   BellOutlined,
   MenuOutlined
 } from '@ant-design/icons';
-import LogoutConfirm from '../components/LogoutConfirm';
+import UserMenu from '../components/UserMenu';
+import DynamicMenu from '../components/DynamicMenu';
+import { MenuPermission } from '../services/portal';
 import './BasicLayout.less';
 
 const { Header, Sider, Content, Footer } = Layout;
 
 const BasicLayout: React.FC = () => {
   const location = useLocation();
+  const [menus, setMenus] = useState<MenuPermission[]>([]);
 
-  const menuItems = [
-    {
-      key: '/dashboard',
-      icon: <DashboardOutlined />,
-      label: <Link to="/dashboard">工作台</Link>,
-    },
-    {
-      key: '/organization',
-      icon: <TeamOutlined />,
-      label: '组织架构',
-      children: [
-        {
-          key: '/organization/departments',
-          label: <Link to="/organization/departments">部门管理</Link>,
-        },
-        {
-          key: '/organization/employees',
-          label: <Link to="/organization/employees">员工管理</Link>,
-        },
-        {
-          key: '/organization/positions',
-          label: <Link to="/organization/positions">岗位管理</Link>,
-        },
-      ],
-    },
-    {
-      key: '/crm',
-      icon: <CustomerServiceOutlined />,
-      label: 'CRM管理',
-      children: [
-        {
-          key: '/crm/customers',
-          label: <Link to="/crm/customers">客户管理</Link>,
-        },
-      ],
-    },
-  ];
+  // 处理菜单更新
+  const handleMenuUpdate = (newMenus: MenuPermission[]) => {
+    setMenus(newMenus);
+  };
 
   // 获取当前页面标题
   const getCurrentPageTitle = () => {
@@ -78,13 +45,10 @@ const BasicLayout: React.FC = () => {
           </div>
         </div>
         <div className="sidebar-menu">
-          <Menu
+          <DynamicMenu
+            menus={menus}
             theme="light"
             mode="inline"
-            selectedKeys={[location.pathname]}
-            defaultOpenKeys={['/organization', '/crm']}
-            items={menuItems}
-            style={{ border: 'none' }}
           />
         </div>
       </aside>
@@ -120,21 +84,7 @@ const BasicLayout: React.FC = () => {
             />
           </Badge>
           
-          <div className="user-menu">
-            <div className="user-avatar">管</div>
-            <span className="user-name">管理员</span>
-            <LogoutConfirm 
-              buttonType="text"
-              buttonText="退出"
-              className="logout-btn"
-              onLogoutSuccess={() => {
-                console.log('用户已成功退出登录');
-              }}
-              onLogoutError={(error) => {
-                console.error('退出登录时发生错误:', error);
-              }}
-            />
-          </div>
+          <UserMenu onMenuUpdate={handleMenuUpdate} />
         </div>
       </header>
 

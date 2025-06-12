@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.central.organization.utils.IdUtils;
+import com.central.organization.annotation.LongToString;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -28,7 +28,7 @@ public class Department {
      * 部门ID
      */
     @TableId(type = IdType.ASSIGN_ID)
-    @IdUtils.LongToString
+    @LongToString
     private Long id;
     
     /**
@@ -39,13 +39,13 @@ public class Department {
     /**
      * 部门主管ID
      */
-    @IdUtils.LongToString
+    @LongToString
     private Long directorId;
     
     /**
      * 父部门ID
      */
-    @IdUtils.LongToString
+    @LongToString
     private Long parentId;
     
     /**
@@ -123,13 +123,13 @@ public class Department {
     /**
      * 创建人
      */
-    @IdUtils.LongToString
+    @LongToString
     private Long createdBy;
     
     /**
      * 更新人
      */
-    @IdUtils.LongToString
+    @LongToString
     private Long updatedBy;
     
     // 非数据库字段 - 用于树形结构展示

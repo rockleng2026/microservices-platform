@@ -435,10 +435,10 @@ const DepartmentManagement: React.FC = () => {
         
         // 根据modalType设置正确的操作类型
         if (modalType === 'edit' && selectedDept) {
-          // 编辑操作
-          submitData.id = parseInt(selectedDept.id);
+          // 编辑操作 - 保持ID为字符串格式避免精度丢失
+          submitData.id = selectedDept.id; // 直接使用字符串ID，不转换为数字
           submitData.operationType = 'edit'; // 明确标识这是编辑操作
-          console.log('编辑部门，传递ID:', submitData.id, '操作类型:', submitData.operationType);
+          console.log('编辑部门，传递ID:', submitData.id, '(字符串格式)', '操作类型:', submitData.operationType);
         } else {
           // 新增或复制操作都视为新增
           submitData.operationType = 'add'; // 明确标识这是新增操作

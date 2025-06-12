@@ -63,6 +63,18 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
             // 复制属性
             BeanUtil.copyProperties(saveDTO, department, "id", "createdAt", "createdBy", "tenantId");
             department.setUpdatedAt(LocalDateTime.now());
+            
+            // 确保gradeId字段正确设置
+            if (saveDTO.getGradeid() != null) {
+                department.setGradeId(saveDTO.getGradeid());
+                log.info("编辑部门更新gradeId: {} -> {}", department.getName(), saveDTO.getGradeid());
+            } else if (department.getGradeId() == null) {
+                // 如果前端没有传递gradeId且数据库中也为空，则计算设置
+                Integer calculatedGrade = calculateDepartmentGrade(department.getParentId());
+                department.setGradeId(calculatedGrade);
+                log.info("编辑部门补充gradeId: {} -> {}", department.getName(), calculatedGrade);
+            }
+            
             // TODO: 设置更新人
             // department.setUpdatedBy(getCurrentUserId());
         } else {
@@ -84,7 +96,9 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
             
             // 设置部门等级
             if (department.getGradeId() == null) {
-                department.setGradeId(calculateDepartmentGrade(department.getParentId()));
+                Integer calculatedGrade = calculateDepartmentGrade(department.getParentId());
+                department.setGradeId(calculatedGrade);
+                log.info("为新增部门设置gradeId: {} -> {}", department.getName(), calculatedGrade);
             }
         }
         
@@ -334,11 +348,20 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         DepartmentTreeVO vo = new DepartmentTreeVO();
         BeanUtil.copyProperties(department, vo);
         
+        // 计算部门层级
+        Integer level = getDepartmentLevel(department.getId());
+        
         // 设置特殊属性
         vo.setIsFiliale("1".equals(department.getFiiale()));
         vo.setIsHalfLevel(department.isHalfLevel());
-        vo.setLevel(getDepartmentLevel(department.getId()));
+        vo.setLevel(level);
         vo.setDisabled(!department.isEnabled());
+        
+        // 修复gradeId字段：如果数据库中gradeId为空，使用计算出的level值
+        if (vo.getGradeid() == null && level != null) {
+            vo.setGradeid(level);
+            log.debug("修复部门{}的gradeId字段：从null设置为{}", department.getName(), level);
+        }
         
         return vo;
     }
@@ -370,35 +393,86 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
             throw new RuntimeException("部门名称不能为空");
         }
         
-        // 根据操作类型和ID判断是新增还是编辑
-        boolean isEdit = saveDTO.getId() != null || "edit".equals(saveDTO.getOperationType());
+        // 精确判断是新增还是编辑操作
+        // 1. 优先使用operationType字段判断
+        // 2. 其次使用ID是否存在判断
+        boolean isEdit = false;
+        Long excludeId = null;
         
-        log.info("验证部门数据 - 操作类型: {}, ID: {}, 是否编辑: {}", 
-                 saveDTO.getOperationType(), saveDTO.getId(), isEdit);
+        if ("edit".equals(saveDTO.getOperationType())) {
+            // 明确标识为编辑操作
+            isEdit = true;
+            excludeId = saveDTO.getId();
+            if (excludeId == null) {
+                log.warn("编辑操作但未提供部门ID，可能存在数据异常");
+            }
+        } else if ("add".equals(saveDTO.getOperationType())) {
+            // 明确标识为新增操作
+            isEdit = false;
+            excludeId = null;
+        } else {
+            // 未明确标识操作类型，根据ID判断
+            if (saveDTO.getId() != null) {
+                isEdit = true;
+                excludeId = saveDTO.getId();
+                log.info("未标识操作类型，根据ID判断为编辑操作");
+            } else {
+                isEdit = false;
+                excludeId = null;
+                log.info("未标识操作类型，根据ID判断为新增操作");
+            }
+        }
+        
+        log.info("验证部门数据 - 操作类型: {}, ID: {}, 判断结果: {}, 排除ID: {}", 
+                 saveDTO.getOperationType(), saveDTO.getId(), 
+                 isEdit ? "编辑" : "新增", excludeId);
         
         // 检查部门编号是否重复
         if (StrUtil.isNotBlank(saveDTO.getDepNo())) {
-            if (isEdit) {
-                // 编辑操作：检查除当前部门外是否有相同编号
-                if (existsByDepNo(saveDTO.getDepNo(), saveDTO.getId())) {
-                    log.warn("编辑部门时部门编号重复 - 编号: {}, 排除ID: {}", 
-                             saveDTO.getDepNo(), saveDTO.getId());
+            // 增加详细的调试信息
+            log.info("开始检查部门编号重复 - 编号: {}, 操作类型: {}, 排除ID: {}", 
+                     saveDTO.getDepNo(), isEdit ? "编辑" : "新增", excludeId);
+            
+            boolean depNoExists = existsByDepNo(saveDTO.getDepNo(), excludeId);
+            
+            log.info("部门编号重复检查结果 - 编号: {}, 排除ID: {}, 是否存在: {}", 
+                     saveDTO.getDepNo(), excludeId, depNoExists);
+            
+            if (depNoExists) {
+                if (isEdit) {
+                    log.error("编辑部门时部门编号重复 - 编号: {}, 当前部门ID: {}, 排除ID: {}, 检查结果: 仍然重复", 
+                             saveDTO.getDepNo(), saveDTO.getId(), excludeId, depNoExists);
+                    
+                    // 额外查询：看看到底哪个部门使用了这个编号
+                    try {
+                        List<Department> conflictDepts = list(new LambdaQueryWrapper<Department>()
+                                .eq(Department::getDepNo, saveDTO.getDepNo())
+                                .eq(Department::getDelflag, 0));
+                        log.error("使用编号 {} 的部门列表: {}", saveDTO.getDepNo(), 
+                                 conflictDepts.stream()
+                                     .map(d -> String.format("ID=%s,名称=%s", d.getId(), d.getName()))
+                                     .collect(java.util.stream.Collectors.toList()));
+                    } catch (Exception e) {
+                        log.error("查询冲突部门信息失败", e);
+                    }
                     throw new RuntimeException("部门编号已存在");
-                }
-                log.info("编辑部门编号验证通过 - 编号: {}, 排除ID: {}", 
-                         saveDTO.getDepNo(), saveDTO.getId());
-            } else {
-                // 新增操作：检查是否有任何部门使用此编号
-                if (existsByDepNo(saveDTO.getDepNo(), null)) {
+                } else {
                     log.warn("新增部门时部门编号重复 - 编号: {}", saveDTO.getDepNo());
                     throw new RuntimeException("部门编号已存在");
                 }
-                log.info("新增部门编号验证通过 - 编号: {}", saveDTO.getDepNo());
+            } else {
+                if (isEdit) {
+                    log.info("编辑部门编号验证通过 - 编号: {}, 排除ID: {}", 
+                             saveDTO.getDepNo(), excludeId);
+                } else {
+                    log.info("新增部门编号验证通过 - 编号: {}", saveDTO.getDepNo());
+                }
             }
         }
         
         // 检查同级部门名称是否重复
-        if (existsByNameAndParentId(saveDTO.getName(), saveDTO.getParentId(), saveDTO.getId())) {
+        boolean nameExists = existsByNameAndParentId(saveDTO.getName(), saveDTO.getParentId(), excludeId);
+        if (nameExists) {
             throw new RuntimeException("同级部门中已存在相同名称的部门");
         }
         

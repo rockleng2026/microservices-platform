@@ -1,6 +1,6 @@
 package com.central.organization.model.dto;
 
-import com.central.organization.utils.IdUtils;
+import com.central.organization.annotation.LongToString;
 import lombok.Data;
 
 import jakarta.validation.constraints.NotBlank;
@@ -19,7 +19,7 @@ public class DepartmentSaveDTO {
     /**
      * 部门ID（新增时为空，修改时必填）
      */
-    @IdUtils.LongToString
+    @LongToString
     private Long id;
     
     /**
@@ -37,13 +37,13 @@ public class DepartmentSaveDTO {
      * 父部门ID（0表示根部门）
      */
     @NotNull(message = "父部门ID不能为空")
-    @IdUtils.LongToString
+    @LongToString
     private Long parentId;
     
     /**
      * 部门主管ID
      */
-    @IdUtils.LongToString
+    @LongToString
     private Long directorId;
     
     /**

@@ -40,7 +40,21 @@ public class DepartmentController {
     @GetMapping("/tree")
     public Result<List<DepartmentTreeVO>> getDepartmentTree(DepartmentQueryDTO query) {
         try {
+            log.info("获取部门树请求 - 查询参数: {}", query);
+            
             List<DepartmentTreeVO> tree = departmentService.getDepartmentTree(query);
+            
+            // 记录ID转换信息，确保精度不丢失
+            if (tree != null && !tree.isEmpty()) {
+                log.info("部门树查询成功 - 返回 {} 个顶级部门", tree.size());
+                tree.forEach(dept -> {
+                    log.debug("部门ID转换检查 - 原始ID: {}, 序列化后预期: {}", 
+                             dept.getId(), IdUtils.toIdString(dept.getId()));
+                });
+            } else {
+                log.info("部门树查询结果为空");
+            }
+            
             return Result.succeed(tree);
         } catch (Exception e) {
             log.error("获取部门树失败", e);
@@ -71,16 +85,16 @@ public class DepartmentController {
             log.info("接收到部门保存请求 - 操作类型: {}, ID: {}, 部门名称: {}, 部门编号: {}", 
                      saveDTO.getOperationType(), saveDTO.getId(), saveDTO.getName(), saveDTO.getDepNo());
             
-            // 处理ID转换
+            // 记录ID的原始值和类型
             if (saveDTO.getId() != null) {
-                saveDTO.setId(IdUtils.toIdLong(IdUtils.toIdString(saveDTO.getId())));
+                log.info("原始ID值: {}, 类型: {}", saveDTO.getId(), saveDTO.getId().getClass().getSimpleName());
             }
             if (saveDTO.getParentId() != null) {
-                saveDTO.setParentId(IdUtils.toIdLong(IdUtils.toIdString(saveDTO.getParentId())));
+                log.info("原始ParentID值: {}, 类型: {}", saveDTO.getParentId(), saveDTO.getParentId().getClass().getSimpleName());
             }
-            if (saveDTO.getDirectorId() != null) {
-                saveDTO.setDirectorId(IdUtils.toIdLong(IdUtils.toIdString(saveDTO.getDirectorId())));
-            }
+            
+            // 由于@LongToString注解已经处理序列化，这里不需要额外转换
+            // 直接使用接收到的值即可
             
             Department department = departmentService.saveDepartment(saveDTO);
             
@@ -98,14 +112,31 @@ public class DepartmentController {
     public Result<Department> getDepartmentById(
             @Parameter(description = "部门ID") @PathVariable String id) {
         try {
+            log.info("获取部门详情请求 - ID字符串: {}", id);
+            
             Long idLong = IdUtils.toIdLong(id);
+            log.info("ID转换结果 - 字符串: {} -> Long: {}", id, idLong);
+            
+            if (idLong == null) {
+                log.warn("无效的部门ID: {}", id);
+                return Result.failed("无效的部门ID");
+            }
+            
             Department department = departmentService.getDepartmentById(idLong);
             if (department == null) {
+                log.warn("部门不存在 - ID: {}", idLong);
                 return Result.failed("部门不存在");
             }
+            
+            log.info("部门详情查询成功 - ID: {}, 名称: {}", department.getId(), department.getName());
+            log.debug("返回的部门ID将序列化为字符串: {}", IdUtils.toIdString(department.getId()));
+            
             return Result.succeed(department);
+        } catch (NumberFormatException e) {
+            log.error("部门ID格式错误 - 输入: {}, 错误: {}", id, e.getMessage());
+            return Result.failed("部门ID格式错误");
         } catch (Exception e) {
-            log.error("获取部门详情失败", e);
+            log.error("获取部门详情失败 - ID: {}, 错误: {}", id, e.getMessage(), e);
             return Result.failed("获取部门详情失败：" + e.getMessage());
         }
     }

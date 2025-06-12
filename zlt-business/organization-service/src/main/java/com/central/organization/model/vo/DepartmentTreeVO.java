@@ -1,6 +1,6 @@
 package com.central.organization.model.vo;
 
-import com.central.organization.utils.IdUtils;
+import com.central.organization.annotation.LongToString;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
@@ -20,7 +20,7 @@ public class DepartmentTreeVO {
     /**
      * 部门ID
      */
-    @IdUtils.LongToString
+    @LongToString
     private Long id;
     
     /**
@@ -36,13 +36,13 @@ public class DepartmentTreeVO {
     /**
      * 父部门ID
      */
-    @IdUtils.LongToString
+    @LongToString
     private Long parentId;
     
     /**
      * 部门主管ID
      */
-    @IdUtils.LongToString
+    @LongToString
     private Long directorId;
     
     /**

@@ -53,7 +53,7 @@ public class DepartmentTreeVO {
     /**
      * 部门等级(1-7)
      */
-    private Integer gradeid;
+    private Integer gradeId;
     
     /**
      * 部门级别

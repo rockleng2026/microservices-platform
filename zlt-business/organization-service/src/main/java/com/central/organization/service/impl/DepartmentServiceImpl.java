@@ -65,9 +65,9 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
             department.setUpdatedAt(LocalDateTime.now());
             
             // 确保gradeId字段正确设置
-            if (saveDTO.getGradeid() != null) {
-                department.setGradeId(saveDTO.getGradeid());
-                log.info("编辑部门更新gradeId: {} -> {}", department.getName(), saveDTO.getGradeid());
+            if (saveDTO.getGradeId() != null) {
+                department.setGradeId(saveDTO.getGradeId());
+                log.info("编辑部门更新gradeId: {} -> {}", department.getName(), saveDTO.getGradeId());
             } else if (department.getGradeId() == null) {
                 // 如果前端没有传递gradeId且数据库中也为空，则计算设置
                 Integer calculatedGrade = calculateDepartmentGrade(department.getParentId());
@@ -128,10 +128,18 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Boolean deleteDepartment(Long id) {
-        Department department = getById(id);
-        if (department == null || department.isDeleted()) {
+        log.info("开始删除部门 - ID: {}", id);
+        
+        // 首先使用自定义mapper查询，确保租户隔离和软删除过滤
+        Department department = departmentMapper.selectById(id);
+        
+        if (department == null) {
+            log.warn("部门不存在或已被删除 - ID: {}", id);
             throw new RuntimeException("部门不存在");
         }
+        
+        log.info("找到部门 - ID: {}, 名称: {}, 删除标识: {}", 
+                 department.getId(), department.getName(), department.getDelflag());
         
         // 检查是否有子部门
         Integer childrenCount = departmentMapper.countChildrenByParentId(id);
@@ -146,7 +154,16 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         }
         
         // 软删除
-        return departmentMapper.softDelete(id) > 0;
+        int deleteResult = departmentMapper.softDelete(id);
+        log.info("软删除操作结果 - ID: {}, 影响行数: {}", id, deleteResult);
+        
+        if (deleteResult > 0) {
+            log.info("部门删除成功 - ID: {}, 名称: {}", id, department.getName());
+            return true;
+        } else {
+            log.error("部门删除失败 - ID: {}, 影响行数为0", id);
+            throw new RuntimeException("删除操作失败");
+        }
     }
     
     @Override
@@ -358,8 +375,8 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         vo.setDisabled(!department.isEnabled());
         
         // 修复gradeId字段：如果数据库中gradeId为空，使用计算出的level值
-        if (vo.getGradeid() == null && level != null) {
-            vo.setGradeid(level);
+        if (vo.getGradeId() == null && level != null) {
+            vo.setGradeId(level);
             log.debug("修复部门{}的gradeId字段：从null设置为{}", department.getName(), level);
         }
         

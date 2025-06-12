@@ -61,7 +61,7 @@ interface DepartmentNode extends DataNode {
   employeeCount: number;
   positionCount: number;
   status: number;
-  gradeid: number;
+  gradeId: number;
   gradeName: string;
   children?: DepartmentNode[];
 }
@@ -72,7 +72,7 @@ interface Department {
   parentId: number;
   depNo: string;
   directorId?: number;
-  gradeid: number;
+  gradeId: number;
   tel?: string;
   address?: string;
   description?: string;
@@ -139,7 +139,7 @@ const DepartmentManagement: React.FC = () => {
       employeeCount: dept.employeeCount || 0,
       positionCount: dept.positionCount || 0,
       status: dept.status,
-      gradeid: dept.gradeid,
+      gradeId: dept.gradeId,
       gradeName: dept.gradeName,
       children: dept.children ? convertToTreeNodes(dept.children) : undefined,
       isLeaf: !dept.children || dept.children.length === 0
@@ -220,18 +220,29 @@ const DepartmentManagement: React.FC = () => {
     }
     
     try {
+      console.log('开始删除部门 - ID:', selectedDept.id);
       const response = await deleteDepartment(selectedDept.id);
-      if (response.success) {
+      console.log('删除部门API响应:', response);
+      
+      // 适配API响应格式：{datas: boolean, resp_code: 0, resp_msg: ""}
+      const isSuccess = response && (
+        response.success === true || 
+        (response.resp_code !== undefined && response.resp_code === 0)
+      );
+      
+      if (isSuccess) {
         message.success('删除成功');
         await loadDepartmentTree();
         setSelectedDept(null);
         setSelectedKeys([]);
       } else {
-        message.error(response.message || '删除失败');
+        const errorMsg = response?.message || response?.resp_msg || '删除失败';
+        console.error('删除失败原因:', errorMsg);
+        message.error(errorMsg);
       }
     } catch (error) {
-      message.error('删除失败');
-      console.error('Delete department error:', error);
+      console.error('删除部门异常:', error);
+      message.error('删除失败：网络请求异常');
     }
   };
 

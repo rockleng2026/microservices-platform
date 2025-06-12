@@ -144,7 +144,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
         // 新增子部门时设置父部门
         form.setFieldsValue({
           parentId: parentDeptInfo.id,
-          gradeid: Math.min((parentDeptInfo.gradeid || 1) + 1, 7),
+          gradeId: Math.min((parentDeptInfo.gradeId || 1) + 1, 7),
           status: true,
         });
       } else {
@@ -193,7 +193,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
         layout="vertical"
         initialValues={{
           status: true,
-          gradeid: 1,
+          gradeId: 1,
         }}
       >
         {type === 'copy' && (
@@ -262,7 +262,7 @@ const DepartmentForm: React.FC<DepartmentFormProps> = ({
         </Form.Item>
 
         <Form.Item
-          name="gradeid"
+          name="gradeId"
           label="部门等级"
           rules={[{ required: true, message: '请选择部门等级' }]}
         >

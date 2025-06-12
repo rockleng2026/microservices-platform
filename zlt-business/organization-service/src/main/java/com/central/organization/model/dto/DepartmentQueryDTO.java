@@ -44,7 +44,7 @@ public class DepartmentQueryDTO {
     /**
      * 部门等级
      */
-    private Integer gradeid;
+    private Integer gradeId;
     
     /**
      * 是否为分公司

@@ -73,8 +73,8 @@
         <if test="query.directorId != null">
             AND d.director_id = #{query.directorId}
         </if>
-        <if test="query.gradeid != null">
-            AND d.grade_id = #{query.gradeid}
+        <if test="query.gradeId != null">
+            AND d.grade_id = #{query.gradeId}
         </if>
         <if test="query.fiiale != null and query.fiiale != ''">
             AND d.fiiale = #{query.fiiale}

@@ -90,7 +90,7 @@ interface DepartmentNode extends DataNode {
   employeeCount: number;
   positionCount: number;
   status: number;
-  gradeid: number;
+  gradeId: number;
   gradeName: string;
   children?: DepartmentNode[];
 }
@@ -101,7 +101,7 @@ interface Department {
   parentId: string;
   depNo: string;
   directorId?: string;
-  gradeid: number;
+  gradeId: number;
   tel?: string;
   address?: string;
   description?: string;
@@ -116,7 +116,15 @@ interface Department {
   updatedAt: string;
 }
 
-const DepartmentManagement: React.FC = () => {
+  // 生成等级名称的工具函数
+  const getGradeName = (gradeId: number | null | undefined, level: number | null | undefined): string => {
+    // 优先使用gradeId，其次使用level，最后默认1
+    const grade = gradeId ?? level ?? 1;
+    console.log(`生成等级名称: gradeId=${gradeId}, level=${level}, 最终等级=${grade}`);
+    return `${grade}级部门`;
+  };
+
+  const DepartmentManagement: React.FC = () => {
   const [treeData, setTreeData] = useState<DepartmentNode[]>([]);
   const [selectedDept, setSelectedDept] = useState<Department | null>(null);
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
@@ -186,6 +194,9 @@ const DepartmentManagement: React.FC = () => {
       const parentId = dept.parentId ? (typeof dept.parentId === 'string' ? dept.parentId : String(dept.parentId)) : '0';
       const directorId = dept.directorId ? (typeof dept.directorId === 'string' ? dept.directorId : String(dept.directorId)) : undefined;
       
+      // 调试等级信息
+      console.log(`转换部门 ${dept.name}: gradeId=${dept.gradeId}, level=${dept.level}`);
+      
       return {
         key: deptId,
         title: renderTreeNodeTitle(dept),
@@ -195,11 +206,11 @@ const DepartmentManagement: React.FC = () => {
         depNo: dept.depNo,
         directorId: directorId,
         directorName: dept.directorName,
-        employeeCount: dept.employeeCount || 0,
-        positionCount: dept.positionCount || 0,
-        status: dept.status,
-        gradeid: dept.gradeid || dept.level || 1,
-        gradeName: `${dept.level || 1}级部门`,
+                  employeeCount: dept.employeeCount || 0,
+          positionCount: dept.positionCount || 0,
+          status: dept.status,
+          gradeId: dept.gradeId ?? dept.level ?? 1,
+                      gradeName: getGradeName(dept.gradeId, dept.level),
         children: dept.children ? convertToTreeNodes(dept.children) : undefined,
         isLeaf: !dept.children || dept.children.length === 0
       };
@@ -298,8 +309,8 @@ const DepartmentManagement: React.FC = () => {
           id: deptId,
           parentId: parentId,
           directorId: directorId,
-          gradeid: departmentData.gradeid || departmentData.level || 1,
-          gradeName: `${departmentData.level || 1}级部门`,
+          gradeId: departmentData.gradeId ?? departmentData.level ?? 1,
+                      gradeName: getGradeName(departmentData.gradeId, departmentData.level),
           employeeCount: departmentData.employeeCount || 0,
           positionCount: departmentData.positionCount || 0,
           parentName: departmentData.parentName || (departmentData.parentId === 0 ? '无' : ''),
@@ -355,8 +366,17 @@ const DepartmentManagement: React.FC = () => {
   const handleDeleteFromTree = async (deptId: string, e: any) => {
     e?.stopPropagation();
     try {
+      console.log('开始删除部门 - ID:', deptId);
       const response = await deleteDepartment(deptId);
-      if (response.success) {
+      console.log('删除部门API响应:', response);
+      
+      // 适配API响应格式：{datas: boolean, resp_code: 0, resp_msg: ""}
+      const isSuccess = response && (
+        response.success === true || 
+        (response.resp_code !== undefined && response.resp_code === 0)
+      );
+      
+      if (isSuccess) {
         message.success('删除成功');
         loadDepartmentTree();
         if (selectedDept?.id === deptId) {
@@ -364,11 +384,13 @@ const DepartmentManagement: React.FC = () => {
           setSelectedKeys([]);
         }
       } else {
-        message.error(response.message || '删除失败');
+        const errorMsg = response?.message || response?.resp_msg || '删除失败';
+        console.error('删除失败原因:', errorMsg);
+        message.error(errorMsg);
       }
     } catch (error) {
-      message.error('删除失败');
-      console.error('Delete department error:', error);
+      console.error('删除部门异常:', error);
+      message.error('删除失败：网络请求异常');
     }
   };
 
@@ -673,7 +695,7 @@ const DepartmentManagement: React.FC = () => {
                         <Card>
                           <Statistic
                             title="部门等级"
-                            value={selectedDept.gradeid}
+                            value={selectedDept.gradeId}
                             suffix="级"
                             valueStyle={{ color: '#722ed1' }}
                           />

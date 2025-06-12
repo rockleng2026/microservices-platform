@@ -146,11 +146,26 @@ public class DepartmentController {
     public Result<Boolean> deleteDepartment(
             @Parameter(description = "部门ID") @PathVariable String id) {
         try {
+            log.info("删除部门请求 - 原始ID: {}, ID类型: {}", id, id.getClass().getSimpleName());
+            
             Long idLong = IdUtils.toIdLong(id);
+            log.info("ID转换成功 - 转换后: {}", idLong);
+            
             Boolean success = departmentService.deleteDepartment(idLong);
-            return Result.succeed(success);
+            
+            if (success) {
+                log.info("删除部门成功 - ID: {}", id);
+                return Result.succeed(success);
+            } else {
+                log.warn("删除部门失败 - ID: {}, 返回false", id);
+                return Result.failed("删除部门失败");
+            }
+        } catch (NumberFormatException e) {
+            log.error("部门ID格式错误 - 输入: {}, 错误: {}", id, e.getMessage());
+            return Result.failed("部门ID格式错误");
         } catch (Exception e) {
-            log.error("删除部门失败", e);
+            log.error("删除部门失败 - ID: {}, 错误类型: {}, 错误信息: {}", 
+                     id, e.getClass().getSimpleName(), e.getMessage(), e);
             return Result.failed("删除部门失败：" + e.getMessage());
         }
     }

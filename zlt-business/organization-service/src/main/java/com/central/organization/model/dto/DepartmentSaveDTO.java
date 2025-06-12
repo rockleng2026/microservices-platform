@@ -49,7 +49,7 @@ public class DepartmentSaveDTO {
     /**
      * 部门等级(1-7级)
      */
-    private Integer gradeid;
+    private Integer gradeId;
     
     /**
      * 部门级别

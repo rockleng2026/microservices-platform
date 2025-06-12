@@ -64,7 +64,7 @@ interface DepartmentFormData {
   parentId: string;
   depNo?: string;
   directorId?: string;
-  gradeid?: number;
+  gradeId?: number;
   islevel?: number;
   fiiale?: string;
   filialemark?: string;
@@ -498,7 +498,7 @@ const DepartmentManagement: React.FC = () => {
 
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item name="gradeid" label="部门等级">
+                <Form.Item name="gradeId" label="部门等级">
                   <Select placeholder="请选择部门等级">
                     <Option value={1}>一级部门</Option>
                     <Option value={2}>二级部门</Option>

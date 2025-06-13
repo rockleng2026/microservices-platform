@@ -139,7 +139,7 @@ public class WorkpositionVO implements Serializable {
     /**
      * 创建人ID
      */
-    private String createdBy;
+    private Long createdBy;
 
     /**
      * 创建人姓名
@@ -149,7 +149,7 @@ public class WorkpositionVO implements Serializable {
     /**
      * 更新人ID
      */
-    private String updatedBy;
+    private Long updatedBy;
 
     /**
      * 更新人姓名

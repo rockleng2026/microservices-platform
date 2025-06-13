@@ -44,4 +44,12 @@ public interface MenuMapper {
      * @return 菜单信息
      */
     Map<String, Object> selectMenuById(@Param("id") Long id);
+
+    /**
+     * 获取系统所有菜单（用于权限配置）
+     * 
+     * @param tenantId 租户ID
+     * @return 系统所有菜单列表
+     */
+    List<Map<String, Object>> selectAllSystemMenus(@Param("tenantId") String tenantId);
 } 

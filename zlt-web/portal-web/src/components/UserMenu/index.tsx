@@ -59,9 +59,13 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
       
       // 获取菜单权限  
       await loadUserMenus();
-    } catch (error) {
+    } catch (error: any) {
       console.error('UserMenu: 加载用户数据失败:', error);
-      message.error('加载用户数据失败，请重试');
+      
+      // 如果是登录失效错误，不显示错误提示，因为已经跳转到登录页面
+      if (!error.message || !error.message.includes('登录已失效')) {
+        message.error('加载用户数据失败，请重试');
+      }
     } finally {
       console.log('UserMenu: 设置loading为false');
       setLoading(false);
@@ -184,17 +188,25 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
     );
   };
 
-  // 用户下拉菜单
-  const userDropdownMenu = (
-    <Menu>
-      <Menu.Item key="profile" icon={<UserOutlined />}>
-        个人资料
-      </Menu.Item>
-      <Menu.Item key="settings" icon={<SettingOutlined />}>
-        个人设置
-      </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item key="logout" icon={<LogoutOutlined />}>
+  // 用户下拉菜单项
+  const userDropdownMenuItems = [
+    {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: '个人资料',
+    },
+    {
+      key: 'settings',
+      icon: <SettingOutlined />,
+      label: '个人设置',
+    },
+    {
+      type: 'divider' as const,
+    },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      label: (
         <LogoutConfirm 
           buttonType="text" 
           buttonText="退出登录"
@@ -206,9 +218,9 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
             message.error('退出登录失败，请重试');
           }}
         />
-      </Menu.Item>
-    </Menu>
-  );
+      ),
+    },
+  ];
 
   if (loading) {
     return (
@@ -248,7 +260,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
         )}
         
         {/* 用户信息下拉菜单 */}
-        <Dropdown overlay={userDropdownMenu} placement="bottomRight">
+        <Dropdown menu={{ items: userDropdownMenuItems }} placement="bottomRight">
           <div className="user-info" style={{ cursor: 'pointer' }}>
             <Space>
               {getUserAvatar()}

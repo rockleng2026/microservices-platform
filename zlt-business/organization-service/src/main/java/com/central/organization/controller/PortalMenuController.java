@@ -21,7 +21,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/menus")
+@RequestMapping("/api/menus")
 @Tag(name = "Portal菜单权限管理", description = "Portal菜单权限管理相关API")
 public class PortalMenuController {
 
@@ -42,6 +42,22 @@ public class PortalMenuController {
         } catch (Exception e) {
             log.error("获取用户权限菜单失败，用户ID: {}", currentUser.getId(), e);
             return Result.failed("获取菜单权限失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取系统菜单树形结构（用于权限配置）
+     */
+    @Operation(summary = "获取系统菜单树", description = "获取系统完整菜单树结构，用于权限配置")
+    @GetMapping("/tree")
+    public Result<List<Map<String, Object>>> getMenuTree(@LoginUser SysUser currentUser) {
+        log.info("获取系统菜单树，操作用户ID: {}", currentUser.getId());
+        try {
+            List<Map<String, Object>> menuTree = menuPermissionService.getSystemMenuTree();
+            return Result.succeed(menuTree, "获取菜单树成功");
+        } catch (Exception e) {
+            log.error("获取系统菜单树失败", e);
+            return Result.failed("获取菜单树失败: " + e.getMessage());
         }
     }
 } 

@@ -226,8 +226,8 @@ public class PortalUserServiceImpl implements PortalUserService {
                     position.setTenantId(vo.getTenantId());
                     position.setCreatedAt(vo.getCreatedAt());
                     position.setUpdatedAt(vo.getUpdatedAt());
-                    position.setCreatedBy(Long.parseLong(vo.getCreatedBy()));
-                    position.setUpdatedBy(Long.parseLong(vo.getUpdatedBy()));
+                    position.setCreatedBy(vo.getCreatedBy());
+                    position.setUpdatedBy(vo.getUpdatedBy());
                     return position;
                 }).collect(java.util.stream.Collectors.toList());
                 positions.addAll(subPositions);

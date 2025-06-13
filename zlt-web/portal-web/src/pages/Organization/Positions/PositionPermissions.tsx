@@ -25,6 +25,11 @@ import {
   FolderOutlined,
   FileOutlined
 } from '@ant-design/icons';
+import { 
+  getMenuTree, 
+  configWorkPositionPermissions, 
+  getWorkPositionPermissions 
+} from '@/services/organization/position';
 
 const { Title, Text } = Typography;
 const { TabPane } = Tabs;
@@ -38,26 +43,26 @@ interface PositionPermissionsProps {
 }
 
 interface MenuNode {
-  id: string;
+  id: number;
   name: string;
-  parentId: string;
+  parentId: number;
   type: 'menu' | 'button';
   path?: string;
   icon?: string;
-  sort: number;
-  status: number;
+  sortOrder: number;
+  status: boolean;
   children?: MenuNode[];
   functions?: FunctionNode[];
 }
 
 interface FunctionNode {
-  id: string;
+  id: number;
   name: string;
-  menuId: string;
+  menuId: number;
   code: string;
-  type: string;
-  sort: number;
-  status: number;
+  type?: string;
+  sortOrder: number;
+  enabled: number;
 }
 
 interface PermissionConfig {
@@ -92,17 +97,15 @@ const PositionPermissions: React.FC<PositionPermissionsProps> = ({
   const loadMenuTree = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/menu/tree', {
-        headers: {
-          'x-tenant-header': 'default',
-        },
-      });
-      const result = await response.json();
+      const result = await getMenuTree();
+      console.log('权限配置 - 菜单树数据:', result);
       
-      if (result.code === 0) {
-        setMenuTree(result.data || []);
+      if (result.resp_code === 0) {
+        const menuData = result.datas || [];
+        console.log('权限配置 - 设置菜单树数据:', menuData);
+        setMenuTree(menuData);
       } else {
-        message.error(result.msg || '加载菜单树失败');
+        message.error(result.resp_msg || '加载菜单树失败');
       }
     } catch (error) {
       console.error('加载菜单树失败:', error);
@@ -115,17 +118,24 @@ const PositionPermissions: React.FC<PositionPermissionsProps> = ({
   // 加载岗位权限配置
   const loadPositionPermissions = async () => {
     try {
-      const response = await fetch(`/api/workposition/${positionId}/permissions`, {
-        headers: {
-          'x-tenant-header': 'default',
-        },
-      });
-      const result = await response.json();
+      const result = await getWorkPositionPermissions(positionId);
+      console.log('权限配置 - 后端返回的权限数据:', result);
       
-      if (result.code === 0 && result.data) {
-        const { menuIds, menuFuncIds } = result.data;
-        setSelectedMenus(menuIds ? menuIds.split(',').filter(Boolean) : []);
-        setSelectedFunctions(menuFuncIds ? menuFuncIds.split(',').filter(Boolean) : []);
+      if (result.resp_code === 0 && result.datas) {
+        const { menuIds, menuFuncIds } = result.datas;
+        console.log('权限配置 - 原始menuIds:', menuIds);
+        console.log('权限配置 - 原始menuFuncIds:', menuFuncIds);
+        
+        const selectedMenuIds = menuIds ? menuIds.split(',').filter(Boolean) : [];
+        const selectedFuncIds = menuFuncIds ? menuFuncIds.split(',').filter(Boolean) : [];
+        
+        console.log('权限配置 - 解析后的菜单ID:', selectedMenuIds);
+        console.log('权限配置 - 解析后的功能ID:', selectedFuncIds);
+        
+        setSelectedMenus(selectedMenuIds);
+        setSelectedFunctions(selectedFuncIds);
+      } else {
+        console.log('权限配置 - 没有权限数据或请求失败:', result);
       }
     } catch (error) {
       console.error('加载岗位权限失败:', error);
@@ -141,17 +151,17 @@ const PositionPermissions: React.FC<PositionPermissionsProps> = ({
           <div style={{ display: 'flex', alignItems: 'center' }}>
             {menu.type === 'menu' ? <FolderOutlined /> : <FileOutlined />}
             <span style={{ marginLeft: 8 }}>{menu.name}</span>
-            <Tag color={menu.type === 'menu' ? 'blue' : 'green'} size="small" style={{ marginLeft: 8 }}>
+            <Tag color={menu.type === 'menu' ? 'blue' : 'green'} style={{ marginLeft: 8 }}>
               {menu.type === 'menu' ? '菜单' : '按钮'}
             </Tag>
           </div>
-          {menu.status === 0 && (
-            <Tag color="red" size="small">禁用</Tag>
+          {!menu.status && (
+            <Tag color="red">禁用</Tag>
           )}
         </div>
       ),
-      key: menu.id,
-      disabled: menu.status === 0,
+      key: String(menu.id), // 确保key是字符串类型
+      disabled: !menu.status,
       children: menu.children ? convertMenuTreeData(menu.children) : undefined,
     }));
   };
@@ -160,7 +170,7 @@ const PositionPermissions: React.FC<PositionPermissionsProps> = ({
   const getAllMenuIds = (menus: MenuNode[]): string[] => {
     let ids: string[] = [];
     menus.forEach(menu => {
-      ids.push(menu.id);
+      ids.push(String(menu.id)); // 确保返回字符串类型
       if (menu.children && menu.children.length > 0) {
         ids = ids.concat(getAllMenuIds(menu.children));
       }
@@ -173,7 +183,7 @@ const PositionPermissions: React.FC<PositionPermissionsProps> = ({
     let ids: string[] = [];
     menus.forEach(menu => {
       if (menu.functions && menu.functions.length > 0) {
-        ids = ids.concat(menu.functions.map(func => func.id));
+        ids = ids.concat(menu.functions.map(func => String(func.id))); // 确保返回字符串类型
       }
       if (menu.children && menu.children.length > 0) {
         ids = ids.concat(getAllFunctionIds(menu.children));
@@ -184,7 +194,13 @@ const PositionPermissions: React.FC<PositionPermissionsProps> = ({
 
   // 菜单选择变化处理
   const handleMenuCheck = (checkedKeys: any, info: any) => {
-    setSelectedMenus(checkedKeys.checked || checkedKeys);
+    const newCheckedKeys = checkedKeys.checked || checkedKeys;
+    console.log('权限配置 - 菜单选择变化:', {
+      新选中的菜单: newCheckedKeys,
+      半选中的菜单: info.halfCheckedKeys || [],
+      之前选中的菜单: selectedMenus
+    });
+    setSelectedMenus(newCheckedKeys);
     setHalfCheckedMenus(info.halfCheckedKeys || []);
   };
 
@@ -214,24 +230,17 @@ const PositionPermissions: React.FC<PositionPermissionsProps> = ({
   const handleSave = async () => {
     setSaving(true);
     try {
-      const response = await fetch(`/api/workposition/${positionId}/permissions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-tenant-header': 'default',
-        },
-        body: JSON.stringify({
-          menuIds: selectedMenus.join(','),
-          menuFuncIds: selectedFunctions.join(','),
-        }),
-      });
-      const result = await response.json();
+      const result = await configWorkPositionPermissions(
+        positionId,
+        selectedMenus.join(','),
+        selectedFunctions.join(',')
+      );
       
-      if (result.code === 0) {
+      if (result.resp_code === 0) {
         message.success('权限配置保存成功');
         onSuccess();
       } else {
-        message.error(result.msg || '保存失败');
+        message.error(result.resp_msg || '保存失败');
       }
     } catch (error) {
       console.error('保存权限配置失败:', error);
@@ -259,28 +268,35 @@ const PositionPermissions: React.FC<PositionPermissionsProps> = ({
               }
               style={{ marginBottom: 8 }}
             >
-              <Checkbox.Group
-                value={selectedFunctions}
-                onChange={setSelectedFunctions}
-              >
-                <Row gutter={[16, 8]}>
-                  {menu.functions!.map(func => (
-                    <Col key={func.id} span={8}>
-                      <Checkbox
-                        value={func.id}
-                        disabled={func.status === 0}
-                      >
-                        <span style={{ fontSize: 12 }}>
-                          {func.name}
-                          {func.status === 0 && (
-                            <Tag color="red" size="small" style={{ marginLeft: 4 }}>禁用</Tag>
-                          )}
-                        </span>
-                      </Checkbox>
-                    </Col>
-                  ))}
-                </Row>
-              </Checkbox.Group>
+              <Row gutter={[16, 8]}>
+                {menu.functions!.map(func => (
+                  <Col key={func.id} span={8}>
+                    <Checkbox
+                      checked={selectedFunctions.includes(String(func.id))}
+                      disabled={func.enabled === 0}
+                      onChange={(e) => {
+                        const funcId = String(func.id);
+                        if (e.target.checked) {
+                          // 添加到选中列表
+                          if (!selectedFunctions.includes(funcId)) {
+                            setSelectedFunctions([...selectedFunctions, funcId]);
+                          }
+                        } else {
+                          // 从选中列表中移除
+                          setSelectedFunctions(selectedFunctions.filter(id => id !== funcId));
+                        }
+                      }}
+                    >
+                      <span style={{ fontSize: 12 }}>
+                        {func.name}
+                        {func.enabled === 0 && (
+                          <Tag color="red" style={{ marginLeft: 4 }}>禁用</Tag>
+                        )}
+                      </span>
+                    </Checkbox>
+                  </Col>
+                ))}
+              </Row>
             </Card>
           )}
           

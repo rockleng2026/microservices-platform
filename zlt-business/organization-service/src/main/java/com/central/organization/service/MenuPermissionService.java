@@ -45,4 +45,11 @@ public interface MenuPermissionService {
      * @return 树形菜单结构
      */
     List<Map<String, Object>> buildMenuTree(List<Map<String, Object>> menuList);
+
+    /**
+     * 获取系统完整菜单树（用于权限配置）
+     * 
+     * @return 系统菜单树
+     */
+    List<Map<String, Object>> getSystemMenuTree();
 } 

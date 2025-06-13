@@ -105,6 +105,8 @@ const PositionSelector: React.FC<PositionSelectorProps> = ({
     position,
   }));
 
+
+
   return (
     <div className="position-selector">
       <Space align="center">

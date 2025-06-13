@@ -165,7 +165,7 @@ const DepartmentManagement: React.FC = () => {
         </span>
         <div className={styles.nodeActions}>
           <Dropdown
-            overlay={renderActionMenu(dept)}
+            menu={{ items: renderActionMenuItems(dept) }}
             trigger={['click']}
             placement="bottomRight"
           >
@@ -176,36 +176,50 @@ const DepartmentManagement: React.FC = () => {
     );
   };
 
-  // 渲染操作菜单
-  const renderActionMenu = (dept: any) => (
-    <Menu>
-      <Menu.Item key="add" icon={<PlusOutlined />} onClick={() => handleAddChild(dept)}>
-        新增子部门
-      </Menu.Item>
-      <Menu.Item key="edit" icon={<EditOutlined />} onClick={() => handleEdit(dept)}>
-        编辑部门
-      </Menu.Item>
-      <Menu.Item key="employees" icon={<TeamOutlined />}>
-        员工管理
-      </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item key="copy" icon={<CopyOutlined />} onClick={() => handleCopy(dept)}>
-        复制结构
-      </Menu.Item>
-      <Menu.Item key="move" icon={<DragOutlined />}>
-        移动部门
-      </Menu.Item>
-      <Menu.Divider />
-      <Menu.Item
-        key="delete"
-        icon={<DeleteOutlined />}
-        danger
-        onClick={() => handleDelete(dept)}
-      >
-        删除部门
-      </Menu.Item>
-    </Menu>
-  );
+  // 渲染操作菜单项
+  const renderActionMenuItems = (dept: any) => [
+    {
+      key: 'add',
+      icon: <PlusOutlined />,
+      label: '新增子部门',
+      onClick: () => handleAddChild(dept),
+    },
+    {
+      key: 'edit',
+      icon: <EditOutlined />,
+      label: '编辑部门',
+      onClick: () => handleEdit(dept),
+    },
+    {
+      key: 'employees',
+      icon: <TeamOutlined />,
+      label: '员工管理',
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'copy',
+      icon: <CopyOutlined />,
+      label: '复制结构',
+      onClick: () => handleCopy(dept),
+    },
+    {
+      key: 'move',
+      icon: <DragOutlined />,
+      label: '移动部门',
+    },
+    {
+      type: 'divider',
+    },
+    {
+      key: 'delete',
+      icon: <DeleteOutlined />,
+      label: '删除部门',
+      danger: true,
+      onClick: () => handleDelete(dept),
+    },
+  ];
 
   // 获取默认展开的节点
   const getDefaultExpandedKeys = (treeData: DepartmentTreeNode[], maxLevel: number): React.Key[] => {
@@ -331,15 +345,34 @@ const DepartmentManagement: React.FC = () => {
       onOk: async () => {
         try {
           const response = await departmentApi.deleteDepartment(dept.id);
-          if (response.code === 0) {
+          console.log('删除部门响应:', response);
+          
+          if (response.code === 0 || response.resp_code === 0) {
             message.success('删除成功');
             loadDepartmentTree();
           } else {
-            message.error(response.msg || '删除失败');
+            const errorMsg = response.msg || response.resp_msg || response.message || '删除失败';
+            console.error('删除部门失败详情:', { response, errorMsg });
+            message.error(errorMsg);
           }
-        } catch (error) {
-          message.error('删除失败');
-          console.error(error);
+        } catch (error: any) {
+          console.error('删除部门异常:', error);
+          
+          // 解析错误信息
+          let errorMessage = '删除失败';
+          if (error?.response?.data?.resp_msg) {
+            errorMessage = error.response.data.resp_msg;
+          } else if (error?.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error?.response?.data?.msg) {
+            errorMessage = error.response.data.msg;
+          } else if (error?.message) {
+            errorMessage = error.message;
+          } else if (typeof error === 'string') {
+            errorMessage = error;
+          }
+          
+          message.error(errorMessage);
         }
       },
     });

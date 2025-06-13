@@ -144,7 +144,7 @@ export async function getCurrentUserMenus(options?: { [key: string]: any }) {
  * 获取指定岗位的菜单权限
  */
 export async function getPositionMenus(positionId?: number, options?: { [key: string]: any }) {
-  const response = await request(`${API_BASE}/api-portal/menus/current`, {
+  const response = await request(`${API_BASE}/api-portal/api/menus/current`, {
     method: 'GET',
     params: positionId ? { positionId } : {},
     ...(options || {}),

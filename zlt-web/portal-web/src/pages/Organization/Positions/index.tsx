@@ -113,7 +113,6 @@ const WorkPositionManagement: React.FC = () => {
   // 初始化
   useEffect(() => {
     loadDepartments();
-    loadWorkPositions();
   }, []);
 
   // 岗位级别选项
@@ -399,6 +398,8 @@ const WorkPositionManagement: React.FC = () => {
         departmentData = Array.isArray(response.data) ? response.data : [];
       } else if (response && response.code === 0 && response.data) {
         departmentData = Array.isArray(response.data) ? response.data : [];
+      } else if (response && response.resp_code === 0 && response.datas) {
+        departmentData = Array.isArray(response.datas) ? response.datas : [];
       } else if (Array.isArray(response)) {
         departmentData = response;
       }
@@ -422,9 +423,10 @@ const WorkPositionManagement: React.FC = () => {
       let errorMsg = '';
 
       if (response.resp_code === 0 && response.datas) {
-        success = response.datas.code === 0;
-        data = response.datas.data || response.datas;
-        errorMsg = response.resp_msg || response.datas.msg || '';
+        // 直接使用datas作为数据，因为这种格式下datas就是实际数据
+        success = true;
+        data = response.datas;
+        errorMsg = response.resp_msg || '';
       } else if (response.code === 0) {
         success = true;
         data = response.data;
@@ -493,17 +495,21 @@ const WorkPositionManagement: React.FC = () => {
   const handleDelete = async (id: string) => {
     try {
       const response = await deleteWorkPosition(id);
+      console.log('删除岗位响应:', response);
       
       // 处理不同的返回格式
       let success = false;
       let errorMsg = '';
 
       if (response.resp_code === 0) {
-        success = response.datas?.code === 0 || true;
-        errorMsg = response.resp_msg || response.datas?.msg || '';
+        success = true;
+        errorMsg = response.resp_msg || '';
       } else if (response.code === 0) {
         success = true;
         errorMsg = response.msg || '';
+      } else {
+        success = false;
+        errorMsg = response.resp_msg || response.msg || response.message || '删除失败';
       }
       
       if (success) {
@@ -511,11 +517,25 @@ const WorkPositionManagement: React.FC = () => {
         loadWorkPositions();
         setSelectedRowKeys(selectedRowKeys.filter(key => key !== id));
       } else {
-        message.error(errorMsg || '删除失败');
+        console.error('删除失败详情:', { response, errorMsg });
+        message.error(errorMsg);
       }
-    } catch (error) {
-      console.error('删除岗位失败:', error);
-      message.error('删除失败');
+    } catch (error: any) {
+      console.error('删除岗位异常:', error);
+      
+      // 解析错误信息
+      let errorMessage = '删除失败';
+      if (error?.response?.data?.resp_msg) {
+        errorMessage = error.response.data.resp_msg;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      message.error(errorMessage);
     }
   };
 
@@ -528,17 +548,21 @@ const WorkPositionManagement: React.FC = () => {
 
     try {
       const response = await deleteWorkPositions(selectedRowKeys as string[]);
+      console.log('批量删除岗位响应:', response);
       
       // 处理不同的返回格式
       let success = false;
       let errorMsg = '';
 
       if (response.resp_code === 0) {
-        success = response.datas?.code === 0 || true;
-        errorMsg = response.resp_msg || response.datas?.msg || '';
+        success = true;
+        errorMsg = response.resp_msg || '';
       } else if (response.code === 0) {
         success = true;
         errorMsg = response.msg || '';
+      } else {
+        success = false;
+        errorMsg = response.resp_msg || response.msg || response.message || '批量删除失败';
       }
       
       if (success) {
@@ -546,11 +570,25 @@ const WorkPositionManagement: React.FC = () => {
         loadWorkPositions();
         setSelectedRowKeys([]);
       } else {
-        message.error(errorMsg || '批量删除失败');
+        console.error('批量删除失败详情:', { response, errorMsg });
+        message.error(errorMsg);
       }
-    } catch (error) {
-      console.error('批量删除失败:', error);
-      message.error('批量删除失败');
+    } catch (error: any) {
+      console.error('批量删除异常:', error);
+      
+      // 解析错误信息
+      let errorMessage = '批量删除失败';
+      if (error?.response?.data?.resp_msg) {
+        errorMessage = error.response.data.resp_msg;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      message.error(errorMessage);
     }
   };
 
@@ -715,7 +753,7 @@ const WorkPositionManagement: React.FC = () => {
     loadWorkPositions();
   }, [queryParams.current, queryParams.size, queryParams.name, queryParams.shortName, queryParams.departmentId, queryParams.positionLevel, queryParams.isManager, queryParams.isDirector, queryParams.status, queryParams.keyword, queryParams.sortField, queryParams.sortOrder]);
 
-  // 转换部门树数据
+  // 转换部门树数据（用于TreeSelect）
   const convertDepartmentTreeData = (departments: any[]): any[] => {
     return departments.map(dept => ({
       title: dept.name,
@@ -723,6 +761,23 @@ const WorkPositionManagement: React.FC = () => {
       key: dept.id,
       children: dept.children ? convertDepartmentTreeData(dept.children) : [],
     }));
+  };
+
+  // 展开部门树为平级列表（用于普通Select）
+  const flattenDepartments = (departments: any[], level = 0): any[] => {
+    let result: any[] = [];
+    departments.forEach(dept => {
+      const indent = '　'.repeat(level); // 使用全角空格作为缩进
+      result.push({
+        id: dept.id,
+        name: `${indent}${dept.name}`,
+        level: level
+      });
+      if (dept.children && dept.children.length > 0) {
+        result = result.concat(flattenDepartments(dept.children, level + 1));
+      }
+    });
+    return result;
   };
 
   return (
@@ -745,8 +800,13 @@ const WorkPositionManagement: React.FC = () => {
               style={{ width: '100%' }}
               value={queryParams.departmentId}
               onChange={(value) => setQueryParams(prev => ({ ...prev, departmentId: value, current: 1 }))}
+              showSearch
+              filterOption={(input, option) => {
+                const label = option?.label || option?.value || '';
+                return String(label).toLowerCase().includes(input.toLowerCase());
+              }}
             >
-              {departments.map(dept => (
+              {flattenDepartments(departments).map(dept => (
                 <Option key={dept.id} value={dept.id}>{dept.name}</Option>
               ))}
             </Select>
@@ -910,6 +970,10 @@ const WorkPositionManagement: React.FC = () => {
                     placeholder="请选择所属部门"
                     treeData={convertDepartmentTreeData(departments)}
                     allowClear
+                    showSearch
+                    treeNodeFilterProp="title"
+                    dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+                    treeDefaultExpandAll
                   />
                 </Form.Item>
               </Col>
@@ -1034,6 +1098,10 @@ const WorkPositionManagement: React.FC = () => {
                 placeholder="请选择目标部门"
                 treeData={convertDepartmentTreeData(departments)}
                 allowClear
+                showSearch
+                treeNodeFilterProp="title"
+                dropdownStyle={{ maxHeight: 400, overflow: 'auto' }}
+                treeDefaultExpandAll
               />
             </Form.Item>
           </Form>

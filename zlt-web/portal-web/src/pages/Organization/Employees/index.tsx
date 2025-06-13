@@ -188,12 +188,35 @@ const Employees: React.FC = () => {
 
   const handleDelete = async (id: number) => {
     try {
-      await deleteEmployee(id);
-      message.success('删除成功');
-      actionRef.current?.reload();
-    } catch (error) {
-      console.error('删除员工失败:', error);
-      message.error('删除失败');
+      const response = await deleteEmployee(id);
+      console.log('删除员工响应:', response);
+      
+      if (response?.resp_code === 0 || response?.code === 0 || response?.success) {
+        message.success('删除成功');
+        actionRef.current?.reload();
+      } else {
+        const errorMsg = response?.resp_msg || response?.msg || response?.message || '删除失败';
+        console.error('删除员工失败详情:', { response, errorMsg });
+        message.error(errorMsg);
+      }
+    } catch (error: any) {
+      console.error('删除员工异常:', error);
+      
+      // 解析错误信息
+      let errorMessage = '删除失败';
+      if (error?.response?.data?.resp_msg) {
+        errorMessage = error.response.data.resp_msg;
+      } else if (error?.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error?.response?.data?.msg) {
+        errorMessage = error.response.data.msg;
+      } else if (error?.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
+      message.error(errorMessage);
     }
   };
 

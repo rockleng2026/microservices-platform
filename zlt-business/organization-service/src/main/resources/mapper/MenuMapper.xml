@@ -87,7 +87,36 @@
             created_at as updatedAt
         FROM menu_page
         WHERE id = #{id}
-        AND tenant_id = 'default'
+        AND tenant_id = #{tenantId}
+    </select>
+
+    <!-- 获取系统所有菜单（用于权限配置） -->
+    <select id="selectAllSystemMenus" resultType="java.util.Map">
+        SELECT
+            id,
+            name,
+            parent_id as parentId,
+            link_url as path,
+            link_url as component,
+            icon,
+            sort_order as sortOrder,
+            status,
+            CASE status 
+                WHEN 1 THEN '启用'
+                WHEN 0 THEN '禁用'
+                ELSE '未知'
+            END as statusDesc,
+            CASE 
+                WHEN parent_id = 0 OR parent_id IS NULL THEN 'menu'
+                ELSE 'button'
+            END as type,
+            tenant_id as tenantId,
+            created_at as createdAt,
+            updated_at as updatedAt
+        FROM menu_page
+        WHERE delflag = 0
+        AND tenant_id = #{tenantId}
+        ORDER BY parent_id ASC, sort_order ASC
     </select>
 
 </mapper> 

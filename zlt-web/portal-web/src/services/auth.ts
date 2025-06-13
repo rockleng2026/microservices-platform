@@ -123,8 +123,8 @@ export async function getCurrentUser() {
 export async function getCurrentUserMenus(positionId?: number) {
   const token = localStorage.getItem('access_token');
   const url = positionId 
-    ? `${API_BASE}/api-portal/menus/current?positionId=${positionId}`
-    : `${API_BASE}/api-portal/menus/current`;
+    ? `${API_BASE}/api/api-portal/menus/current?positionId=${positionId}`
+    : `${API_BASE}/api-portal/api/menus/current`;
   
   return request(url, {
     method: 'GET',

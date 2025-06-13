@@ -154,4 +154,33 @@ public class MenuPermissionServiceImpl implements MenuPermissionService {
 
         return rootMenus;
     }
+
+    @Override
+    public List<Map<String, Object>> getSystemMenuTree() {
+        log.info("获取系统完整菜单树");
+        
+        try {
+            String tenantId = TenantContextHolder.getTenant();
+            
+            // 获取系统所有菜单（不限制权限）
+            List<Map<String, Object>> allMenus = menuMapper.selectAllSystemMenus(tenantId);
+            
+            // 为每个菜单添加功能按钮信息
+            for (Map<String, Object> menu : allMenus) {
+                Long menuId = (Long) menu.get("id");
+                List<Map<String, Object>> functions = menuMapper.selectFunctionsByMenuId(menuId);
+                menu.put("functions", functions);
+            }
+            
+            // 构建菜单树
+            List<Map<String, Object>> menuTree = buildMenuTree(allMenus);
+            
+            log.info("获取系统菜单树成功，共 {} 个顶级菜单", menuTree.size());
+            return menuTree;
+            
+        } catch (Exception e) {
+            log.error("获取系统菜单树失败", e);
+            return Collections.emptyList();
+        }
+    }
 } 

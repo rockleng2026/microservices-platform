@@ -1,6 +1,8 @@
 import { request } from '@/utils/request';
 
-const API_PREFIX = '/api/organization/departments';
+// API基础地址
+const API_BASE = 'http://127.0.0.1:9900/api-portal';
+const API_PREFIX = `${API_BASE}/api/organization/departments`;
 
 interface ApiResponse<T = any> {
   success: boolean;

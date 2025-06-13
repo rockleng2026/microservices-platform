@@ -1,12 +1,15 @@
 import { request } from 'umi';
 
+// API基础地址
+const API_BASE = 'http://127.0.0.1:9900/api-portal';
+
 /**
  * 部门管理API
  */
 
 // 获取部门树
 export async function getDepartmentTree(params?: any) {
-  return request<ApiResponse<Department[]>>('/api/organization/departments/tree', {
+  return request<ApiResponse<Department[]>>(`${API_BASE}/api/organization/departments/tree`, {
     method: 'GET',
     params,
   });

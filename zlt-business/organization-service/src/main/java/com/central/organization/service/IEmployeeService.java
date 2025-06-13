@@ -7,6 +7,7 @@ import com.central.organization.model.vo.EmployeeVO;
 import com.central.organization.mapper.EmployeeMapper;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 员工服务接口
@@ -206,7 +207,7 @@ public interface IEmployeeService {
      * 
      * @return 统计信息
      */
-    EmployeeMapper.EmployeeStatisticsVO getStatistics();
+    Map<String, Object> getStatistics();
 
     /**
      * 获取部门员工分布统计

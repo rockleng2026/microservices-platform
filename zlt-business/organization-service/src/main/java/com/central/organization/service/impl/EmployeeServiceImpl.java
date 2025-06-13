@@ -444,7 +444,7 @@ public class EmployeeServiceImpl implements IEmployeeService {
     }
 
     @Override
-    public EmployeeMapper.EmployeeStatisticsVO getStatistics() {
+    public Map<String, Object> getStatistics() {
         return employeeMapper.getStatistics();
     }
 

@@ -34,7 +34,6 @@
         <result column="marital_status" property="maritalStatus" jdbcType="VARCHAR"/>
         <result column="work_years" property="workYears" jdbcType="INTEGER"/>
         <result column="birthplace" property="birthplace" jdbcType="VARCHAR"/>
-        <result column="residence" property="residence" jdbcType="VARCHAR"/>
         <result column="emergency_contact" property="emergencyContact" jdbcType="VARCHAR"/>
         <result column="emergency_phone" property="emergencyPhone" jdbcType="VARCHAR"/>
         <result column="specialty" property="specialty" jdbcType="VARCHAR"/>
@@ -82,10 +81,8 @@
         <result column="address" property="address" jdbcType="VARCHAR"/>
         <result column="emergency_contact" property="emergencyContact" jdbcType="VARCHAR"/>
         <result column="emergency_phone" property="emergencyPhone" jdbcType="VARCHAR"/>
-        <result column="description" property="description" jdbcType="VARCHAR"/>
         <result column="age" property="age" jdbcType="INTEGER"/>
         <result column="work_days" property="workDays" jdbcType="INTEGER"/>
-        <result column="status" property="status" jdbcType="TINYINT"/>
         <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
         <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
         <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
@@ -100,7 +97,7 @@
         e.employment_type, e.employment_status, e.entry_date,
         e.probation_end_date, e.regularization_date, e.leave_date, e.leave_reason,
         e.login_account_flag, e.education, e.nation, e.health_status, e.height, e.weight,
-        e.marital_status, e.work_years, e.birthplace, e.residence,
+        e.marital_status, e.work_years, e.birthplace, e.address,
         e.emergency_contact, e.emergency_phone, e.specialty, e.avatar, e.remark, e.delflag,
         e.tenant_id, e.created_at, e.updated_at, e.created_by, e.updated_by
     </sql>
@@ -111,8 +108,7 @@
         e.department_id, d.name as department_name, e.position_id, p.name as position_name, e.secondary_position_ids, e.grade_id,
         e.employment_type, e.employment_status, e.entry_date, e.probation_end_date, e.regularization_date,
         e.leave_date, e.leave_reason, e.work_years, e.education, e.graduation_school, e.major,
-        e.marital_status, e.address, e.emergency_contact, e.emergency_phone, e.description,
-        e.status, e.created_at, e.updated_at, e.created_by,
+        e.marital_status, e.address, e.emergency_contact, e.emergency_phone, e.created_at, e.updated_at, e.created_by,
         eg.grade_name,
         TIMESTAMPDIFF(YEAR, e.birth_date, CURDATE()) AS age,
         TIMESTAMPDIFF(DAY, e.entry_date, CURDATE()) AS work_days,
@@ -154,9 +150,6 @@
             </if>
             <if test="query.education != null">
                 AND e.education = #{query.education}
-            </if>
-            <if test="query.status != null">
-                AND e.status = #{query.status}
             </if>
             <if test="query.entryDateStart != null">
                 AND e.entry_date >= #{query.entryDateStart}

@@ -116,9 +116,16 @@ public class TenantSqlInterceptor implements Interceptor {
             return false;
         }
         
+        // 如果包含子查询，先不处理，避免复杂性
+        if (lowerSql.contains("(select") || lowerSql.contains("( select")) {
+            return false;
+        }
+        
         // 检查是否涉及租户表
         for (String table : TENANT_TABLES) {
-            if (lowerSql.contains(table)) {
+            if (lowerSql.contains(" from " + table + " ") || 
+                lowerSql.contains(" from " + table + " as ") ||
+                lowerSql.startsWith("select") && lowerSql.contains(table)) {
                 return true;
             }
         }
@@ -159,13 +166,16 @@ public class TenantSqlInterceptor implements Interceptor {
     private String addTenantConditionToSelect(String sql, String tenantId) {
         String lowerSql = sql.toLowerCase();
         
+        // 尝试识别主表别名
+        String tenantCondition = getTenantCondition(sql, tenantId);
+        
         // 查找WHERE子句位置
         int whereIndex = lowerSql.indexOf(" where ");
         
         if (whereIndex > 0) {
             // 已有WHERE子句，添加AND条件
             return sql.substring(0, whereIndex + 7) + 
-                   " tenant_id = '" + tenantId + "' AND " + 
+                   " " + tenantCondition + " AND " + 
                    sql.substring(whereIndex + 7);
         } else {
             // 没有WHERE子句，添加WHERE条件
@@ -181,9 +191,62 @@ public class TenantSqlInterceptor implements Interceptor {
             }
             
             return sql.substring(0, insertIndex) + 
-                   " WHERE tenant_id = '" + tenantId + "' " + 
+                   " WHERE " + tenantCondition + " " + 
                    sql.substring(insertIndex);
         }
+    }
+
+    /**
+     * 获取租户条件，尝试识别表别名
+     */
+    private String getTenantCondition(String sql, String tenantId) {
+        String lowerSql = sql.toLowerCase();
+        
+        // 尝试从SQL中识别主表和别名
+        for (String table : TENANT_TABLES) {
+            // 查找 "FROM table alias" 或 "FROM table AS alias" 模式
+            String fromPattern1 = " from " + table + " ";
+            String fromPattern2 = " from " + table + " as ";
+            
+            int fromIndex1 = lowerSql.indexOf(fromPattern1);
+            int fromIndex2 = lowerSql.indexOf(fromPattern2);
+            
+            if (fromIndex1 > 0 || fromIndex2 > 0) {
+                int fromIndex = Math.max(fromIndex1, fromIndex2);
+                String pattern = fromIndex1 > fromIndex2 ? fromPattern1 : fromPattern2;
+                
+                // 查找别名
+                int aliasStart = fromIndex + pattern.length();
+                int aliasEnd = aliasStart;
+                
+                // 跳过AS关键字
+                if (pattern.contains(" as ")) {
+                    while (aliasEnd < sql.length() && Character.isWhitespace(sql.charAt(aliasEnd))) {
+                        aliasEnd++;
+                    }
+                }
+                
+                // 提取别名
+                while (aliasEnd < sql.length() && 
+                       (Character.isLetterOrDigit(sql.charAt(aliasEnd)) || sql.charAt(aliasEnd) == '_')) {
+                    aliasEnd++;
+                }
+                
+                if (aliasEnd > aliasStart) {
+                    String alias = sql.substring(aliasStart, aliasEnd).trim();
+                    if (!alias.isEmpty() && !alias.toLowerCase().startsWith("left") && 
+                        !alias.toLowerCase().startsWith("right") && !alias.toLowerCase().startsWith("inner")) {
+                        return alias + ".tenant_id = '" + tenantId + "'";
+                    }
+                }
+                
+                // 如果没有找到别名，直接使用表名
+                return table + ".tenant_id = '" + tenantId + "'";
+            }
+        }
+        
+        // 默认情况，不使用别名
+        return "tenant_id = '" + tenantId + "'";
     }
     
     /**

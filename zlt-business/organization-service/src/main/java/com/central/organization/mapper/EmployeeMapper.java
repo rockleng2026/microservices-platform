@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 员工数据访问层
@@ -238,7 +239,7 @@ public interface EmployeeMapper {
      * 
      * @return 统计信息
      */
-    EmployeeStatisticsVO getStatistics();
+    Map<String, Object> getStatistics();
 
     /**
      * 获取部门员工分布统计

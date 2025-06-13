@@ -32,7 +32,7 @@ const { TabPane } = Tabs;
 
 // 员工类型定义
 interface EmployeeType {
-  id: number;
+  id: string | number;
   empNo: string;
   name: string;
   nameEn?: string;
@@ -126,8 +126,19 @@ const Employees: React.FC = () => {
   const loadStatistics = async () => {
     try {
       const response = await getEmployeeStatistics();
-      if (response && response.resp_code === 0) {
-        setStatistics(response.datas || response.data);
+      console.log('统计数据响应:', response);
+      
+      if (response && response.success) {
+        const stats = response.data;
+        // 映射字段名
+        setStatistics({
+          totalCount: stats.totalCount || 0,
+          onJobCount: stats.activeCount || 0, // 映射activeCount到onJobCount
+          probationCount: stats.probationCount || 0,
+          leaveCount: stats.leaveCount || 0,
+          maleCount: 0, // API暂时没有返回性别统计
+          femaleCount: 0,
+        });
       } else {
         setStatistics({
           totalCount: 0,
@@ -763,28 +774,17 @@ const Employees: React.FC = () => {
               keyword: params.keyword || params.name,
               departmentId: params.departmentId ? Number(params.departmentId) : undefined,
               positionId: params.positionId ? Number(params.positionId) : undefined,
-              status: params.employmentStatus || params.status ? Number(params.employmentStatus || params.status) : undefined,
+              employmentStatus: params.employmentStatus ? Number(params.employmentStatus) : undefined,
               employmentType: params.employmentType,
             });
             
             console.log('员工列表响应:', response);
             
-            if (response && response.resp_code === 0) {
-              const records = response.datas?.records || response.datas?.data || response.data?.records || response.data || [];
-              const total = response.datas?.total || response.datas?.count || response.data?.total || 0;
+            if (response && response.success) {
+              const records = response.data?.records || [];
+              const total = response.data?.total || 0;
               
-              if (records.length > 0) {
-                const firstRecord = records[0];
-                if (firstRecord.shortName || firstRecord.jobDescription || firstRecord.salaryRange) {
-                  console.warn('接口返回的是岗位数据，不是员工数据');
-                  message.warning('当前没有员工数据，请先添加员工');
-                  return {
-                    data: [],
-                    success: true,
-                    total: 0,
-                  };
-                }
-              }
+              console.log('处理后的数据:', { records, total });
               
               return {
                 data: records,

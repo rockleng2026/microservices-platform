@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 员工管理控制器
@@ -481,13 +482,19 @@ public class EmployeeController {
         private Integer thisMonthJoinCount;
         private Integer thisMonthLeaveCount;
 
-        public EmployeeStatisticsVO(EmployeeMapper.EmployeeStatisticsVO statistics) {
-            this.totalCount = statistics.getTotalCount();
-            this.activeCount = statistics.getActiveCount();
-            this.probationCount = statistics.getProbationCount();
-            this.leaveCount = statistics.getLeaveCount();
-            this.thisMonthJoinCount = statistics.getThisMonthJoinCount();
-            this.thisMonthLeaveCount = statistics.getThisMonthLeaveCount();
+        public EmployeeStatisticsVO(Map<String, Object> statistics) {
+            this.totalCount = statistics.get("totalCount") != null ? 
+                ((Number) statistics.get("totalCount")).intValue() : 0;
+            this.activeCount = statistics.get("activeCount") != null ? 
+                ((Number) statistics.get("activeCount")).intValue() : 0;
+            this.probationCount = statistics.get("probationCount") != null ? 
+                ((Number) statistics.get("probationCount")).intValue() : 0;
+            this.leaveCount = statistics.get("leaveCount") != null ? 
+                ((Number) statistics.get("leaveCount")).intValue() : 0;
+            this.thisMonthJoinCount = statistics.get("thisMonthJoinCount") != null ? 
+                ((Number) statistics.get("thisMonthJoinCount")).intValue() : 0;
+            this.thisMonthLeaveCount = statistics.get("thisMonthLeaveCount") != null ? 
+                ((Number) statistics.get("thisMonthLeaveCount")).intValue() : 0;
         }
 
         // getters and setters

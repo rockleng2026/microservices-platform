@@ -160,6 +160,8 @@ public class EmployeeVO {
      */
     private Integer workDays;
 
+    private String education;
+
     /**
      * 试用期结束日期
      */
@@ -232,16 +234,6 @@ public class EmployeeVO {
      * 紧急联系电话
      */
     private String emergencyPhone;
-
-    /**
-     * 个人描述
-     */
-    private String description;
-
-    /**
-     * 状态(1:启用,0:禁用)
-     */
-    private Integer status;
 
     /**
      * 状态描述
@@ -434,15 +426,4 @@ public class EmployeeVO {
         };
     }
 
-    /**
-     * 获取状态描述
-     */
-    public String getStatusText() {
-        if (status == null) return null;
-        return switch (status) {
-            case 1 -> "启用";
-            case 0 -> "禁用";
-            default -> "未知";
-        };
-    }
 } 

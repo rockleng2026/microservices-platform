@@ -118,17 +118,107 @@ public class Employee implements Serializable {
     private Date entryDate;
 
     /**
+     * 试用期结束日期
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date probationEndDate;
+
+    /**
+     * 转正日期
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date regularizationDate;
+
+    /**
+     * 离职日期
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date leaveDate;
+
+    /**
+     * 离职原因
+     */
+    private String leaveReason;
+
+    /**
+     * 登录账号状态(0:无登录账号,1:有登录账号,2:禁止登录)
+     */
+    private Integer loginAccountFlag;
+
+    /**
      * 学历
      */
     private String education;
 
     /**
+     * 民族
+     */
+    private String nation;
+
+    /**
+     * 健康状况
+     */
+    private String healthStatus;
+
+    /**
+     * 身高
+     */
+    private String height;
+
+    /**
+     * 体重
+     */
+    private String weight;
+
+    /**
+     * 婚姻状况
+     */
+    private String maritalStatus;
+
+    /**
+     * 工作年限
+     */
+    private Integer workYears;
+
+    /**
+     * 籍贯
+     */
+    private String birthplace;
+
+    /**
+     * 现居住地
+     */
+    private String residence;
+
+    /**
+     * 紧急联系人
+     */
+    private String emergencyContact;
+
+    /**
+     * 紧急联系电话
+     */
+    private String emergencyPhone;
+
+    /**
+     * 专业技能
+     */
+    private String specialty;
+
+    /**
+     * 头像
+     */
+    private String avatar;
+
+    /**
+     * 备注
+     */
+    private String remark;
+
+    /**
      * 删除标识
      */
-    private int delflag;
-
-    private Date leaveDate;
-    private String leaveReason;
+    private Integer delflag;
 
 
     /**

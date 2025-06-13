@@ -191,4 +191,29 @@ public class EmployeeQueryDTO implements Serializable {
      * 每页数量
      */
     private Integer size = 20;
+    
+    /**
+     * 分页偏移量
+     */
+    private Integer offset;
+    
+    /**
+     * 获取offset值（计算分页偏移量）
+     */
+    public Integer getOffset() {
+        if (offset != null) {
+            return offset;
+        }
+        if (page == null || size == null || page <= 0 || size <= 0) {
+            return 0;
+        }
+        return (page - 1) * size;
+    }
+    
+    /**
+     * 设置offset值
+     */
+    public void setOffset(Integer offset) {
+        this.offset = offset;
+    }
 } 

@@ -21,6 +21,15 @@ export default defineConfig({
           name: '组织架构',
           routes: [
             {
+              path: '/organization',
+              redirect: '/organization/dashboard',
+            },
+            {
+              path: '/organization/dashboard',
+              name: '组织概览',
+              component: '@/pages/Organization/Dashboard',
+            },
+            {
               path: '/organization/departments',
               name: '部门管理',
               component: '@/pages/Organization/Departments',

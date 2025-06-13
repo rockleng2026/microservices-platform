@@ -45,9 +45,14 @@ public class EmployeeController {
         if (query.getGradeId() != null) {
             query.setGradeId(IdUtils.stringToLong(query.getGradeId().toString()));
         }
-        
-        IEmployeeService.PageResult<EmployeeVO> pageResult = employeeService.getPageList(query);
-        return Result.success(pageResult);
+
+        try{
+            IEmployeeService.PageResult<EmployeeVO> pageResult = employeeService.getPageList(query);
+            return Result.success(pageResult);
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+        return null;
     }
 
     /**

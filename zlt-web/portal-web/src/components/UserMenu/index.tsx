@@ -49,17 +49,22 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
         console.log('UserMenu: 设置用户信息:', userResponse.datas);
         setUserInfo(userResponse.datas);
         
-        // 从用户信息中提取岗位信息
-        extractPositionsFromUserInfo(userResponse.datas);
+        // 从用户信息中提取岗位信息，并获取当前岗位
+        const targetPosition = extractPositionsFromUserInfo(userResponse.datas);
         
         setInitialized(true);
+        
+        // 使用确定的岗位ID加载菜单权限
+        console.log('UserMenu: 使用岗位ID加载菜单:', targetPosition?.id);
+        await loadUserMenus(targetPosition?.id);
       } else {
         console.log('UserMenu: 用户信息获取失败', userResponse);
         message.error(userResponse?.resp_msg || '获取用户信息失败');
+        
+        setInitialized(true);
+        // 即使用户信息获取失败，也尝试加载菜单（可能是匿名访问）
+        await loadUserMenus();
       }
-      
-      // 获取菜单权限  
-      await loadUserMenus();
     } catch (error: any) {
       console.error('UserMenu: 加载用户数据失败:', error);
       
@@ -67,6 +72,8 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
       if (!error.message || !error.message.includes('登录已失效')) {
         message.error('加载用户数据失败，请重试');
       }
+      
+      setInitialized(true);
     } finally {
       console.log('UserMenu: 设置loading为false');
       setLoading(false);
@@ -74,7 +81,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
   };
 
   // 从用户信息中提取岗位信息
-  const extractPositionsFromUserInfo = (userInfo: UserInfo) => {
+  const extractPositionsFromUserInfo = (userInfo: UserInfo): WorkPosition | null => {
     try {
       console.log('UserMenu: 从用户信息中提取岗位信息:', userInfo);
       
@@ -123,6 +130,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
             saveCurrentPosition(globalPosition);
           }
           console.log('UserMenu: 设置当前岗位:', targetPosition);
+          return targetPosition;
         }
       } else {
         console.log('UserMenu: 用户无岗位信息');
@@ -131,12 +139,17 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
     } catch (error) {
       console.error('UserMenu: 提取岗位信息失败:', error);
     }
+    return null;
   };
 
   // 加载用户菜单权限
-  const loadUserMenus = async () => {
+  const loadUserMenus = async (positionId?: number) => {
     try {
-      const menuResponse = await getCurrentUserMenus();
+      // 使用指定的岗位ID或当前岗位ID获取菜单
+      const targetPositionId = positionId || currentPosition?.id;
+      console.log('UserMenu: 获取菜单权限，岗位ID:', targetPositionId);
+      
+      const menuResponse = await getCurrentUserMenus(targetPositionId);
       console.log('UserMenu: 获取菜单权限响应:', menuResponse);
       
       if (menuResponse && menuResponse.resp_code === 0) {

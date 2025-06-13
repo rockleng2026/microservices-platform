@@ -21,7 +21,26 @@
         <result column="employment_type" property="employmentType" jdbcType="TINYINT"/>
         <result column="employment_status" property="employmentStatus" jdbcType="TINYINT"/>
         <result column="entry_date" property="entryDate" jdbcType="DATE"/>
+        <result column="probation_end_date" property="probationEndDate" jdbcType="DATE"/>
+        <result column="regularization_date" property="regularizationDate" jdbcType="DATE"/>
+        <result column="leave_date" property="leaveDate" jdbcType="DATE"/>
+        <result column="leave_reason" property="leaveReason" jdbcType="VARCHAR"/>
+        <result column="login_account_flag" property="loginAccountFlag" jdbcType="TINYINT"/>
         <result column="education" property="education" jdbcType="VARCHAR"/>
+        <result column="nation" property="nation" jdbcType="VARCHAR"/>
+        <result column="health_status" property="healthStatus" jdbcType="VARCHAR"/>
+        <result column="height" property="height" jdbcType="VARCHAR"/>
+        <result column="weight" property="weight" jdbcType="VARCHAR"/>
+        <result column="marital_status" property="maritalStatus" jdbcType="VARCHAR"/>
+        <result column="work_years" property="workYears" jdbcType="INTEGER"/>
+        <result column="birthplace" property="birthplace" jdbcType="VARCHAR"/>
+        <result column="residence" property="residence" jdbcType="VARCHAR"/>
+        <result column="emergency_contact" property="emergencyContact" jdbcType="VARCHAR"/>
+        <result column="emergency_phone" property="emergencyPhone" jdbcType="VARCHAR"/>
+        <result column="specialty" property="specialty" jdbcType="VARCHAR"/>
+        <result column="avatar" property="avatar" jdbcType="VARCHAR"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="delflag" property="delflag" jdbcType="TINYINT"/>
         <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
         <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
         <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
@@ -56,7 +75,7 @@
         <result column="leave_date" property="leaveDate" jdbcType="DATE"/>
         <result column="leave_reason" property="leaveReason" jdbcType="VARCHAR"/>
         <result column="work_years" property="workYears" jdbcType="INTEGER"/>
-        <result column="education_level" property="educationLevel" jdbcType="TINYINT"/>
+        <result column="education" property="education" jdbcType="TINYINT"/>
         <result column="graduation_school" property="graduationSchool" jdbcType="VARCHAR"/>
         <result column="major" property="major" jdbcType="VARCHAR"/>
         <result column="marital_status" property="maritalStatus" jdbcType="TINYINT"/>
@@ -78,7 +97,11 @@
         e.id, e.emp_no, e.name, e.name_en, e.birth_date, e.gender, e.id_card, 
         e.mobile, e.email, e.department_id, d.name as department_name, 
         e.position_id, p.name as position_name, e.grade_id,
-        e.employment_type, e.employment_status, e.entry_date, e.education,
+        e.employment_type, e.employment_status, e.entry_date,
+        e.probation_end_date, e.regularization_date, e.leave_date, e.leave_reason,
+        e.login_account_flag, e.education, e.nation, e.health_status, e.height, e.weight,
+        e.marital_status, e.work_years, e.birthplace, e.residence,
+        e.emergency_contact, e.emergency_phone, e.specialty, e.avatar, e.remark, e.delflag,
         e.tenant_id, e.created_at, e.updated_at, e.created_by, e.updated_by
     </sql>
 
@@ -87,7 +110,7 @@
         e.id, e.emp_no, e.name, e.name_en, e.gender, e.birth_date, e.id_card, e.mobile, e.email, e.avatar,
         e.department_id, d.name as department_name, e.position_id, p.name as position_name, e.secondary_position_ids, e.grade_id,
         e.employment_type, e.employment_status, e.entry_date, e.probation_end_date, e.regularization_date,
-        e.leave_date, e.leave_reason, e.work_years, e.education_level, e.graduation_school, e.major,
+        e.leave_date, e.leave_reason, e.work_years, e.education, e.graduation_school, e.major,
         e.marital_status, e.address, e.emergency_contact, e.emergency_phone, e.description,
         e.status, e.created_at, e.updated_at, e.created_by,
         eg.grade_name,
@@ -129,8 +152,8 @@
             <if test="query.gender != null">
                 AND e.gender = #{query.gender}
             </if>
-            <if test="query.educationLevel != null">
-                AND e.education_level = #{query.educationLevel}
+            <if test="query.education != null">
+                AND e.education = #{query.education}
             </if>
             <if test="query.status != null">
                 AND e.status = #{query.status}
@@ -198,16 +221,16 @@
         <choose>
             <when test="query.sortField != null and query.sortField != ''">
                 ${query.sortField}
-                <if test="query.sortOrder != null and query.sortOrder != ''">
-                    ${query.sortOrder}
+                <if test="query.sortDirection != null and query.sortDirection != ''">
+                    ${query.sortDirection}
                 </if>
             </when>
             <otherwise>
                 e.entry_date DESC, e.created_at DESC
             </otherwise>
         </choose>
-        <if test="query.pageSize != null and query.pageSize > 0">
-            LIMIT #{query.offset}, #{query.pageSize}
+        <if test="query.size != null and query.size > 0">
+            LIMIT #{query.offset}, #{query.size}
         </if>
     </select>
 

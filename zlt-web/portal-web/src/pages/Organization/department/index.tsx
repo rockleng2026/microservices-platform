@@ -37,6 +37,7 @@ import {
 import type { TreeProps, DataNode } from 'antd/es/tree';
 import { PageContainer } from '@ant-design/pro-components';
 import * as departmentApi from '@/services/organization/department';
+import DepartmentPositions from './DepartmentPositions';
 import styles from './index.less';
 
 const { Search } = Input;
@@ -433,63 +434,102 @@ const DepartmentManagement: React.FC = () => {
 
   const onSelect = (selectedKeys: React.Key[], info: any) => {
     setSelectedKeys(selectedKeys);
+    console.log('选中部门:', selectedKeys, info);
   };
 
   useEffect(() => {
     loadDepartmentTree();
   }, []);
 
+  // 获取选中部门信息
+  const getSelectedDepartment = () => {
+    if (selectedKeys.length === 0) return null;
+    
+    const findDept = (nodes: DepartmentTreeNode[], id: string): DepartmentTreeNode | null => {
+      for (const node of nodes) {
+        if (node.id === id) return node;
+        if (node.children) {
+          const found = findDept(node.children, id);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    
+    return findDept(treeData, selectedKeys[0] as string);
+  };
+
+  const selectedDepartment = getSelectedDepartment();
+
   return (
     <PageContainer
       title="部门管理"
       content="管理企业组织架构，支持多级部门结构和灵活的权限配置"
     >
-      <Card>
-        {/* 工具栏 */}
-        <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
-          <Col flex="auto">
-            <Space>
-              <Button type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
-                新增根部门
-              </Button>
-              <Button icon={<ExpandAltOutlined />} onClick={handleExpandAll}>
-                全部展开
-              </Button>
-              <Button icon={<CompressOutlined />} onClick={handleCollapseAll}>
-                全部折叠
-              </Button>
-              <Button icon={<ReloadOutlined />} onClick={loadDepartmentTree}>
-                刷新
-              </Button>
-            </Space>
-          </Col>
-          <Col>
+      <Row gutter={16} style={{ height: 'calc(100vh - 200px)' }}>
+        {/* 左侧：部门树 */}
+        <Col span={8}>
+          <Card 
+            title="部门结构" 
+            size="small"
+            style={{ height: '100%' }}
+            bodyStyle={{ height: 'calc(100% - 57px)', overflow: 'auto' }}
+          >
+            {/* 工具栏 */}
+            <Row gutter={[8, 8]} style={{ marginBottom: 16 }}>
+              <Col flex="auto">
+                <Space size="small">
+                  <Button size="small" type="primary" icon={<PlusOutlined />} onClick={handleAddRoot}>
+                    新增根部门
+                  </Button>
+                  <Button size="small" icon={<ExpandAltOutlined />} onClick={handleExpandAll}>
+                    全部展开
+                  </Button>
+                  <Button size="small" icon={<CompressOutlined />} onClick={handleCollapseAll}>
+                    全部折叠
+                  </Button>
+                  <Button size="small" icon={<ReloadOutlined />} onClick={loadDepartmentTree}>
+                    刷新
+                  </Button>
+                </Space>
+              </Col>
+            </Row>
+            
+            {/* 搜索框 */}
             <Search
               placeholder="搜索部门名称或编号"
               allowClear
-              style={{ width: 250 }}
+              size="small"
+              style={{ marginBottom: 16 }}
               onSearch={onSearch}
             />
-          </Col>
-        </Row>
 
-        {/* 部门树 */}
-        <Spin spinning={loading}>
-          <div className={styles.treeContainer}>
-            <Tree
-              ref={treeRef}
-              showLine
-              showIcon={false}
-              expandedKeys={expandedKeys}
-              autoExpandParent={autoExpandParent}
-              selectedKeys={selectedKeys}
-              treeData={treeData}
-              onExpand={onExpand}
-              onSelect={onSelect}
-              className={styles.departmentTree}
-            />
-          </div>
-        </Spin>
+            {/* 部门树 */}
+            <Spin spinning={loading}>
+              <Tree
+                ref={treeRef}
+                showLine
+                showIcon={false}
+                expandedKeys={expandedKeys}
+                autoExpandParent={autoExpandParent}
+                selectedKeys={selectedKeys}
+                treeData={treeData}
+                onExpand={onExpand}
+                onSelect={onSelect}
+                style={{ minHeight: 400 }}
+              />
+            </Spin>
+          </Card>
+        </Col>
+
+        {/* 右侧：部门岗位管理 */}
+        <Col span={16}>
+          <DepartmentPositions
+            departmentId={selectedDepartment?.id}
+            departmentName={selectedDepartment?.name}
+          />
+        </Col>
+      </Row>
 
         {/* 编辑弹窗 */}
         <Modal
@@ -591,7 +631,6 @@ const DepartmentManagement: React.FC = () => {
             </Form.Item>
           </Form>
         </Modal>
-      </Card>
     </PageContainer>
   );
 };

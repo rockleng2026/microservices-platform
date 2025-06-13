@@ -5,6 +5,7 @@ import { getCurrentUser, getCurrentUserMenus } from '../../services/auth';
 import { WorkPosition } from '../../services/portal';
 import PositionSelector from '../PositionSelector';
 import LogoutConfirm from '../LogoutConfirm';
+import { globalState, saveCurrentPosition, getCurrentPosition, GlobalUserPosition } from '../../utils/globalState';
 import './index.less';
 
 interface UserMenuProps {
@@ -91,11 +92,37 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
         setPositions(enhancedPositions);
         console.log('UserMenu: 设置岗位列表（含主岗位和分管岗位）:', enhancedPositions);
         
-        // 设置当前岗位（如果用户信息中有当前岗位，使用它；否则使用第一个岗位）
-        const current = userInfo.currentPosition || enhancedPositions[0];
-        if (current) {
-          setCurrentPosition(current);
-          console.log('UserMenu: 设置当前岗位:', current);
+        // 尝试从全局状态恢复当前岗位
+        const savedPosition = getCurrentPosition();
+        let targetPosition = null;
+        
+        if (savedPosition) {
+          // 验证保存的岗位是否在当前用户的岗位列表中
+          targetPosition = enhancedPositions.find((pos: any) => String(pos.id) === savedPosition.id);
+          if (targetPosition) {
+            console.log('UserMenu: 从全局状态恢复岗位:', targetPosition);
+          } else {
+            console.log('UserMenu: 保存的岗位不在当前用户岗位列表中，使用默认岗位');
+          }
+        }
+        
+        // 如果没有保存的岗位或保存的岗位无效，使用默认岗位
+        if (!targetPosition) {
+          targetPosition = userInfo.currentPosition || enhancedPositions[0];
+        }
+        
+        if (targetPosition) {
+          setCurrentPosition(targetPosition);
+          // 保存到全局状态（如果还没保存的话）
+          if (!savedPosition || savedPosition.id !== String(targetPosition.id)) {
+            const globalPosition: GlobalUserPosition = {
+              ...targetPosition,
+              id: String(targetPosition.id),
+              deptId: targetPosition.deptId ? String(targetPosition.deptId) : undefined,
+            };
+            saveCurrentPosition(globalPosition);
+          }
+          console.log('UserMenu: 设置当前岗位:', targetPosition);
         }
       } else {
         console.log('UserMenu: 用户无岗位信息');
@@ -130,6 +157,14 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
   const handlePositionChange = async (newPosition: WorkPosition) => {
     console.log('UserMenu: 接收到岗位切换请求:', newPosition);
     setCurrentPosition(newPosition);
+    
+    // 保存到全局状态，实现持久化
+    const globalPosition: GlobalUserPosition = {
+      ...newPosition,
+      id: String(newPosition.id), // 转换为字符串类型
+      deptId: newPosition.deptId ? String(newPosition.deptId) : undefined, // 转换为字符串类型
+    };
+    saveCurrentPosition(globalPosition);
     
     // 更新用户信息中的当前岗位
     if (userInfo) {

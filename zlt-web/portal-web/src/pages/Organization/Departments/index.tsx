@@ -44,6 +44,7 @@ import {
 import DepartmentForm from './components/DepartmentForm';
 import DepartmentDetail from './components/DepartmentDetail';
 
+
 const { Search } = Input;
 
 // 添加CSS样式
@@ -138,6 +139,7 @@ interface Department {
   const [modalType, setModalType] = useState<'add' | 'edit' | 'copy'>('add');
   const [showEditForm, setShowEditForm] = useState(false);
   const [addParentDept, setAddParentDept] = useState<DepartmentNode | null>(null); // 新增时的父部门信息
+
 
   // 加载部门树
   const loadDepartmentTree = async (includeDisabled = false) => {
@@ -412,7 +414,12 @@ interface Department {
 
   // 处理岗位管理
   const handleManagePositions = () => {
-    message.info('岗位管理功能开发中');
+    if (!selectedDept) {
+      message.warning('请先选择部门');
+      return;
+    }
+    // 跳转到部门岗位页面，并传递部门ID参数
+    window.location.href = `/organization/departments/positions?deptId=${selectedDept.id}&deptName=${encodeURIComponent(selectedDept.name)}`;
   };
 
   // 处理人员管理

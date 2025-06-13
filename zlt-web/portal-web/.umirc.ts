@@ -35,6 +35,11 @@ export default defineConfig({
               name: '岗位管理',
               component: '@/pages/Organization/Positions',
             },
+            {
+              path: '/organization/departments/positions',
+              name: '部门岗位',
+              component: '@/pages/Organization/DepartmentPositions',
+            },
           ],
         },
         {

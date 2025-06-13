@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Select, Space, Avatar, message } from 'antd';
 import { UserOutlined, SwapOutlined } from '@ant-design/icons';
 import { WorkPosition } from '../../services/portal';
+import { saveCurrentPosition, GlobalUserPosition } from '../../utils/globalState';
 import './index.less';
 
 interface PositionSelectorProps {
@@ -61,6 +62,14 @@ const PositionSelector: React.FC<PositionSelectorProps> = ({
         setSelectedPosition(targetPosition);
         message.success(`已切换到岗位：${targetPosition.name}`);
         
+        // 保存到全局状态，实现跨页面持久化
+        const globalPosition: GlobalUserPosition = {
+          ...targetPosition,
+          id: String(targetPosition.id),
+          deptId: targetPosition.deptId ? String(targetPosition.deptId) : undefined,
+        };
+        saveCurrentPosition(globalPosition);
+        
         // 通知父组件岗位已切换
         onPositionChange?.(targetPosition);
         
@@ -76,7 +85,7 @@ const PositionSelector: React.FC<PositionSelectorProps> = ({
         
         // 菜单数据已通过事件传递，不需要单独的onMenuUpdate调用
         
-        console.log('PositionSelector: 岗位切换成功，已触发全局事件');
+        console.log('PositionSelector: 岗位切换成功，已保存到全局状态并触发全局事件');
       } else {
         const errorMsg = menuResponse?.resp_msg || '岗位切换失败';
         console.error('PositionSelector: 岗位切换失败', menuResponse);
@@ -90,23 +99,6 @@ const PositionSelector: React.FC<PositionSelectorProps> = ({
     }
   };
 
-  // 生成岗位选项
-  const positionOptions = positions.map(position => ({
-    label: (
-      <Space>
-        <Avatar size="small" icon={<UserOutlined />} />
-        <div>
-          <div style={{ fontWeight: 500 }}>{position.name}</div>
-          <div style={{ fontSize: 12, color: '#999' }}>{position.deptName}</div>
-        </div>
-      </Space>
-    ),
-    value: position.id,
-    position,
-  }));
-
-
-
   return (
     <div className="position-selector">
       <Space align="center">
@@ -117,12 +109,22 @@ const PositionSelector: React.FC<PositionSelectorProps> = ({
           style={{ minWidth: 160 }}
           loading={loading}
           onChange={handlePositionChange}
-          optionLabelProp="children"
+          optionLabelProp="label"
           size="small"
         >
-          {positionOptions.map(option => (
-            <Select.Option key={option.value} value={option.value}>
-              {option.label}
+          {positions.map(position => (
+            <Select.Option 
+              key={position.id} 
+              value={position.id} 
+              label={position.name}
+            >
+              <Space>
+                <Avatar size="small" icon={<UserOutlined />} />
+                <div>
+                  <div style={{ fontWeight: 500 }}>{position.name}</div>
+                  <div style={{ fontSize: 12, color: '#999' }}>{position.deptName}</div>
+                </div>
+              </Space>
             </Select.Option>
           ))}
         </Select>

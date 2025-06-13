@@ -30,6 +30,7 @@ const BasicLayout: React.FC = () => {
       '/organization/departments': '部门管理',
       '/organization/employees': '员工管理',
       '/organization/positions': '岗位管理',
+      '/organization/departments/positions': '部门岗位',
       '/crm/customers': '客户管理',
     };
     return pathTitleMap[location.pathname] || '工作台';

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Modal, message, Button } from 'antd';
 import { ExclamationCircleOutlined, LogoutOutlined } from '@ant-design/icons';
 import { logout, quickLogout } from '../../services/auth';
+import { globalState } from '../../utils/globalState';
 
 const { confirm } = Modal;
 
@@ -91,6 +92,9 @@ const LogoutConfirm: React.FC<LogoutConfirmProps> = ({
           // 调用退出接口
           await logout();
 
+          // 清理全局状态
+          globalState.clearAll();
+
           message.destroy();
           message.success('退出登录成功');
 
@@ -123,6 +127,10 @@ const LogoutConfirm: React.FC<LogoutConfirmProps> = ({
               try {
                 message.loading('正在强制退出...', 0);
                 await quickLogout();
+                
+                // 清理全局状态
+                globalState.clearAll();
+                
                 message.destroy();
                 message.success('已强制退出登录');
 

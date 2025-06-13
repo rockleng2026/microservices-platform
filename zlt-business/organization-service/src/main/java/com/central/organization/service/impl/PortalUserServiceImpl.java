@@ -12,6 +12,7 @@ import com.central.organization.model.PortalUser;
 import com.central.organization.model.UserPersonalConfig;
 import com.central.organization.model.Workposition;
 import com.central.organization.model.Department;
+import com.central.organization.model.vo.WorkpositionVO;
 import com.central.organization.service.MenuPermissionService;
 import com.central.organization.service.PortalUserService;
 import lombok.extern.slf4j.Slf4j;
@@ -203,7 +204,32 @@ public class PortalUserServiceImpl implements PortalUserService {
             
             // 获取分管岗位（实现多岗位关联表）
             if (employee.getPositionId() != null) {
-                List<Workposition> subPositions = workpositionMapper.selectSubPositionsByPositionId(employee.getPositionId(), user.getTenantId() != null ? user.getTenantId() : "default");
+                List<WorkpositionVO> subPositionsVO = workpositionMapper.selectSubPositionsByPositionId(employee.getPositionId(), user.getTenantId() != null ? user.getTenantId() : "default");
+                // 转换VO为实体
+                List<Workposition> subPositions = subPositionsVO.stream().map(vo -> {
+                    Workposition position = new Workposition();
+                    position.setId(Long.parseLong(vo.getId()));
+                    position.setName(vo.getName());
+                    position.setShortName(vo.getShortName());
+                    position.setDepartmentId(Long.parseLong(vo.getDepartmentId()));
+                    position.setPositionLevel(vo.getPositionLevel());
+                    position.setJobDescription(vo.getJobDescription());
+                    position.setRequirements(vo.getRequirements());
+                    position.setSalaryRange(vo.getSalaryRange());
+                    position.setMaxEmployees(vo.getMaxEmployees());
+                    position.setMenuIds(vo.getMenuIds());
+                    position.setMenuFuncIds(vo.getMenuFuncIds());
+                    position.setIsManager(vo.getIsManager());
+                    position.setIsDirector(vo.getIsDirector());
+                    position.setSortOrder(vo.getSortOrder());
+                    position.setStatus(vo.getStatus());
+                    position.setTenantId(vo.getTenantId());
+                    position.setCreatedAt(vo.getCreatedAt());
+                    position.setUpdatedAt(vo.getUpdatedAt());
+                    position.setCreatedBy(Long.parseLong(vo.getCreatedBy()));
+                    position.setUpdatedBy(Long.parseLong(vo.getUpdatedBy()));
+                    return position;
+                }).collect(java.util.stream.Collectors.toList());
                 positions.addAll(subPositions);
             }
 

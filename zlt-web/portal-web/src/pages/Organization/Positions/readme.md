@@ -7,3 +7,4 @@
 租户ID，每次请求头部带上x-tenant-header
 id字段前后端传递时需要转换，因为long类型的id传递时会丢失精度，前端页面内部传递时也需要注意，部门管理开发时已发现问题
 
+authorization

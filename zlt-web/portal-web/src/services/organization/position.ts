@@ -1,40 +1,68 @@
 import { request } from '@/utils/request';
 
+// 岗位数据类型定义
 export interface WorkPosition {
-  id: number;
+  id: string;
   name: string;
-  positionCode: string;
-  departmentId: number;
+  shortName?: string;
+  departmentId: string;
   departmentName: string;
-  level: string;
-  responsibilities: string;
-  requirements: string;
-  salaryRange: string;
-  isManager: boolean;
+  departmentPath?: string;
+  positionLevel: number;
+  positionLevelName: string;
+  jobDescription?: string;
+  requirements?: string;
+  salaryRange?: string;
+  maxEmployees?: number;
+  currentEmployees: number;
+  menuIds?: string;
+  menuFuncIds?: string;
+  isManager: number;
+  isDirector: number;
+  sortOrder?: number;
   status: number;
-  maxHeadcount: number;
-  currentHeadcount: number;
+  statusDesc: string;
   tenantId: string;
   createdAt: string;
   updatedAt: string;
+  createdBy: string;
+  createdByName?: string;
+  updatedBy: string;
+  updatedByName?: string;
 }
 
-export interface WorkPositionDetail extends WorkPosition {
-  permissions: string[];
-  employees: Array<{
-    id: number;
-    name: string;
-    empNo: string;
-    status: number;
-  }>;
-}
-
+// 查询参数类型
 export interface WorkPositionPageParams {
-  page?: number;
+  current?: number;
   size?: number;
+  name?: string;
+  shortName?: string;
+  departmentId?: string;
+  positionLevel?: number;
+  isManager?: number;
+  isDirector?: number;
+  status?: number;
   keyword?: string;
-  departmentId?: number;
-  level?: string;
+  sortField?: string;
+  sortOrder?: string;
+}
+
+// 保存DTO类型
+export interface WorkPositionSaveDTO {
+  id?: string;
+  name: string;
+  shortName?: string;
+  departmentId: string;
+  positionLevel?: number;
+  jobDescription?: string;
+  requirements?: string;
+  salaryRange?: string;
+  maxEmployees?: number;
+  menuIds?: string;
+  menuFuncIds?: string;
+  isManager?: number;
+  isDirector?: number;
+  sortOrder?: number;
   status?: number;
 }
 
@@ -42,7 +70,7 @@ export interface WorkPositionPageParams {
  * 分页查询岗位列表
  */
 export async function getWorkPositionPage(params: WorkPositionPageParams) {
-  return request('/api/organization/positions/page', {
+  return request('/api/workposition/page', {
     method: 'GET',
     params,
   });
@@ -51,8 +79,8 @@ export async function getWorkPositionPage(params: WorkPositionPageParams) {
 /**
  * 获取岗位详情
  */
-export async function getWorkPositionDetail(id: number) {
-  return request(`/api/organization/positions/${id}`, {
+export async function getWorkPositionDetail(id: string) {
+  return request(`/api/workposition/${id}`, {
     method: 'GET',
   });
 }
@@ -60,8 +88,8 @@ export async function getWorkPositionDetail(id: number) {
 /**
  * 创建岗位
  */
-export async function createWorkPosition(data: Partial<WorkPosition>) {
-  return request('/api/organization/positions', {
+export async function createWorkPosition(data: WorkPositionSaveDTO) {
+  return request('/api/workposition', {
     method: 'POST',
     data,
   });
@@ -70,8 +98,8 @@ export async function createWorkPosition(data: Partial<WorkPosition>) {
 /**
  * 更新岗位
  */
-export async function updateWorkPosition(id: number, data: Partial<WorkPosition>) {
-  return request(`/api/organization/positions/${id}`, {
+export async function updateWorkPosition(id: string, data: WorkPositionSaveDTO) {
+  return request(`/api/workposition/${id}`, {
     method: 'PUT',
     data,
   });
@@ -80,8 +108,8 @@ export async function updateWorkPosition(id: number, data: Partial<WorkPosition>
 /**
  * 删除岗位
  */
-export async function deleteWorkPosition(id: number) {
-  return request(`/api/organization/positions/${id}`, {
+export async function deleteWorkPosition(id: string) {
+  return request(`/api/workposition/${id}`, {
     method: 'DELETE',
   });
 }
@@ -89,8 +117,8 @@ export async function deleteWorkPosition(id: number) {
 /**
  * 批量删除岗位
  */
-export async function deleteWorkPositions(ids: number[]) {
-  return request('/api/organization/positions/batch', {
+export async function deleteWorkPositions(ids: string[]) {
+  return request('/api/workposition/batch', {
     method: 'DELETE',
     data: ids,
   });
@@ -99,88 +127,100 @@ export async function deleteWorkPositions(ids: number[]) {
 /**
  * 更新岗位状态
  */
-export async function updateWorkPositionStatus(id: number, status: number) {
-  return request(`/api/organization/positions/${id}/status`, {
+export async function updateWorkPositionStatus(ids: string[], status: number) {
+  return request('/api/workposition/status', {
     method: 'PUT',
-    params: { status },
+    data: { ids, status },
   });
 }
 
 /**
  * 复制岗位
  */
-export async function copyWorkPosition(id: number, targetDepartmentId: number) {
-  return request(`/api/organization/positions/${id}/copy`, {
+export async function copyWorkPosition(sourceId: string, targetDepartmentId: string, newName: string) {
+  return request('/api/workposition/copy', {
     method: 'POST',
-    params: { targetDepartmentId },
+    data: {
+      sourceId,
+      targetDepartmentId,
+      newName,
+    },
   });
 }
 
 /**
  * 根据部门查询岗位
  */
-export async function getWorkPositionsByDepartment(departmentId: number, includeSubDepartments: boolean = false) {
-  return request(`/api/organization/positions/department/${departmentId}`, {
+export async function getWorkPositionsByDepartment(departmentId: string) {
+  return request(`/api/workposition/department/${departmentId}`, {
     method: 'GET',
-    params: { includeSubDepartments },
   });
 }
 
 /**
- * 查询可用岗位（用于下拉选择）
+ * 根据员工ID查询岗位列表
  */
-export async function getAvailableWorkPositions(departmentId?: number) {
-  return request('/api/organization/positions/available', {
+export async function getWorkPositionsByEmployee(employeeId: string) {
+  return request(`/api/workposition/employee/${employeeId}`, {
     method: 'GET',
-    params: { departmentId },
+  });
+}
+
+/**
+ * 根据用户ID查询岗位列表
+ */
+export async function getWorkPositionsByUser(userId: string) {
+  return request(`/api/workposition/user/${userId}`, {
+    method: 'GET',
+  });
+}
+
+/**
+ * 查询管理岗位列表
+ */
+export async function getManagerPositions() {
+  return request('/api/workposition/manager', {
+    method: 'GET',
   });
 }
 
 /**
  * 验证岗位名称是否可用
  */
-export async function checkPositionNameAvailable(name: string, departmentId: number, excludeId?: number) {
-  return request('/api/organization/positions/check-name', {
+export async function checkPositionNameAvailable(name: string, departmentId: string, excludeId?: string) {
+  return request('/api/workposition/check-name', {
     method: 'GET',
     params: { name, departmentId, excludeId },
   });
 }
 
 /**
- * 验证岗位编号是否可用
+ * 配置岗位权限
  */
-export async function checkPositionCodeAvailable(positionCode: string, excludeId?: number) {
-  return request('/api/organization/positions/check-code', {
-    method: 'GET',
-    params: { positionCode, excludeId },
+export async function configWorkPositionPermissions(positionId: string, menuIds: string, menuFuncIds: string) {
+  return request(`/api/workposition/${positionId}/permissions`, {
+    method: 'POST',
+    data: {
+      menuIds,
+      menuFuncIds,
+    },
   });
 }
 
 /**
- * 生成岗位编号
+ * 获取岗位权限配置
  */
-export async function generatePositionCode(departmentId: number) {
-  return request('/api/organization/positions/generate-code', {
-    method: 'GET',
-    params: { departmentId },
-  });
-}
-
-/**
- * 获取权限菜单树
- */
-export async function getPermissionMenuTree() {
-  return request('/api/organization/positions/permissions/tree', {
+export async function getWorkPositionPermissions(positionId: string) {
+  return request(`/api/workposition/${positionId}/permissions`, {
     method: 'GET',
   });
 }
 
 /**
- * 更新岗位权限
+ * 获取菜单树（用于权限配置）
  */
-export async function updatePositionPermissions(positionId: number, permissions: string) {
-  return request(`/api/organization/positions/${positionId}/permissions`, {
-    method: 'PUT',
-    data: { permissions },
+export async function getMenuTree() {
+  return request('/api/menu/tree', {
+    method: 'GET',
   });
 } 

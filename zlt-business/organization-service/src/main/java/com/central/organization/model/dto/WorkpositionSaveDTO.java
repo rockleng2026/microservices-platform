@@ -1,35 +1,33 @@
-package com.central.organization.model;
+package com.central.organization.model.dto;
 
-import com.baomidou.mybatisplus.annotation.*;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
- * 工作岗位表
+ * 岗位保存/更新DTO
  * 
  * @author Portal Team
  * @since 2024-12-19
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("workposition")
-public class Workposition implements Serializable {
+public class WorkpositionSaveDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * 主键ID
+     * 主键ID（更新时必填）
      */
-    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**
      * 岗位名称
      */
+    @NotBlank(message = "岗位名称不能为空")
     private String name;
 
     /**
@@ -40,10 +38,11 @@ public class Workposition implements Serializable {
     /**
      * 所属部门ID
      */
+    @NotNull(message = "所属部门不能为空")
     private Long departmentId;
 
     /**
-     * 岗位级别（1-5级别）
+     * 岗位级别
      */
     private Integer positionLevel;
 
@@ -96,41 +95,4 @@ public class Workposition implements Serializable {
      * 状态(1启用,0禁用)
      */
     private Integer status;
-
-    /**
-     * 删除标识(0正常,1删除)
-     */
-    @TableLogic
-    private Integer delflag;
-
-    /**
-     * 租户ID
-     */
-    private String tenantId;
-
-    /**
-     * 创建时间
-     */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @TableField(fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
-
-    /**
-     * 更新时间
-     */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
-
-    /**
-     * 创建人ID
-     */
-    @TableField(fill = FieldFill.INSERT)
-    private Long createdBy;
-
-    /**
-     * 更新人ID
-     */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private Long updatedBy;
 } 

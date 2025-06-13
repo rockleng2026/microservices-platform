@@ -1,6 +1,5 @@
-package com.central.organization.model;
+package com.central.organization.model.vo;
 
-import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -9,23 +8,21 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * 工作岗位表
+ * 岗位视图对象
  * 
  * @author Portal Team
  * @since 2024-12-19
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("workposition")
-public class Workposition implements Serializable {
+public class WorkpositionVO implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
     /**
      * 主键ID
      */
-    @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
+    private String id;
 
     /**
      * 岗位名称
@@ -40,12 +37,27 @@ public class Workposition implements Serializable {
     /**
      * 所属部门ID
      */
-    private Long departmentId;
+    private String departmentId;
 
     /**
-     * 岗位级别（1-5级别）
+     * 所属部门名称
+     */
+    private String departmentName;
+
+    /**
+     * 部门路径
+     */
+    private String departmentPath;
+
+    /**
+     * 岗位级别
      */
     private Integer positionLevel;
+
+    /**
+     * 岗位级别名称
+     */
+    private String positionLevelName;
 
     /**
      * 岗位职责描述
@@ -66,6 +78,11 @@ public class Workposition implements Serializable {
      * 最大任职人数
      */
     private Integer maxEmployees;
+
+    /**
+     * 当前任职人数
+     */
+    private Integer currentEmployees;
 
     /**
      * 菜单权限ID列表（逗号分隔）
@@ -98,10 +115,9 @@ public class Workposition implements Serializable {
     private Integer status;
 
     /**
-     * 删除标识(0正常,1删除)
+     * 状态描述
      */
-    @TableLogic
-    private Integer delflag;
+    private String statusDesc;
 
     /**
      * 租户ID
@@ -112,25 +128,31 @@ public class Workposition implements Serializable {
      * 创建时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
     /**
      * 更新时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
     /**
      * 创建人ID
      */
-    @TableField(fill = FieldFill.INSERT)
-    private Long createdBy;
+    private String createdBy;
+
+    /**
+     * 创建人姓名
+     */
+    private String createdByName;
 
     /**
      * 更新人ID
      */
-    @TableField(fill = FieldFill.INSERT_UPDATE)
-    private Long updatedBy;
+    private String updatedBy;
+
+    /**
+     * 更新人姓名
+     */
+    private String updatedByName;
 } 

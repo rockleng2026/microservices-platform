@@ -3,115 +3,279 @@
 <mapper namespace="com.central.organization.mapper.WorkpositionMapper">
 
     <!-- 结果映射 -->
-    <resultMap id="BaseResultMap" type="com.central.organization.model.Workposition">
-        <id column="id" property="id" jdbcType="BIGINT"/>
-        <result column="name" property="name" jdbcType="VARCHAR"/>
-        <result column="short_name" property="shortName" jdbcType="VARCHAR"/>
-        <result column="department_id" property="departmentId" jdbcType="BIGINT"/>
-        <result column="position_level" property="positionLevel" jdbcType="INTEGER"/>
-        <result column="job_description" property="jobDescription" jdbcType="CLOB"/>
-        <result column="requirements" property="requirements" jdbcType="CLOB"/>
-        <result column="salary_range" property="salaryRange" jdbcType="VARCHAR"/>
-        <result column="max_employees" property="maxEmployees" jdbcType="INTEGER"/>
-        <result column="menu_ids" property="menuIds" jdbcType="CLOB"/>
-        <result column="menu_func_ids" property="menuFuncIds" jdbcType="CLOB"/>
-        <result column="is_manager" property="isManager" jdbcType="TINYINT"/>
-        <result column="is_director" property="isDirector" jdbcType="TINYINT"/>
-        <result column="sort_order" property="sortOrder" jdbcType="INTEGER"/>
-        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
-        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
-        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
-        <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
-        <result column="updated_by" property="updatedBy" jdbcType="BIGINT"/>
+    <resultMap id="WorkpositionVOResult" type="com.central.organization.model.vo.WorkpositionVO">
+        <id property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="shortName" column="short_name"/>
+        <result property="departmentId" column="department_id"/>
+        <result property="departmentName" column="department_name"/>
+        <result property="departmentPath" column="department_path"/>
+        <result property="positionLevel" column="position_level"/>
+        <result property="positionLevelName" column="position_level_name"/>
+        <result property="jobDescription" column="job_description"/>
+        <result property="requirements" column="requirements"/>
+        <result property="salaryRange" column="salary_range"/>
+        <result property="maxEmployees" column="max_employees"/>
+        <result property="currentEmployees" column="current_employees"/>
+        <result property="menuIds" column="menu_ids"/>
+        <result property="menuFuncIds" column="menu_func_ids"/>
+        <result property="isManager" column="is_manager"/>
+        <result property="isDirector" column="is_director"/>
+        <result property="sortOrder" column="sort_order"/>
+        <result property="status" column="status"/>
+        <result property="statusDesc" column="status_desc"/>
+        <result property="tenantId" column="tenant_id"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+        <result property="createdBy" column="created_by"/>
+        <result property="createdByName" column="created_by_name"/>
+        <result property="updatedBy" column="updated_by"/>
+        <result property="updatedByName" column="updated_by_name"/>
     </resultMap>
 
-    <!-- 基础字段 -->
+    <!-- 通用查询字段 -->
     <sql id="Base_Column_List">
-        id, name, short_name, department_id, position_level, job_description, requirements,
-        salary_range, max_employees, menu_ids, menu_func_ids, is_manager, is_director,
-        sort_order, tenant_id, created_at, updated_at, created_by, updated_by
+        w.id,
+        w.name,
+        w.short_name,
+        w.department_id,
+        w.position_level,
+        w.job_description,
+        w.requirements,
+        w.salary_range,
+        w.max_employees,
+        w.menu_ids,
+        w.menu_func_ids,
+        w.is_manager,
+        w.is_director,
+        w.sort_order,
+        w.status,
+        w.tenant_id,
+        w.created_at,
+        w.updated_at,
+        w.created_by,
+        w.updated_by
     </sql>
 
+    <!-- 详情查询字段（包含关联信息） -->
+    <sql id="Detail_Column_List">
+        <include refid="Base_Column_List"/>,
+        d.name AS department_name,
+        d.dep_no AS department_path,
+        CASE w.position_level
+            WHEN 5 THEN '高级经理级'
+            WHEN 4 THEN '总经理级'
+            WHEN 3 THEN '主管级'
+            WHEN 2 THEN '组长级'
+            WHEN 1 THEN '成员级'
+            ELSE '未设置'
+        END AS position_level_name,
+        CASE w.status
+            WHEN 1 THEN '启用'
+            WHEN 0 THEN '禁用'
+            ELSE '未知'
+        END AS status_desc,
+        (SELECT COUNT(1) FROM employee e WHERE e.position_id = w.id AND e.employment_status = 1 AND e.delflag = 0 AND e.tenant_id = w.tenant_id) AS current_employees,
+        ec.name AS created_by_name,
+        eu.name AS updated_by_name
+    </sql>
+
+    <!-- 查询条件 -->
+    <sql id="Query_Where_Clause">
+        <where>
+            w.delflag = 0
+            AND w.tenant_id = #{tenantId}
+            <if test="query != null">
+                <if test="query.name != null and query.name != ''">
+                    AND w.name LIKE CONCAT('%', #{query.name}, '%')
+                </if>
+                <if test="query.shortName != null and query.shortName != ''">
+                    AND w.short_name LIKE CONCAT('%', #{query.shortName}, '%')
+                </if>
+                <if test="query.departmentId != null">
+                    AND w.department_id = #{query.departmentId}
+                </if>
+                <if test="query.positionLevel != null">
+                    AND w.position_level = #{query.positionLevel}
+                </if>
+                <if test="query.isManager != null">
+                    AND w.is_manager = #{query.isManager}
+                </if>
+                <if test="query.isDirector != null">
+                    AND w.is_director = #{query.isDirector}
+                </if>
+                <if test="query.status != null">
+                    AND w.status = #{query.status}
+                </if>
+                <if test="query.keyword != null and query.keyword != ''">
+                    AND (w.name LIKE CONCAT('%', #{query.keyword}, '%') 
+                         OR w.short_name LIKE CONCAT('%', #{query.keyword}, '%'))
+                </if>
+            </if>
+        </where>
+    </sql>
+
+    <!-- 分页查询岗位列表 -->
+    <select id="selectPageList" resultMap="WorkpositionVOResult">
+        SELECT
+        <include refid="Detail_Column_List"/>
+        FROM workposition w
+        LEFT JOIN department d ON w.department_id = d.id AND d.delflag = 0 AND d.tenant_id = w.tenant_id
+        LEFT JOIN employee ec ON w.created_by = ec.id AND ec.delflag = 0 AND ec.tenant_id = w.tenant_id
+        LEFT JOIN employee eu ON w.updated_by = eu.id AND eu.delflag = 0 AND eu.tenant_id = w.tenant_id
+        <include refid="Query_Where_Clause"/>
+        <choose>
+            <when test="query != null and query.sortField != null and query.sortField != ''">
+                ORDER BY w.${query.sortField}
+                <if test="query.sortOrder != null and query.sortOrder == 'desc'">DESC</if>
+                <if test="query.sortOrder == null or query.sortOrder != 'desc'">ASC</if>
+            </when>
+            <otherwise>
+                ORDER BY w.sort_order ASC, w.created_at DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 根据ID查询岗位详情 -->
+    <select id="selectDetailById" resultMap="WorkpositionVOResult">
+        SELECT
+        <include refid="Detail_Column_List"/>
+        FROM workposition w
+        LEFT JOIN department d ON w.department_id = d.id AND d.delflag = 0 AND d.tenant_id = w.tenant_id
+        LEFT JOIN employee ec ON w.created_by = ec.id AND ec.delflag = 0 AND ec.tenant_id = w.tenant_id
+        LEFT JOIN employee eu ON w.updated_by = eu.id AND eu.delflag = 0 AND eu.tenant_id = w.tenant_id
+        WHERE w.id = #{id} AND w.delflag = 0 AND w.tenant_id = #{tenantId}
+    </select>
+
     <!-- 根据部门ID查询岗位列表 -->
-    <select id="selectByDepartmentId" resultMap="BaseResultMap">
+    <select id="selectByDepartmentId" resultMap="WorkpositionVOResult">
         SELECT
-        <include refid="Base_Column_List"/>
-        FROM workposition
-        WHERE department_id = #{departmentId}
-        AND tenant_id = #{tenantId}
-        ORDER BY sort_order ASC
+        <include refid="Detail_Column_List"/>
+        FROM workposition w
+        LEFT JOIN department d ON w.department_id = d.id AND d.delflag = 0 AND d.tenant_id = w.tenant_id
+        LEFT JOIN employee ec ON w.created_by = ec.id AND ec.delflag = 0 AND ec.tenant_id = w.tenant_id
+        LEFT JOIN employee eu ON w.updated_by = eu.id AND eu.delflag = 0 AND eu.tenant_id = w.tenant_id
+        WHERE w.department_id = #{departmentId} AND w.delflag = 0 AND w.tenant_id = #{tenantId}
+        ORDER BY w.sort_order ASC, w.created_at DESC
     </select>
 
-    <!-- 根据员工ID查询岗位列表（通过员工关联） -->
-    <select id="selectByEmployeeId" resultMap="BaseResultMap">
+    <!-- 根据员工ID查询岗位列表 -->
+    <select id="selectByEmployeeId" resultMap="WorkpositionVOResult">
         SELECT
-        <include refid="Base_Column_List"/>
-        FROM workposition wp
-        WHERE EXISTS (
-            SELECT 1 FROM employee e 
-            WHERE e.id = #{employeeId} 
-            AND e.position_id = wp.id
-            AND e.tenant_id = #{tenantId}
+        <include refid="Detail_Column_List"/>
+        FROM workposition w
+        LEFT JOIN department d ON w.department_id = d.id AND d.delflag = 0 AND d.tenant_id = w.tenant_id
+        LEFT JOIN employee ec ON w.created_by = ec.id AND ec.delflag = 0 AND ec.tenant_id = w.tenant_id
+        LEFT JOIN employee eu ON w.updated_by = eu.id AND eu.delflag = 0 AND eu.tenant_id = w.tenant_id
+        WHERE w.id IN (
+            SELECT ep.position_id FROM employee_position ep 
+            WHERE ep.employee_id = #{employeeId} AND ep.tenant_id = #{tenantId}
+            UNION
+            SELECT e.position_id FROM employee e 
+            WHERE e.id = #{employeeId} AND e.position_id IS NOT NULL AND e.delflag = 0 AND e.tenant_id = #{tenantId}
         )
-        AND wp.tenant_id = #{tenantId}
-        ORDER BY wp.sort_order ASC
+        AND w.delflag = 0 AND w.tenant_id = #{tenantId}
+        ORDER BY w.sort_order ASC
     </select>
 
-    <!-- 根据用户ID查询岗位列表（通过用户-员工-岗位关联） -->
-    <select id="selectByUserId" resultMap="BaseResultMap">
+    <!-- 根据用户ID查询岗位列表 -->
+    <select id="selectByUserId" resultMap="WorkpositionVOResult">
         SELECT
-        <include refid="Base_Column_List"/>
-        FROM workposition wp
-        WHERE EXISTS (
-            SELECT 1 FROM employee e
+        <include refid="Detail_Column_List"/>
+        FROM workposition w
+        LEFT JOIN department d ON w.department_id = d.id AND d.delflag = 0 AND d.tenant_id = w.tenant_id
+        LEFT JOIN employee ec ON w.created_by = ec.id AND ec.delflag = 0 AND ec.tenant_id = w.tenant_id
+        LEFT JOIN employee eu ON w.updated_by = eu.id AND eu.delflag = 0 AND eu.tenant_id = w.tenant_id
+        WHERE w.id IN (
+            SELECT DISTINCT wp.id FROM workposition wp
+            INNER JOIN employee e ON e.position_id = wp.id
             INNER JOIN users u ON u.employee_id = e.id
-            WHERE u.id = #{userId}
-            AND e.position_id = wp.id
-            AND u.tenant_id = #{tenantId}
+            WHERE u.id = #{userId} AND u.tenant_id = #{tenantId}
+            AND e.employment_status = 1 AND e.delflag = 0 AND e.tenant_id = #{tenantId}
+            AND wp.delflag = 0 AND wp.tenant_id = #{tenantId}
         )
-        AND wp.tenant_id = #{tenantId}
-        ORDER BY wp.sort_order ASC
+        AND w.delflag = 0 AND w.tenant_id = #{tenantId}
+        ORDER BY w.sort_order ASC
     </select>
 
     <!-- 查询管理岗位列表 -->
-    <select id="selectManagerPositions" resultMap="BaseResultMap">
+    <select id="selectManagerPositions" resultMap="WorkpositionVOResult">
         SELECT
-        <include refid="Base_Column_List"/>
-        FROM workposition
-        WHERE (is_manager = 1 OR is_director = 1)
-        AND tenant_id = #{tenantId}
-        ORDER BY position_level ASC, sort_order ASC
+        <include refid="Detail_Column_List"/>
+        FROM workposition w
+        LEFT JOIN department d ON w.department_id = d.id AND d.delflag = 0 AND d.tenant_id = w.tenant_id
+        LEFT JOIN employee ec ON w.created_by = ec.id AND ec.delflag = 0 AND ec.tenant_id = w.tenant_id
+        LEFT JOIN employee eu ON w.updated_by = eu.id AND eu.delflag = 0 AND eu.tenant_id = w.tenant_id
+        WHERE w.is_manager = 1 AND w.delflag = 0 AND w.tenant_id = #{tenantId}
+        ORDER BY w.sort_order ASC, w.created_at DESC
     </select>
 
-    <!-- 根据岗位ID查询分管岗位列表（从workposition_manage_dept表获取） -->
-    <select id="selectSubPositionsByPositionId" resultMap="BaseResultMap">
-        SELECT wp.id,
-               wp.name,
-               wp.short_name,
-               wp.department_id,
-               wp.position_level,
-               wp.job_description,
-               wp.requirements,
-               wp.salary_range,
-               wp.max_employees,
-               wp.menu_ids,
-               wp.menu_func_ids,
-               wp.is_manager,
-               wp.is_director,
-               wp.sort_order,
-               wp.tenant_id,
-               wp.created_at,
-               wp.updated_at,
-               wp.created_by,
-               wp.updated_by
-        FROM workposition wp
-        where wp.id in (select charge_workposition_id
-                        from workposition_manage_dept wmd
-                        WHERE wmd.workposition_id = #{positionId}
-                          AND wmd.tenant_id = #{tenantId}
-                          AND wp.status = 1
-                          AND wp.delflag = 0)
-        ORDER BY wp.sort_order ASC
+    <!-- 根据岗位ID查询分管岗位列表 -->
+    <select id="selectSubPositionsByPositionId" resultMap="WorkpositionVOResult">
+        SELECT
+        <include refid="Detail_Column_List"/>
+        FROM workposition w
+        LEFT JOIN department d ON w.department_id = d.id AND d.delflag = 0 AND d.tenant_id = w.tenant_id
+        LEFT JOIN employee ec ON w.created_by = ec.id AND ec.delflag = 0 AND ec.tenant_id = w.tenant_id
+        LEFT JOIN employee eu ON w.updated_by = eu.id AND eu.delflag = 0 AND eu.tenant_id = w.tenant_id
+        INNER JOIN workposition_manage_dept wmd ON w.id = wmd.charge_workposition_id
+        WHERE wmd.workposition_id = #{positionId} AND wmd.tenant_id = #{tenantId}
+        AND w.delflag = 0 AND w.tenant_id = #{tenantId}
+        ORDER BY w.sort_order ASC
+    </select>
+
+    <!-- 检查岗位名称是否已存在 -->
+    <select id="checkNameExists" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM workposition
+        WHERE name = #{name}
+        AND department_id = #{departmentId}
+        AND delflag = 0
+        AND tenant_id = #{tenantId}
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+
+    <!-- 批量删除岗位 -->
+    <update id="batchDelete">
+        UPDATE workposition
+        SET delflag = 1, updated_at = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND tenant_id = #{tenantId}
+    </update>
+
+    <!-- 更新岗位状态 -->
+    <update id="updateStatus">
+        UPDATE workposition
+        SET status = #{status}, updated_at = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND tenant_id = #{tenantId}
+    </update>
+
+    <!-- 获取部门下岗位数量 -->
+    <select id="getPositionCountByDepartment" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM workposition
+        WHERE department_id = #{departmentId}
+        AND delflag = 0
+        AND tenant_id = #{tenantId}
+    </select>
+
+    <!-- 获取岗位下员工数量 -->
+    <select id="getEmployeeCountByPosition" resultType="java.lang.Integer">
+        SELECT COUNT(1)
+        FROM employee
+        WHERE position_id = #{positionId}
+        AND employment_status = 1
+        AND delflag = 0
+        AND tenant_id = #{tenantId}
     </select>
 
 </mapper> 

@@ -346,13 +346,95 @@ public class EmployeeController {
     }
 
     /**
-     * 生成员工编号
+     * 导出员工数据
      * 
-     * @return 员工编号
+     * @param query 查询条件
+     * @return 员工列表
+     */
+    @PostMapping("/export")
+    public Result<List<EmployeeVO>> exportEmployees(@RequestBody EmployeeQueryDTO query) {
+        // ID转换处理
+        if (query.getDepartmentId() != null) {
+            query.setDepartmentId(IdUtils.stringToLong(query.getDepartmentId().toString()));
+        }
+        if (query.getPositionId() != null) {
+            query.setPositionId(IdUtils.stringToLong(query.getPositionId().toString()));
+        }
+        if (query.getGradeId() != null) {
+            query.setGradeId(IdUtils.stringToLong(query.getGradeId().toString()));
+        }
+
+        List<EmployeeVO> employees = employeeService.exportEmployees(query);
+        return Result.success(employees);
+    }
+
+    /**
+     * 检查工号是否可用
+     * 
+     * @param empNo 工号
+     * @param excludeId 排除的员工ID（编辑时使用）
+     * @return 是否可用
+     */
+    @GetMapping("/check-emp-no")
+    public Result<Boolean> checkEmpNoAvailable(@RequestParam String empNo, 
+                                             @RequestParam(required = false) String excludeId) {
+        Long excludeEmployeeId = excludeId != null ? IdUtils.stringToLong(excludeId) : null;
+        boolean available = employeeService.checkEmpNoAvailable(empNo, excludeEmployeeId);
+        if (available) {
+            return Result.success(true);
+        } else {
+            return Result.error("工号已存在");
+        }
+    }
+
+    /**
+     * 检查手机号是否可用
+     * 
+     * @param phoneNumber 手机号
+     * @param excludeId 排除的员工ID（编辑时使用）
+     * @return 是否可用
+     */
+    @GetMapping("/check-phone")
+    public Result<Boolean> checkPhoneNumberAvailable(@RequestParam String phoneNumber, 
+                                                   @RequestParam(required = false) String excludeId) {
+        Long excludeEmployeeId = excludeId != null ? IdUtils.stringToLong(excludeId) : null;
+        boolean available = employeeService.checkPhoneNumberAvailable(phoneNumber, excludeEmployeeId);
+        if (available) {
+            return Result.success(true);
+        } else {
+            return Result.error("手机号已存在");
+        }
+    }
+
+    /**
+     * 检查邮箱是否可用
+     * 
+     * @param email 邮箱
+     * @param excludeId 排除的员工ID（编辑时使用）
+     * @return 是否可用
+     */
+    @GetMapping("/check-email")
+    public Result<Boolean> checkEmailAvailable(@RequestParam String email, 
+                                             @RequestParam(required = false) String excludeId) {
+        Long excludeEmployeeId = excludeId != null ? IdUtils.stringToLong(excludeId) : null;
+        boolean available = employeeService.checkEmailAvailable(email, excludeEmployeeId);
+        if (available) {
+            return Result.success(true);
+        } else {
+            return Result.error("邮箱已存在");
+        }
+    }
+
+    /**
+     * 生成工号
+     * 
+     * @param departmentId 部门ID
+     * @return 生成的工号
      */
     @GetMapping("/generate-emp-no")
-    public Result<String> generateEmpNo() {
-        String empNo = employeeService.generateEmpNo();
+    public Result<String> generateEmpNo(@RequestParam String departmentId) {
+        Long deptId = IdUtils.stringToLong(departmentId);
+        String empNo = employeeService.generateEmpNo(deptId);
         return Result.success(empNo);
     }
 
@@ -385,29 +467,6 @@ public class EmployeeController {
                 ))
                 .toList();
         return Result.success(result);
-    }
-
-    /**
-     * 导出员工数据
-     * 
-     * @param query 查询条件
-     * @return 导出数据
-     */
-    @PostMapping("/export")
-    public Result<List<EmployeeVO>> exportEmployees(@RequestBody EmployeeQueryDTO query) {
-        // ID转换处理
-        if (query.getDepartmentId() != null) {
-            query.setDepartmentId(IdUtils.stringToLong(query.getDepartmentId().toString()));
-        }
-        if (query.getPositionId() != null) {
-            query.setPositionId(IdUtils.stringToLong(query.getPositionId().toString()));
-        }
-        if (query.getGradeId() != null) {
-            query.setGradeId(IdUtils.stringToLong(query.getGradeId().toString()));
-        }
-        
-        List<EmployeeVO> employees = employeeService.exportEmployees(query);
-        return Result.success(employees);
     }
 
     // 内部DTO类定义

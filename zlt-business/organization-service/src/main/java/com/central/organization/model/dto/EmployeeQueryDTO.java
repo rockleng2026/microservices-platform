@@ -58,6 +58,11 @@ public class EmployeeQueryDTO implements Serializable {
     private Long positionId;
 
     /**
+     * 岗位名称
+     */
+    private String positionName;
+
+    /**
      * 员工等级ID
      */
     @LongToString

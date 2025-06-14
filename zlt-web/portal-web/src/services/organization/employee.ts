@@ -71,9 +71,13 @@ export interface EmployeePageParams {
   page?: number;
   size?: number;
   keyword?: string;
+  empNo?: string;
+  mobile?: string;
+  positionName?: string;
   departmentId?: number;
   positionId?: number;
   status?: number;
+  employmentStatus?: number;
   employmentType?: string;
 }
 
@@ -109,7 +113,7 @@ export async function getEmployeeDetail(id: number) {
  * 创建员工
  */
 export async function createEmployee(data: Partial<Employee>) {
-  return request(`${API_BASE}/api/organization/employee`, {
+  return request(`${API_BASE}/api/organization/employee/save`, {
     method: 'POST',
     data,
   });
@@ -119,9 +123,12 @@ export async function createEmployee(data: Partial<Employee>) {
  * 更新员工
  */
 export async function updateEmployee(id: number, data: Partial<Employee>) {
-  return request(`${API_BASE}/api/organization/employee/${id}`, {
-    method: 'PUT',
-    data,
+  return request(`${API_BASE}/api/organization/employee/save`, {
+    method: 'POST',
+    data: {
+      ...data,
+      id: id
+    },
   });
 }
 

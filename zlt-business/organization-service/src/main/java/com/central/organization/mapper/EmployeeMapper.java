@@ -235,6 +235,15 @@ public interface EmployeeMapper {
     Boolean existsIdCard(@Param("idCard") String idCard, @Param("excludeId") Long excludeId);
 
     /**
+     * 检查邮箱是否存在
+     * 
+     * @param email 邮箱
+     * @param excludeId 排除的员工ID
+     * @return 是否存在
+     */
+    Boolean existsEmail(@Param("email") String email, @Param("excludeId") Long excludeId);
+
+    /**
      * 获取员工统计信息
      * 
      * @return 统计信息

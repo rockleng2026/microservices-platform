@@ -27,6 +27,8 @@
         <result column="leave_reason" property="leaveReason" jdbcType="VARCHAR"/>
         <result column="login_account_flag" property="loginAccountFlag" jdbcType="TINYINT"/>
         <result column="education" property="education" jdbcType="VARCHAR"/>
+        <result column="graduation_school" property="graduationSchool" jdbcType="VARCHAR"/>
+        <result column="major" property="major" jdbcType="VARCHAR"/>
         <result column="nation" property="nation" jdbcType="VARCHAR"/>
         <result column="health_status" property="healthStatus" jdbcType="VARCHAR"/>
         <result column="height" property="height" jdbcType="VARCHAR"/>
@@ -34,11 +36,13 @@
         <result column="marital_status" property="maritalStatus" jdbcType="VARCHAR"/>
         <result column="work_years" property="workYears" jdbcType="INTEGER"/>
         <result column="birthplace" property="birthplace" jdbcType="VARCHAR"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
         <result column="emergency_contact" property="emergencyContact" jdbcType="VARCHAR"/>
         <result column="emergency_phone" property="emergencyPhone" jdbcType="VARCHAR"/>
         <result column="specialty" property="specialty" jdbcType="VARCHAR"/>
         <result column="avatar" property="avatar" jdbcType="VARCHAR"/>
         <result column="remark" property="remark" jdbcType="VARCHAR"/>
+        <result column="age" property="age" jdbcType="INTEGER"/>
         <result column="delflag" property="delflag" jdbcType="TINYINT"/>
         <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
         <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
@@ -91,12 +95,12 @@
 
     <!-- 基础字段 -->
     <sql id="baseColumns">
-        e.id, e.emp_no, e.name, e.name_en, e.birth_date, e.gender, e.id_card, 
+        e.id, e.emp_no, e.name, e.name_en, e.birth_date, e.age, e.gender, e.id_card, 
         e.mobile, e.email, e.department_id, d.name as department_name, 
         e.position_id, p.name as position_name, e.grade_id,
         e.employment_type, e.employment_status, e.entry_date,
         e.probation_end_date, e.regularization_date, e.leave_date, e.leave_reason,
-        e.login_account_flag, e.education, e.nation, e.health_status, e.height, e.weight,
+        e.login_account_flag, e.education, e.graduation_school, e.major, e.nation, e.health_status, e.height, e.weight,
         e.marital_status, e.work_years, e.birthplace, e.address,
         e.emergency_contact, e.emergency_phone, e.specialty, e.avatar, e.remark, e.delflag,
         e.tenant_id, e.created_at, e.updated_at, e.created_by, e.updated_by
@@ -124,6 +128,21 @@
                 OR e.emp_no LIKE CONCAT('%', #{query.keyword}, '%')
                 OR e.mobile LIKE CONCAT('%', #{query.keyword}, '%'))
             </if>
+            <if test="query.empNo != null and query.empNo != ''">
+                AND e.emp_no = #{query.empNo}
+            </if>
+            <if test="query.mobile != null and query.mobile != ''">
+                AND e.mobile LIKE CONCAT('%', #{query.mobile}, '%')
+            </if>
+            <if test="query.name != null and query.name != ''">
+                AND e.name LIKE CONCAT('%', #{query.name}, '%')
+            </if>
+            <if test="query.email != null and query.email != ''">
+                AND e.email = #{query.email}
+            </if>
+            <if test="query.idCard != null and query.idCard != ''">
+                AND e.id_card = #{query.idCard}
+            </if>
             <if test="query.departmentId != null">
                 AND e.department_id = #{query.departmentId}
             </if>
@@ -135,6 +154,9 @@
             </if>
             <if test="query.positionId != null">
                 AND e.position_id = #{query.positionId}
+            </if>
+            <if test="query.positionName != null and query.positionName != ''">
+                AND p.name LIKE CONCAT('%', #{query.positionName}, '%')
             </if>
             <if test="query.gradeId != null">
                 AND e.grade_id = #{query.gradeId}
@@ -231,6 +253,8 @@
     <select id="selectCount" resultType="java.lang.Long">
         SELECT COUNT(1)
         FROM employee e
+        LEFT JOIN department d ON e.department_id = d.id
+        LEFT JOIN workposition p ON e.position_id = p.id
         <include refid="whereConditions"/>
     </select>
 
@@ -312,13 +336,21 @@
     <!-- 新增员工 -->
     <insert id="insert" parameterType="com.central.organization.model.Employee" useGeneratedKeys="true" keyProperty="id">
         INSERT INTO employee (
-            emp_no, name, name_en, birth_date, gender, id_card, mobile, email,
+            emp_no, name, name_en, birth_date, age, gender, id_card, mobile, email,
             department_id, position_id, grade_id, employment_type, employment_status, 
-            entry_date, education, tenant_id, created_at, updated_at, created_by, updated_by
+            entry_date, probation_end_date, regularization_date, leave_date, leave_reason,
+            login_account_flag, education, graduation_school, major, nation, health_status,
+            height, weight, marital_status, work_years, birthplace, address,
+            emergency_contact, emergency_phone, specialty, avatar, remark,
+            tenant_id, created_at, updated_at, created_by, updated_by
         ) VALUES (
-            #{empNo}, #{name}, #{nameEn}, #{birthDate}, #{gender}, #{idCard}, #{mobile}, #{email},
+            #{empNo}, #{name}, #{nameEn}, #{birthDate}, #{age}, #{gender}, #{idCard}, #{mobile}, #{email},
             #{departmentId}, #{positionId}, #{gradeId}, #{employmentType}, #{employmentStatus}, 
-            #{entryDate}, #{education}, #{tenantId}, #{createdAt}, #{updatedAt}, #{createdBy}, #{updatedBy}
+            #{entryDate}, #{probationEndDate}, #{regularizationDate}, #{leaveDate}, #{leaveReason},
+            #{loginAccountFlag}, #{education}, #{graduationSchool}, #{major}, #{nation}, #{healthStatus},
+            #{height}, #{weight}, #{maritalStatus}, #{workYears}, #{birthplace}, #{address},
+            #{emergencyContact}, #{emergencyPhone}, #{specialty}, #{avatar}, #{remark},
+            #{tenantId}, #{createdAt}, #{updatedAt}, #{createdBy}, #{updatedBy}
         )
     </insert>
 
@@ -326,9 +358,11 @@
     <update id="updateById" parameterType="com.central.organization.model.Employee">
         UPDATE employee
         <set>
+            <if test="empNo != null">emp_no = #{empNo},</if>
             <if test="name != null">name = #{name},</if>
             <if test="nameEn != null">name_en = #{nameEn},</if>
             <if test="birthDate != null">birth_date = #{birthDate},</if>
+            <if test="age != null">age = #{age},</if>
             <if test="gender != null">gender = #{gender},</if>
             <if test="idCard != null">id_card = #{idCard},</if>
             <if test="mobile != null">mobile = #{mobile},</if>
@@ -339,7 +373,27 @@
             <if test="employmentType != null">employment_type = #{employmentType},</if>
             <if test="employmentStatus != null">employment_status = #{employmentStatus},</if>
             <if test="entryDate != null">entry_date = #{entryDate},</if>
+            <if test="probationEndDate != null">probation_end_date = #{probationEndDate},</if>
+            <if test="regularizationDate != null">regularization_date = #{regularizationDate},</if>
+            <if test="leaveDate != null">leave_date = #{leaveDate},</if>
+            <if test="leaveReason != null">leave_reason = #{leaveReason},</if>
+            <if test="loginAccountFlag != null">login_account_flag = #{loginAccountFlag},</if>
             <if test="education != null">education = #{education},</if>
+            <if test="graduationSchool != null">graduation_school = #{graduationSchool},</if>
+            <if test="major != null">major = #{major},</if>
+            <if test="nation != null">nation = #{nation},</if>
+            <if test="healthStatus != null">health_status = #{healthStatus},</if>
+            <if test="height != null">height = #{height},</if>
+            <if test="weight != null">weight = #{weight},</if>
+            <if test="maritalStatus != null">marital_status = #{maritalStatus},</if>
+            <if test="workYears != null">work_years = #{workYears},</if>
+            <if test="birthplace != null">birthplace = #{birthplace},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="emergencyContact != null">emergency_contact = #{emergencyContact},</if>
+            <if test="emergencyPhone != null">emergency_phone = #{emergencyPhone},</if>
+            <if test="specialty != null">specialty = #{specialty},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="remark != null">remark = #{remark},</if>
             <if test="updatedBy != null">updated_by = #{updatedBy},</if>
             updated_at = NOW()
         </set>
@@ -386,6 +440,17 @@
         SELECT COUNT(1) > 0
         FROM employee
         WHERE id_card = #{idCard}
+        AND delflag = 0
+        <if test="excludeId != null">
+            AND id != #{excludeId}
+        </if>
+    </select>
+
+    <!-- 检查邮箱是否存在 -->
+    <select id="existsEmail" resultType="java.lang.Boolean">
+        SELECT COUNT(1) > 0
+        FROM employee
+        WHERE email = #{email}
         AND delflag = 0
         <if test="excludeId != null">
             AND id != #{excludeId}

@@ -174,9 +174,37 @@ public interface IEmployeeService {
     /**
      * 生成员工编号
      * 
+     * @param departmentId 部门ID
      * @return 员工编号
      */
-    String generateEmpNo();
+    String generateEmpNo(Long departmentId);
+
+    /**
+     * 检查工号是否可用
+     * 
+     * @param empNo 工号
+     * @param excludeId 排除的员工ID（编辑时使用）
+     * @return 是否可用
+     */
+    Boolean checkEmpNoAvailable(String empNo, Long excludeId);
+
+    /**
+     * 检查手机号是否可用
+     * 
+     * @param phoneNumber 手机号
+     * @param excludeId 排除的员工ID（编辑时使用）
+     * @return 是否可用
+     */
+    Boolean checkPhoneNumberAvailable(String phoneNumber, Long excludeId);
+
+    /**
+     * 检查邮箱是否可用
+     * 
+     * @param email 邮箱
+     * @param excludeId 排除的员工ID（编辑时使用）
+     * @return 是否可用
+     */
+    Boolean checkEmailAvailable(String email, Long excludeId);
 
     /**
      * 验证员工数据

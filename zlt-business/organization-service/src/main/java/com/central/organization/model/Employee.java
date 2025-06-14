@@ -52,6 +52,11 @@ public class Employee implements Serializable {
     private Date birthDate;
 
     /**
+     * 年龄
+     */
+    private Integer age;
+
+    /**
      * 性别(1:男,2:女)
      */
     private Integer gender;
@@ -151,6 +156,16 @@ public class Employee implements Serializable {
     private String education;
 
     /**
+     * 毕业院校
+     */
+    private String graduationSchool;
+
+    /**
+     * 专业
+     */
+    private String major;
+
+    /**
      * 民族
      */
     private String nation;
@@ -188,7 +203,7 @@ public class Employee implements Serializable {
     /**
      * 现居住地
      */
-    private String residence;
+    private String address;
 
     /**
      * 紧急联系人

@@ -127,20 +127,57 @@ public class EmployeeServiceImpl implements IEmployeeService {
         Employee employee = new Employee();
         BeanUtil.copyProperties(saveDTO, employee);
 
+        // 手动映射字段名不匹配的字段
+        if (StrUtil.isNotBlank(saveDTO.getGraduateSchool())) {
+            employee.setGraduationSchool(saveDTO.getGraduateSchool());
+        }
+        
+        // 映射民族字段：前端传递nation，后端存储为ethnicity
+        if (StrUtil.isNotBlank(saveDTO.getNation())) {
+            employee.setNation(saveDTO.getNation());
+        }
+        
+        // 映射籍贯字段：前端传递birthplace，后端存储为nativePlace
+        if (StrUtil.isNotBlank(saveDTO.getBirthplace())) {
+            employee.setBirthplace(saveDTO.getBirthplace());
+        }
+
+        // 自动计算年龄
+        if (employee.getBirthDate() != null) {
+            int age = DateUtil.ageOfNow(employee.getBirthDate());
+            employee.setAge(age);
+        }
+
         LocalDateTime now = LocalDateTime.now();
         if (employee.getId() == null) {
             // 新增
             employee.setId(IdUtils.nextId());
             if (StrUtil.isBlank(employee.getEmpNo())) {
-                employee.setEmpNo(generateEmpNo());
+                employee.setEmpNo(generateEmpNo(saveDTO.getDepartmentId()));
             }
             employee.setCreatedAt(now);
             employee.setDelflag(0);
+            
+            // 设置租户ID - 这里需要从当前上下文获取，暂时设置为默认值
+            if (StrUtil.isBlank(employee.getTenantId())) {
+                employee.setTenantId("default");
+            }
+            
+            // 设置创建人 - 这里需要从当前上下文获取，暂时设置为默认值
+            if (employee.getCreatedBy() == null) {
+                employee.setCreatedBy(1L); // 默认系统用户
+            }
             
             employeeMapper.insert(employee);
         } else {
             // 修改
             employee.setUpdatedAt(now);
+            
+            // 设置更新人 - 这里需要从当前上下文获取，暂时设置为默认值
+            if (employee.getUpdatedBy() == null) {
+                employee.setUpdatedBy(1L); // 默认系统用户
+            }
+            
             employeeMapper.updateById(employee);
         }
 
@@ -334,9 +371,18 @@ public class EmployeeServiceImpl implements IEmployeeService {
     }
 
     @Override
-    public String generateEmpNo() {
+    public String generateEmpNo(Long departmentId) {
         String prefix = "EMP";
         Integer year = DateUtil.thisYear();
+        
+        // 如果有部门ID，可以根据部门生成特定前缀的工号
+        if (departmentId != null) {
+            Department department = departmentMapper.selectById(departmentId);
+            if (department != null && StrUtil.isNotBlank(department.getDepNo())) {
+                prefix = department.getDepNo();
+            }
+        }
+        
         return employeeMapper.generateNextEmpNo(prefix, year);
     }
 
@@ -451,5 +497,32 @@ public class EmployeeServiceImpl implements IEmployeeService {
     @Override
     public List<EmployeeMapper.DepartmentEmployeeDistributionVO> getDepartmentDistribution() {
         return employeeMapper.getDepartmentDistribution();
+    }
+
+    @Override
+    public Boolean checkEmpNoAvailable(String empNo, Long excludeId) {
+        if (StrUtil.isBlank(empNo)) {
+            return false;
+        }
+        Boolean exists = employeeMapper.existsEmpNo(empNo, excludeId);
+        return !Boolean.TRUE.equals(exists);
+    }
+
+    @Override
+    public Boolean checkPhoneNumberAvailable(String phoneNumber, Long excludeId) {
+        if (StrUtil.isBlank(phoneNumber)) {
+            return false;
+        }
+        Boolean exists = employeeMapper.existsMobile(phoneNumber, excludeId);
+        return !Boolean.TRUE.equals(exists);
+    }
+
+    @Override
+    public Boolean checkEmailAvailable(String email, Long excludeId) {
+        if (StrUtil.isBlank(email)) {
+            return false;
+        }
+        Boolean exists = employeeMapper.existsEmail(email, excludeId);
+        return !Boolean.TRUE.equals(exists);
     }
 } 

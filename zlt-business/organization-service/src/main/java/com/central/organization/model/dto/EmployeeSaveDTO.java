@@ -148,7 +148,7 @@ public class EmployeeSaveDTO implements Serializable {
      * 转正日期
      */
     @JsonFormat(pattern = "yyyy-MM-dd")
-    private Date regularDate;
+    private Date regularizationDate;
 
     /**
      * 离职日期
@@ -213,9 +213,19 @@ public class EmployeeSaveDTO implements Serializable {
     private String ethnicity;
 
     /**
+     * 民族(前端传递字段名)
+     */
+    private String nation;
+
+    /**
      * 籍贯
      */
     private String nativePlace;
+
+    /**
+     * 籍贯(前端传递字段名)
+     */
+    private String birthplace;
 
     /**
      * 户口性质(1:城镇,2:农村)
@@ -246,6 +256,36 @@ public class EmployeeSaveDTO implements Serializable {
      * 备注
      */
     private String remark;
+
+    /**
+     * 身高(cm)
+     */
+    private String height;
+
+    /**
+     * 体重(kg)
+     */
+    private String weight;
+
+    /**
+     * 健康状况
+     */
+    private String healthStatus;
+
+    /**
+     * 现居住地
+     */
+    private String residence;
+
+    /**
+     * 专业技能
+     */
+    private String specialty;
+
+    /**
+     * 工作年限
+     */
+    private Integer workYears;
 
     /**
      * 排序号

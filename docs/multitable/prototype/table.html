@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>多维表格 - 项目任务管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            height: 60px;
+            background: #fff;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: #1890ff;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #1890ff, #722ed1);
+            border-radius: 8px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #8c8c8c;
+        }
+
+        .breadcrumb a {
+            color: #8c8c8c;
+            text-decoration: none;
+        }
+
+        .breadcrumb a:hover {
+            color: #1890ff;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-btn {
+            padding: 8px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .header-btn.primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        .table-sidebar {
+            width: 260px;
+            background: white;
+            border-right: 1px solid #e8e8e8;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .table-header {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .table-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .table-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, #1890ff, #40a9ff);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+        }
+
+        .table-description {
+            color: #8c8c8c;
+            font-size: 14px;
+        }
+
+        .view-tabs {
+            padding: 0 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .view-tab {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            cursor: pointer;
+            font-size: 14px;
+            gap: 8px;
+            border-bottom: 2px solid transparent;
+        }
+
+        .view-tab.active {
+            color: #1890ff;
+            border-bottom-color: #1890ff;
+        }
+
+        .tools-panel {
+            flex: 1;
+            padding: 16px;
+        }
+
+        .tool-section {
+            margin-bottom: 20px;
+        }
+
+        .tool-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #262626;
+        }
+
+        .tool-btn {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            margin-bottom: 8px;
+            text-align: left;
+            transition: all 0.3s;
+        }
+
+        .tool-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .toolbar {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #fafafa;
+        }
+
+        .toolbar-btn {
+            padding: 6px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.3s;
+        }
+
+        .toolbar-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .toolbar-btn.active {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .table-container {
+            flex: 1;
+            overflow: auto;
+            background: white;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            min-width: 800px;
+        }
+
+        .data-table th {
+            background: #fafafa;
+            border: 1px solid #f0f0f0;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 14px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .data-table td {
+            border: 1px solid #f0f0f0;
+            padding: 8px;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        .data-table tr:hover {
+            background: #f5f5f5;
+        }
+
+        .field-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .field-type-icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: white;
+        }
+
+        .cell-content {
+            min-height: 20px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 2px;
+        }
+
+        .cell-content:hover {
+            background: #f0f0f0;
+        }
+
+        .status-tag {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-todo {
+            background: #f6ffed;
+            color: #389e0d;
+            border: 1px solid #b7eb8f;
+        }
+
+        .status-doing {
+            background: #e6f7ff;
+            color: #1890ff;
+            border: 1px solid #91d5ff;
+        }
+
+        .status-done {
+            background: #f9f0ff;
+            color: #722ed1;
+            border: 1px solid #d3adf7;
+        }
+
+        .priority-high {
+            color: #ff4d4f;
+            font-weight: 600;
+        }
+
+        .priority-medium {
+            color: #fa8c16;
+            font-weight: 600;
+        }
+
+        .priority-low {
+            color: #52c41a;
+            font-weight: 600;
+        }
+
+        .user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        .add-row-btn {
+            padding: 8px;
+            text-align: center;
+            color: #8c8c8c;
+            cursor: pointer;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .add-row-btn:hover {
+            background: #f5f5f5;
+            color: #1890ff;
+        }
+
+        .filter-panel {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #e8e8e8;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 16px;
+            z-index: 100;
+            display: none;
+        }
+
+        .filter-panel.show {
+            display: block;
+        }
+
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            background: white;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 20px;
+        }
+
+        .btn-cancel {
+            padding: 8px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            padding: 8px 16px;
+            border: 1px solid #1890ff;
+            border-radius: 6px;
+            background: #1890ff;
+            color: white;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div class="header">
+        <div class="logo" onclick="location.href='index.html'">
+            <div class="logo-icon">MT</div>
+            多维表格
+        </div>
+        
+        <div class="breadcrumb">
+            <a href="index.html">首页</a>
+            <span>/</span>
+            <a href="#">我的工作区</a>
+            <span>/</span>
+            <span style="color: #262626;">项目任务管理</span>
+        </div>
+        
+        <div class="header-right">
+            <button class="header-btn" onclick="showFieldConfig()">⚙️ 字段配置</button>
+            <button class="header-btn">📤 分享</button>
+            <button class="header-btn primary">💾 保存</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- 表格侧边栏 -->
+        <div class="table-sidebar">
+            <div class="table-header">
+                <div class="table-title">
+                    <div class="table-icon">📋</div>
+                    项目任务管理
+                </div>
+                <div class="table-description">团队项目任务跟踪和进度管理</div>
+            </div>
+            
+            <div class="view-tabs">
+                <div class="view-tab active">
+                    <span>📊</span>
+                    <span>表格视图</span>
+                </div>
+                <div class="view-tab">
+                    <span>📋</span>
+                    <span>看板视图</span>
+                </div>
+                <div class="view-tab">
+                    <span>📅</span>
+                    <span>日历视图</span>
+                </div>
+                <div class="view-tab">
+                    <span>📈</span>
+                    <span>甘特图</span>
+                </div>
+            </div>
+            
+            <div class="tools-panel">
+                <div class="tool-section">
+                    <div class="tool-title">筛选和排序</div>
+                    <button class="tool-btn" onclick="showFilter()">🔍 添加筛选</button>
+                    <button class="tool-btn">📊 排序</button>
+                    <button class="tool-btn">👥 分组</button>
+                </div>
+                
+                <div class="tool-section">
+                    <div class="tool-title">字段管理</div>
+                    <button class="tool-btn" onclick="showAddField()">➕ 添加字段</button>
+                    <button class="tool-btn">👁️ 隐藏字段</button>
+                    <button class="tool-btn">🔧 字段属性</button>
+                </div>
+                
+                <div class="tool-section">
+                    <div class="tool-title">数据操作</div>
+                    <button class="tool-btn">📥 导入数据</button>
+                    <button class="tool-btn">📤 导出数据</button>
+                    <button class="tool-btn">🗑️ 批量删除</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="content">
+            <div class="toolbar">
+                <button class="toolbar-btn active">全部任务</button>
+                <button class="toolbar-btn">待处理</button>
+                <button class="toolbar-btn">进行中</button>
+                <button class="toolbar-btn">已完成</button>
+                <div style="margin-left: auto; display: flex; gap: 8px;">
+                    <button class="toolbar-btn">🔍 搜索</button>
+                    <button class="toolbar-btn">⚙️ 设置</button>
+                </div>
+            </div>
+            
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">
+                                <input type="checkbox">
+                            </th>
+                            <th style="width: 200px;">
+                                <div class="field-header">
+                                    <div class="field-type-icon" style="background: #1890ff;">T</div>
+                                    <span>任务名称</span>
+                                </div>
+                            </th>
+                            <th style="width: 120px;">
+                                <div class="field-header">
+                                    <div class="field-type-icon" style="background: #52c41a;">S</div>
+                                    <span>状态</span>
+                                </div>
+                            </th>
+                            <th style="width: 100px;">
+                                <div class="field-header">
+                                    <div class="field-type-icon" style="background: #fa8c16;">P</div>
+                                    <span>优先级</span>
+                                </div>
+                            </th>
+                            <th style="width: 120px;">
+                                <div class="field-header">
+                                    <div class="field-type-icon" style="background: #722ed1;">U</div>
+                                    <span>负责人</span>
+                                </div>
+                            </th>
+                            <th style="width: 120px;">
+                                <div class="field-header">
+                                    <div class="field-type-icon" style="background: #13c2c2;">D</div>
+                                    <span>截止日期</span>
+                                </div>
+                            </th>
+                            <th style="width: 100px;">
+                                <div class="field-header">
+                                    <div class="field-type-icon" style="background: #eb2f96;">%</div>
+                                    <span>进度</span>
+                                </div>
+                            </th>
+                            <th>
+                                <div class="field-header">
+                                    <div class="field-type-icon" style="background: #8c8c8c;">T</div>
+                                    <span>备注</span>
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td><div class="cell-content">完成用户登录功能</div></td>
+                            <td><span class="status-tag status-doing">进行中</span></td>
+                            <td><span class="priority-high">高</span></td>
+                            <td><div class="user-avatar">张</div></td>
+                            <td><div class="cell-content">2024-12-25</div></td>
+                            <td><div class="cell-content">75%</div></td>
+                            <td><div class="cell-content">需要完成前端和后端开发</div></td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td><div class="cell-content">设计数据库表结构</div></td>
+                            <td><span class="status-tag status-done">已完成</span></td>
+                            <td><span class="priority-medium">中</span></td>
+                            <td><div class="user-avatar">李</div></td>
+                            <td><div class="cell-content">2024-12-20</div></td>
+                            <td><div class="cell-content">100%</div></td>
+                            <td><div class="cell-content">已经完成所有表的设计</div></td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td><div class="cell-content">编写API接口文档</div></td>
+                            <td><span class="status-tag status-todo">待处理</span></td>
+                            <td><span class="priority-low">低</span></td>
+                            <td><div class="user-avatar">王</div></td>
+                            <td><div class="cell-content">2024-12-28</div></td>
+                            <td><div class="cell-content">30%</div></td>
+                            <td><div class="cell-content">等待确认接口规范</div></td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td><div class="cell-content">前端UI界面开发</div></td>
+                            <td><span class="status-tag status-doing">进行中</span></td>
+                            <td><span class="priority-high">高</span></td>
+                            <td><div class="user-avatar">陈</div></td>
+                            <td><div class="cell-content">2024-12-30</div></td>
+                            <td><div class="cell-content">60%</div></td>
+                            <td><div class="cell-content">主要页面已完成</div></td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox"></td>
+                            <td><div class="cell-content">系统测试和调试</div></td>
+                            <td><span class="status-tag status-todo">待处理</span></td>
+                            <td><span class="priority-medium">中</span></td>
+                            <td><div class="user-avatar">刘</div></td>
+                            <td><div class="cell-content">2025-01-05</div></td>
+                            <td><div class="cell-content">0%</div></td>
+                            <td><div class="cell-content">等待开发完成后开始测试</div></td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+                <div class="add-row-btn" onclick="addNewRow()">
+                    ➕ 添加新行
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 字段配置模态框 -->
+    <div class="modal" id="fieldConfigModal">
+        <div class="modal-content">
+            <div class="modal-header">字段配置</div>
+            <div class="form-group">
+                <label class="form-label">字段名称</label>
+                <input type="text" class="form-input" placeholder="请输入字段名称">
+            </div>
+            <div class="form-group">
+                <label class="form-label">字段类型</label>
+                <select class="form-select">
+                    <option value="text">文本</option>
+                    <option value="number">数字</option>
+                    <option value="date">日期</option>
+                    <option value="select">单选</option>
+                    <option value="multiselect">多选</option>
+                    <option value="user">人员</option>
+                    <option value="attachment">附件</option>
+                    <option value="formula">公式</option>
+                    <option value="link">关联</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">描述</label>
+                <input type="text" class="form-input" placeholder="字段描述（可选）">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="hideFieldConfig()">取消</button>
+                <button class="btn-primary" onclick="location.href='field-config.html'">高级配置</button>
+                <button class="btn-primary">确定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加字段模态框 -->
+    <div class="modal" id="addFieldModal">
+        <div class="modal-content">
+            <div class="modal-header">添加字段</div>
+            <div class="form-group">
+                <label class="form-label">字段名称</label>
+                <input type="text" class="form-input" placeholder="请输入字段名称">
+            </div>
+            <div class="form-group">
+                <label class="form-label">字段类型</label>
+                <select class="form-select">
+                    <option value="text">文本</option>
+                    <option value="number">数字</option>
+                    <option value="date">日期</option>
+                    <option value="select">单选</option>
+                    <option value="multiselect">多选</option>
+                    <option value="user">人员</option>
+                    <option value="attachment">附件</option>
+                    <option value="formula">公式</option>
+                    <option value="link">关联</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="hideAddField()">取消</button>
+                <button class="btn-primary">添加</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showFieldConfig() {
+            document.getElementById('fieldConfigModal').classList.add('show');
+        }
+
+        function hideFieldConfig() {
+            document.getElementById('fieldConfigModal').classList.remove('show');
+        }
+
+        function showAddField() {
+            document.getElementById('addFieldModal').classList.add('show');
+        }
+
+        function hideAddField() {
+            document.getElementById('addFieldModal').classList.remove('show');
+        }
+
+        function addNewRow() {
+            alert('添加新行功能');
+        }
+
+        function showFilter() {
+            alert('筛选功能');
+        }
+
+        // 点击模态框背景关闭
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html> 

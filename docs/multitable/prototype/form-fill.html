@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>客户满意度调查问卷 - 多维表格</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .form-container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .form-header {
+            background: linear-gradient(135deg, #1890ff, #722ed1);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+        }
+
+        .form-title {
+            font-size: 28px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .form-description {
+            font-size: 16px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .form-body {
+            padding: 40px 30px;
+        }
+
+        .form-field {
+            margin-bottom: 32px;
+        }
+
+        .field-label {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: #262626;
+            display: flex;
+            align-items: center;
+        }
+
+        .required-mark {
+            color: #ff4d4f;
+            margin-left: 4px;
+            font-size: 18px;
+        }
+
+        .field-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e8e8e8;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        .field-input:focus {
+            outline: none;
+            border-color: #1890ff;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+        }
+
+        .field-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e8e8e8;
+            border-radius: 8px;
+            font-size: 16px;
+            min-height: 120px;
+            resize: vertical;
+            transition: all 0.3s;
+            background: #fafafa;
+            font-family: inherit;
+        }
+
+        .field-textarea:focus {
+            outline: none;
+            border-color: #1890ff;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+        }
+
+        .radio-group, .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .radio-option, .checkbox-option {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border: 2px solid #f0f0f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fafafa;
+        }
+
+        .radio-option:hover, .checkbox-option:hover {
+            border-color: #1890ff;
+            background: #f0f9ff;
+        }
+
+        .radio-option.selected, .checkbox-option.selected {
+            border-color: #1890ff;
+            background: #e6f7ff;
+        }
+
+        .radio-option input, .checkbox-option input {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .option-text {
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .rating-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 16px;
+            background: #fafafa;
+            border-radius: 8px;
+            border: 2px solid #f0f0f0;
+            transition: border-color 0.3s;
+        }
+
+        .rating-group:hover {
+            border-color: #1890ff;
+        }
+
+        .star {
+            font-size: 32px;
+            color: #d9d9d9;
+            cursor: pointer;
+            transition: all 0.3s;
+            user-select: none;
+        }
+
+        .star:hover,
+        .star.hover {
+            color: #fadb14;
+            transform: scale(1.1);
+        }
+
+        .star.active {
+            color: #fadb14;
+        }
+
+        .rating-text {
+            margin-left: 16px;
+            font-size: 16px;
+            color: #8c8c8c;
+            min-width: 80px;
+        }
+
+        .form-progress {
+            height: 4px;
+            background: #f0f0f0;
+            border-radius: 2px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #1890ff, #722ed1);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .form-footer {
+            padding: 30px;
+            background: #fafafa;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .progress-info {
+            color: #8c8c8c;
+            font-size: 14px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+            border: 1px solid #d9d9d9;
+        }
+
+        .btn-secondary:hover {
+            background: #e8e8e8;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #1890ff, #40a9ff);
+            color: white;
+            box-shadow: 0 2px 8px rgba(24, 144, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #40a9ff, #1890ff);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(24, 144, 255, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: #d9d9d9;
+            color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .field-error {
+            color: #ff4d4f;
+            font-size: 14px;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .field-input.error,
+        .field-textarea.error {
+            border-color: #ff4d4f;
+            background: #fff2f0;
+        }
+
+        .success-message {
+            display: none;
+            text-align: center;
+            padding: 60px 30px;
+        }
+
+        .success-icon {
+            font-size: 64px;
+            color: #52c41a;
+            margin-bottom: 20px;
+        }
+
+        .success-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #262626;
+        }
+
+        .success-description {
+            font-size: 16px;
+            color: #8c8c8c;
+            line-height: 1.6;
+        }
+
+        .field-help {
+            font-size: 14px;
+            color: #8c8c8c;
+            margin-top: 6px;
+            line-height: 1.5;
+        }
+
+        .question-number {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 24px;
+            height: 24px;
+            background: #1890ff;
+            color: white;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        /* 动画效果 */
+        .form-field {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.6s ease forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+
+            .form-header {
+                padding: 30px 20px;
+            }
+
+            .form-title {
+                font-size: 24px;
+            }
+
+            .form-body {
+                padding: 30px 20px;
+            }
+
+            .form-footer {
+                padding: 20px;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .button-group {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .btn {
+                flex: 1;
+                max-width: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <div class="form-header">
+            <div class="form-title">客户满意度调查问卷</div>
+            <div class="form-description">
+                感谢您参与我们的客户满意度调查。您的宝贵意见将帮助我们改进服务质量，为您提供更好的体验。
+            </div>
+        </div>
+        
+        <div class="form-progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+        
+        <form class="form-body" id="surveyForm">
+            <!-- 姓名字段 -->
+            <div class="form-field" style="animation-delay: 0.1s">
+                <div class="field-label">
+                    <span class="question-number">1</span>
+                    您的姓名
+                    <span class="required-mark">*</span>
+                </div>
+                <input type="text" class="field-input" name="name" placeholder="请输入您的姓名" required>
+                <div class="field-error">请输入您的姓名</div>
+                <div class="field-help">我们将对您的个人信息严格保密</div>
+            </div>
+            
+            <!-- 年龄段字段 -->
+            <div class="form-field" style="animation-delay: 0.2s">
+                <div class="field-label">
+                    <span class="question-number">2</span>
+                    您的年龄段
+                </div>
+                <div class="radio-group">
+                    <label class="radio-option" onclick="selectRadio(this)">
+                        <input type="radio" name="age" value="18-25">
+                        <span class="option-text">18-25岁</span>
+                    </label>
+                    <label class="radio-option" onclick="selectRadio(this)">
+                        <input type="radio" name="age" value="26-35">
+                        <span class="option-text">26-35岁</span>
+                    </label>
+                    <label class="radio-option" onclick="selectRadio(this)">
+                        <input type="radio" name="age" value="36-45">
+                        <span class="option-text">36-45岁</span>
+                    </label>
+                    <label class="radio-option" onclick="selectRadio(this)">
+                        <input type="radio" name="age" value="46+">
+                        <span class="option-text">46岁以上</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- 满意度评分字段 -->
+            <div class="form-field" style="animation-delay: 0.3s">
+                <div class="field-label">
+                    <span class="question-number">3</span>
+                    整体满意度评分
+                    <span class="required-mark">*</span>
+                </div>
+                <div class="rating-group">
+                    <span class="star" data-rating="1" onclick="setRating(1)">⭐</span>
+                    <span class="star" data-rating="2" onclick="setRating(2)">⭐</span>
+                    <span class="star" data-rating="3" onclick="setRating(3)">⭐</span>
+                    <span class="star" data-rating="4" onclick="setRating(4)">⭐</span>
+                    <span class="star" data-rating="5" onclick="setRating(5)">⭐</span>
+                    <span class="rating-text" id="ratingText">请评分</span>
+                </div>
+                <input type="hidden" name="rating" id="ratingValue" required>
+                <div class="field-error">请为我们的服务评分</div>
+            </div>
+            
+            <!-- 改进方面字段 -->
+            <div class="form-field" style="animation-delay: 0.4s">
+                <div class="field-label">
+                    <span class="question-number">4</span>
+                    您认为我们需要改进的方面（多选）
+                </div>
+                <div class="checkbox-group">
+                    <label class="checkbox-option" onclick="toggleCheckbox(this)">
+                        <input type="checkbox" name="improvement" value="service">
+                        <span class="option-text">服务态度</span>
+                    </label>
+                    <label class="checkbox-option" onclick="toggleCheckbox(this)">
+                        <input type="checkbox" name="improvement" value="speed">
+                        <span class="option-text">响应速度</span>
+                    </label>
+                    <label class="checkbox-option" onclick="toggleCheckbox(this)">
+                        <input type="checkbox" name="improvement" value="quality">
+                        <span class="option-text">产品质量</span>
+                    </label>
+                    <label class="checkbox-option" onclick="toggleCheckbox(this)">
+                        <input type="checkbox" name="improvement" value="price">
+                        <span class="option-text">价格合理性</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- 建议字段 -->
+            <div class="form-field" style="animation-delay: 0.5s">
+                <div class="field-label">
+                    <span class="question-number">5</span>
+                    其他建议或意见
+                </div>
+                <textarea class="field-textarea" name="suggestions" placeholder="请输入您的建议或意见..."></textarea>
+                <div class="field-help">您的建议对我们非常重要，请尽量详细描述</div>
+            </div>
+        </form>
+        
+        <div class="form-footer">
+            <div class="progress-info">
+                已完成 <span id="completedFields">0</span> / <span id="totalFields">5</span> 题
+            </div>
+            <div class="button-group">
+                <button type="button" class="btn btn-secondary" onclick="resetForm()">重置</button>
+                <button type="submit" class="btn btn-primary" onclick="submitForm()" id="submitBtn">
+                    提交问卷
+                </button>
+            </div>
+        </div>
+        
+        <!-- 成功提示 -->
+        <div class="success-message" id="successMessage">
+            <div class="success-icon">✅</div>
+            <div class="success-title">提交成功！</div>
+            <div class="success-description">
+                感谢您的参与！您的反馈对我们改进服务非常重要。<br>
+                我们会认真对待每一条建议，持续为您提供更好的服务体验。
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentRating = 0;
+        const ratingTexts = ['请评分', '很不满意', '不满意', '一般', '满意', '非常满意'];
+        
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateProgress();
+            addFormListeners();
+        });
+        
+        // 添加表单监听器
+        function addFormListeners() {
+            const inputs = document.querySelectorAll('input[type="text"], textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', updateProgress);
+                input.addEventListener('blur', validateField);
+            });
+            
+            // 星星悬停效果
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((star, index) => {
+                star.addEventListener('mouseenter', function() {
+                    highlightStars(index + 1);
+                });
+                
+                star.addEventListener('mouseleave', function() {
+                    highlightStars(currentRating);
+                });
+            });
+        }
+        
+        // 选择单选项
+        function selectRadio(element) {
+            // 清除同组其他选项的选中状态
+            const group = element.closest('.radio-group');
+            group.querySelectorAll('.radio-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 选中当前选项
+            element.classList.add('selected');
+            element.querySelector('input').checked = true;
+            
+            updateProgress();
+        }
+        
+        // 切换复选框
+        function toggleCheckbox(element) {
+            const checkbox = element.querySelector('input');
+            checkbox.checked = !checkbox.checked;
+            
+            if (checkbox.checked) {
+                element.classList.add('selected');
+            } else {
+                element.classList.remove('selected');
+            }
+            
+            updateProgress();
+        }
+        
+        // 设置评分
+        function setRating(rating) {
+            currentRating = rating;
+            document.getElementById('ratingValue').value = rating;
+            document.getElementById('ratingText').textContent = ratingTexts[rating];
+            
+            highlightStars(rating);
+            updateProgress();
+        }
+        
+        // 高亮星星
+        function highlightStars(rating) {
+            const stars = document.querySelectorAll('.star');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
+                }
+            });
+        }
+        
+        // 更新进度
+        function updateProgress() {
+            const totalFields = 5;
+            let completedFields = 0;
+            
+            // 检查姓名
+            const name = document.querySelector('input[name="name"]').value.trim();
+            if (name) completedFields++;
+            
+            // 检查年龄
+            const age = document.querySelector('input[name="age"]:checked');
+            if (age) completedFields++;
+            
+            // 检查评分
+            if (currentRating > 0) completedFields++;
+            
+            // 检查改进方面（可选）
+            const improvements = document.querySelectorAll('input[name="improvement"]:checked');
+            if (improvements.length > 0) completedFields++;
+            
+            // 检查建议（可选）
+            const suggestions = document.querySelector('textarea[name="suggestions"]').value.trim();
+            if (suggestions) completedFields++;
+            
+            // 更新进度条
+            const progress = (completedFields / totalFields) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            // 更新进度文字
+            document.getElementById('completedFields').textContent = completedFields;
+            document.getElementById('totalFields').textContent = totalFields;
+            
+            // 更新提交按钮状态
+            const submitBtn = document.getElementById('submitBtn');
+            const requiredCompleted = name && age && currentRating > 0;
+            submitBtn.disabled = !requiredCompleted;
+        }
+        
+        // 验证字段
+        function validateField(event) {
+            const field = event.target;
+            const fieldContainer = field.closest('.form-field');
+            const errorElement = fieldContainer.querySelector('.field-error');
+            
+            // 清除之前的错误状态
+            field.classList.remove('error');
+            errorElement.style.display = 'none';
+            
+            // 验证必填字段
+            if (field.hasAttribute('required') && !field.value.trim()) {
+                field.classList.add('error');
+                errorElement.style.display = 'block';
+                return false;
+            }
+            
+            return true;
+        }
+        
+        // 提交表单
+        function submitForm() {
+            const form = document.getElementById('surveyForm');
+            const formData = new FormData(form);
+            
+            // 验证必填字段
+            const name = formData.get('name');
+            const age = formData.get('age');
+            const rating = formData.get('rating');
+            
+            if (!name || !name.trim()) {
+                showFieldError('name', '请输入您的姓名');
+                return;
+            }
+            
+            if (!rating) {
+                showFieldError('rating', '请为我们的服务评分');
+                return;
+            }
+            
+            // 显示提交动画
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.textContent = '提交中...';
+            submitBtn.disabled = true;
+            
+            // 模拟提交延迟
+            setTimeout(() => {
+                // 隐藏表单，显示成功消息
+                document.querySelector('.form-body').style.display = 'none';
+                document.querySelector('.form-footer').style.display = 'none';
+                document.querySelector('.form-progress').style.display = 'none';
+                document.getElementById('successMessage').style.display = 'block';
+                
+                // 可以在这里发送数据到服务器
+                console.log('表单数据:', Object.fromEntries(formData));
+            }, 1500);
+        }
+        
+        // 显示字段错误
+        function showFieldError(fieldName, message) {
+            const field = document.querySelector(`[name="${fieldName}"]`);
+            const fieldContainer = field.closest('.form-field');
+            const errorElement = fieldContainer.querySelector('.field-error');
+            
+            field.classList.add('error');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            // 滚动到错误字段
+            fieldContainer.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center' 
+            });
+        }
+        
+        // 重置表单
+        function resetForm() {
+            if (confirm('确定要重置表单吗？所有已填写的内容将被清空。')) {
+                // 重置所有输入
+                document.getElementById('surveyForm').reset();
+                
+                // 清除选中状态
+                document.querySelectorAll('.radio-option, .checkbox-option').forEach(option => {
+                    option.classList.remove('selected');
+                });
+                
+                // 重置评分
+                currentRating = 0;
+                document.getElementById('ratingValue').value = '';
+                document.getElementById('ratingText').textContent = '请评分';
+                highlightStars(0);
+                
+                // 清除错误状态
+                document.querySelectorAll('.field-input, .field-textarea').forEach(field => {
+                    field.classList.remove('error');
+                });
+                document.querySelectorAll('.field-error').forEach(error => {
+                    error.style.display = 'none';
+                });
+                
+                // 更新进度
+                updateProgress();
+                
+                // 滚动到顶部
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', function(e) {
+            // Ctrl+Enter 提交表单
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                if (!document.getElementById('submitBtn').disabled) {
+                    submitForm();
+                }
+            }
+            
+            // Escape 重置表单
+            if (e.key === 'Escape') {
+                e.preventDefault();
+                resetForm();
+            }
+        });
+    </script>
+</body>
+</html> 

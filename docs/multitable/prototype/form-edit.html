@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>问卷调查表编辑 - 多维表格</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .header {
+            height: 60px;
+            background: #fff;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            font-size: 20px;
+            font-weight: 600;
+            color: #1890ff;
+            cursor: pointer;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #1890ff, #722ed1);
+            border-radius: 8px;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .form-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-btn {
+            padding: 8px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+
+        .header-btn.primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 60px);
+        }
+
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e8e8e8;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-tabs {
+            display: flex;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .sidebar-tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .sidebar-tab.active {
+            color: #1890ff;
+            border-bottom-color: #1890ff;
+            background: #f0f9ff;
+        }
+
+        .components-panel {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+        }
+
+        .component-category {
+            margin-bottom: 20px;
+        }
+
+        .category-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #262626;
+        }
+
+        .component-list {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .component-item {
+            padding: 12px 8px;
+            border: 1px solid #f0f0f0;
+            border-radius: 6px;
+            cursor: grab;
+            text-align: center;
+            font-size: 12px;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .component-item:hover {
+            border-color: #1890ff;
+            background: #f0f9ff;
+        }
+
+        .component-item:active {
+            cursor: grabbing;
+        }
+
+        .component-icon {
+            width: 24px;
+            height: 24px;
+            margin: 0 auto 6px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+        }
+
+        .form-designer {
+            flex: 1;
+            background: #fafafa;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .form-preview {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            min-height: 80vh;
+        }
+
+        .form-header {
+            padding: 30px;
+            border-bottom: 1px solid #f0f0f0;
+            text-align: center;
+        }
+
+        .form-header-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        .form-header-title:hover {
+            background: #f5f5f5;
+        }
+
+        .form-header-description {
+            color: #8c8c8c;
+            font-size: 16px;
+            line-height: 1.6;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background 0.3s;
+        }
+
+        .form-header-description:hover {
+            background: #f5f5f5;
+        }
+
+        .form-body {
+            padding: 20px 30px 30px;
+        }
+
+        .form-field {
+            margin-bottom: 24px;
+            padding: 16px;
+            border: 2px dashed transparent;
+            border-radius: 6px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .form-field:hover {
+            border-color: #d9d9d9;
+            background: #fafafa;
+        }
+
+        .form-field.selected {
+            border-color: #1890ff;
+            background: #f0f9ff;
+        }
+
+        .field-toolbar {
+            position: absolute;
+            top: -12px;
+            right: 8px;
+            display: none;
+            gap: 4px;
+        }
+
+        .form-field:hover .field-toolbar,
+        .form-field.selected .field-toolbar {
+            display: flex;
+        }
+
+        .toolbar-btn {
+            width: 24px;
+            height: 24px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: #666;
+        }
+
+        .toolbar-btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .toolbar-btn.delete:hover {
+            border-color: #ff4d4f;
+            color: #ff4d4f;
+        }
+
+        .field-label {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+        }
+
+        .required-mark {
+            color: #ff4d4f;
+            margin-left: 4px;
+        }
+
+        .field-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            background: #f8f8f8;
+            pointer-events: none;
+        }
+
+        .field-textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            background: #f8f8f8;
+            pointer-events: none;
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .radio-group, .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .radio-option, .checkbox-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px;
+            background: #f8f8f8;
+            border-radius: 4px;
+        }
+
+        .rating-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .star {
+            font-size: 24px;
+            color: #d9d9d9;
+            cursor: pointer;
+        }
+
+        .star.active {
+            color: #fadb14;
+        }
+
+        .drop-zone {
+            min-height: 200px;
+            border: 2px dashed #d9d9d9;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #8c8c8c;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+
+        .drop-zone.dragover {
+            border-color: #1890ff;
+            background: #f0f9ff;
+            color: #1890ff;
+        }
+
+        .properties-panel {
+            width: 320px;
+            background: white;
+            border-left: 1px solid #e8e8e8;
+            overflow-y: auto;
+        }
+
+        .properties-header {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .properties-content {
+            padding: 16px;
+        }
+
+        .property-group {
+            margin-bottom: 20px;
+        }
+
+        .property-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #262626;
+        }
+
+        .property-field {
+            margin-bottom: 12px;
+        }
+
+        .property-label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .property-input {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        .property-select {
+            width: 100%;
+            padding: 6px 8px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 13px;
+            background: white;
+        }
+
+        .property-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .options-editor {
+            border: 1px solid #f0f0f0;
+            border-radius: 4px;
+            padding: 8px;
+            background: #fafafa;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            padding: 4px;
+        }
+
+        .option-input {
+            flex: 1;
+            padding: 4px 6px;
+            border: 1px solid #e8e8e8;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .option-delete {
+            color: #ff4d4f;
+            cursor: pointer;
+            padding: 2px;
+        }
+
+        .add-option {
+            width: 100%;
+            padding: 6px;
+            border: 1px dashed #d9d9d9;
+            border-radius: 3px;
+            background: transparent;
+            cursor: pointer;
+            color: #8c8c8c;
+            font-size: 12px;
+        }
+
+        .preview-footer {
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .submit-btn {
+            padding: 12px 32px;
+            background: #1890ff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            pointer-events: none;
+        }
+
+        .no-fields {
+            text-align: center;
+            color: #8c8c8c;
+            font-size: 16px;
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航栏 -->
+    <div class="header">
+        <div class="logo" onclick="location.href='index.html'">
+            <div class="logo-icon">MT</div>
+            多维表格
+        </div>
+        
+        <div class="form-title">问卷调查表编辑器</div>
+        
+        <div class="header-right">
+            <button class="header-btn" onclick="previewForm()">👁️ 预览</button>
+            <button class="header-btn" onclick="location.href='form-fill.html'">📝 填写表单</button>
+            <button class="header-btn">📤 发布</button>
+            <button class="header-btn primary">💾 保存</button>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <!-- 组件库侧边栏 -->
+        <div class="sidebar">
+            <div class="sidebar-tabs">
+                <div class="sidebar-tab active">组件</div>
+                <div class="sidebar-tab">模板</div>
+            </div>
+            
+            <div class="components-panel">
+                <div class="component-category">
+                    <div class="category-title">基础组件</div>
+                    <div class="component-list">
+                        <div class="component-item" draggable="true" data-type="text">
+                            <div class="component-icon">📝</div>
+                            <div>单行文本</div>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="textarea">
+                            <div class="component-icon">📄</div>
+                            <div>多行文本</div>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="number">
+                            <div class="component-icon">🔢</div>
+                            <div>数字</div>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="email">
+                            <div class="component-icon">📧</div>
+                            <div>邮箱</div>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="phone">
+                            <div class="component-icon">📞</div>
+                            <div>电话</div>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="date">
+                            <div class="component-icon">📅</div>
+                            <div>日期</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="component-category">
+                    <div class="category-title">选择组件</div>
+                    <div class="component-list">
+                        <div class="component-item" draggable="true" data-type="radio">
+                            <div class="component-icon">🔘</div>
+                            <div>单选题</div>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="checkbox">
+                            <div class="component-icon">☑️</div>
+                            <div>多选题</div>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="select">
+                            <div class="component-icon">📋</div>
+                            <div>下拉选择</div>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="rating">
+                            <div class="component-icon">⭐</div>
+                            <div>评分</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="component-category">
+                    <div class="category-title">高级组件</div>
+                    <div class="component-list">
+                        <div class="component-item" draggable="true" data-type="file">
+                            <div class="component-icon">📎</div>
+                            <div>文件上传</div>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="image">
+                            <div class="component-icon">🖼️</div>
+                            <div>图片</div>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="divider">
+                            <div class="component-icon">➖</div>
+                            <div>分割线</div>
+                        </div>
+                        <div class="component-item" draggable="true" data-type="description">
+                            <div class="component-icon">💬</div>
+                            <div>说明文字</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 表单设计器 -->
+        <div class="content">
+            <div class="form-designer">
+                <div class="form-preview">
+                    <div class="form-header">
+                        <div class="form-header-title" onclick="editTitle(this)">客户满意度调查问卷</div>
+                        <div class="form-header-description" onclick="editDescription(this)">
+                            感谢您参与我们的客户满意度调查。您的宝贵意见将帮助我们改进服务质量，为您提供更好的体验。
+                        </div>
+                    </div>
+                    
+                    <div class="form-body" id="formBody">
+                        <!-- 示例字段 -->
+                        <div class="form-field" onclick="selectField(this)" data-id="field1">
+                            <div class="field-toolbar">
+                                <div class="toolbar-btn" onclick="moveFieldUp(this)">↑</div>
+                                <div class="toolbar-btn" onclick="moveFieldDown(this)">↓</div>
+                                <div class="toolbar-btn" onclick="copyField(this)">📋</div>
+                                <div class="toolbar-btn delete" onclick="deleteField(this)">🗑️</div>
+                            </div>
+                            <div class="field-label">
+                                您的姓名
+                                <span class="required-mark">*</span>
+                            </div>
+                            <input type="text" class="field-input" placeholder="请输入您的姓名">
+                        </div>
+                        
+                        <div class="form-field" onclick="selectField(this)" data-id="field2">
+                            <div class="field-toolbar">
+                                <div class="toolbar-btn" onclick="moveFieldUp(this)">↑</div>
+                                <div class="toolbar-btn" onclick="moveFieldDown(this)">↓</div>
+                                <div class="toolbar-btn" onclick="copyField(this)">📋</div>
+                                <div class="toolbar-btn delete" onclick="deleteField(this)">🗑️</div>
+                            </div>
+                            <div class="field-label">您的年龄段</div>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="age" disabled>
+                                    <span>18-25岁</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="age" disabled>
+                                    <span>26-35岁</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="age" disabled>
+                                    <span>36-45岁</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="age" disabled>
+                                    <span>46岁以上</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-field" onclick="selectField(this)" data-id="field3">
+                            <div class="field-toolbar">
+                                <div class="toolbar-btn" onclick="moveFieldUp(this)">↑</div>
+                                <div class="toolbar-btn" onclick="moveFieldDown(this)">↓</div>
+                                <div class="toolbar-btn" onclick="copyField(this)">📋</div>
+                                <div class="toolbar-btn delete" onclick="deleteField(this)">🗑️</div>
+                            </div>
+                            <div class="field-label">
+                                整体满意度评分
+                                <span class="required-mark">*</span>
+                            </div>
+                            <div class="rating-group">
+                                <span class="star active">⭐</span>
+                                <span class="star active">⭐</span>
+                                <span class="star active">⭐</span>
+                                <span class="star active">⭐</span>
+                                <span class="star">⭐</span>
+                                <span style="margin-left: 12px; color: #8c8c8c;">非常满意</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-field" onclick="selectField(this)" data-id="field4">
+                            <div class="field-toolbar">
+                                <div class="toolbar-btn" onclick="moveFieldUp(this)">↑</div>
+                                <div class="toolbar-btn" onclick="moveFieldDown(this)">↓</div>
+                                <div class="toolbar-btn" onclick="copyField(this)">📋</div>
+                                <div class="toolbar-btn delete" onclick="deleteField(this)">🗑️</div>
+                            </div>
+                            <div class="field-label">您认为我们需要改进的方面（多选）</div>
+                            <div class="checkbox-group">
+                                <label class="checkbox-option">
+                                    <input type="checkbox" disabled>
+                                    <span>服务态度</span>
+                                </label>
+                                <label class="checkbox-option">
+                                    <input type="checkbox" disabled>
+                                    <span>响应速度</span>
+                                </label>
+                                <label class="checkbox-option">
+                                    <input type="checkbox" disabled>
+                                    <span>产品质量</span>
+                                </label>
+                                <label class="checkbox-option">
+                                    <input type="checkbox" disabled>
+                                    <span>价格合理性</span>
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div class="form-field" onclick="selectField(this)" data-id="field5">
+                            <div class="field-toolbar">
+                                <div class="toolbar-btn" onclick="moveFieldUp(this)">↑</div>
+                                <div class="toolbar-btn" onclick="moveFieldDown(this)">↓</div>
+                                <div class="toolbar-btn" onclick="copyField(this)">📋</div>
+                                <div class="toolbar-btn delete" onclick="deleteField(this)">🗑️</div>
+                            </div>
+                            <div class="field-label">其他建议或意见</div>
+                            <textarea class="field-textarea" placeholder="请输入您的建议或意见..."></textarea>
+                        </div>
+                        
+                        <div class="drop-zone" id="dropZone">
+                            拖拽组件到这里添加新字段
+                        </div>
+                    </div>
+                    
+                    <div class="preview-footer">
+                        <button class="submit-btn">提交问卷</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 属性面板 -->
+        <div class="properties-panel">
+            <div class="properties-header">字段属性</div>
+            <div class="properties-content" id="propertiesContent">
+                <div style="text-align: center; color: #8c8c8c; padding: 40px 20px;">
+                    选择一个字段来编辑属性
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let selectedField = null;
+        let fieldCounter = 6;
+        
+        // 拖拽功能
+        document.querySelectorAll('.component-item').forEach(item => {
+            item.addEventListener('dragstart', function(e) {
+                e.dataTransfer.setData('text/plain', this.dataset.type);
+            });
+        });
+        
+        const dropZone = document.getElementById('dropZone');
+        const formBody = document.getElementById('formBody');
+        
+        dropZone.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', function(e) {
+            this.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('dragover');
+            
+            const componentType = e.dataTransfer.getData('text/plain');
+            addField(componentType);
+        });
+        
+        function addField(type) {
+            const fieldId = 'field' + fieldCounter++;
+            let fieldHTML = '';
+            
+            switch(type) {
+                case 'text':
+                    fieldHTML = `
+                        <div class="form-field" onclick="selectField(this)" data-id="${fieldId}">
+                            <div class="field-toolbar">
+                                <div class="toolbar-btn" onclick="moveFieldUp(this)">↑</div>
+                                <div class="toolbar-btn" onclick="moveFieldDown(this)">↓</div>
+                                <div class="toolbar-btn" onclick="copyField(this)">📋</div>
+                                <div class="toolbar-btn delete" onclick="deleteField(this)">🗑️</div>
+                            </div>
+                            <div class="field-label">单行文本</div>
+                            <input type="text" class="field-input" placeholder="请输入">
+                        </div>
+                    `;
+                    break;
+                case 'textarea':
+                    fieldHTML = `
+                        <div class="form-field" onclick="selectField(this)" data-id="${fieldId}">
+                            <div class="field-toolbar">
+                                <div class="toolbar-btn" onclick="moveFieldUp(this)">↑</div>
+                                <div class="toolbar-btn" onclick="moveFieldDown(this)">↓</div>
+                                <div class="toolbar-btn" onclick="copyField(this)">📋</div>
+                                <div class="toolbar-btn delete" onclick="deleteField(this)">🗑️</div>
+                            </div>
+                            <div class="field-label">多行文本</div>
+                            <textarea class="field-textarea" placeholder="请输入"></textarea>
+                        </div>
+                    `;
+                    break;
+                case 'radio':
+                    fieldHTML = `
+                        <div class="form-field" onclick="selectField(this)" data-id="${fieldId}">
+                            <div class="field-toolbar">
+                                <div class="toolbar-btn" onclick="moveFieldUp(this)">↑</div>
+                                <div class="toolbar-btn" onclick="moveFieldDown(this)">↓</div>
+                                <div class="toolbar-btn" onclick="copyField(this)">📋</div>
+                                <div class="toolbar-btn delete" onclick="deleteField(this)">🗑️</div>
+                            </div>
+                            <div class="field-label">单选题</div>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="${fieldId}" disabled>
+                                    <span>选项1</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="${fieldId}" disabled>
+                                    <span>选项2</span>
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                case 'rating':
+                    fieldHTML = `
+                        <div class="form-field" onclick="selectField(this)" data-id="${fieldId}">
+                            <div class="field-toolbar">
+                                <div class="toolbar-btn" onclick="moveFieldUp(this)">↑</div>
+                                <div class="toolbar-btn" onclick="moveFieldDown(this)">↓</div>
+                                <div class="toolbar-btn" onclick="copyField(this)">📋</div>
+                                <div class="toolbar-btn delete" onclick="deleteField(this)">🗑️</div>
+                            </div>
+                            <div class="field-label">评分</div>
+                            <div class="rating-group">
+                                <span class="star">⭐</span>
+                                <span class="star">⭐</span>
+                                <span class="star">⭐</span>
+                                <span class="star">⭐</span>
+                                <span class="star">⭐</span>
+                            </div>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            if (fieldHTML) {
+                dropZone.insertAdjacentHTML('beforebegin', fieldHTML);
+            }
+        }
+        
+        function selectField(element) {
+            // 取消之前选中的字段
+            document.querySelectorAll('.form-field').forEach(field => {
+                field.classList.remove('selected');
+            });
+            
+            // 选中当前字段
+            element.classList.add('selected');
+            selectedField = element;
+            
+            // 显示属性面板
+            showProperties(element);
+        }
+        
+        function showProperties(fieldElement) {
+            const fieldType = getFieldType(fieldElement);
+            const propertiesContent = document.getElementById('propertiesContent');
+            
+            let propertiesHTML = `
+                <div class="property-group">
+                    <div class="property-title">基本设置</div>
+                    <div class="property-field">
+                        <label class="property-label">字段标题</label>
+                        <input type="text" class="property-input" value="${getFieldLabel(fieldElement)}" onchange="updateFieldLabel(this.value)">
+                    </div>
+                    <div class="property-field">
+                        <label class="property-label">提示文字</label>
+                        <input type="text" class="property-input" placeholder="请输入提示文字" onchange="updateFieldPlaceholder(this.value)">
+                    </div>
+                    <div class="property-field">
+                        <div class="property-checkbox">
+                            <input type="checkbox" id="required" onchange="toggleRequired(this.checked)">
+                            <label for="required">必填字段</label>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (fieldType === 'radio' || fieldType === 'checkbox') {
+                propertiesHTML += `
+                    <div class="property-group">
+                        <div class="property-title">选项设置</div>
+                        <div class="property-field">
+                            <label class="property-label">选项列表</label>
+                            <div class="options-editor">
+                                <div class="option-item">
+                                    <input class="option-input" value="选项1">
+                                    <span class="option-delete">🗑️</span>
+                                </div>
+                                <div class="option-item">
+                                    <input class="option-input" value="选项2">
+                                    <span class="option-delete">🗑️</span>
+                                </div>
+                                <button class="add-option">+ 添加选项</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            propertiesContent.innerHTML = propertiesHTML;
+        }
+        
+        function getFieldType(element) {
+            if (element.querySelector('.radio-group')) return 'radio';
+            if (element.querySelector('.checkbox-group')) return 'checkbox';
+            if (element.querySelector('.rating-group')) return 'rating';
+            if (element.querySelector('.field-textarea')) return 'textarea';
+            return 'text';
+        }
+        
+        function getFieldLabel(element) {
+            const label = element.querySelector('.field-label');
+            return label ? label.textContent.replace('*', '').trim() : '';
+        }
+        
+        function updateFieldLabel(value) {
+            if (selectedField) {
+                const label = selectedField.querySelector('.field-label');
+                if (label) {
+                    const required = label.querySelector('.required-mark');
+                    label.innerHTML = value + (required ? '<span class="required-mark">*</span>' : '');
+                }
+            }
+        }
+        
+        function updateFieldPlaceholder(value) {
+            if (selectedField) {
+                const input = selectedField.querySelector('.field-input, .field-textarea');
+                if (input) {
+                    input.placeholder = value;
+                }
+            }
+        }
+        
+        function toggleRequired(checked) {
+            if (selectedField) {
+                const label = selectedField.querySelector('.field-label');
+                if (label) {
+                    const requiredMark = label.querySelector('.required-mark');
+                    if (checked && !requiredMark) {
+                        label.innerHTML += '<span class="required-mark">*</span>';
+                    } else if (!checked && requiredMark) {
+                        requiredMark.remove();
+                    }
+                }
+            }
+        }
+        
+        function deleteField(element) {
+            if (confirm('确定要删除这个字段吗？')) {
+                element.closest('.form-field').remove();
+                // 清空属性面板
+                document.getElementById('propertiesContent').innerHTML = `
+                    <div style="text-align: center; color: #8c8c8c; padding: 40px 20px;">
+                        选择一个字段来编辑属性
+                    </div>
+                `;
+            }
+        }
+        
+        function copyField(element) {
+            const field = element.closest('.form-field');
+            const clone = field.cloneNode(true);
+            const newId = 'field' + fieldCounter++;
+            clone.dataset.id = newId;
+            
+            // 更新单选按钮的name属性
+            const radios = clone.querySelectorAll('input[type="radio"]');
+            radios.forEach(radio => {
+                radio.name = newId;
+            });
+            
+            field.insertAdjacentElement('afterend', clone);
+        }
+        
+        function moveFieldUp(element) {
+            const field = element.closest('.form-field');
+            const prev = field.previousElementSibling;
+            if (prev && prev.classList.contains('form-field')) {
+                field.parentNode.insertBefore(field, prev);
+            }
+        }
+        
+        function moveFieldDown(element) {
+            const field = element.closest('.form-field');
+            const next = field.nextElementSibling;
+            if (next && !next.classList.contains('drop-zone')) {
+                field.parentNode.insertBefore(next, field);
+            }
+        }
+        
+        function editTitle(element) {
+            const currentText = element.textContent;
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = currentText;
+            input.style.cssText = 'width: 100%; font-size: 24px; font-weight: 600; border: 2px solid #1890ff; border-radius: 4px; padding: 8px; text-align: center;';
+            
+            element.innerHTML = '';
+            element.appendChild(input);
+            input.focus();
+            
+            input.addEventListener('blur', function() {
+                element.textContent = this.value || currentText;
+            });
+            
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    this.blur();
+                }
+            });
+        }
+        
+        function editDescription(element) {
+            const currentText = element.textContent;
+            const textarea = document.createElement('textarea');
+            textarea.value = currentText;
+            textarea.style.cssText = 'width: 100%; font-size: 16px; border: 2px solid #1890ff; border-radius: 4px; padding: 8px; min-height: 80px; resize: vertical;';
+            
+            element.innerHTML = '';
+            element.appendChild(textarea);
+            textarea.focus();
+            
+            textarea.addEventListener('blur', function() {
+                element.textContent = this.value || currentText;
+            });
+        }
+        
+        function previewForm() {
+            window.open('form-fill.html', '_blank');
+        }
+        
+        // 阻止工具栏点击冒泡
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.field-toolbar')) {
+                e.stopPropagation();
+            }
+        });
+    </script>
+</body>
+</html> 

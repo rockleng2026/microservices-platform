@@ -1,0 +1,175 @@
+// 主题色彩
+$primary-color: #0969da;
+$primary-hover: #0860ca;
+$primary-active: #0757ba;
+$primary-light: #dbeafe;
+
+$secondary-color: #6b7280;
+$secondary-hover: #4b5563;
+$secondary-active: #374151;
+
+// 语义色彩
+$success-color: #22c55e;
+$success-light: #dcfce7;
+$warning-color: #f59e0b;
+$warning-light: #fef3c7;
+$error-color: #ef4444;
+$error-light: #fef2f2;
+$info-color: #3b82f6;
+$info-light: #dbeafe;
+
+// 文本色彩
+$text-primary: #1f2937;
+$text-secondary: #6b7280;
+$text-muted: #9ca3af;
+$text-disabled: #d1d5db;
+$text-inverse: #ffffff;
+
+// 背景色彩
+$background-primary: #ffffff;
+$background-secondary: #f9fafb;
+$background-tertiary: #f3f4f6;
+$background-disabled: #f9fafb;
+$background-overlay: rgba(0, 0, 0, 0.5);
+
+// 边框色彩
+$border-color: #e5e7eb;
+$border-light: #f3f4f6;
+$border-dark: #d1d5db;
+$border-focus: $primary-color;
+
+// 阴影
+$shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+$shadow-base: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+$shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+$shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+$shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+// 间距
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-2xl: 48px;
+$spacing-3xl: 64px;
+
+// 字体大小
+$font-size-xs: 12px;
+$font-size-sm: 13px;
+$font-size-base: 14px;
+$font-size-lg: 16px;
+$font-size-xl: 18px;
+$font-size-2xl: 20px;
+$font-size-3xl: 24px;
+$font-size-4xl: 32px;
+
+// 字体粗细
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
+
+// 行高
+$line-height-tight: 1.25;
+$line-height-normal: 1.5;
+$line-height-relaxed: 1.75;
+
+// 边框圆角
+$border-radius-sm: 2px;
+$border-radius-base: 4px;
+$border-radius-md: 6px;
+$border-radius-lg: 8px;
+$border-radius-xl: 12px;
+$border-radius-full: 9999px;
+
+// 过渡时间
+$transition-fast: 0.15s;
+$transition-base: 0.2s;
+$transition-slow: 0.3s;
+
+// Z-index层级
+$z-dropdown: 1000;
+$z-sticky: 1020;
+$z-fixed: 1030;
+$z-modal-backdrop: 1040;
+$z-modal: 1050;
+$z-popover: 1060;
+$z-tooltip: 1070;
+
+// 布局断点
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+$breakpoint-2xl: 1536px;
+
+// 容器最大宽度
+$container-sm: 640px;
+$container-md: 768px;
+$container-lg: 1024px;
+$container-xl: 1280px;
+$container-2xl: 1536px;
+
+// 表格特定变量
+$table-header-bg: #f8f9fa;
+$table-header-color: #333333;
+$table-cell-padding: 12px;
+$table-border-color: #e1e4e8;
+$table-hover-bg: #f6f8fa;
+$table-selected-bg: #dbeafe;
+$table-selected-border: #3b82f6;
+
+// VTable主题变量
+$vtable-header-bg: $table-header-bg;
+$vtable-header-color: $table-header-color;
+$vtable-header-font-weight: 600;
+$vtable-header-font-size: 12px;
+
+$vtable-cell-bg: #ffffff;
+$vtable-cell-color: #24292f;
+$vtable-cell-font-size: 12px;
+$vtable-cell-padding: 6px 12px;
+$vtable-cell-border: 1px solid $table-border-color;
+
+$vtable-cell-hover-bg: $table-hover-bg;
+$vtable-cell-selected-bg: $table-selected-bg;
+$vtable-cell-selected-border: $table-selected-border;
+$vtable-cell-editing-bg: #ffffff;
+$vtable-cell-editing-border: #0969da;
+
+// 工具栏变量
+$toolbar-bg: #ffffff;
+$toolbar-border: $border-color;
+$toolbar-padding: 8px 0;
+$toolbar-gap: 8px;
+
+$toolbar-btn-padding: 6px 12px;
+$toolbar-btn-font-size: 12px;
+$toolbar-btn-border-radius: 4px;
+$toolbar-btn-primary-bg: $primary-color;
+$toolbar-btn-primary-color: #ffffff;
+$toolbar-btn-secondary-bg: #f6f8fa;
+$toolbar-btn-secondary-color: #24292f;
+$toolbar-btn-danger-bg: #da3633;
+
+// 侧边栏变量
+$sidebar-width: 240px;
+$sidebar-collapsed-width: 60px;
+$sidebar-bg: #f8f9fa;
+$sidebar-border: $border-color;
+
+// 头部变量
+$header-height: 60px;
+$header-bg: #ffffff;
+$header-border: $border-color;
+$header-shadow: $shadow-sm;
+
+// 暗色主题变量
+$dark-bg-primary: #0d1117;
+$dark-bg-secondary: #161b22;
+$dark-bg-tertiary: #21262d;
+$dark-text-primary: #f0f6fc;
+$dark-text-secondary: #8b949e;
+$dark-border-color: #30363d;
+$dark-primary-color: #238636; 

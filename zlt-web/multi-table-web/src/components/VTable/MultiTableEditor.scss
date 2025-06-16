@@ -1,0 +1,270 @@
+.multi-table-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e1e4e8;
+  padding: 16px;
+
+  .table-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #e1e4e8;
+
+    .toolbar-btn {
+      padding: 6px 12px;
+      background: #0969da;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+
+      &:hover {
+        background: #0860ca;
+        box-shadow: 0 2px 4px rgba(9, 105, 218, 0.2);
+      }
+
+      &:active {
+        background: #0757ba;
+        transform: translateY(1px);
+      }
+
+      &:disabled {
+        background: #94a3b8;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      &.secondary {
+        background: #f6f8fa;
+        color: #24292f;
+        border: 1px solid #d1d9e0;
+
+        &:hover {
+          background: #f3f4f6;
+          border-color: #c7d2fe;
+        }
+
+        &:active {
+          background: #e5e7eb;
+        }
+      }
+
+      &.danger {
+        background: #da3633;
+
+        &:hover {
+          background: #cb2d20;
+        }
+
+        &:active {
+          background: #b62324;
+        }
+      }
+    }
+  }
+
+  .table-container {
+    flex: 1;
+    overflow: hidden;
+    border-radius: 4px;
+    border: 1px solid #e1e4e8;
+
+    // VTable 样式覆盖
+    .vtable {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+      
+      .vtable-header {
+        background: #f6f8fa;
+        border-bottom: 1px solid #d1d9e0;
+        
+        .vtable-header-cell {
+          font-weight: 600;
+          color: #24292f;
+          font-size: 12px;
+          padding: 8px 12px;
+          
+          &:hover {
+            background: #f3f4f6;
+          }
+        }
+      }
+      
+      .vtable-body {
+        .vtable-cell {
+          font-size: 12px;
+          color: #24292f;
+          padding: 6px 12px;
+          border-right: 1px solid #e1e4e8;
+          border-bottom: 1px solid #e1e4e8;
+          
+          &:hover {
+            background: #f6f8fa;
+          }
+          
+          &.selected {
+            background: #dbeafe;
+            border-color: #3b82f6;
+          }
+          
+          &.editing {
+            background: #fff;
+            border-color: #0969da;
+            box-shadow: inset 0 0 0 1px #0969da;
+          }
+        }
+      }
+      
+      .vtable-editor {
+        border: none;
+        outline: none;
+        font-size: 12px;
+        padding: 4px 8px;
+        background: transparent;
+        
+        &:focus {
+          outline: 2px solid #0969da;
+          outline-offset: -2px;
+        }
+      }
+      
+      .vtable-menu {
+        background: #fff;
+        border: 1px solid #d1d9e0;
+        border-radius: 6px;
+        box-shadow: 0 8px 24px rgba(140, 149, 159, 0.2);
+        
+        .vtable-menu-item {
+          padding: 8px 12px;
+          font-size: 12px;
+          color: #24292f;
+          
+          &:hover {
+            background: #f6f8fa;
+          }
+          
+          &.disabled {
+            color: #656d76;
+            cursor: not-allowed;
+          }
+        }
+      }
+    }
+  }
+
+  // 响应式设计
+  @media (max-width: 768px) {
+    padding: 12px;
+    
+    .table-toolbar {
+      flex-wrap: wrap;
+      gap: 6px;
+      
+      .toolbar-btn {
+        font-size: 11px;
+        padding: 5px 10px;
+      }
+    }
+    
+    .table-container {
+      font-size: 11px;
+    }
+  }
+
+  // 暗色主题支持
+  &.dark-theme {
+    background: #0d1117;
+    border-color: #30363d;
+    color: #f0f6fc;
+
+    .table-toolbar {
+      border-bottom-color: #30363d;
+
+      .toolbar-btn {
+        background: #238636;
+
+        &:hover {
+          background: #2ea043;
+        }
+
+        &.secondary {
+          background: #21262d;
+          color: #f0f6fc;
+          border-color: #30363d;
+
+          &:hover {
+            background: #30363d;
+          }
+        }
+
+        &.danger {
+          background: #da3633;
+        }
+      }
+    }
+
+    .table-container {
+      border-color: #30363d;
+      background: #0d1117;
+    }
+  }
+
+  // 加载状态
+  &.loading {
+    .table-container {
+      position: relative;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.8);
+        z-index: 10;
+      }
+      
+      &::after {
+        content: '加载中...';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 11;
+        font-size: 14px;
+        color: #656d76;
+      }
+    }
+  }
+
+  // 错误状态
+  &.error {
+    .table-container {
+      border-color: #da3633;
+      background: #fdf2f2;
+    }
+  }
+
+  // 只读模式
+  &.readonly {
+    .table-container {
+      background: #f6f8fa;
+      
+      .vtable-cell {
+        cursor: default;
+        
+        &:hover {
+          background: #f6f8fa;
+        }
+      }
+    }
+  }
+} 

@@ -1,0 +1,352 @@
+// 按钮混入
+@mixin button-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: $toolbar-btn-padding;
+  font-size: $toolbar-btn-font-size;
+  font-weight: $font-weight-medium;
+  border-radius: $toolbar-btn-border-radius;
+  border: none;
+  cursor: pointer;
+  transition: all $transition-base ease;
+  text-decoration: none;
+  
+  &:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  
+  &:focus {
+    outline: 2px solid $primary-color;
+    outline-offset: 2px;
+  }
+}
+
+@mixin button-primary {
+  @include button-base;
+  background-color: $toolbar-btn-primary-bg;
+  color: $toolbar-btn-primary-color;
+  
+  &:hover:not(:disabled) {
+    background-color: $primary-hover;
+    box-shadow: 0 2px 4px rgba($primary-color, 0.2);
+  }
+  
+  &:active:not(:disabled) {
+    background-color: $primary-active;
+    transform: translateY(1px);
+  }
+}
+
+@mixin button-secondary {
+  @include button-base;
+  background-color: $toolbar-btn-secondary-bg;
+  color: $toolbar-btn-secondary-color;
+  border: 1px solid $border-color;
+  
+  &:hover:not(:disabled) {
+    background-color: darken($toolbar-btn-secondary-bg, 5%);
+    border-color: $border-dark;
+  }
+  
+  &:active:not(:disabled) {
+    background-color: darken($toolbar-btn-secondary-bg, 10%);
+  }
+}
+
+@mixin button-danger {
+  @include button-base;
+  background-color: $toolbar-btn-danger-bg;
+  color: white;
+  
+  &:hover:not(:disabled) {
+    background-color: darken($toolbar-btn-danger-bg, 5%);
+  }
+  
+  &:active:not(:disabled) {
+    background-color: darken($toolbar-btn-danger-bg, 10%);
+  }
+}
+
+// 输入框混入
+@mixin input-base {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: $font-size-base;
+  line-height: $line-height-normal;
+  color: $text-primary;
+  background-color: $background-primary;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-base;
+  transition: all $transition-base ease;
+  
+  &::placeholder {
+    color: $text-secondary;
+  }
+  
+  &:focus {
+    outline: none;
+    border-color: $primary-color;
+    box-shadow: 0 0 0 3px rgba($primary-color, 0.1);
+  }
+  
+  &:disabled {
+    background-color: $background-disabled;
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+  
+  &.error {
+    border-color: $error-color;
+    
+    &:focus {
+      border-color: $error-color;
+      box-shadow: 0 0 0 3px rgba($error-color, 0.1);
+    }
+  }
+}
+
+// 卡片混入
+@mixin card {
+  background-color: $background-primary;
+  border: 1px solid $border-color;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-sm;
+  overflow: hidden;
+}
+
+@mixin card-hover {
+  @include card;
+  transition: all $transition-base ease;
+  
+  &:hover {
+    box-shadow: $shadow-md;
+    transform: translateY(-2px);
+  }
+}
+
+// 阴影混入
+@mixin shadow($level: 'base') {
+  @if $level == 'sm' {
+    box-shadow: $shadow-sm;
+  } @else if $level == 'base' {
+    box-shadow: $shadow-base;
+  } @else if $level == 'md' {
+    box-shadow: $shadow-md;
+  } @else if $level == 'lg' {
+    box-shadow: $shadow-lg;
+  } @else if $level == 'xl' {
+    box-shadow: $shadow-xl;
+  }
+}
+
+// 响应式混入
+@mixin responsive($breakpoint) {
+  @if $breakpoint == 'sm' {
+    @media (min-width: $breakpoint-sm) {
+      @content;
+    }
+  } @else if $breakpoint == 'md' {
+    @media (min-width: $breakpoint-md) {
+      @content;
+    }
+  } @else if $breakpoint == 'lg' {
+    @media (min-width: $breakpoint-lg) {
+      @content;
+    }
+  } @else if $breakpoint == 'xl' {
+    @media (min-width: $breakpoint-xl) {
+      @content;
+    }
+  } @else if $breakpoint == '2xl' {
+    @media (min-width: $breakpoint-2xl) {
+      @content;
+    }
+  }
+}
+
+@mixin mobile-only {
+  @media (max-width: $breakpoint-md - 1px) {
+    @content;
+  }
+}
+
+@mixin tablet-and-up {
+  @media (min-width: $breakpoint-md) {
+    @content;
+  }
+}
+
+@mixin desktop-and-up {
+  @media (min-width: $breakpoint-lg) {
+    @content;
+  }
+}
+
+// 布局混入
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@mixin flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@mixin flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+@mixin absolute-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+// 文本混入
+@mixin text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@mixin text-clamp($lines: 2) {
+  display: -webkit-box;
+  -webkit-line-clamp: $lines;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// 清除浮动
+@mixin clearfix {
+  &::after {
+    content: '';
+    display: table;
+    clear: both;
+  }
+}
+
+// 隐藏滚动条
+@mixin hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// 自定义滚动条
+@mixin custom-scrollbar($width: 8px, $track-color: $background-secondary, $thumb-color: $border-color) {
+  &::-webkit-scrollbar {
+    width: $width;
+    height: $width;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: $track-color;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: $thumb-color;
+    border-radius: $width / 2;
+    
+    &:hover {
+      background: darken($thumb-color, 10%);
+    }
+  }
+}
+
+// 动画混入
+@mixin fade-in($duration: $transition-base) {
+  animation: fadeIn $duration ease-in;
+}
+
+@mixin fade-out($duration: $transition-base) {
+  animation: fadeOut $duration ease-out;
+}
+
+@mixin slide-in-left($duration: $transition-base) {
+  animation: slideInLeft $duration ease-out;
+}
+
+@mixin slide-in-right($duration: $transition-base) {
+  animation: slideInRight $duration ease-out;
+}
+
+// 表格混入
+@mixin table-cell {
+  padding: $vtable-cell-padding;
+  font-size: $vtable-cell-font-size;
+  color: $vtable-cell-color;
+  background-color: $vtable-cell-bg;
+  border: $vtable-cell-border;
+  transition: all $transition-fast ease;
+}
+
+@mixin table-header-cell {
+  @include table-cell;
+  background-color: $vtable-header-bg;
+  color: $vtable-header-color;
+  font-weight: $vtable-header-font-weight;
+  font-size: $vtable-header-font-size;
+}
+
+@mixin table-cell-hover {
+  background-color: $vtable-cell-hover-bg;
+}
+
+@mixin table-cell-selected {
+  background-color: $vtable-cell-selected-bg;
+  border-color: $vtable-cell-selected-border;
+}
+
+@mixin table-cell-editing {
+  background-color: $vtable-cell-editing-bg;
+  border-color: $vtable-cell-editing-border;
+  box-shadow: inset 0 0 0 1px $vtable-cell-editing-border;
+}
+
+// 工具栏混入
+@mixin toolbar {
+  display: flex;
+  align-items: center;
+  gap: $toolbar-gap;
+  padding: $toolbar-padding;
+  background-color: $toolbar-bg;
+  border-bottom: 1px solid $toolbar-border;
+}
+
+// 暗色主题混入
+@mixin dark-theme {
+  background-color: $dark-bg-primary;
+  color: $dark-text-primary;
+  border-color: $dark-border-color;
+  
+  .text-primary {
+    color: $dark-text-primary;
+  }
+  
+  .text-secondary {
+    color: $dark-text-secondary;
+  }
+  
+  .bg-primary {
+    background-color: $dark-bg-primary;
+  }
+  
+  .bg-secondary {
+    background-color: $dark-bg-secondary;
+  }
+  
+  .border {
+    border-color: $dark-border-color;
+  }
+} 

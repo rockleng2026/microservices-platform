@@ -55,6 +55,12 @@ spring:
             - Path=/api-portal/**
           filters:
             - StripPrefix=1
+        - id: multi-table
+          uri: lb://multi-table-service
+          predicates:
+            - Path=/api-multitable/**
+          filters:
+            - StripPrefix=1
         - id: file
           uri: lb://file-center
           predicates:

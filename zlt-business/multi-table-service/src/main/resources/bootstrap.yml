@@ -1,0 +1,11 @@
+server:
+  port: 7003
+
+spring:
+  application:
+    name: multi-table-service
+  profiles:
+    active: dev
+logging:
+  level:
+    com.central.multitable: debug 

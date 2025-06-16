@@ -1,0 +1,186 @@
+.multi-table-editor {
+  position: relative;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+
+    .loading-spinner {
+      text-align: center;
+
+      .spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid #f3f4f6;
+        border-top: 3px solid #4f46e5;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 16px;
+      }
+
+      .loading-text {
+        color: #6b7280;
+        font-size: 14px;
+      }
+    }
+  }
+
+  .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e5e7eb;
+    background: #fafbfc;
+
+    .table-title {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+
+      h3 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 600;
+        color: #1f2937;
+      }
+
+      .table-stats {
+        font-size: 13px;
+        color: #6b7280;
+        background: #f3f4f6;
+        padding: 4px 8px;
+        border-radius: 4px;
+      }
+    }
+
+    .table-actions {
+      display: flex;
+      gap: 8px;
+
+      .action-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        border: 1px solid #d1d5db;
+        background: #fff;
+        border-radius: 6px;
+        font-size: 13px;
+        color: #374151;
+        cursor: pointer;
+        transition: all 0.2s;
+
+        &:hover {
+          border-color: #4f46e5;
+          color: #4f46e5;
+          background: #f8fafc;
+        }
+
+        .icon {
+          font-size: 14px;
+        }
+      }
+    }
+  }
+
+  .table-container {
+    flex: 1;
+    overflow: hidden;
+    
+    // VTable样式覆盖
+    .vtable {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  // 响应式设计
+  @media (max-width: 768px) {
+    .table-header {
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-start;
+
+      .table-actions {
+        width: 100%;
+        justify-content: flex-end;
+
+        .action-btn {
+          font-size: 12px;
+          padding: 5px 10px;
+        }
+      }
+    }
+  }
+}
+
+// 暗色主题支持
+@media (prefers-color-scheme: dark) {
+  .multi-table-editor {
+    background: #1f2937;
+
+    .loading-overlay {
+      background: rgba(31, 41, 55, 0.9);
+
+      .loading-spinner {
+        .spinner {
+          border-color: #374151;
+          border-top-color: #6366f1;
+        }
+
+        .loading-text {
+          color: #9ca3af;
+        }
+      }
+    }
+
+    .table-header {
+      background: #374151;
+      border-bottom-color: #4b5563;
+
+      .table-title {
+        h3 {
+          color: #f9fafb;
+        }
+
+        .table-stats {
+          background: #4b5563;
+          color: #d1d5db;
+        }
+      }
+
+      .table-actions {
+        .action-btn {
+          background: #4b5563;
+          border-color: #6b7280;
+          color: #f3f4f6;
+
+          &:hover {
+            border-color: #8b5cf6;
+            color: #c4b5fd;
+            background: #5b21b6;
+          }
+        }
+      }
+    }
+  }
+} 

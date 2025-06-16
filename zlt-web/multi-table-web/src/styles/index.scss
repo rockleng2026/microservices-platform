@@ -16,7 +16,7 @@ body {
   font-size: 14px;
   line-height: 1.5;
   color: $text-primary;
-  background-color: $background-primary;
+  background-color: $background-color;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -194,7 +194,7 @@ select {
 }
 
 .text-muted {
-  color: $text-muted;
+  color: $text-tertiary;
 }
 
 .text-success {

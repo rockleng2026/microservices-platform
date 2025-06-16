@@ -9,10 +9,25 @@ export default defineConfig({
     port: 8064,
     host: true,
     proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
+      '/api-uaa': {
+        target: 'http://127.0.0.1:9900',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
+        secure: false,
+        rewrite: (path) => {
+          console.log('代理转发 /api-uaa:', path, '→', path)
+          return path
+        }
+      },
+      '/api/multi-table': {
+        target: 'http://127.0.0.1:9900',
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api\/multi-table/, '/multi-table-service')
+      },
+      '/api': {
+        target: 'http://127.0.0.1:9900',
+        changeOrigin: true,
+        secure: false
       }
     }
   },

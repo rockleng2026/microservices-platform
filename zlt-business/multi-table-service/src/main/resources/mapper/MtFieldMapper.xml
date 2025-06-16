@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.multitable.mapper.MtFieldMapper">
+
+    <resultMap id="BaseResultMap" type="com.central.multitable.model.MtField">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="table_id" property="tableId" jdbcType="BIGINT"/>
+        <result column="field_key" property="fieldKey" jdbcType="VARCHAR"/>
+        <result column="field_name" property="fieldName" jdbcType="VARCHAR"/>
+        <result column="field_type" property="fieldType" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="config" property="config" jdbcType="VARCHAR"/>
+        <result column="default_value" property="defaultValue" jdbcType="VARCHAR"/>
+        <result column="is_required" property="isRequired" jdbcType="TINYINT"/>
+        <result column="is_unique" property="isUnique" jdbcType="TINYINT"/>
+        <result column="is_system" property="isSystem" jdbcType="TINYINT"/>
+        <result column="is_hidden" property="isHidden" jdbcType="TINYINT"/>
+        <result column="sort_order" property="sortOrder" jdbcType="INTEGER"/>
+        <result column="width" property="width" jdbcType="INTEGER"/>
+        <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, table_id, field_key, field_name, field_type, description, config,
+        default_value, is_required, is_unique, is_system, is_hidden, 
+        sort_order, width, created_by, created_at, updated_at
+    </sql>
+
+    <select id="findByTableId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM mt_field
+        WHERE table_id = #{tableId}
+        ORDER BY sort_order ASC
+    </select>
+
+    <select id="findByTableIdAndFieldKey" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM mt_field
+        WHERE table_id = #{tableId} AND field_key = #{fieldKey}
+        LIMIT 1
+    </select>
+
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO mt_field (
+            table_id, field_key, field_name, field_type, description, config,
+            default_value, is_required, is_unique, is_system, is_hidden,
+            sort_order, width, created_by, created_at, updated_at
+        ) VALUES
+        <foreach collection="fields" item="field" separator=",">
+            (
+                #{field.tableId}, #{field.fieldKey}, #{field.fieldName}, #{field.fieldType}, 
+                #{field.description}, #{field.config}, #{field.defaultValue}, #{field.isRequired}, 
+                #{field.isUnique}, #{field.isSystem}, #{field.isHidden}, #{field.sortOrder}, 
+                #{field.width}, #{field.createdBy}, NOW(), NOW()
+            )
+        </foreach>
+    </insert>
+
+    <update id="updateSortOrder">
+        UPDATE mt_field 
+        SET sort_order = #{sortOrder}, updated_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper> 

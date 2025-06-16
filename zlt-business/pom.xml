@@ -20,5 +20,7 @@
         <module>organization-service</module>
         <!-- 系统管理中心 -->
         <module>system-service</module>
+        <!-- 多维表格服务 -->
+        <module>multi-table-service</module>
     </modules>
 </project>

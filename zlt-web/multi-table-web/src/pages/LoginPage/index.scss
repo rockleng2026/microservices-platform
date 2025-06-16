@@ -1,0 +1,436 @@
+@import "@/styles/variables.scss";
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  overflow: auto;
+  padding: 20px;
+
+  .login-container {
+    display: flex;
+    width: 100%;
+    max-width: 1200px;
+    min-height: 600px;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    background: #fff;
+
+    .login-banner {
+      flex: 1.2;
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      color: white;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="0.5" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="0.8" fill="white" opacity="0.05"/><circle cx="50" cy="10" r="0.3" fill="white" opacity="0.08"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        opacity: 0.3;
+      }
+
+      .banner-content {
+        position: relative;
+        text-align: center;
+        padding: 60px 40px;
+        z-index: 1;
+
+        .banner-title {
+          font-size: 3.5rem;
+          font-weight: 700;
+          margin-bottom: 16px;
+          background: linear-gradient(45deg, #fff, #e2e8f0);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .banner-subtitle {
+          font-size: 1.2rem;
+          opacity: 0.9;
+          margin-bottom: 40px;
+          font-weight: 300;
+          letter-spacing: 1px;
+        }
+
+        .banner-features {
+          display: flex;
+          flex-direction: column;
+          gap: 24px;
+          margin-top: 48px;
+
+          .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 1.1rem;
+            opacity: 0.95;
+
+            .feature-icon {
+              font-size: 1.8rem;
+              width: 50px;
+              height: 50px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background: rgba(255, 255, 255, 0.15);
+              border-radius: 12px;
+              backdrop-filter: blur(10px);
+              border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+          }
+        }
+      }
+    }
+
+    .login-form-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+      background: #fafafa;
+
+      .login-card {
+        width: 100%;
+        max-width: 420px;
+        border-radius: 16px;
+        border: none;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+        background: #fff;
+
+        .ant-card-body {
+          padding: 40px;
+        }
+
+        .login-header {
+          text-align: center;
+          margin-bottom: 32px;
+
+          h2 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1a202c;
+            margin-bottom: 8px;
+          }
+
+          p {
+            color: #64748b;
+            font-size: 0.95rem;
+            margin: 0;
+          }
+        }
+
+        .ant-form {
+          .ant-form-item {
+            margin-bottom: 20px;
+
+            .ant-input-affix-wrapper,
+            .ant-input {
+              height: 48px;
+              border-radius: 8px;
+              border: 1px solid #e2e8f0;
+              transition: all 0.3s ease;
+
+              &:hover {
+                border-color: #4f46e5;
+                box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+              }
+
+              &:focus,
+              &.ant-input-affix-wrapper-focused {
+                border-color: #4f46e5;
+                box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+              }
+            }
+
+            .ant-input-prefix {
+              color: #94a3b8;
+              margin-right: 12px;
+            }
+          }
+
+          .captcha-container {
+            height: 48px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            background: #f8fafc;
+
+            &:hover {
+              border-color: #4f46e5;
+              background: #f1f5f9;
+            }
+
+            .captcha-image {
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              display: block;
+            }
+
+            .captcha-placeholder {
+              color: #94a3b8;
+              font-size: 0.9rem;
+            }
+          }
+
+          .login-button {
+            height: 48px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            border: none;
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            transition: all 0.3s ease;
+
+            &:hover {
+              transform: translateY(-2px);
+              box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+            }
+
+            &:active {
+              transform: translateY(0);
+            }
+
+            &.ant-btn-loading {
+              transform: none;
+            }
+          }
+        }
+
+        .ant-divider {
+          margin: 24px 0 20px;
+          border-color: #e2e8f0;
+
+          .divider-text {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            font-weight: 500;
+          }
+        }
+
+        .login-footer {
+          text-align: center;
+
+          .system-info {
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+            margin-bottom: 16px;
+
+            .info-item {
+              display: flex;
+              align-items: center;
+              gap: 6px;
+              font-size: 0.85rem;
+
+              .info-label {
+                color: #94a3b8;
+                font-weight: 500;
+              }
+
+              .info-value {
+                color: #4f46e5;
+                font-weight: 600;
+              }
+            }
+          }
+
+          .copyright {
+            color: #cbd5e1;
+            font-size: 0.8rem;
+            margin-top: 12px;
+          }
+        }
+      }
+    }
+  }
+
+  // 响应式设计
+  @media (max-width: 1024px) {
+    .login-container {
+      .login-banner {
+        display: none;
+      }
+
+      .login-form-container {
+        flex: 1;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        
+        .login-card {
+          margin: 0 auto;
+          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+      }
+    }
+  }
+
+  @media (max-width: 768px) {
+    padding: 16px;
+
+    .login-container {
+      min-height: auto;
+      border-radius: 12px;
+
+      .login-form-container {
+        padding: 20px;
+
+        .login-card .ant-card-body {
+          padding: 24px;
+        }
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    padding: 12px;
+
+    .login-container {
+      .login-form-container {
+        padding: 16px;
+
+        .login-card {
+          .ant-card-body {
+            padding: 20px;
+          }
+
+          .login-header h2 {
+            font-size: 1.5rem;
+          }
+
+          .system-info {
+            flex-direction: column;
+            gap: 12px;
+          }
+        }
+      }
+    }
+  }
+}
+
+// 暗色主题支持
+@media (prefers-color-scheme: dark) {
+  .login-page {
+    .login-container {
+      background: #1a202c;
+
+      .login-form-container {
+        background: #2d3748;
+
+        .login-card {
+          background: #1a202c;
+          box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+
+          .login-header {
+            h2 {
+              color: #f7fafc;
+            }
+
+            p {
+              color: #a0aec0;
+            }
+          }
+
+          .ant-form {
+            .ant-form-item {
+              .ant-input-affix-wrapper,
+              .ant-input {
+                background: #2d3748;
+                border-color: #4a5568;
+                color: #f7fafc;
+
+                &:hover {
+                  border-color: #6b46c1;
+                  background: #374151;
+                }
+
+                &:focus,
+                &.ant-input-affix-wrapper-focused {
+                  border-color: #6b46c1;
+                  background: #374151;
+                }
+              }
+
+              .ant-input-prefix {
+                color: #a0aec0;
+              }
+            }
+
+            .captcha-container {
+              background: #2d3748;
+              border-color: #4a5568;
+
+              &:hover {
+                border-color: #6b46c1;
+                background: #374151;
+              }
+
+              .captcha-placeholder {
+                color: #a0aec0;
+              }
+            }
+          }
+
+          .ant-divider {
+            border-color: #4a5568;
+
+            .divider-text {
+              color: #a0aec0;
+            }
+          }
+
+          .login-footer {
+            .system-info {
+              .info-item {
+                .info-label {
+                  color: #a0aec0;
+                }
+
+                .info-value {
+                  color: #9f7aea;
+                }
+              }
+            }
+
+            .copyright {
+              color: #718096;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// 加载动画
+.ant-spin-dot {
+  .ant-spin-dot-item {
+    background-color: #4f46e5;
+  }
+}
+
+// 消息提示样式优化
+.ant-message {
+  .ant-message-notice-content {
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+} 

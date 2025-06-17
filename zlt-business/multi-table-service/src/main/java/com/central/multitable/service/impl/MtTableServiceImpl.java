@@ -3,17 +3,15 @@ package com.central.multitable.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.central.common.model.PageResult;
-import org.apache.commons.collections4.MapUtils;
 import com.central.multitable.mapper.MtTableMapper;
 import com.central.multitable.model.MtTable;
+import com.central.multitable.model.dto.TableQueryDTO;
 import com.central.multitable.service.IMtTableService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 表格Service实现类
@@ -25,9 +23,21 @@ import java.util.Map;
 public class MtTableServiceImpl extends ServiceImpl<MtTableMapper, MtTable> implements IMtTableService {
     
     @Override
-    public PageResult<MtTable> findList(Map<String, Object> params) {
-        Page<MtTable> page = new Page<>(MapUtils.getInteger(params, "page"), MapUtils.getInteger(params, "limit"));
-        List<MtTable> list = baseMapper.findList(page, params);
+    public PageResult<MtTable> findList(TableQueryDTO queryDTO) {
+        // 处理默认值
+        if (queryDTO.getPage() == null || queryDTO.getPage() < 1) {
+            queryDTO.setPage(1);
+        }
+        if (queryDTO.getLimit() == null || queryDTO.getLimit() < 1) {
+            queryDTO.setLimit(20);
+        }
+        
+        // 创建分页对象
+        Page<MtTable> page = new Page<>(queryDTO.getPage(), queryDTO.getLimit());
+        
+        // 调用Mapper查询方法
+        List<MtTable> list = baseMapper.findList(page, queryDTO);
+        
         return PageResult.<MtTable>builder()
                 .data(list)
                 .code(0)
@@ -43,24 +53,23 @@ public class MtTableServiceImpl extends ServiceImpl<MtTableMapper, MtTable> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean createTable(MtTable table) {
-        table.setCreateTime(new Date());
-        table.setUpdateTime(new Date());
-        table.setIsDeleted(false);
+        // 移除手动设置时间字段，MyBatis-Plus会自动处理
+        table.setStatus(1); // 设置状态为正常
         return save(table);
     }
     
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateTable(MtTable table) {
-        table.setUpdateTime(new Date());
+        // 移除手动设置时间字段，MyBatis-Plus会自动处理
         return updateById(table);
     }
     
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean deleteTable(Long id) {
-        // TODO: 需要获取当前用户ID
-        Long userId = 1L; // 临时设置
+        // TODO: 需要实现用户上下文获取，获取当前登录用户ID
+        Long userId = 1L; // 临时使用默认值
         return baseMapper.deleteLogically(id, userId) > 0;
     }
     

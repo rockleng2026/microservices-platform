@@ -19,7 +19,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/fields")
+@RequestMapping("/api/fields")
 @Tag(name = "字段管理", description = "字段管理相关接口")
 public class MtFieldController {
     

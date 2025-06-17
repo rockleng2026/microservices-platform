@@ -3,7 +3,7 @@ import { Form, Input, Button, Card, message, Row, Col, Image, Divider } from 'an
 import { UserOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { v4 as uuidv4 } from 'uuid'
-import { login, getCaptcha, LoginForm as ApiLoginForm } from '../../services/auth'
+import { login, getCaptcha, LoginForm as ApiLoginForm, getCurrentUser } from '../../services/auth'
 import './index.scss'
 
 interface LoginForm {
@@ -57,16 +57,36 @@ const LoginPage: React.FC = () => {
       if (response.resp_code === 0) {
         const { access_token, refresh_token } = response.datas
 
-        // 存储token和用户信息
+        // 存储token
         localStorage.setItem('access_token', access_token)
         localStorage.setItem('refresh_token', refresh_token)
         
+        // 存储登录接口返回的基础用户信息
         if (response.datas.userInfo) {
-          localStorage.setItem('userInfo', JSON.stringify(response.datas.userInfo))
+          localStorage.setItem('basicUserInfo', JSON.stringify(response.datas.userInfo))
         }
 
-        message.success('登录成功！')
-        
+        // 获取完整用户信息
+        try {
+          console.log('开始获取用户详细信息...')
+          const userInfoResponse = await getCurrentUser()
+          
+          if (userInfoResponse.resp_code === 0) {
+            // 存储完整用户信息
+            localStorage.setItem('userInfo', JSON.stringify(userInfoResponse.datas))
+            localStorage.setItem('currentUser', JSON.stringify(userInfoResponse.datas))
+            
+            console.log('用户详细信息获取成功:', userInfoResponse.datas)
+            message.success(`欢迎回来，${userInfoResponse.datas.nickname || userInfoResponse.datas.username}！`)
+          } else {
+            console.warn('获取用户详细信息失败:', userInfoResponse.resp_msg)
+            message.warning('登录成功，但获取用户信息失败')
+          }
+        } catch (userInfoError) {
+          console.error('获取用户详细信息异常:', userInfoError)
+          message.warning('登录成功，但获取用户详细信息失败')
+        }
+
         // 跳转到控制台
         navigate('/dashboard')
       } else {

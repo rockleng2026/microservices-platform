@@ -1,5 +1,7 @@
 package com.central.multitable.model;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.central.common.model.SuperEntity;
@@ -21,7 +23,7 @@ import java.util.Date;
 public class MtTable extends SuperEntity {
     
     @Schema(description = "租户ID")
-    private Long tenantId;
+    private String tenantId;
     
     @Schema(description = "表格名称")
     private String name;
@@ -41,9 +43,14 @@ public class MtTable extends SuperEntity {
     @Schema(description = "创建人ID")
     private Long createdBy;
     
-    @Schema(description = "是否删除")
-    private Boolean isDeleted;
+    @Schema(description = "状态：1=正常，0=删除")
+    private Integer status;
     
-    @Schema(description = "删除时间")
-    private Date deletedAt;
-} 
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
+    @Schema(description = "创建时间")
+    private Date createTime;
+    
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
+    @Schema(description = "更新时间")
+    private Date updateTime;
+}

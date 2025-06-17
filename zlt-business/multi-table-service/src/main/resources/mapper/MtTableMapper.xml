@@ -4,60 +4,73 @@
 
     <resultMap id="BaseResultMap" type="com.central.multitable.model.MtTable">
         <id column="id" property="id" jdbcType="BIGINT"/>
-        <result column="tenant_id" property="tenantId" jdbcType="BIGINT"/>
+        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
         <result column="name" property="name" jdbcType="VARCHAR"/>
         <result column="description" property="description" jdbcType="VARCHAR"/>
         <result column="team_id" property="teamId" jdbcType="BIGINT"/>
         <result column="icon" property="icon" jdbcType="VARCHAR"/>
         <result column="color" property="color" jdbcType="VARCHAR"/>
         <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
-        <result column="is_deleted" property="isDeleted" jdbcType="TINYINT"/>
-        <result column="deleted_at" property="deletedAt" jdbcType="TIMESTAMP"/>
-        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
-        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="status" property="status" jdbcType="TINYINT"/>
+        <result column="created_at" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updateTime" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id, tenant_id, name, description, team_id, icon, color, 
-        created_by, is_deleted, deleted_at, created_at, updated_at
+        created_by, status, created_at, updated_at
     </sql>
 
     <select id="findList" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List"/>
         FROM mt_table
-        WHERE is_deleted = 0
-        <if test="params.name != null and params.name != ''">
-            AND name LIKE CONCAT('%', #{params.name}, '%')
+        WHERE status = 1
+        <if test="query.name != null and query.name != ''">
+            AND name LIKE CONCAT('%', #{query.name}, '%')
         </if>
-        <if test="params.teamId != null">
-            AND team_id = #{params.teamId}
+        <if test="query.teamId != null">
+            AND team_id = #{query.teamId}
         </if>
-        <if test="params.tenantId != null">
-            AND tenant_id = #{params.tenantId}
+        <if test="query.createdBy != null">
+            AND created_by = #{query.createdBy}
         </if>
-        ORDER BY created_at DESC
+        <choose>
+            <when test="query.orderBy != null and query.orderBy != ''">
+                <choose>
+                    <when test="query.orderDirection != null and query.orderDirection.toLowerCase() == 'asc'">
+                        ORDER BY ${query.orderBy} ASC
+                    </when>
+                    <otherwise>
+                        ORDER BY ${query.orderBy} DESC
+                    </otherwise>
+                </choose>
+            </when>
+            <otherwise>
+                ORDER BY updated_at DESC
+            </otherwise>
+        </choose>
     </select>
 
     <select id="findByTeamId" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List"/>
         FROM mt_table
-        WHERE team_id = #{teamId} AND is_deleted = 0
-        ORDER BY created_at DESC
+        WHERE team_id = #{teamId} AND status = 1
+        ORDER BY updated_at DESC
     </select>
 
     <select id="findByTenantId" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List"/>
         FROM mt_table
-        WHERE tenant_id = #{tenantId} AND is_deleted = 0
-        ORDER BY created_at DESC
+        WHERE tenant_id = #{tenantId} AND status = 1
+        ORDER BY updated_at DESC
     </select>
 
     <update id="deleteLogically">
         UPDATE mt_table 
-        SET is_deleted = 1, deleted_at = NOW()
+        SET status = 0, updated_at = NOW()
         WHERE id = #{id}
     </update>
 

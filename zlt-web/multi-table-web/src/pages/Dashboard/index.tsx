@@ -32,8 +32,9 @@ import {
   DatabaseOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
+import { getTableList, createTable, TableInfo, TableListResponse } from '../../services/multitable'
 import MultiTableEditor from '../../components/MultiTableEditor'
+import type { CurrentUserInfo } from '../../services/auth'
 import './index.scss'
 
 const { Header, Sider, Content } = Layout
@@ -46,20 +47,9 @@ interface UserInfo {
   roles: string[]
 }
 
-interface TableInfo {
-  id: string
-  name: string
-  description: string
-  fieldCount: number
-  rowCount: number
-  status: 'active' | 'inactive'
-  createTime: string
-  updateTime: string
-}
-
 const Dashboard: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false)
-  const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
+  const [userInfo, setUserInfo] = useState<CurrentUserInfo | null>(null)
   const [tables, setTables] = useState<TableInfo[]>([])
   const [selectedTable, setSelectedTable] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -82,9 +72,18 @@ const Dashboard: React.FC = () => {
       }
 
       // 获取用户信息
-      const storedUserInfo = localStorage.getItem('userInfo')
+      const storedUserInfo = localStorage.getItem('currentUser')
       if (storedUserInfo) {
-        setUserInfo(JSON.parse(storedUserInfo))
+        const parsedUserInfo = JSON.parse(storedUserInfo) as CurrentUserInfo
+        setUserInfo(parsedUserInfo)
+        console.log('已加载用户信息:', parsedUserInfo)
+      } else {
+        // 兼容旧版本的用户信息存储
+        const basicUserInfo = localStorage.getItem('userInfo')
+        if (basicUserInfo) {
+          const parsedBasicInfo = JSON.parse(basicUserInfo)
+          console.log('使用基础用户信息:', parsedBasicInfo)
+        }
       }
 
       // 获取表格列表
@@ -100,23 +99,28 @@ const Dashboard: React.FC = () => {
 
   const loadTables = async () => {
     try {
-      const token = localStorage.getItem('access_token')
-      const response = await axios.get('/api/multi-table/tables', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      console.log('开始加载表格列表...')
+      const response: TableListResponse = await getTableList({
+        page: 1,
+        limit: 20
       })
 
-      if (response.data.success) {
-        setTables(response.data.data || [])
+      console.log('表格列表响应:', response)
+
+      if (response.code === 0) {
+        setTables(response.data || [])
+        message.success('表格列表加载成功')
       } else {
+        console.warn('表格列表响应异常:', response.code)
         // 如果后端还没有数据，使用模拟数据
         setTables(mockTables)
+        message.info('使用模拟数据')
       }
     } catch (error) {
       console.error('加载表格失败:', error)
       // 使用模拟数据
       setTables(mockTables)
+      message.warning('表格服务连接失败，使用模拟数据')
     }
   }
 
@@ -126,31 +130,31 @@ const Dashboard: React.FC = () => {
       id: '1',
       name: '员工满意度调查',
       description: '2024年第一季度员工满意度调查表',
-      fieldCount: 12,
-      rowCount: 156,
-      status: 'active',
       createTime: '2024-01-15 10:30:00',
-      updateTime: '2024-06-16 14:25:00'
+      updateTime: '2024-06-16 14:25:00',
+      createdBy: 1,
+      rowCount: 156,
+      columnCount: 12
     },
     {
-      id: '2',
+      id: '2', 
       name: '产品需求分析',
       description: '新产品功能需求收集和分析',
-      fieldCount: 8,
-      rowCount: 89,
-      status: 'active',
       createTime: '2024-02-20 09:15:00',
-      updateTime: '2024-06-15 16:45:00'
+      updateTime: '2024-06-15 16:45:00',
+      createdBy: 1,
+      rowCount: 89,
+      columnCount: 8
     },
     {
       id: '3',
-      name: '项目进度跟踪',
+      name: '项目进度跟踪', 
       description: '各项目进度和里程碑跟踪表',
-      fieldCount: 15,
-      rowCount: 45,
-      status: 'inactive',
       createTime: '2024-03-10 11:00:00',
-      updateTime: '2024-06-10 13:20:00'
+      updateTime: '2024-06-10 13:20:00',
+      createdBy: 1,
+      rowCount: 45,
+      columnCount: 15
     }
   ]
 
@@ -170,25 +174,23 @@ const Dashboard: React.FC = () => {
     try {
       setLoading(true)
       
-      // 这里应该调用后端API创建表格
-      // const response = await axios.post('/api/multi-table/tables', values)
-      
-      // 模拟创建成功
-      const newTable: TableInfo = {
-        id: Date.now().toString(),
+      console.log('开始创建表格:', values)
+      const response = await createTable({
         name: values.name,
-        description: values.description,
-        fieldCount: 0,
-        rowCount: 0,
-        status: 'active',
-        createTime: new Date().toLocaleString(),
-        updateTime: new Date().toLocaleString()
-      }
+        description: values.description
+      })
       
-      setTables(prev => [newTable, ...prev])
-      setCreateModalVisible(false)
-      form.resetFields()
-      message.success('表格创建成功！')
+      console.log('创建表格响应:', response)
+      
+      if (response.resp_code === 0) {
+        // 重新加载表格列表
+        await loadTables()
+        setCreateModalVisible(false)
+        form.resetFields()
+        message.success('表格创建成功！')
+      } else {
+        message.error(response.resp_msg || '创建表格失败')
+      }
     } catch (error) {
       console.error('创建表格失败:', error)
       message.error('创建表格失败，请稍后重试')
@@ -197,8 +199,8 @@ const Dashboard: React.FC = () => {
     }
   }
 
-  const handleTableSelect = (tableId: string) => {
-    setSelectedTable(tableId)
+  const handleTableSelect = (tableId: string | number) => {
+    setSelectedTable(String(tableId))
   }
 
   const userMenuItems = [
@@ -263,8 +265,8 @@ const Dashboard: React.FC = () => {
     },
     {
       title: '字段数',
-      dataIndex: 'fieldCount',
-      key: 'fieldCount',
+      dataIndex: 'columnCount',
+      key: 'columnCount',
       width: 80,
       align: 'center' as const
     },
@@ -276,16 +278,11 @@ const Dashboard: React.FC = () => {
       align: 'center' as const
     },
     {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      width: 80,
-      align: 'center' as const,
-      render: (status: string) => (
-        <Tag color={status === 'active' ? 'green' : 'default'}>
-          {status === 'active' ? '活跃' : '非活跃'}
-        </Tag>
-      )
+      title: '创建者',
+      dataIndex: 'createdBy',
+      key: 'createdBy',
+      width: 100,
+      align: 'center' as const
     },
     {
       title: '更新时间',
@@ -298,7 +295,7 @@ const Dashboard: React.FC = () => {
       key: 'actions',
       width: 120,
       align: 'center' as const,
-             render: (_: any, record: TableInfo) => (
+      render: (_: any, record: TableInfo) => (
         <Space>
           <Button
             type="primary"
@@ -315,7 +312,7 @@ const Dashboard: React.FC = () => {
     }
   ]
 
-  const currentTable = tables.find(t => t.id === selectedTable)
+  const currentTable = tables.find(t => String(t.id) === selectedTable)
 
   return (
     <Layout className="dashboard">
@@ -352,8 +349,14 @@ const Dashboard: React.FC = () => {
             
             <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
               <div className="user-info">
-                <Avatar size="small" icon={<UserOutlined />} />
-                <span className="username">{userInfo?.nickname || userInfo?.username || '用户'}</span>
+                <Avatar 
+                  size="small" 
+                  src={userInfo?.employee?.avatar || userInfo?.headImgUrl}
+                  icon={<UserOutlined />} 
+                />
+                <span className="username">
+                  {userInfo?.employee?.name || userInfo?.nickname || userInfo?.username || '用户'}
+                </span>
               </div>
             </Dropdown>
           </Space>
@@ -401,7 +404,7 @@ const Dashboard: React.FC = () => {
                     <div className="table-info">
                       <div className="table-name">{table.name}</div>
                       <div className="table-meta">
-                        {table.fieldCount}字段 · {table.rowCount}记录
+                        {table.columnCount}字段 · {table.rowCount}记录
                       </div>
                     </div>
                   </div>

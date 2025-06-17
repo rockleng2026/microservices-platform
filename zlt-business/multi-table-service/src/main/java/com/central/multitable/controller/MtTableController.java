@@ -3,6 +3,7 @@ package com.central.multitable.controller;
 import com.central.common.model.PageResult;
 import com.central.common.model.Result;
 import com.central.multitable.model.MtTable;
+import com.central.multitable.model.dto.TableQueryDTO;
 import com.central.multitable.service.IMtTableService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -11,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 表格管理Controller
@@ -20,7 +20,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/tables")
+@RequestMapping("/api/tables")
 @Tag(name = "表格管理", description = "表格管理相关接口")
 public class MtTableController {
     
@@ -29,8 +29,8 @@ public class MtTableController {
     
     @Operation(summary = "分页查询表格列表")
     @GetMapping
-    public PageResult<MtTable> findList(@RequestParam Map<String, Object> params) {
-        return tableService.findList(params);
+    public PageResult<MtTable> findList(TableQueryDTO queryDTO) {
+        return tableService.findList(queryDTO);
     }
     
     @Operation(summary = "根据ID查询表格")

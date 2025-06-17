@@ -3,11 +3,11 @@ package com.central.multitable.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.central.multitable.model.MtTable;
+import com.central.multitable.model.dto.TableQueryDTO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 表格Mapper接口
@@ -21,10 +21,10 @@ public interface MtTableMapper extends BaseMapper<MtTable> {
      * 分页查询表格列表
      *
      * @param page 分页参数
-     * @param params 查询参数
+     * @param queryDTO 查询参数
      * @return 表格列表
      */
-    List<MtTable> findList(Page<MtTable> page, @Param("params") Map<String, Object> params);
+    List<MtTable> findList(Page<MtTable> page, @Param("query") TableQueryDTO queryDTO);
     
     /**
      * 根据团队ID查询表格
@@ -40,7 +40,7 @@ public interface MtTableMapper extends BaseMapper<MtTable> {
      * @param tenantId 租户ID
      * @return 表格列表
      */
-    List<MtTable> findByTenantId(@Param("tenantId") Long tenantId);
+    List<MtTable> findByTenantId(@Param("tenantId") String tenantId);
     
     /**
      * 逻辑删除表格

@@ -4,9 +4,9 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.central.common.model.PageResult;
 import com.central.multitable.model.MtTable;
+import com.central.multitable.model.dto.TableQueryDTO;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 表格Service接口
@@ -18,10 +18,10 @@ public interface IMtTableService extends IService<MtTable> {
     /**
      * 分页查询表格列表
      *
-     * @param params 查询参数
+     * @param queryDTO 查询参数
      * @return 分页结果
      */
-    PageResult<MtTable> findList(Map<String, Object> params);
+    PageResult<MtTable> findList(TableQueryDTO queryDTO);
     
     /**
      * 根据团队ID查询表格

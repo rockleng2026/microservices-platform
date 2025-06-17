@@ -1,11 +1,15 @@
 package com.central.multitable.model;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.central.common.model.SuperEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+
+import java.util.Date;
 
 /**
  * 字段实体类
@@ -63,4 +67,28 @@ public class MtField extends SuperEntity {
     
     @Schema(description = "创建人ID")
     private Long createdBy;
+    
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
+    @Schema(description = "创建时间")
+    private Date createdAt;
+    
+    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
+    @Schema(description = "更新时间")  
+    private Date updatedAt;
+    
+    public Date getCreateTime() {
+        return this.createdAt;
+    }
+    
+    public void setCreateTime(Date createTime) {
+        this.createdAt = createTime;
+    }
+    
+    public Date getUpdateTime() {
+        return this.updatedAt;
+    }
+    
+    public void setUpdateTime(Date updateTime) {
+        this.updatedAt = updateTime;
+    }
 } 

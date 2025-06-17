@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -29,15 +28,12 @@ public class MtFieldServiceImpl extends ServiceImpl<MtFieldMapper, MtField> impl
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean createField(MtField field) {
-        field.setCreateTime(new Date());
-        field.setUpdateTime(new Date());
         return save(field);
     }
     
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean updateField(MtField field) {
-        field.setUpdateTime(new Date());
         return updateById(field);
     }
     
@@ -52,12 +48,6 @@ public class MtFieldServiceImpl extends ServiceImpl<MtFieldMapper, MtField> impl
     public boolean batchCreateFields(List<MtField> fields) {
         if (fields == null || fields.isEmpty()) {
             return false;
-        }
-        
-        Date now = new Date();
-        for (MtField field : fields) {
-            field.setCreateTime(now);
-            field.setUpdateTime(now);
         }
         
         return baseMapper.batchInsert(fields) > 0;

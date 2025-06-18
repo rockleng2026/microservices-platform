@@ -43,6 +43,7 @@ zlt:
     enable: true
     ignoreTables:
       - mt_field_type_dict
+      - mt_field
       - mt_tenant
       - mt_tenant_config
     ignoreSqls:

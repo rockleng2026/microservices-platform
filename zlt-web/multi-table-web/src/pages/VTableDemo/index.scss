@@ -1,0 +1,56 @@
+.vtable-demo {
+  padding: 20px;
+  min-height: 100vh;
+  background: #f5f5f5;
+  
+  .demo-header {
+    text-align: center;
+    margin-bottom: 30px;
+    
+    h1 {
+      margin: 0 0 10px 0;
+      color: #333;
+      font-size: 28px;
+      font-weight: 600;
+    }
+    
+    p {
+      margin: 0;
+      color: #666;
+      font-size: 16px;
+    }
+  }
+  
+  .demo-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    
+    .vtable-container {
+      width: 100%;
+      height: 500px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+      
+      // VTable样式覆盖
+      .vtable {
+        border: none;
+        
+        .vtable-header {
+          background: #fafafa;
+          border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .vtable-cell {
+          border-right: 1px solid #f0f0f0;
+          border-bottom: 1px solid #f0f0f0;
+          
+          &:hover {
+            background: #f5f5f5;
+          }
+        }
+      }
+    }
+  }
+} 

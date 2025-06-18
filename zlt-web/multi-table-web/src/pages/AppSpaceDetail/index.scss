@@ -1,14 +1,15 @@
 .app-space-detail {
   height: 100vh;
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
   
   .app-space-header {
     background: #fff;
-    border-bottom: 1px solid #e8e8e8;
+    border-bottom: 1px solid #e8eaed;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 0 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
     
     .header-left {
       display: flex;
@@ -66,13 +67,15 @@
   
   .app-space-sidebar {
     background: white;
-    border-right: 1px solid #e8e8e8;
+    border-right: 1px solid #e8eaed;
+    display: flex;
+    flex-direction: column;
     
-    .table-header {
+    .workspace-header {
       padding: 16px;
-      border-bottom: 1px solid #f0f0f0;
+      border-bottom: 1px solid #f0f2f5;
       
-      .table-title {
+      .workspace-title {
         font-size: 18px;
         font-weight: 600;
         margin-bottom: 8px;
@@ -80,7 +83,7 @@
         align-items: center;
         gap: 8px;
         
-        .table-icon {
+        .workspace-icon {
           width: 24px;
           height: 24px;
           border-radius: 4px;
@@ -92,33 +95,97 @@
         }
       }
       
-      .table-description {
+      .workspace-description {
         color: #8c8c8c;
         font-size: 14px;
       }
     }
     
-    .view-tabs {
-      padding: 0 16px;
-      border-bottom: 1px solid #f0f0f0;
+    .tables-section {
+      padding: 16px;
+      border-bottom: 1px solid #f0f2f5;
       
-      .view-tab {
-        display: flex;
-        align-items: center;
-        padding: 12px 0;
-        cursor: pointer;
+      .section-title {
         font-size: 14px;
-        gap: 8px;
-        border-bottom: 2px solid transparent;
-        color: #595959;
-        
-        &:hover {
-          color: #1890ff;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #262626;
+      }
+      
+      .tables-list {
+        .table-item {
+          display: flex;
+          align-items: center;
+          padding: 8px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+          margin-bottom: 4px;
+          gap: 8px;
+          transition: all 0.3s;
+          
+          .table-icon {
+            font-size: 16px;
+          }
+          
+          .table-name {
+            font-size: 14px;
+            color: #595959;
+          }
+          
+          &:hover {
+            background: #f5f5f5;
+            
+            .table-name {
+              color: #1890ff;
+            }
+          }
+          
+          &.active {
+            background: #e6f7ff;
+            
+            .table-name {
+              color: #1890ff;
+              font-weight: 500;
+            }
+          }
         }
-        
-        &.active {
-          color: #1890ff;
-          border-bottom-color: #1890ff;
+      }
+    }
+    
+    .views-section {
+      padding: 16px;
+      border-bottom: 1px solid #f0f2f5;
+      
+      .section-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #262626;
+      }
+      
+      .views-list {
+        .view-item {
+          display: flex;
+          align-items: center;
+          padding: 8px 12px;
+          border-radius: 6px;
+          cursor: pointer;
+          margin-bottom: 4px;
+          gap: 8px;
+          font-size: 14px;
+          color: #595959;
+          transition: all 0.3s;
+          
+          &:hover {
+            background: #f5f5f5;
+            color: #1890ff;
+          }
+          
+          &.active {
+            background: #e6f7ff;
+            color: #1890ff;
+            font-weight: 500;
+          }
         }
       }
     }
@@ -164,18 +231,49 @@
   .app-space-content {
     display: flex;
     flex-direction: column;
-    background: white;
+    background: #f8f9fa;
     
-    .toolbar {
+    .content-header {
       padding: 16px 20px;
-      border-bottom: 1px solid #f0f0f0;
-      background: #fafafa;
+      border-bottom: 1px solid #e8eaed;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      
+      .table-info {
+        h2 {
+          margin: 0;
+          font-size: 20px;
+          color: #262626;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        
+        .view-name {
+          color: #8c8c8c;
+          font-size: 14px;
+          margin-left: 8px;
+        }
+      }
+      
+      .toolbar {
+        padding: 0;
+        border: none;
+        background: transparent;
+      }
     }
     
     .table-container {
       flex: 1;
       overflow: hidden;
       position: relative;
+      margin: 12px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border: 1px solid #e8eaed;
     }
   }
 }
@@ -185,21 +283,7 @@
   width: 100%;
   height: 100%;
   
-  .vtable {
-    border: none;
-    
-    .vtable-header {
-      background: #fafafa;
-      border-bottom: 1px solid #f0f0f0;
-    }
-    
-    .vtable-cell {
-      border-right: 1px solid #f0f0f0;
-      border-bottom: 1px solid #f0f0f0;
-      
-      &:hover {
-        background: #f5f5f5;
-      }
-    }
+  canvas {
+    border-radius: 8px;
   }
 } 

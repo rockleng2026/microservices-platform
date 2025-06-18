@@ -25,7 +25,7 @@ import {
   BellOutlined,
   LogoutOutlined
 } from '@ant-design/icons'
-import { ListTable } from '@visactor/vtable'
+import * as VTable from '@visactor/vtable'
 import { getAppSpaceByCode, AppSpace } from '../../services/appspace'
 import type { CurrentUserInfo } from '../../services/auth'
 import './index.scss'
@@ -54,17 +54,14 @@ const AppSpaceDetail: React.FC = () => {
   const navigate = useNavigate()
   
   const [appSpace, setAppSpace] = useState<AppSpace | null>(null)
-  const [, setTables] = useState<TableData[]>([])
+  const [tables, setTables] = useState<TableData[]>([])
   const [views, setViews] = useState<ViewData[]>([])
   const [selectedTable, setSelectedTable] = useState<string | null>(null)
   const [selectedView, setSelectedView] = useState<string | null>(null)
   const [, setLoading] = useState(true)
   const [userInfo, setUserInfo] = useState<CurrentUserInfo | null>(null)
-  const [tableData, setTableData] = useState<any[]>([])
-  const [tableColumns, setTableColumns] = useState<any[]>([])
   
   const tableContainerRef = useRef<HTMLDivElement>(null)
-  const vtableRef = useRef<ListTable | null>(null)
 
   useEffect(() => {
     if (appSpaceCode) {
@@ -86,7 +83,7 @@ const AppSpaceDetail: React.FC = () => {
   }, [searchParams])
 
   useEffect(() => {
-    if (selectedTable) {
+    if (selectedTable && tableContainerRef.current) {
       loadTableData()
     }
   }, [selectedTable, selectedView])
@@ -134,8 +131,14 @@ const AppSpaceDetail: React.FC = () => {
       // 如果URL没有指定table，默认选择第一个
       if (!selectedTable && mockTables.length > 0) {
         const firstTable = mockTables[0]
+        const firstView = mockViews.length > 0 ? mockViews[0] : null
         setSelectedTable(firstTable.id)
-        setSearchParams({ table: firstTable.id })
+        if (firstView) {
+          setSelectedView(firstView.id)
+          setSearchParams({ table: firstTable.id, view: firstView.id })
+        } else {
+          setSearchParams({ table: firstTable.id })
+        }
       }
     } catch (error) {
       console.error('加载表格列表失败:', error)
@@ -146,70 +149,97 @@ const AppSpaceDetail: React.FC = () => {
 
   const loadTableData = async () => {
     try {
-      // 这里应该调用获取表格数据的API
-      // 暂时使用模拟数据
-      setTableColumns(mockTableColumns)
-      setTableData(mockTableData)
+      if (!tableContainerRef.current) return
       
-      // 初始化VTable
-      setTimeout(() => {
-        initVTable()
-      }, 100)
+      // 创建VTable实例
+      const option = {
+        records: mockTableData,
+        columns: mockTableColumns,
+        widthMode: 'standard' as const,
+        heightMode: 'adaptive' as const,
+        autoWrapText: true,
+        stripe: true,
+        hover: {
+          highlightMode: 'cell' as const,
+          disableRowHover: false,
+          disableColumnHover: false
+        },
+        select: {
+          headerSelectMode: 'inline' as const,
+          highlightMode: 'row' as const
+        },
+        theme: {
+          underlayBackgroundColor: '#f8f9fa',
+          defaultStyle: {
+            borderLineWidth: 1,
+            borderColor: '#e8eaed',
+            fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif'
+          },
+          headerStyle: {
+            bgColor: '#f8f9fa',
+            color: '#202124',
+            fontSize: 14,
+            fontWeight: 500,
+            borderColor: '#e8eaed',
+            borderLineWidth: 1
+          },
+          bodyStyle: {
+            bgColor: '#ffffff',
+            color: '#202124',
+            fontSize: 14,
+            borderColor: '#e8eaed',
+            borderLineWidth: 1
+          },
+          frameStyle: {
+            borderLineWidth: 1,
+            borderColor: '#e8eaed',
+            shadowBlur: 0,
+            shadowColor: 'rgba(0,0,0,0)'
+          },
+          selectionStyle: {
+            cellBgColor: 'rgba(66, 133, 244, 0.1)',
+            cellBorderColor: '#4285f4',
+            cellBorderLineWidth: 2
+          },
+          scrollStyle: {
+            visible: 'always' as const,
+            scrollSliderColor: 'rgba(0,0,0,0.2)',
+            scrollRailColor: 'rgba(0,0,0,0.05)',
+            scrollSliderCornerRadius: 4,
+            width: 8
+          }
+        }
+      }
+
+      // 创建VTable实例
+      const tableInstance = new VTable.ListTable(tableContainerRef.current, option)
+      
+      // 可选：将实例存储到window对象中，方便调试
+      // @ts-ignore
+      window.tableInstance = tableInstance
+      
     } catch (error) {
       console.error('加载表格数据失败:', error)
     }
-  }
-
-  const initVTable = () => {
-    if (!tableContainerRef.current) return
-
-    // 销毁之前的实例
-    if (vtableRef.current) {
-      vtableRef.current.release()
-    }
-
-    const option = {
-      records: tableData,
-      columns: tableColumns,
-      widthMode: 'standard' as const,
-      heightMode: 'autoHeight' as const,
-      autoWrapText: true,
-      hover: {
-        highlightMode: 'row' as const
-      },
-      select: {
-        highlightMode: 'row' as const
-      },
-      theme: {
-        underlayBackgroundColor: '#fff',
-        scrollStyle: {
-          visible: 'always' as const,
-          scrollSliderColor: 'rgba(0,0,0,0.2)',
-          scrollRailColor: 'rgba(0,0,0,0.1)'
-        }
-      }
-    }
-
-    vtableRef.current = new ListTable(tableContainerRef.current, option)
   }
 
   // 模拟数据
   const mockAppSpace: AppSpace = {
     id: 1,
     uniCode: appSpaceCode || '',
-    name: '员工满意度调查应用',
-    description: '2024年第一季度员工满意度调查应用空间',
+    name: '未命名',
+    description: '新建的应用空间',
     icon: '📊',
     color: '#4CAF50',
     tableCount: 1,
-    viewCount: 3
+    viewCount: 1
   }
 
   const mockTables: TableData[] = [
     {
       id: 'tbl001',
-      name: '员工满意度调查问卷',
-      description: '公司年度员工满意度调查问卷',
+      name: '未命名',
+      description: '默认创建的表格',
       tableId: 'tbl001'
     }
   ]
@@ -217,135 +247,89 @@ const AppSpaceDetail: React.FC = () => {
   const mockViews: ViewData[] = [
     {
       id: 'view001',
-      name: '问卷结果汇总',
+      name: '表格视图',
       type: 'grid',
       config: {},
       isDefault: true
-    },
-    {
-      id: 'view002',
-      name: '满意度统计看板',
-      type: 'kanban',
-      config: {},
-      isDefault: false
-    },
-    {
-      id: 'view003',
-      name: '问卷填写表单',
-      type: 'form',
-      config: {},
-      isDefault: false
     }
   ]
 
   const mockTableColumns = [
     {
-      field: 'respondent_name',
-      title: '填写人',
-      width: 120,
-      cellType: 'text'
-    },
-    {
-      field: 'respondent_dept',
-      title: '填写人部门',
-      width: 150,
-      cellType: 'text'
-    },
-    {
-      field: 'submit_time',
-      title: '提交时间',
-      width: 160,
-      cellType: 'text'
-    },
-    {
-      field: 'leadership_satisfaction',
-      title: '公司的领导和管理满意度如何',
+      field: 'col_1',
+      title: 'col_1',
       width: 200,
-      cellType: 'text'
+      style: {
+        fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif',
+        fontSize: 14
+      }
     },
     {
-      field: 'colleague_relationship',
-      title: '您觉得同事之间的关系',
-      width: 180,
-      cellType: 'text'
+      field: 'col_2',
+      title: 'col_2',
+      width: 150,
+      style: {
+        fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif',
+        fontSize: 14
+      }
     },
     {
-      field: 'superior_communication',
-      title: '您觉得与上级领导的沟通',
-      width: 180,
-      cellType: 'text'
+      field: 'col_3',
+      title: 'col_3',
+      width: 150,
+      style: {
+        fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif',
+        fontSize: 14
+      }
     },
     {
-      field: 'work_pressure',
-      title: '您认为自己的工作压力',
-      width: 160,
-      cellType: 'text'
-    },
-    {
-      field: 'overall_rating',
-      title: '综合评分',
-      width: 100,
-      cellType: 'text'
+      field: 'col_4',
+      title: 'col_4',
+      width: 150,
+      style: {
+        fontFamily: 'PingFang SC, Microsoft YaHei, sans-serif',
+        fontSize: 14
+      }
     }
   ]
 
   const mockTableData = [
     {
-      respondent_name: '张三',
-      respondent_dept: '技术部',
-      submit_time: '2024-06-16 17:11:15',
-      leadership_satisfaction: '4星',
-      colleague_relationship: '比较和谐',
-      superior_communication: '非常顺畅',
-      work_pressure: '压力适中，能够承受',
-      overall_rating: '8.0'
+      col_1: '示例文本数据',
+      col_2: '选项1',
+      col_3: '2024-06-17',
+      col_4: '文档.pdf'
     },
     {
-      respondent_name: '李四',
-      respondent_dept: '设计部',
-      submit_time: '2024-06-16 17:11:15',
-      leadership_satisfaction: '5星',
-      colleague_relationship: '非常融洽',
-      superior_communication: '比较顺畅',
-      work_pressure: '压力很小，工作轻松',
-      overall_rating: '9.0'
+      col_1: '另一个文本',
+      col_2: '选项2',
+      col_3: '2024-06-18',
+      col_4: '图片.jpg'
     },
     {
-      respondent_name: '王五',
-      respondent_dept: '技术部',
-      submit_time: '2024-06-16 17:11:15',
-      leadership_satisfaction: '3星',
-      colleague_relationship: '一般',
-      superior_communication: '有时存在障碍',
-      work_pressure: '压力较大，有些吃力',
-      overall_rating: '6.0'
+      col_1: '第三行文本',
+      col_2: '选项1',
+      col_3: '2024-06-19',
+      col_4: '表格.xlsx'
     },
     {
-      respondent_name: '赵六',
-      respondent_dept: '财务部',
-      submit_time: '2024-06-16 17:11:15',
-      leadership_satisfaction: '4星',
-      colleague_relationship: '比较和谐',
-      superior_communication: '比较顺畅',
-      work_pressure: '压力适中，能够承受',
-      overall_rating: '7.5'
+      col_1: '',
+      col_2: '',
+      col_3: '',
+      col_4: ''
     },
     {
-      respondent_name: '钱七',
-      respondent_dept: '运营部',
-      submit_time: '2024-06-16 17:11:15',
-      leadership_satisfaction: '5星',
-      colleague_relationship: '非常融洽',
-      superior_communication: '非常顺畅',
-      work_pressure: '压力很小，工作轻松',
-      overall_rating: '8.5'
+      col_1: '',
+      col_2: '',
+      col_3: '',
+      col_4: ''
     }
   ]
 
-  // const handleTableSelect = (tableId: string) => {
-  //   setSelectedTable(tableId)
-  //   setSearchParams({ table: tableId, ...(selectedView && { view: selectedView }) })
-  // }
+  const handleTableSelect = (tableId: string) => {
+    setSelectedTable(tableId)
+    setSearchParams({ table: tableId, ...(selectedView && { view: selectedView }) })
+  }
 
   const handleViewSelect = (viewId: string) => {
     setSelectedView(viewId)
@@ -380,8 +364,8 @@ const AppSpaceDetail: React.FC = () => {
     }
   ]
 
-  // const currentTable = tables.find(t => t.id === selectedTable)
-  // const currentView = views.find(v => v.id === selectedView)
+  const currentTable = tables.find(t => t.id === selectedTable)
+  const currentView = views.find(v => v.id === selectedView)
 
   return (
     <Layout className="app-space-detail">
@@ -434,32 +418,55 @@ const AppSpaceDetail: React.FC = () => {
 
       <Layout>
         <Sider width={260} className="app-space-sidebar">
-          <div className="table-header">
-            <div className="table-title">
-              <span className="table-icon" style={{ backgroundColor: appSpace?.color }}>
+          <div className="workspace-header">
+            <div className="workspace-title">
+              <span className="workspace-icon" style={{ backgroundColor: appSpace?.color }}>
                 {appSpace?.icon || '📊'}
               </span>
               {appSpace?.name}
             </div>
-            <div className="table-description">{appSpace?.description}</div>
+            <div className="workspace-description">{appSpace?.description}</div>
           </div>
 
-          <div className="view-tabs">
-            {views.map(view => (
-              <div
-                key={view.id}
-                className={`view-tab ${selectedView === view.id ? 'active' : ''}`}
-                onClick={() => handleViewSelect(view.id)}
-              >
-                <TableOutlined />
-                {view.name}
-              </div>
-            ))}
+          {/* 表格列表 */}
+          <div className="tables-section">
+            <div className="section-title">表格</div>
+            <div className="tables-list">
+              {tables.map(table => (
+                <div
+                  key={table.id}
+                  className={`table-item ${selectedTable === table.id ? 'active' : ''}`}
+                  onClick={() => handleTableSelect(table.id)}
+                >
+                  <span className="table-icon">📋</span>
+                  <span className="table-name">{table.name}</span>
+                </div>
+              ))}
+            </div>
           </div>
+
+          {/* 视图列表 */}
+          {selectedTable && (
+            <div className="views-section">
+              <div className="section-title">视图</div>
+              <div className="views-list">
+                {views.map(view => (
+                  <div
+                    key={view.id}
+                    className={`view-item ${selectedView === view.id ? 'active' : ''}`}
+                    onClick={() => handleViewSelect(view.id)}
+                  >
+                    <TableOutlined />
+                    {view.name}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="tools-panel">
             <div className="tool-section">
-              <div className="tool-title">视图</div>
+              <div className="tool-title">筛选与排序</div>
               <button className="tool-btn">
                 <FilterOutlined /> 筛选
               </button>
@@ -481,19 +488,28 @@ const AppSpaceDetail: React.FC = () => {
         </Sider>
 
         <Content className="app-space-content">
-          <div className="toolbar">
-            <Space>
-              <Button 
-                type="primary" 
-                icon={<PlusOutlined />}
-                size="small"
-              >
-                添加记录
-              </Button>
-              <Button icon={<FilterOutlined />} size="small">筛选</Button>
-              <Button icon={<SortAscendingOutlined />} size="small">排序</Button>
-              <Button icon={<GroupOutlined />} size="small">分组</Button>
-            </Space>
+          <div className="content-header">
+            <div className="table-info">
+              <h2>{currentTable?.name || '未选择表格'}</h2>
+              <span className="view-name">
+                {currentView?.name ? `${currentView.name}` : ''}
+              </span>
+            </div>
+            
+            <div className="toolbar">
+              <Space>
+                <Button 
+                  type="primary" 
+                  icon={<PlusOutlined />}
+                  size="small"
+                >
+                  添加记录
+                </Button>
+                <Button icon={<FilterOutlined />} size="small">筛选</Button>
+                <Button icon={<SortAscendingOutlined />} size="small">排序</Button>
+                <Button icon={<GroupOutlined />} size="small">分组</Button>
+              </Space>
+            </div>
           </div>
 
           <div className="table-container" ref={tableContainerRef} style={{ flex: 1, overflow: 'hidden' }}>

@@ -4,6 +4,7 @@ import Layout from './components/Layout'
 import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
 import AppSpaceDetail from './pages/AppSpaceDetail'
+import VTableDemo from './pages/VTableDemo'
 import HomePage from './pages/HomePage'
 import TableManagement from './pages/TableManagement'
 import FieldConfig from './pages/FieldConfig'
@@ -22,6 +23,9 @@ const App: React.FC = () => {
       <Routes>
         {/* 登录页面 */}
         <Route path="/login" element={<LoginPage />} />
+        
+        {/* VTable演示页面 */}
+        <Route path="/vtable-demo" element={<VTableDemo />} />
         
         {/* 控制台页面 */}
         <Route path="/dashboard" element={

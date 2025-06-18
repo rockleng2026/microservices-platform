@@ -3,7 +3,7 @@ import { Form, Input, Button, Card, message, Row, Col, Image, Divider } from 'an
 import { UserOutlined, LockOutlined, SafetyOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { v4 as uuidv4 } from 'uuid'
-import { login, getCaptcha, LoginForm as ApiLoginForm, getCurrentUser } from '../../services/auth'
+import { login, getCaptcha, getCurrentUser } from '../../services/auth'
 import './index.scss'
 
 interface LoginForm {
@@ -28,7 +28,7 @@ const LoginPage: React.FC = () => {
     // 检查是否已登录
     const token = localStorage.getItem('access_token')
     if (token) {
-      navigate('/dashboard')
+      navigate('/base')
     }
   }, [navigate])
 
@@ -87,8 +87,8 @@ const LoginPage: React.FC = () => {
           message.warning('登录成功，但获取用户详细信息失败')
         }
 
-        // 跳转到控制台
-        navigate('/dashboard')
+        // 跳转到应用空间
+        navigate('/base')
       } else {
         message.error(response.resp_msg || '登录失败')
         refreshCaptcha() // 刷新验证码

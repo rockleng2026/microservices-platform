@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.multitable.mapper.MtAppSpaceMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.central.multitable.model.MtAppSpace">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="uni_code" property="uniCode" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="VARCHAR"/>
+        <result column="team_id" property="teamId" jdbcType="BIGINT"/>
+        <result column="icon" property="icon" jdbcType="VARCHAR"/>
+        <result column="color" property="color" jdbcType="VARCHAR"/>
+        <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
+        <result column="table_count" property="tableCount" jdbcType="INTEGER"/>
+        <result column="view_count" property="viewCount" jdbcType="INTEGER"/>
+        <result column="is_template" property="isTemplate" jdbcType="INTEGER"/>
+        <result column="template_category" property="templateCategory" jdbcType="VARCHAR"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+        <result column="created_at" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updateTime" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 通用查询结果列 -->
+    <sql id="Base_Column_List">
+        id, uni_code, tenant_id, name, description, team_id, icon, color, created_by, 
+        table_count, view_count, is_template, template_category, status, created_at, updated_at
+    </sql>
+
+    <!-- 根据租户ID查询应用空间列表 -->
+    <select id="findByTenantId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM mt_app_space
+        WHERE status = 1 AND tenant_id = #{tenantId}
+        ORDER BY updated_at DESC
+    </select>
+
+    <!-- 根据团队ID查询应用空间列表 -->
+    <select id="findByTeamId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM mt_app_space
+        WHERE status = 1 AND team_id = #{teamId}
+        ORDER BY updated_at DESC
+    </select>
+
+    <!-- 根据应用空间编码查询 -->
+    <select id="findByUniCode" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM mt_app_space
+        WHERE status = 1 AND uni_code = #{uniCode}
+    </select>
+
+</mapper> 

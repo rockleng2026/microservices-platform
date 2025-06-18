@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import LoginPage from './pages/LoginPage'
 import Dashboard from './pages/Dashboard'
+import AppSpaceDetail from './pages/AppSpaceDetail'
 import HomePage from './pages/HomePage'
 import TableManagement from './pages/TableManagement'
 import FieldConfig from './pages/FieldConfig'
@@ -26,6 +27,20 @@ const App: React.FC = () => {
         <Route path="/dashboard" element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        } />
+        
+        {/* 应用空间主页 */}
+        <Route path="/base" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+        
+        {/* 应用空间详情页 */}
+        <Route path="/base/:appSpaceCode" element={
+          <ProtectedRoute>
+            <AppSpaceDetail />
           </ProtectedRoute>
         } />
         

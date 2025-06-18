@@ -24,8 +24,8 @@ DROP TABLE IF EXISTS `mt_field`;
 CREATE TABLE `mt_field`  (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '字段ID，主键',
   `table_id` bigint(20) NOT NULL COMMENT '所属表格ID',
-  `field_key` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '字段标识（表内唯一）',
-  `field_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '字段名称',
+  `field_key` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '字段标识（表内唯一），格式col_1,col_2,col_3...col_100',
+  `field_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '字段名称,学历，年纪，家庭住址...联系电话',
   `field_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '字段类型（关联字典表type_key）',
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '字段描述',
   `config` json NULL COMMENT '字段配置（JSON格式）',
@@ -186,6 +186,8 @@ INSERT INTO `mt_row` VALUES (100004, 2001, '{\"work_pressure\": \"low\", \"other
 DROP TABLE IF EXISTS `mt_table`;
 CREATE TABLE `mt_table`  (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '表格ID，主键',
+  `uni_code` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '表格编码，唯一键',
+  `app_space_code` varchar(128) NOT NULL COMMENT '所属应用空间ID',
   `tenant_id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '所属租户ID',
   `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '表格名称',
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '表格描述',
@@ -203,6 +205,7 @@ CREATE TABLE `mt_table`  (
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_team`(`team_id`) USING BTREE,
+  INDEX `idx_code`(`uni_code`) USING BTREE,
   INDEX `idx_creator`(`created_by`) USING BTREE,
   INDEX `idx_template`(`is_template`) USING BTREE,
   INDEX `idx_status`(`status`) USING BTREE,
@@ -212,7 +215,43 @@ CREATE TABLE `mt_table`  (
 -- ----------------------------
 -- Records of mt_table
 -- ----------------------------
-INSERT INTO `mt_table` VALUES (2001, 'default', '员工满意度调查问卷', '公司年度员工满意度调查问卷，用于收集员工对公司各方面的反馈意见', 102, '📊', '#4CAF50', 1002, 5, 10, 3, 0, NULL, 1, '2025-06-16 17:11:15', '2025-06-17 10:31:14');
+INSERT INTO `mt_table` VALUES (2001, 'tblBfPmGYOYlMWF1', 'Q4Aub0W40axbTusDZ34cBIEEnAf', 'default', '员工满意度调查问卷', '公司年度员工满意度调查问卷，用于收集员工对公司各方面的反馈意见', 102, '📊', '#4CAF50', 1002, 5, 10, 3, 0, NULL, 1, '2025-06-16 17:11:15', '2025-06-17 10:31:14');
+
+
+-- ----------------------------
+-- Table structure for mt_app_space
+-- ----------------------------
+DROP TABLE IF EXISTS `mt_app_space`;
+CREATE TABLE `mt_app_space`  (
+ `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '应用空间ID，主键',
+ `uni_code` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '应用空间编码，唯一键',
+ `tenant_id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '所属租户ID',
+ `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '应用空间名称-创建表格默认创建应用空间和对应一条表格数据',
+ `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '应用空间',
+ `team_id` bigint(20)  COMMENT '所属团队ID',
+ `icon` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '表格图标',
+ `color` varchar(7) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '表格颜色（十六进制）',
+ `created_by` bigint(20) NOT NULL COMMENT '创建人ID',
+ `table_count` int(11) NOT NULL DEFAULT 0 COMMENT '表格数量',
+ `view_count` int(11) NOT NULL DEFAULT 0 COMMENT '视图数量',
+ `is_template` tinyint(4) NOT NULL DEFAULT 0 COMMENT '是否模板：1=是，0=否',
+ `template_category` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL DEFAULT NULL COMMENT '模板分类',
+ `status` tinyint(4) NOT NULL DEFAULT 1 COMMENT '状态：1=正常，0=删除',
+ `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+ `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+ PRIMARY KEY (`id`) USING BTREE,
+ INDEX `idx_team`(`team_id`) USING BTREE,
+ INDEX `idx_code`(`uni_code`) USING BTREE,
+ INDEX `idx_creator`(`created_by`) USING BTREE,
+ INDEX `idx_template`(`is_template`) USING BTREE,
+ INDEX `idx_status`(`status`) USING BTREE,
+ INDEX `idx_tenant`(`tenant_id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 2002 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '表格应用空间信息表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of mt_app_space
+-- ----------------------------
+INSERT INTO `mt_app_space` VALUES (1, 'Q4Aub0W40axbTusDZ34cBIEEnAf', 'default', '员工问卷调查表', '问卷调查表', 101, NULL, NULL, 1, 0, 0, 0, NULL, 1, '2025-06-17 15:14:26', '2025-06-17 15:14:26');
 
 -- ----------------------------
 -- Table structure for mt_team
@@ -249,6 +288,7 @@ DROP TABLE IF EXISTS `mt_view`;
 CREATE TABLE `mt_view`  (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '视图ID，主键',
   `table_id` bigint(20) NOT NULL COMMENT '所属表格ID',
+  `app_space_code` varchar(128) NOT NULL COMMENT '所属应用空间ID',
   `view_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '视图名称',
   `view_type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '视图类型：grid/kanban/calendar/gallery/form',
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NULL COMMENT '视图描述',
@@ -261,6 +301,7 @@ CREATE TABLE `mt_view`  (
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `idx_table`(`table_id`) USING BTREE,
+  INDEX `idx_app_space`(`app_space_code`) USING BTREE,
   INDEX `idx_creator`(`created_by`) USING BTREE,
   INDEX `idx_default`(`is_default`) USING BTREE,
   INDEX `idx_public`(`is_public`) USING BTREE,
@@ -270,8 +311,8 @@ CREATE TABLE `mt_view`  (
 -- ----------------------------
 -- Records of mt_view
 -- ----------------------------
-INSERT INTO `mt_view` VALUES (10000, 2001, '问卷结果汇总', 'grid', '显示所有问卷填写结果的表格视图', '{\"sorts\": [{\"fieldKey\": \"submit_time\", \"direction\": \"desc\"}], \"fields\": [{\"width\": 120, \"visible\": true, \"fieldKey\": \"respondent_name\"}, {\"width\": 120, \"visible\": true, \"fieldKey\": \"respondent_dept\"}, {\"width\": 160, \"visible\": true, \"fieldKey\": \"submit_time\"}, {\"width\": 140, \"visible\": true, \"fieldKey\": \"leadership_satisfaction\"}, {\"width\": 140, \"visible\": true, \"fieldKey\": \"colleague_relationship\"}, {\"width\": 140, \"visible\": true, \"fieldKey\": \"superior_communication\"}, {\"width\": 120, \"visible\": true, \"fieldKey\": \"work_pressure\"}, {\"width\": 180, \"visible\": true, \"fieldKey\": \"improvement_areas\"}, {\"width\": 100, \"visible\": true, \"fieldKey\": \"overall_rating\"}], \"groups\": [], \"filters\": []}', 1, 1, 1, 1002, '2025-06-16 17:11:15', '2025-06-16 17:11:15');
-INSERT INTO `mt_view` VALUES (10001, 2001, '满意度统计看板', 'kanban', '按部门分组显示满意度调查结果', '{\"sorts\": [{\"fieldKey\": \"overall_rating\", \"direction\": \"desc\"}], \"filters\": [], \"cardFields\": [\"respondent_name\", \"leadership_satisfaction\", \"overall_rating\"], \"colorField\": \"leadership_satisfaction\", \"groupByField\": \"respondent_dept\"}', 0, 1, 2, 1002, '2025-06-16 17:11:15', '2025-06-16 17:11:15');
-INSERT INTO `mt_view` VALUES (10002, 2001, '问卷填写表单', 'form', '用于员工填写满意度调查问卷的表单视图', '{\"sections\": [{\"title\": \"基本信息\", \"fields\": [\"respondent_name\", \"respondent_dept\"]}, {\"title\": \"满意度评价\", \"fields\": [\"leadership_satisfaction\", \"colleague_relationship\", \"superior_communication\", \"work_pressure\"]}, {\"title\": \"改进建议\", \"fields\": [\"improvement_areas\", \"other_feedback\", \"overall_rating\"]}], \"submitText\": \"提交问卷\", \"successMessage\": \"感谢您的参与，问卷已成功提交！\"}', 0, 1, 3, 1002, '2025-06-16 17:11:15', '2025-06-16 17:11:15');
+INSERT INTO `mt_view` VALUES (10000, 2001, 'Q4Aub0W40axbTusDZ34cBIEEnAf', '问卷结果汇总', 'grid', '显示所有问卷填写结果的表格视图', '{\"sorts\": [{\"fieldKey\": \"submit_time\", \"direction\": \"desc\"}], \"fields\": [{\"width\": 120, \"visible\": true, \"fieldKey\": \"respondent_name\"}, {\"width\": 120, \"visible\": true, \"fieldKey\": \"respondent_dept\"}, {\"width\": 160, \"visible\": true, \"fieldKey\": \"submit_time\"}, {\"width\": 140, \"visible\": true, \"fieldKey\": \"leadership_satisfaction\"}, {\"width\": 140, \"visible\": true, \"fieldKey\": \"colleague_relationship\"}, {\"width\": 140, \"visible\": true, \"fieldKey\": \"superior_communication\"}, {\"width\": 120, \"visible\": true, \"fieldKey\": \"work_pressure\"}, {\"width\": 180, \"visible\": true, \"fieldKey\": \"improvement_areas\"}, {\"width\": 100, \"visible\": true, \"fieldKey\": \"overall_rating\"}], \"groups\": [], \"filters\": []}', 1, 1, 1, 1002, '2025-06-16 17:11:15', '2025-06-16 17:11:15');
+INSERT INTO `mt_view` VALUES (10001, 2001, 'Q4Aub0W40axbTusDZ34cBIEEnAf', '满意度统计看板', 'kanban', '按部门分组显示满意度调查结果', '{\"sorts\": [{\"fieldKey\": \"overall_rating\", \"direction\": \"desc\"}], \"filters\": [], \"cardFields\": [\"respondent_name\", \"leadership_satisfaction\", \"overall_rating\"], \"colorField\": \"leadership_satisfaction\", \"groupByField\": \"respondent_dept\"}', 0, 1, 2, 1002, '2025-06-16 17:11:15', '2025-06-16 17:11:15');
+INSERT INTO `mt_view` VALUES (10002, 2001, 'Q4Aub0W40axbTusDZ34cBIEEnAf', '问卷填写表单', 'form', '用于员工填写满意度调查问卷的表单视图', '{\"sections\": [{\"title\": \"基本信息\", \"fields\": [\"respondent_name\", \"respondent_dept\"]}, {\"title\": \"满意度评价\", \"fields\": [\"leadership_satisfaction\", \"colleague_relationship\", \"superior_communication\", \"work_pressure\"]}, {\"title\": \"改进建议\", \"fields\": [\"improvement_areas\", \"other_feedback\", \"overall_rating\"]}], \"submitText\": \"提交问卷\", \"successMessage\": \"感谢您的参与，问卷已成功提交！\"}', 0, 1, 3, 1002, '2025-06-16 17:11:15', '2025-06-16 17:11:15');
 
 SET FOREIGN_KEY_CHECKS = 1;

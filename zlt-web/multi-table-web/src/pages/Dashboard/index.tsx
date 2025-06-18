@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Layout,
   Menu,
@@ -10,11 +10,9 @@ import {
   Space,
   Card,
   Table,
-  Tag,
+
   message,
   Modal,
-  Form,
-  Select,
   Tooltip
 } from 'antd'
 import {
@@ -26,40 +24,36 @@ import {
   LogoutOutlined,
   SettingOutlined,
   PlusOutlined,
-  TableOutlined,
-  FileTextOutlined,
   AppstoreOutlined,
+  FileTextOutlined,
   DatabaseOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
-import { getTableList, createTable, TableInfo, TableListResponse } from '../../services/multitable'
+import { getAppSpaceList, createAppSpace, createAppSpaceWithDefaults, AppSpace, AppSpaceListResponse } from '../../services/appspace'
 import MultiTableEditor from '../../components/MultiTableEditor'
 import type { CurrentUserInfo } from '../../services/auth'
 import './index.scss'
 
 const { Header, Sider, Content } = Layout
-const { Option } = Select
-
-interface UserInfo {
-  id: string
-  username: string
-  nickname: string
-  roles: string[]
-}
+// const { Option } = Select
 
 const Dashboard: React.FC = () => {
   const [collapsed, setCollapsed] = useState(false)
   const [userInfo, setUserInfo] = useState<CurrentUserInfo | null>(null)
-  const [tables, setTables] = useState<TableInfo[]>([])
-  const [selectedTable, setSelectedTable] = useState<string | null>(null)
+  const [appSpaces, setAppSpaces] = useState<AppSpace[]>([])
+  const [selectedAppSpace, setSelectedAppSpace] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [createModalVisible, setCreateModalVisible] = useState(false)
-  const [form] = Form.useForm()
+  // const [createModalVisible, setCreateModalVisible] = useState(false)
+  const initializingRef = useRef(false)
+  // const [form] = Form.useForm()
   const navigate = useNavigate()
 
-  // 初始化用户信息和表格数据
+  // 初始化用户信息和应用空间数据
   useEffect(() => {
-    initializeData()
+    if (!initializingRef.current) {
+      initializingRef.current = true
+      initializeData()
+    }
   }, [])
 
   const initializeData = async () => {
@@ -77,17 +71,10 @@ const Dashboard: React.FC = () => {
         const parsedUserInfo = JSON.parse(storedUserInfo) as CurrentUserInfo
         setUserInfo(parsedUserInfo)
         console.log('已加载用户信息:', parsedUserInfo)
-      } else {
-        // 兼容旧版本的用户信息存储
-        const basicUserInfo = localStorage.getItem('userInfo')
-        if (basicUserInfo) {
-          const parsedBasicInfo = JSON.parse(basicUserInfo)
-          console.log('使用基础用户信息:', parsedBasicInfo)
-        }
       }
 
-      // 获取表格列表
-      await loadTables()
+      // 获取应用空间列表
+      await loadAppSpaces()
     } catch (error) {
       console.error('初始化失败:', error)
       message.error('初始化失败，请重新登录')
@@ -97,64 +84,70 @@ const Dashboard: React.FC = () => {
     }
   }
 
-  const loadTables = async () => {
+  const loadAppSpaces = async () => {
     try {
-      console.log('开始加载表格列表...')
-      const response: TableListResponse = await getTableList({
-        page: 1,
-        limit: 20
-      })
+      console.log('开始加载应用空间列表...')
+      const response: AppSpaceListResponse = await getAppSpaceList()
 
-      console.log('表格列表响应:', response)
+      console.log('应用空间列表响应:', response)
 
-      if (response.code === 0) {
-        setTables(response.data || [])
-        message.success('表格列表加载成功')
+      if (response.resp_code === 0) {
+        setAppSpaces(response.datas || [])
+        message.success('应用空间列表加载成功')
       } else {
-        console.warn('表格列表响应异常:', response.code)
+        console.warn('应用空间列表响应异常:', response.resp_code)
         // 如果后端还没有数据，使用模拟数据
-        setTables(mockTables)
+        setAppSpaces(mockAppSpaces)
         message.info('使用模拟数据')
       }
     } catch (error) {
-      console.error('加载表格失败:', error)
+      console.error('加载应用空间失败:', error)
       // 使用模拟数据
-      setTables(mockTables)
-      message.warning('表格服务连接失败，使用模拟数据')
+      setAppSpaces(mockAppSpaces)
+      message.warning('应用空间服务连接失败，使用模拟数据')
     }
   }
 
-  // 模拟表格数据
-  const mockTables: TableInfo[] = [
+  // 模拟应用空间数据
+  const mockAppSpaces: AppSpace[] = [
     {
-      id: '1',
-      name: '员工满意度调查',
-      description: '2024年第一季度员工满意度调查表',
+      id: 1,
+      uniCode: 'Q4Aub0W40axbTusDZ34cBIEEnAf',
+      name: '员工满意度调查应用',
+      description: '2024年第一季度员工满意度调查应用空间',
       createTime: '2024-01-15 10:30:00',
       updateTime: '2024-06-16 14:25:00',
       createdBy: 1,
-      rowCount: 156,
-      columnCount: 12
+      tableCount: 3,
+      viewCount: 8,
+      icon: '📊',
+      color: '#4CAF50'
     },
     {
-      id: '2', 
-      name: '产品需求分析',
-      description: '新产品功能需求收集和分析',
+      id: 2, 
+      uniCode: 'B5Bvb1X41bycVvtEA45dCJFEoGg',
+      name: '产品需求分析应用',
+      description: '新产品功能需求收集和分析应用空间',
       createTime: '2024-02-20 09:15:00',
       updateTime: '2024-06-15 16:45:00',
       createdBy: 1,
-      rowCount: 89,
-      columnCount: 8
+      tableCount: 2,
+      viewCount: 5,
+      icon: '📋',
+      color: '#2196F3'
     },
     {
-      id: '3',
-      name: '项目进度跟踪', 
-      description: '各项目进度和里程碑跟踪表',
+      id: 3,
+      uniCode: 'C6Cwc2Y52czdWwuFA56eDKGFpHh',
+      name: '项目进度跟踪应用', 
+      description: '各项目进度和里程碑跟踪应用空间',
       createTime: '2024-03-10 11:00:00',
       updateTime: '2024-06-10 13:20:00',
       createdBy: 1,
-      rowCount: 45,
-      columnCount: 15
+      tableCount: 4,
+      viewCount: 12,
+      icon: '📈',
+      color: '#FF9800'
     }
   ]
 
@@ -170,37 +163,47 @@ const Dashboard: React.FC = () => {
     })
   }
 
-  const handleCreateTable = async (values: any) => {
+  const handleCreateAppSpace = async () => {
     try {
       setLoading(true)
       
-      console.log('开始创建表格:', values)
-      const response = await createTable({
-        name: values.name,
-        description: values.description
-      })
+      // 获取用户信息
+      if (!userInfo) {
+        message.error('用户信息不存在，请重新登录')
+        return
+      }
       
-      console.log('创建表格响应:', response)
+      console.log('开始创建应用空间（包含默认表格）...')
+      const response = await createAppSpaceWithDefaults(
+        userInfo.tenantId || 'default',
+        userInfo.currentPosition?.departmentId || 101,
+        userInfo.id
+      )
+      
+      console.log('创建应用空间响应:', response)
       
       if (response.resp_code === 0) {
-        // 重新加载表格列表
-        await loadTables()
-        setCreateModalVisible(false)
-        form.resetFields()
-        message.success('表格创建成功！')
+        // 重新加载应用空间列表
+        await loadAppSpaces()
+        message.success('应用空间创建成功！')
+        
+        // 自动跳转到新创建的应用空间
+        if (response.datas?.uniCode) {
+          navigate(`/base/${response.datas.uniCode}`)
+        }
       } else {
-        message.error(response.resp_msg || '创建表格失败')
+        message.error(response.resp_msg || '创建应用空间失败')
       }
     } catch (error) {
-      console.error('创建表格失败:', error)
-      message.error('创建表格失败，请稍后重试')
+      console.error('创建应用空间失败:', error)
+      message.error('创建应用空间失败，请稍后重试')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleTableSelect = (tableId: string | number) => {
-    setSelectedTable(String(tableId))
+  const handleAppSpaceSelect = (appSpaceCode: string) => {
+    setSelectedAppSpace(appSpaceCode)
   }
 
   const userMenuItems = [
@@ -232,9 +235,9 @@ const Dashboard: React.FC = () => {
       label: '概览'
     },
     {
-      key: 'tables',
-      icon: <TableOutlined />,
-      label: '我的表格'
+      key: 'appspaces',
+      icon: <AppstoreOutlined />,
+      label: '我的应用空间'
     },
     {
       key: 'templates',
@@ -248,14 +251,16 @@ const Dashboard: React.FC = () => {
     }
   ]
 
-  const tableColumns = [
+  const appSpaceColumns = [
     {
-      title: '表格名称',
+      title: '应用空间名称',
       dataIndex: 'name',
       key: 'name',
-      render: (text: string, record: TableInfo) => (
-        <div className="table-name-cell">
-          <TableOutlined className="table-icon" />
+      render: (text: string, record: AppSpace) => (
+        <div className="table-name-cell" onClick={() => navigate(`/base/${record.uniCode}`)} style={{ cursor: 'pointer' }}>
+          <span className="app-space-icon" style={{ backgroundColor: record.color }}>
+            {record.icon || '📁'}
+          </span>
           <div>
             <div className="table-title">{text}</div>
             <div className="table-description">{record.description}</div>
@@ -264,16 +269,16 @@ const Dashboard: React.FC = () => {
       )
     },
     {
-      title: '字段数',
-      dataIndex: 'columnCount',
-      key: 'columnCount',
+      title: '表格数',
+      dataIndex: 'tableCount',
+      key: 'tableCount',
       width: 80,
       align: 'center' as const
     },
     {
-      title: '记录数',
-      dataIndex: 'rowCount',
-      key: 'rowCount',
+      title: '视图数',
+      dataIndex: 'viewCount',
+      key: 'viewCount',
       width: 80,
       align: 'center' as const
     },
@@ -295,12 +300,12 @@ const Dashboard: React.FC = () => {
       key: 'actions',
       width: 120,
       align: 'center' as const,
-      render: (_: any, record: TableInfo) => (
+      render: (_: any, record: AppSpace) => (
         <Space>
           <Button
             type="primary"
             size="small"
-            onClick={() => handleTableSelect(record.id)}
+            onClick={() => navigate(`/base/${record.uniCode}`)}
           >
             打开
           </Button>
@@ -312,14 +317,14 @@ const Dashboard: React.FC = () => {
     }
   ]
 
-  const currentTable = tables.find(t => String(t.id) === selectedTable)
+  const currentAppSpace = appSpaces.find(app => app.uniCode === selectedAppSpace)
 
   return (
     <Layout className="dashboard">
       <Header className="dashboard-header">
         <div className="header-left">
           <div className="logo">
-            <TableOutlined className="logo-icon" />
+            <AppstoreOutlined className="logo-icon" />
             <span className="logo-text">多维表格</span>
           </div>
           <Button
@@ -332,7 +337,7 @@ const Dashboard: React.FC = () => {
 
         <div className="header-center">
           <Input
-            placeholder="搜索表格、字段、数据..."
+            placeholder="搜索应用空间..."
             prefix={<SearchOutlined />}
             className="search-input"
             allowClear
@@ -377,16 +382,17 @@ const Dashboard: React.FC = () => {
                 type="primary"
                 icon={<PlusOutlined />}
                 block
-                onClick={() => setCreateModalVisible(true)}
+                onClick={handleCreateAppSpace}
                 className="create-btn"
+                loading={loading}
               >
-                {!collapsed && '新建表格'}
+                {!collapsed && '新建应用空间'}
               </Button>
             </div>
 
             <Menu
               mode="inline"
-              defaultSelectedKeys={['tables']}
+              defaultSelectedKeys={['appspaces']}
               items={sidebarMenuItems}
               className="sidebar-menu"
             />
@@ -394,17 +400,19 @@ const Dashboard: React.FC = () => {
             {!collapsed && (
               <div className="table-list">
                 <div className="section-title">最近使用</div>
-                {tables.slice(0, 5).map(table => (
+                {appSpaces.slice(0, 5).map(appSpace => (
                   <div
-                    key={table.id}
-                    className={`table-item ${selectedTable === table.id ? 'active' : ''}`}
-                    onClick={() => handleTableSelect(table.id)}
+                    key={appSpace.id}
+                    className={`table-item ${selectedAppSpace === appSpace.uniCode ? 'active' : ''}`}
+                    onClick={() => handleAppSpaceSelect(appSpace.uniCode!)}
                   >
-                    <TableOutlined className="table-icon" />
+                    <span className="app-space-icon" style={{ backgroundColor: appSpace.color }}>
+                      {appSpace.icon || '📁'}
+                    </span>
                     <div className="table-info">
-                      <div className="table-name">{table.name}</div>
+                      <div className="table-name">{appSpace.name}</div>
                       <div className="table-meta">
-                        {table.columnCount}字段 · {table.rowCount}记录
+                        {appSpace.tableCount}表格 · {appSpace.viewCount}视图
                       </div>
                     </div>
                   </div>
@@ -415,12 +423,12 @@ const Dashboard: React.FC = () => {
         </Sider>
 
         <Content className="dashboard-content">
-          {selectedTable && currentTable ? (
+          {selectedAppSpace && currentAppSpace ? (
             <div className="table-workspace">
               <div className="workspace-header">
                 <div className="table-info">
-                  <h2>{currentTable.name}</h2>
-                  <p>{currentTable.description}</p>
+                  <h2>{currentAppSpace.name}</h2>
+                  <p>{currentAppSpace.description}</p>
                 </div>
                 <div className="workspace-actions">
                   <Space>
@@ -433,36 +441,37 @@ const Dashboard: React.FC = () => {
               
               <div className="table-editor">
                 <MultiTableEditor
-                  tableId={selectedTable}
-                  tableName={currentTable.name}
+                  tableId={selectedAppSpace}
+                  tableName={currentAppSpace.name}
                 />
               </div>
             </div>
           ) : (
             <div className="overview-content">
               <div className="overview-header">
-                <h1>我的表格</h1>
+                <h1>我的应用空间</h1>
                 <Button
                   type="primary"
                   icon={<PlusOutlined />}
-                  onClick={() => setCreateModalVisible(true)}
+                  onClick={handleCreateAppSpace}
+                  loading={loading}
                 >
-                  新建表格
+                  新建应用空间
                 </Button>
               </div>
 
               <div className="stats-cards">
                 <Card className="stat-card">
-                  <div className="stat-number">12</div>
+                  <div className="stat-number">{appSpaces.length}</div>
+                  <div className="stat-label">应用空间数</div>
+                </Card>
+                <Card className="stat-card">
+                  <div className="stat-number">{appSpaces.reduce((sum, app) => sum + (app.tableCount || 0), 0)}</div>
                   <div className="stat-label">总表格数</div>
                 </Card>
                 <Card className="stat-card">
-                  <div className="stat-number">1.2K</div>
-                  <div className="stat-label">总记录数</div>
-                </Card>
-                <Card className="stat-card">
-                  <div className="stat-number">156</div>
-                  <div className="stat-label">总字段数</div>
+                  <div className="stat-number">{appSpaces.reduce((sum, app) => sum + (app.viewCount || 0), 0)}</div>
+                  <div className="stat-label">总视图数</div>
                 </Card>
                 <Card className="stat-card">
                   <div className="stat-number">98%</div>
@@ -470,17 +479,17 @@ const Dashboard: React.FC = () => {
                 </Card>
               </div>
 
-              <Card title="表格列表" className="tables-card">
+              <Card title="应用空间列表" className="tables-card">
                 <Table
-                  columns={tableColumns}
-                  dataSource={tables}
+                  columns={appSpaceColumns}
+                  dataSource={appSpaces}
                   rowKey="id"
                   loading={loading}
                   pagination={{
                     pageSize: 10,
                     showSizeChanger: true,
                     showQuickJumper: true,
-                    showTotal: (total) => `共 ${total} 个表格`
+                    showTotal: (total) => `共 ${total} 个应用空间`
                   }}
                 />
               </Card>
@@ -489,55 +498,7 @@ const Dashboard: React.FC = () => {
         </Content>
       </Layout>
 
-      <Modal
-        title="新建表格"
-        open={createModalVisible}
-        onCancel={() => setCreateModalVisible(false)}
-        onOk={() => form.submit()}
-        confirmLoading={loading}
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleCreateTable}
-        >
-          <Form.Item
-            label="表格名称"
-            name="name"
-            rules={[
-              { required: true, message: '请输入表格名称' },
-              { max: 50, message: '表格名称不能超过50个字符' }
-            ]}
-          >
-            <Input placeholder="请输入表格名称" />
-          </Form.Item>
-
-          <Form.Item
-            label="描述"
-            name="description"
-            rules={[
-              { max: 200, message: '描述不能超过200个字符' }
-            ]}
-          >
-            <Input.TextArea 
-              placeholder="请输入表格描述"
-              rows={3}
-            />
-          </Form.Item>
-
-          <Form.Item
-            label="模板"
-            name="template"
-          >
-            <Select placeholder="选择模板（可选）">
-              <Option value="blank">空白表格</Option>
-              <Option value="survey">调查问卷</Option>
-              <Option value="project">项目管理</Option>
-              <Option value="inventory">库存管理</Option>
-            </Select>
-          </Form.Item>
-        </Form>
-      </Modal>
+      {/* Modal已移除，现在直接创建应用空间 */}
     </Layout>
   )
 }

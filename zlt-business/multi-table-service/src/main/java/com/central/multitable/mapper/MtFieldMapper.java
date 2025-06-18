@@ -8,9 +8,10 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 /**
- * 字段Mapper接口
+ * 表格字段定义Mapper
  *
- * @author multi-table-system
+ * @author zlt
+ * @date 2025-06-17
  */
 @Mapper
 public interface MtFieldMapper extends BaseMapper<MtField> {
@@ -33,10 +34,18 @@ public interface MtFieldMapper extends BaseMapper<MtField> {
     MtField findByTableIdAndFieldKey(@Param("tableId") Long tableId, @Param("fieldKey") String fieldKey);
     
     /**
+     * 根据字段类型查询字段列表
+     *
+     * @param fieldType 字段类型
+     * @return 字段列表
+     */
+    List<MtField> findByFieldType(@Param("fieldType") String fieldType);
+    
+    /**
      * 批量插入字段
      *
      * @param fields 字段列表
-     * @return 影响行数
+     * @return 插入数量
      */
     int batchInsert(@Param("fields") List<MtField> fields);
     

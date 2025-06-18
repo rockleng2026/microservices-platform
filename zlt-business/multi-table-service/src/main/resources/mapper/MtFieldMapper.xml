@@ -8,9 +8,9 @@
         <result column="field_key" property="fieldKey" jdbcType="VARCHAR"/>
         <result column="field_name" property="fieldName" jdbcType="VARCHAR"/>
         <result column="field_type" property="fieldType" jdbcType="VARCHAR"/>
-        <result column="description" property="description" jdbcType="VARCHAR"/>
-        <result column="config" property="config" jdbcType="VARCHAR"/>
-        <result column="default_value" property="defaultValue" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="LONGVARCHAR"/>
+        <result column="config" property="config" jdbcType="LONGVARCHAR"/>
+        <result column="default_value" property="defaultValue" jdbcType="LONGVARCHAR"/>
         <result column="is_required" property="isRequired" jdbcType="TINYINT"/>
         <result column="is_unique" property="isUnique" jdbcType="TINYINT"/>
         <result column="is_system" property="isSystem" jdbcType="TINYINT"/>
@@ -23,40 +23,29 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id, table_id, field_key, field_name, field_type, description, config,
-        default_value, is_required, is_unique, is_system, is_hidden, 
-        sort_order, width, created_by, created_at, updated_at
+        id, table_id, field_key, field_name, field_type, description, config, default_value,
+        is_required, is_unique, is_system, is_hidden, sort_order, width, created_by, created_at, updated_at
     </sql>
 
     <select id="findByTableId" resultMap="BaseResultMap">
-        SELECT
-        <include refid="Base_Column_List"/>
-        FROM mt_field
-        WHERE table_id = #{tableId}
-        ORDER BY sort_order ASC
+        SELECT <include refid="Base_Column_List"/>
+        FROM mt_field WHERE table_id = #{tableId} ORDER BY sort_order ASC
     </select>
 
     <select id="findByTableIdAndFieldKey" resultMap="BaseResultMap">
-        SELECT
-        <include refid="Base_Column_List"/>
-        FROM mt_field
-        WHERE table_id = #{tableId} AND field_key = #{fieldKey}
-        LIMIT 1
+        SELECT <include refid="Base_Column_List"/>
+        FROM mt_field WHERE table_id = #{tableId} AND field_key = #{fieldKey} LIMIT 1
     </select>
 
-    <insert id="batchInsert" parameterType="java.util.List">
-        INSERT INTO mt_field (
-            table_id, field_key, field_name, field_type, description, config,
-            default_value, is_required, is_unique, is_system, is_hidden,
-            sort_order, width, created_by, created_at, updated_at
-        ) VALUES
+    <select id="findByFieldType" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM mt_field WHERE field_type = #{fieldType} ORDER BY created_at DESC
+    </select>
+
+    <insert id="batchInsert" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO mt_field (table_id, field_key, field_name, field_type, description, config, default_value, is_required, is_unique, is_system, is_hidden, sort_order, width, created_by) VALUES
         <foreach collection="fields" item="field" separator=",">
-            (
-                #{field.tableId}, #{field.fieldKey}, #{field.fieldName}, #{field.fieldType}, 
-                #{field.description}, #{field.config}, #{field.defaultValue}, #{field.isRequired}, 
-                #{field.isUnique}, #{field.isSystem}, #{field.isHidden}, #{field.sortOrder}, 
-                #{field.width}, #{field.createdBy}, NOW(), NOW()
-            )
+            (#{field.tableId}, #{field.fieldKey}, #{field.fieldName}, #{field.fieldType}, #{field.description}, #{field.config}, #{field.defaultValue}, #{field.isRequired}, #{field.isUnique}, #{field.isSystem}, #{field.isHidden}, #{field.sortOrder}, #{field.width}, #{field.createdBy})
         </foreach>
     </insert>
 

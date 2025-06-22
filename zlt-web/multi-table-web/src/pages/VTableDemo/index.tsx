@@ -3,11 +3,13 @@ import { Button, Layout, Menu } from 'antd'
 import { 
   TableOutlined, 
   CodeOutlined,
+  EditOutlined,
   HomeOutlined
 } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import VTableExamplePage from './VTableExample'
 import ReactExamplePage from './ReactExample'
+import TableEditExample from './TableEditExample'
 import './index.scss'
 
 const { Sider, Content, Header } = Layout
@@ -36,6 +38,12 @@ const VTableDemo: React.FC = () => {
       label: 'React示例',
       icon: <CodeOutlined />,
       component: <ReactExamplePage />
+    },
+    {
+      key: 'table-edit',
+      label: '单元格编辑示例',
+      icon: <EditOutlined />,
+      component: <TableEditExample />
     }
   ]
 

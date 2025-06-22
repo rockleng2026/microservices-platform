@@ -115,57 +115,18 @@ const TableEditExample: React.FC = () => {
     }
 
     try {
-      // 尝试注册内置编辑器
-      try {
-        // 使用VTable内置的编辑器
-        const InputEditor = (VTable as any).editors?.InputEditor || 
-                           (VTable as any).InputEditor ||
-                           class MockInputEditor {
-                             startEditing() { console.log('Start editing with input editor') }
-                             endEditing() { console.log('End editing') }
-                           }
-        
-        const DateInputEditor = (VTable as any).editors?.DateInputEditor || 
-                               (VTable as any).DateInputEditor ||
-                               class MockDateEditor {
-                                 startEditing() { console.log('Start editing with date editor') }
-                                 endEditing() { console.log('End editing') }
-                               }
-        
-        const ListEditor = (VTable as any).editors?.ListEditor || 
-                          (VTable as any).ListEditor ||
-                          class MockListEditor {
-                            constructor(options: any) {}
-                            startEditing() { console.log('Start editing with list editor') }
-                            endEditing() { console.log('End editing') }
-                          }
-        
-        const TextAreaEditor = (VTable as any).editors?.TextAreaEditor || 
-                              (VTable as any).TextAreaEditor ||
-                              class MockTextAreaEditor {
-                                constructor(options: any) {}
-                                startEditing() { console.log('Start editing with textarea editor') }
-                                endEditing() { console.log('End editing') }
-                              }
-
-        const input_editor = new InputEditor()
-        const date_input_editor = new DateInputEditor()
-        const list_editor = new ListEditor({ values: ['boy', 'girl'] })
-        const textArea_editor = new TextAreaEditor({ readonly: false })
-        
-        // 注册编辑器
-        if (VTable.register && VTable.register.editor) {
-          VTable.register.editor('input-editor', input_editor)
-          VTable.register.editor('date-input-editor', date_input_editor)
-          VTable.register.editor('list-editor', list_editor)
-          VTable.register.editor('textArea-editor', textArea_editor)
-          console.log('编辑器注册成功')
-        } else {
-          console.warn('VTable.register.editor 不可用')
-        }
-      } catch (editorError) {
-        console.warn('编辑器注册失败:', editorError)
-      }
+      // 注册VTable编辑器
+      const input_editor = new VTable_editors.InputEditor()
+      const date_input_editor = new VTable_editors.DateInputEditor()
+      const list_editor = new VTable_editors.ListEditor({ values: ['boy', 'girl'] })
+      const textArea_editor = new VTable_editors.TextAreaEditor({ readonly: false })
+      
+      VTable.register.editor('input-editor', input_editor)
+      VTable.register.editor('date-input-editor', date_input_editor)
+      VTable.register.editor('list-editor', list_editor)
+      VTable.register.editor('textArea-editor', textArea_editor)
+      
+      console.log('VTable编辑器注册成功')
 
       const records = generatePersons(10)
 
@@ -272,33 +233,7 @@ const TableEditExample: React.FC = () => {
         message.success(`单元格值已更改: ${arg.field} = ${arg.value}`)
       })
 
-              // 监听单元格双击事件，启用编辑
-        instance.on('dblclick_cell', (arg: any) => {
-          const { col, row } = arg
-          const cellValue = instance.getCellValue(col, row)
-          const field = String(instance.getHeaderField(col, row))
-          
-          console.log('Double click cell:', { col, row, field, cellValue })
-          
-          // 可编辑字段
-          const editableFields = ['name', 'lastName', 'birthday', 'sex', 'address']
-          if (editableFields.includes(field)) {
-            // 这里可以添加自定义编辑逻辑
-            console.log(`字段 ${field} 可编辑`)
-            message.info(`双击编辑字段: ${field}`)
-          }
-        })
-
-        // 监听单元格点击事件
-        instance.on('click_cell', (arg: any) => {
-          const { col, row } = arg
-          const field = String(instance.getHeaderField(col, row))
-          const editableFields = ['name', 'lastName', 'birthday', 'sex', 'address']
-          
-          if (editableFields.includes(field)) {
-            message.info(`点击可编辑字段: ${field}，双击可编辑`)
-          }
-        })
+              
 
       setTableInstance(instance)
       

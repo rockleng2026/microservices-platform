@@ -248,6 +248,12 @@ const Dashboard: React.FC = () => {
       key: 'database',
       icon: <DatabaseOutlined />,
       label: '数据源'
+    },
+    {
+      key: 'demo',
+      icon: <FileTextOutlined />,
+      label: 'Demo示例',
+      onClick: () => navigate('/vtable-demo')
     }
   ]
 

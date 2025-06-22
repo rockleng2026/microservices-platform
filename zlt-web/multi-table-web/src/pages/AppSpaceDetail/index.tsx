@@ -159,6 +159,7 @@ const AppSpaceDetail: React.FC = () => {
         heightMode: 'adaptive' as const,
         autoWrapText: true,
         stripe: true,
+        defaultRowHeight: 32,
         hover: {
           highlightMode: 'cell' as const,
           disableRowHover: false,

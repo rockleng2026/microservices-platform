@@ -83,6 +83,39 @@ const menuData = [
         ]
     },
     {
+        id: 'project',
+        name: '项目管理',
+        icon: 'fas fa-project-diagram',
+        children: [
+            { id: 'project-list', name: '项目列表', url: 'project-manager/project-list.html' },
+            { id: 'project-create', name: '项目立项', url: 'project-manager/project-create.html' }
+        ]
+    },
+    {
+        id: 'performance',
+        name: '绩效考核',
+        icon: 'fas fa-chart-line',
+        children: [
+            { id: 'performance-evaluation', name: '绩效考核', url: 'evaluation-plan/performance-evaluation.html' }
+        ]
+    },
+    {
+        id: 'salary',
+        name: '薪酬管理',
+        icon: 'fas fa-money-bill-wave',
+        children: [
+            { id: 'salary-overview', name: '薪酬总览', url: 'salary/salary-overview.html' }
+        ]
+    },
+    {
+        id: 'approval',
+        name: '流程管理',
+        icon: 'fas fa-tasks',
+        children: [
+            { id: 'approval-center', name: '审批中心', url: 'approval/approval-center.html' }
+        ]
+    },
+    {
         id: 'system',
         name: '系统管理',
         icon: 'fas fa-cogs',

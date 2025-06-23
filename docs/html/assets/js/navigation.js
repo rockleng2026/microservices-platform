@@ -88,7 +88,8 @@ const menuData = [
         icon: 'fas fa-project-diagram',
         children: [
             { id: 'project-list', name: '项目列表', url: 'project-manager/project-list.html' },
-            { id: 'project-create', name: '项目立项', url: 'project-manager/project-create.html' }
+            { id: 'project-create', name: '项目立项', url: 'project-manager/project-create.html' },
+            { id: 'project-profit-rules', name: '项目提成规则', url: 'project-manager/project-profit-rules.html' }
         ]
     },
     {

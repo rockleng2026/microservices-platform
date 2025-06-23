@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绩效考核 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        /* 框架布局结构 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            color: #262626;
+        }
+
+        .app-sidebar {
+            grid-area: sidebar;
+            background: #001529;
+            color: rgba(255,255,255,0.85);
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+            min-height: calc(100vh - 120px);
+            background: #f5f5f5;
+            color: #262626;
+        }
+
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 绩效考核特有样式 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 16px 24px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .evaluation-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 24px;
+        }
+        .card-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+        }
+        .card-content {
+            padding: 24px;
+        }
+        .evaluation-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .info-label {
+            font-size: 12px;
+            color: #8c8c8c;
+            margin-bottom: 4px;
+        }
+        .info-value {
+            font-size: 14px;
+            color: #262626;
+            font-weight: 500;
+        }
+        .evaluation-items {
+            margin-bottom: 24px;
+        }
+        .evaluation-item {
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        .item-header {
+            padding: 16px;
+            background: #fafafa;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .item-title {
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 8px;
+        }
+        .item-description {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+        .standards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+        .standard {
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            text-align: center;
+        }
+        .standard-excellent {
+            background: #f6ffed;
+            color: #52c41a;
+            border: 1px solid #b7eb8f;
+        }
+        .standard-good {
+            background: #e6f7ff;
+            color: #1890ff;
+            border: 1px solid #91d5ff;
+        }
+        .standard-pass {
+            background: #fff2e8;
+            color: #fa8c16;
+            border: 1px solid #ffd591;
+        }
+        .item-content {
+            padding: 16px;
+        }
+        .evaluation-section {
+            margin-bottom: 20px;
+        }
+        .section-title {
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        .grade-selector {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .grade-option {
+            padding: 8px 16px;
+            border: 2px solid #f0f0f0;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        .grade-option:hover {
+            border-color: #1890ff;
+        }
+        .grade-option.selected {
+            border-color: #1890ff;
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+        .grade-s { border-color: #52c41a; background: #f6ffed; color: #52c41a; }
+        .grade-a { border-color: #1890ff; background: #e6f7ff; color: #1890ff; }
+        .grade-b { border-color: #fa8c16; background: #fff2e8; color: #fa8c16; }
+        .grade-c { border-color: #faad14; background: #fffbe6; color: #faad14; }
+        .grade-d { border-color: #ff4d4f; background: #fff1f0; color: #ff4d4f; }
+        .evaluation-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+        }
+        .progress-bar {
+            background: #f0f0f0;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+        .progress-fill {
+            background: #1890ff;
+            height: 100%;
+            transition: width 0.3s;
+        }
+        .status-tag {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-draft { background: #f0f0f0; color: #666; }
+        .status-pending { background: #e6f7ff; color: #1890ff; }
+        .status-approved { background: #f6ffed; color: #52c41a; }
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+            border: 1px solid #d9d9d9;
+            padding: 10px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 24px;
+            border-top: 1px solid #f0f0f0;
+        }
+        
+        /* 侧边栏样式修复 */
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            border-bottom: 1px solid #112a45;
+            background: #002140;
+        }
+        
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+        
+        .brand-name {
+            color: #fff;
+            font-size: 16px;
+        }
+        
+        .nav-menu {
+            padding: 16px 0;
+            list-style: none;
+        }
+        
+        .nav-item {
+            margin-bottom: 4px;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        
+        .nav-link.active {
+            background: #1890ff;
+            color: #fff;
+            border-left-color: #fff;
+        }
+        
+        .nav-group {
+            width: 100%;
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            justify-content: space-between;
+        }
+        
+        .nav-group:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        
+        .nav-icon {
+            margin-right: 12px;
+            width: 16px;
+            text-align: center;
+        }
+        
+        .nav-arrow {
+            transition: transform 0.3s;
+        }
+        
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+        
+        .nav-submenu {
+            display: none;
+            background: rgba(0,0,0,0.1);
+        }
+        
+        .nav-submenu.expanded {
+            display: block;
+        }
+        
+        .nav-subitem {
+            display: block;
+            padding: 8px 24px 8px 52px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .nav-subitem:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        
+        .nav-subitem.active {
+            background: #1890ff;
+            color: #fff;
+        }
+        
+        /* 顶部导航栏样式 */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .breadcrumb-item {
+            color: #8c8c8c;
+        }
+        
+        .breadcrumb-item:last-child {
+            color: #262626;
+        }
+        
+        .breadcrumb-separator {
+            color: #d9d9d9;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .search-box .search-input {
+            padding: 8px 12px 8px 32px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            width: 200px;
+            font-size: 14px;
+            color: #262626;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            color: #8c8c8c;
+            z-index: 1;
+        }
+        
+        .notification-btn {
+            position: relative;
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #262626;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .notification-btn:hover {
+            background: #f5f5f5;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #ff4d4f;
+            color: white;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 8px;
+            min-width: 16px;
+            text-align: center;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            color: #262626;
+        }
+        
+        .user-menu:hover {
+            background: #f5f5f5;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 侧边导航栏 -->
+        <div class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">P3</div>
+                <div class="brand-name">Portal 3.0</div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        首页
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="nav-icon">📋</span>
+                            项目管理
+                        </div>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../project-manager/project-list.html" class="nav-subitem">项目列表</a>
+                        <a href="../project-manager/project-create.html" class="nav-subitem">新建项目</a>
+                        <a href="#" class="nav-subitem">分红管理</a>
+                        <a href="#" class="nav-subitem">配置管理</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group expanded" onclick="toggleSubmenu(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="nav-icon">🎯</span>
+                            绩效管理
+                        </div>
+                        <span class="nav-arrow rotated">▶</span>
+                    </button>
+                    <div class="nav-submenu expanded">
+                        <a href="performance-target.html" class="nav-subitem">绩效目标</a>
+                        <a href="performance-evaluation.html" class="nav-subitem active">绩效考核</a>
+                        <a href="performance-result.html" class="nav-subitem">考核结果</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="nav-icon">💰</span>
+                            薪酬管理
+                        </div>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../salary/salary-overview.html" class="nav-subitem">薪酬总览</a>
+                        <a href="../salary/department-bonus.html" class="nav-subitem">部门分红</a>
+                        <a href="../salary/bonus-history.html" class="nav-subitem">分红记录</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="../approval/approval-center.html" class="nav-link">
+                        <span class="nav-icon">✅</span>
+                        审批中心
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="nav-icon">🏢</span>
+                            组织管理
+                        </div>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../organization/department-tree.html" class="nav-subitem">部门管理</a>
+                        <a href="../organization/employee-list.html" class="nav-subitem">员工管理</a>
+                        <a href="../organization/position-manage.html" class="nav-subitem">岗位管理</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="nav-icon">⚙️</span>
+                            系统设置
+                        </div>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../system/menu-manage.html" class="nav-subitem">菜单管理</a>
+                        <a href="../system/role-manage.html" class="nav-subitem">角色管理</a>
+                        <a href="../system/operation-log.html" class="nav-subitem">操作日志</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 顶部导航栏 -->
+        <div class="app-header">
+            <div class="breadcrumb">
+                <span class="breadcrumb-item">绩效考核</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item">绩效考核</span>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索...">
+                </div>
+                <button class="notification-btn">
+                    🔔
+                    <span class="notification-badge">3</span>
+                </button>
+                <div class="user-menu">
+                    <div class="user-avatar">张</div>
+                    <span>张三</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区域 -->
+        <div class="app-main">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <div>
+                    <h1 style="margin: 0; font-size: 20px; color: #262626;">绩效考核</h1>
+                    <p style="margin: 4px 0 0 0; color: #8c8c8c; font-size: 14px;">2024年第一季度个人绩效考核</p>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <span class="status-tag status-pending">待自评</span>
+                    <button class="btn-secondary">保存草稿</button>
+                </div>
+            </div>
+
+            <!-- 考核基本信息 -->
+            <div class="evaluation-card">
+                <div class="card-header">
+                    <div class="card-title">考核基本信息</div>
+                    <div class="progress-bar" style="width: 200px;">
+                        <div class="progress-fill" style="width: 30%;"></div>
+                    </div>
+                </div>
+                <div class="card-content">
+                    <div class="evaluation-info">
+                        <div class="info-item">
+                            <div class="info-label">考核对象</div>
+                            <div class="info-value">张三 - 技术部高级工程师</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">考核周期</div>
+                            <div class="info-value">2024年第一季度</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">考核类型</div>
+                            <div class="info-value">个人绩效考核</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">考核截止时间</div>
+                            <div class="info-value">2024-04-15</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">目标金额</div>
+                            <div class="info-value">¥8,000</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-label">考核状态</div>
+                            <div class="info-value">
+                                <span class="status-tag status-pending">待自评</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 绩效考核项目 -->
+            <div class="evaluation-card">
+                <div class="card-header">
+                    <div class="card-title">绩效考核项目</div>
+                    <div style="font-size: 12px; color: #8c8c8c;">请对以下各项进行自评</div>
+                </div>
+                <div class="card-content">
+                    <div class="evaluation-items">
+                        <!-- 考核项目1 -->
+                        <div class="evaluation-item">
+                            <div class="item-header">
+                                <div class="item-title">1. 技术能力与创新</div>
+                                <div class="item-description">
+                                    评估技术专业能力、技术创新意识和解决复杂问题的能力
+                                </div>
+                                <div class="standards">
+                                    <div class="standard standard-excellent">卓越：技术方案创新，解决重大技术难题</div>
+                                    <div class="standard standard-good">良好：技术能力扎实，能独立解决问题</div>
+                                    <div class="standard standard-pass">及格：基本技术能力，能完成常规任务</div>
+                                </div>
+                            </div>
+                            <div class="item-content">
+                                <div class="evaluation-section">
+                                    <div class="section-title">自我评价等级</div>
+                                    <div class="grade-selector">
+                                        <div class="grade-option" data-grade="S" onclick="selectGrade(this, 'item1-self')">S (卓越)</div>
+                                        <div class="grade-option selected" data-grade="A" onclick="selectGrade(this, 'item1-self')">A (良好)</div>
+                                        <div class="grade-option" data-grade="B" onclick="selectGrade(this, 'item1-self')">B (及格)</div>
+                                        <div class="grade-option" data-grade="C" onclick="selectGrade(this, 'item1-self')">C (需改进)</div>
+                                        <div class="grade-option" data-grade="D" onclick="selectGrade(this, 'item1-self')">D (不合格)</div>
+                                    </div>
+                                    <div class="section-title">自我评价描述</div>
+                                    <textarea class="evaluation-textarea" placeholder="请详细描述您在技术能力与创新方面的表现，包括具体的工作成果和改进计划...">
+本季度在技术方面主要完成了以下工作：
+1. 主导了新一代微服务架构的设计和实施
+2. 优化了系统性能，响应时间提升30%
+3. 引入了新的技术栈，提高了开发效率</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 考核项目2 -->
+                        <div class="evaluation-item">
+                            <div class="item-header">
+                                <div class="item-title">2. 工作质量与效率</div>
+                                <div class="item-description">
+                                    评估工作完成质量、按时交付能力和工作效率
+                                </div>
+                                <div class="standards">
+                                    <div class="standard standard-excellent">卓越：高质量完成，超前交付</div>
+                                    <div class="standard standard-good">良好：质量良好，按时交付</div>
+                                    <div class="standard standard-pass">及格：基本完成，偶有延期</div>
+                                </div>
+                            </div>
+                            <div class="item-content">
+                                <div class="evaluation-section">
+                                    <div class="section-title">自我评价等级</div>
+                                    <div class="grade-selector">
+                                        <div class="grade-option" data-grade="S" onclick="selectGrade(this, 'item2-self')">S (卓越)</div>
+                                        <div class="grade-option" data-grade="A" onclick="selectGrade(this, 'item2-self')">A (良好)</div>
+                                        <div class="grade-option selected" data-grade="B" onclick="selectGrade(this, 'item2-self')">B (及格)</div>
+                                        <div class="grade-option" data-grade="C" onclick="selectGrade(this, 'item2-self')">C (需改进)</div>
+                                        <div class="grade-option" data-grade="D" onclick="selectGrade(this, 'item2-self')">D (不合格)</div>
+                                    </div>
+                                    <div class="section-title">自我评价描述</div>
+                                    <textarea class="evaluation-textarea" placeholder="请详细描述您在工作质量与效率方面的表现...">
+本季度工作完成情况：
+1. 按时完成了8个功能模块的开发
+2. 代码质量测试通过率95%以上
+3. 响应需求变更及时，客户满意度较高</textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 考核项目3 -->
+                        <div class="evaluation-item">
+                            <div class="item-header">
+                                <div class="item-title">3. 团队协作与沟通</div>
+                                <div class="item-description">
+                                    评估团队合作精神、沟通协调能力和知识分享意识
+                                </div>
+                                <div class="standards">
+                                    <div class="standard standard-excellent">卓越：积极主动，带动团队</div>
+                                    <div class="standard standard-good">良好：配合良好，有效沟通</div>
+                                    <div class="standard standard-pass">及格：基本配合，沟通一般</div>
+                                </div>
+                            </div>
+                            <div class="item-content">
+                                <div class="evaluation-section">
+                                    <div class="section-title">自我评价等级</div>
+                                    <div class="grade-selector">
+                                        <div class="grade-option selected" data-grade="S" onclick="selectGrade(this, 'item3-self')">S (卓越)</div>
+                                        <div class="grade-option" data-grade="A" onclick="selectGrade(this, 'item3-self')">A (良好)</div>
+                                        <div class="grade-option" data-grade="B" onclick="selectGrade(this, 'item3-self')">B (及格)</div>
+                                        <div class="grade-option" data-grade="C" onclick="selectGrade(this, 'item3-self')">C (需改进)</div>
+                                        <div class="grade-option" data-grade="D" onclick="selectGrade(this, 'item3-self')">D (不合格)</div>
+                                    </div>
+                                    <div class="section-title">自我评价描述</div>
+                                    <textarea class="evaluation-textarea" placeholder="请详细描述您在团队协作与沟通方面的表现...">
+在团队协作方面的表现：
+1. 主动帮助新同事熟悉技术栈
+2. 组织了3次技术分享会
+3. 与产品、测试等部门协作顺畅</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 综合评价 -->
+            <div class="evaluation-card">
+                <div class="card-header">
+                    <div class="card-title">综合自我评价</div>
+                </div>
+                <div class="card-content">
+                    <div class="evaluation-section">
+                        <div class="section-title">综合自评等级</div>
+                        <div class="grade-selector">
+                            <div class="grade-option" data-grade="S" onclick="selectGrade(this, 'overall-self')">S (卓越)</div>
+                            <div class="grade-option selected" data-grade="A" onclick="selectGrade(this, 'overall-self')">A (良好)</div>
+                            <div class="grade-option" data-grade="B" onclick="selectGrade(this, 'overall-self')">B (及格)</div>
+                            <div class="grade-option" data-grade="C" onclick="selectGrade(this, 'overall-self')">C (需改进)</div>
+                            <div class="grade-option" data-grade="D" onclick="selectGrade(this, 'overall-self')">D (不合格)</div>
+                        </div>
+                        <div class="section-title">综合评价与改进计划</div>
+                        <textarea class="evaluation-textarea" style="min-height: 120px;" placeholder="请对本考核周期的整体表现进行总结，并制定下阶段的改进计划...">
+本季度总体表现总结：
+1. 技术能力持续提升，成功完成了多个重要项目
+2. 在团队协作方面表现突出，获得同事好评
+3. 工作效率还有提升空间，需要进一步优化时间管理
+
+下阶段改进计划：
+1. 学习新的技术框架，提升开发效率
+2. 加强项目管理能力，提高任务规划水平
+3. 继续保持团队协作的优势，成为技术导师</textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <div style="display: flex; gap: 12px;">
+                            <button type="button" class="btn-secondary">保存草稿</button>
+                            <button type="button" class="btn-secondary">预览</button>
+                        </div>
+                        <button type="button" class="btn-primary">提交自评</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="app-footer">
+            © 2024 Portal 3.0. All rights reserved.
+        </div>
+    </div>
+
+    <script src="../assets/js/navigation.js"></script>
+    <script>
+        // 导航菜单展开/收起
+        function toggleSubmenu(element) {
+            const submenu = element.nextElementSibling;
+            const arrow = element.querySelector('.nav-arrow');
+            
+            element.classList.toggle('expanded');
+            submenu.classList.toggle('expanded');
+            arrow.classList.toggle('rotated');
+        }
+
+        // 等级选择功能
+        function selectGrade(element, groupName) {
+            // 移除同组其他选项的selected类
+            const group = element.parentElement;
+            group.querySelectorAll('.grade-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // 添加选中样式
+            element.classList.add('selected');
+            
+            // 根据等级添加对应的颜色类
+            const grade = element.getAttribute('data-grade');
+            element.classList.remove('grade-s', 'grade-a', 'grade-b', 'grade-c', 'grade-d');
+            element.classList.add('grade-' + grade.toLowerCase());
+            
+            console.log(`选择等级: ${groupName} - ${grade}`);
+            
+            // 更新进度条
+            updateProgress();
+        }
+
+        // 更新进度条
+        function updateProgress() {
+            const selectedGrades = document.querySelectorAll('.grade-option.selected').length;
+            const totalItems = 4; // 3个考核项目 + 1个综合评价
+            const progress = (selectedGrades / totalItems) * 100;
+            
+            document.querySelector('.progress-fill').style.width = progress + '%';
+        }
+
+        // 自动保存功能
+        let autoSaveTimer;
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('evaluation-textarea')) {
+                clearTimeout(autoSaveTimer);
+                autoSaveTimer = setTimeout(() => {
+                    console.log('自动保存草稿...');
+                    // 这里添加自动保存逻辑
+                }, 2000);
+            }
+        });
+
+        // 初始化进度条
+        updateProgress();
+    </script>
+</body>
+</html> 

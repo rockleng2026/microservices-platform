@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新建项目 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        /* 框架布局结构 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            color: #262626;
+        }
+
+        .app-sidebar {
+            grid-area: sidebar;
+            background: #001529;
+            color: rgba(255,255,255,0.85);
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+            min-height: calc(100vh - 120px);
+            background: #f5f5f5;
+            color: #262626;
+        }
+
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 项目创建特有样式 */
+        .page-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 16px 24px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .steps-container {
+            margin-bottom: 24px;
+            padding: 24px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 32px;
+        }
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+        .step-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 2;
+        }
+        .step-active .step-circle {
+            background: #1890ff;
+            color: white;
+        }
+        .step-completed .step-circle {
+            background: #52c41a;
+            color: white;
+        }
+        .step-pending .step-circle {
+            background: #f0f0f0;
+            color: #8c8c8c;
+        }
+        .step-title {
+            font-size: 14px;
+            color: #262626;
+            text-align: center;
+        }
+        .step-line {
+            position: absolute;
+            top: 16px;
+            left: 50%;
+            right: -50%;
+            height: 2px;
+            background: #f0f0f0;
+            z-index: 1;
+        }
+        .step-completed .step-line {
+            background: #52c41a;
+        }
+        .form-container {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 24px;
+        }
+        .form-section {
+            margin-bottom: 32px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .form-row {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 16px;
+        }
+        .form-group {
+            flex: 1;
+        }
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #262626;
+        }
+        .required {
+            color: #ff4d4f;
+        }
+        .form-input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .form-textarea {
+            width: 100%;
+            min-height: 80px;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            resize: vertical;
+        }
+        .participants-section {
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            padding: 16px;
+            background: #fafafa;
+        }
+        .participant-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid #f0f0f0;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+        .participant-info {
+            flex: 1;
+        }
+        .participant-name {
+            font-weight: 500;
+            color: #262626;
+            margin-bottom: 2px;
+        }
+        .participant-dept {
+            font-size: 12px;
+            color: #8c8c8c;
+        }
+        .role-select {
+            min-width: 120px;
+            padding: 6px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        .btn-remove {
+            background: #ff4d4f;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        .btn-add {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid #f0f0f0;
+        }
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+            border: 1px solid #d9d9d9;
+            padding: 10px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .remove-btn:hover {
+            background: #ff7875;
+        }
+        
+        /* 侧边栏样式修复 */
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            border-bottom: 1px solid #112a45;
+            background: #002140;
+        }
+        
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+        
+        .brand-name {
+            color: #fff;
+            font-size: 16px;
+        }
+        
+        .nav-menu {
+            padding: 16px 0;
+            list-style: none;
+        }
+        
+        .nav-item {
+            margin-bottom: 4px;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        
+        .nav-link.active {
+            background: #1890ff;
+            color: #fff;
+            border-left-color: #fff;
+        }
+        
+        .nav-group {
+            width: 100%;
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            justify-content: space-between;
+        }
+        
+        .nav-group:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        
+        .nav-icon {
+            margin-right: 12px;
+            width: 16px;
+            text-align: center;
+        }
+        
+        .nav-arrow {
+            transition: transform 0.3s;
+        }
+        
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+        
+        .nav-submenu {
+            display: none;
+            background: rgba(0,0,0,0.1);
+        }
+        
+        .nav-submenu.expanded {
+            display: block;
+        }
+        
+        .nav-subitem {
+            display: block;
+            padding: 8px 24px 8px 52px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .nav-subitem:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        
+        .nav-subitem.active {
+            background: #1890ff;
+            color: #fff;
+        }
+        
+        /* 顶部导航栏样式 */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .breadcrumb-item {
+            color: #8c8c8c;
+        }
+        
+        .breadcrumb-item:last-child {
+            color: #262626;
+        }
+        
+        .breadcrumb-separator {
+            color: #d9d9d9;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .search-box .search-input {
+            padding: 8px 12px 8px 32px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            width: 200px;
+            font-size: 14px;
+            color: #262626;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            color: #8c8c8c;
+            z-index: 1;
+        }
+        
+        .notification-btn {
+            position: relative;
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #262626;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .notification-btn:hover {
+            background: #f5f5f5;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #ff4d4f;
+            color: white;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 8px;
+            min-width: 16px;
+            text-align: center;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            color: #262626;
+        }
+        
+        .user-menu:hover {
+            background: #f5f5f5;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 侧边导航栏 -->
+        <div class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">P3</div>
+                <div class="brand-name">Portal 3.0</div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        首页
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group expanded" onclick="toggleSubmenu(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="nav-icon">📋</span>
+                            项目管理
+                        </div>
+                        <span class="nav-arrow rotated">▶</span>
+                    </button>
+                    <div class="nav-submenu expanded">
+                        <a href="project-list.html" class="nav-subitem">项目列表</a>
+                        <a href="project-create.html" class="nav-subitem active">新建项目</a>
+                        <a href="#" class="nav-subitem">分红管理</a>
+                        <a href="#" class="nav-subitem">配置管理</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="nav-icon">🎯</span>
+                            绩效管理
+                        </div>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../evaluation-plan/performance-target.html" class="nav-subitem">绩效目标</a>
+                        <a href="../evaluation-plan/performance-evaluation.html" class="nav-subitem">绩效考核</a>
+                        <a href="../evaluation-plan/performance-result.html" class="nav-subitem">考核结果</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="nav-icon">💰</span>
+                            薪酬管理
+                        </div>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../salary/salary-overview.html" class="nav-subitem">薪酬总览</a>
+                        <a href="../salary/department-bonus.html" class="nav-subitem">部门分红</a>
+                        <a href="../salary/bonus-history.html" class="nav-subitem">分红记录</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="../approval/approval-center.html" class="nav-link">
+                        <span class="nav-icon">✅</span>
+                        审批中心
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="nav-icon">🏢</span>
+                            组织管理
+                        </div>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../organization/department-tree.html" class="nav-subitem">部门管理</a>
+                        <a href="../organization/employee-list.html" class="nav-subitem">员工管理</a>
+                        <a href="../organization/position-manage.html" class="nav-subitem">岗位管理</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="nav-icon">⚙️</span>
+                            系统设置
+                        </div>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../system/menu-manage.html" class="nav-subitem">菜单管理</a>
+                        <a href="../system/role-manage.html" class="nav-subitem">角色管理</a>
+                        <a href="../system/operation-log.html" class="nav-subitem">操作日志</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 顶部导航栏 -->
+        <div class="app-header">
+            <div class="breadcrumb">
+                <span class="breadcrumb-item">项目管理</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item">新建项目</span>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索...">
+                </div>
+                <button class="notification-btn">
+                    🔔
+                    <span class="notification-badge">3</span>
+                </button>
+                <div class="user-menu">
+                    <div class="user-avatar">张</div>
+                    <span>张三</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区域 -->
+        <div class="app-main">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <div>
+                    <h1 style="margin: 0; font-size: 20px; color: #262626;">新建项目</h1>
+                    <p style="margin: 4px 0 0 0; color: #8c8c8c; font-size: 14px;">创建新的项目并设置基本信息、参与人员和角色分配</p>
+                </div>
+            </div>
+
+            <!-- 步骤指示器 -->
+            <div class="steps-container">
+                <div class="steps">
+                    <div class="step step-active">
+                        <div class="step-circle">1</div>
+                        <div class="step-title">基本信息</div>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step step-pending">
+                        <div class="step-circle">2</div>
+                        <div class="step-title">参与人员</div>
+                        <div class="step-line"></div>
+                    </div>
+                    <div class="step step-pending">
+                        <div class="step-circle">3</div>
+                        <div class="step-title">确认提交</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 表单内容 -->
+            <div class="form-container">
+                <form id="projectForm">
+                    <!-- 基本信息 -->
+                    <div class="form-section">
+                        <h3 class="section-title">项目基本信息</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    项目名称 <span class="required">*</span>
+                                </label>
+                                <input type="text" class="form-input" placeholder="请输入项目名称" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">
+                                    项目类别 <span class="required">*</span>
+                                </label>
+                                <select class="form-input" required>
+                                    <option value="">请选择项目类别</option>
+                                    <option value="党建项目">党建项目</option>
+                                    <option value="IDC项目">IDC项目</option>
+                                    <option value="软件项目">软件项目</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    客户名称 <span class="required">*</span>
+                                </label>
+                                <input type="text" class="form-input" placeholder="请输入客户名称" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">客户联系人</label>
+                                <input type="text" class="form-input" placeholder="请输入客户联系人">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    预计立项时间 <span class="required">*</span>
+                                </label>
+                                <input type="date" class="form-input" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">预计合同金额</label>
+                                <input type="number" class="form-input" placeholder="请输入预计金额" step="0.01">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">项目描述</label>
+                                <textarea class="form-textarea" placeholder="请描述项目的主要内容和目标"></textarea>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 项目负责人 -->
+                    <div class="form-section">
+                        <h3 class="section-title">项目负责人</h3>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label class="form-label">
+                                    项目负责人 <span class="required">*</span>
+                                </label>
+                                <select class="form-input" required>
+                                    <option value="">请选择项目负责人</option>
+                                    <option value="1">张三 - 技术部</option>
+                                    <option value="2">李四 - 销售部</option>
+                                    <option value="3">王五 - 产品部</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">商机来源部门</label>
+                                <select class="form-input">
+                                    <option value="">请选择部门</option>
+                                    <option value="销售部">销售部</option>
+                                    <option value="市场部">市场部</option>
+                                    <option value="技术部">技术部</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 参与人员 -->
+                    <div class="form-section">
+                        <h3 class="section-title">项目参与人员</h3>
+                        <div class="participants-section">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                                <span style="font-weight: 500;">已选择人员</span>
+                                <button type="button" class="btn-add" onclick="addParticipant()">+ 添加人员</button>
+                            </div>
+                            
+                            <div id="participantsList">
+                                <div class="participant-item">
+                                    <div class="avatar">张</div>
+                                    <div class="participant-info">
+                                        <div class="participant-name">张三</div>
+                                        <div class="participant-dept">技术部 - 高级工程师</div>
+                                    </div>
+                                    <select class="role-select">
+                                        <option value="项目经理">项目经理</option>
+                                        <option value="技术负责人">技术负责人</option>
+                                        <option value="开发工程师">开发工程师</option>
+                                        <option value="测试工程师">测试工程师</option>
+                                        <option value="产品经理">产品经理</option>
+                                        <option value="销售">销售</option>
+                                    </select>
+                                    <button type="button" class="btn-remove" onclick="removeParticipant(this)">移除</button>
+                                </div>
+                                <div class="participant-item">
+                                    <div class="avatar">李</div>
+                                    <div class="participant-info">
+                                        <div class="participant-name">李四</div>
+                                        <div class="participant-dept">销售部 - 销售经理</div>
+                                    </div>
+                                    <select class="role-select">
+                                        <option value="销售" selected>销售</option>
+                                        <option value="项目经理">项目经理</option>
+                                        <option value="技术负责人">技术负责人</option>
+                                        <option value="开发工程师">开发工程师</option>
+                                        <option value="测试工程师">测试工程师</option>
+                                        <option value="产品经理">产品经理</option>
+                                    </select>
+                                    <button type="button" class="btn-remove" onclick="removeParticipant(this)">移除</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 表单操作 -->
+                    <div class="form-actions">
+                        <button type="button" class="btn-secondary">保存草稿</button>
+                        <div style="display: flex; gap: 16px;">
+                            <button type="button" class="btn-secondary" onclick="location.href='project-list.html'">返回列表</button>
+                            <button type="button" class="btn-primary">下一步</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="app-footer">
+            © 2024 Portal 3.0. All rights reserved.
+        </div>
+    </div>
+
+    <script src="../assets/js/navigation.js"></script>
+    <script>
+        // 导航菜单展开/收起
+        function toggleSubmenu(element) {
+            const submenu = element.nextElementSibling;
+            const arrow = element.querySelector('.nav-arrow');
+            
+            element.classList.toggle('expanded');
+            submenu.classList.toggle('expanded');
+            arrow.classList.toggle('rotated');
+        }
+
+        // 添加参与人员
+        function addParticipant() {
+            // 这里应该打开人员选择弹框
+            console.log('打开人员选择器');
+            
+            // 模拟添加人员
+            const participantsList = document.getElementById('participantsList');
+            const newParticipant = document.createElement('div');
+            newParticipant.className = 'participant-item';
+            newParticipant.innerHTML = `
+                <div class="avatar">王</div>
+                <div class="participant-info">
+                    <div class="participant-name">王五</div>
+                    <div class="participant-dept">产品部 - 产品经理</div>
+                </div>
+                <select class="role-select">
+                    <option value="产品经理" selected>产品经理</option>
+                    <option value="项目经理">项目经理</option>
+                    <option value="技术负责人">技术负责人</option>
+                    <option value="开发工程师">开发工程师</option>
+                    <option value="测试工程师">测试工程师</option>
+                    <option value="销售">销售</option>
+                </select>
+                <button type="button" class="btn-remove" onclick="removeParticipant(this)">移除</button>
+            `;
+            participantsList.appendChild(newParticipant);
+        }
+
+        // 移除参与人员
+        function removeParticipant(button) {
+            button.parentElement.remove();
+        }
+
+        // 表单验证
+        document.getElementById('projectForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 验证必填字段
+            const requiredFields = this.querySelectorAll('[required]');
+            let isValid = true;
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    field.style.borderColor = '#ff4d4f';
+                    isValid = false;
+                } else {
+                    field.style.borderColor = '#d9d9d9';
+                }
+            });
+            
+            if (isValid) {
+                console.log('表单验证通过，准备提交');
+                // 这里添加提交逻辑
+            } else {
+                alert('请填写所有必填字段');
+            }
+        });
+    </script>
+</body>
+</html> 

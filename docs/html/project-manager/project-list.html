@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目列表 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <style>
+        /* 框架布局结构 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            color: #262626;
+        }
+
+        .app-sidebar {
+            grid-area: sidebar;
+            background: #001529;
+            color: rgba(255,255,255,0.85);
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+            min-height: calc(100vh - 120px);
+            background: #f5f5f5;
+            color: #262626;
+        }
+
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 项目管理特有样式 */
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 16px 24px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            color: #262626;
+        }
+        
+        .project-header h1 {
+            color: #262626;
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+        }
+        .project-filters {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 16px 24px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            color: #262626;
+        }
+        .project-table {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .status-tag {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-init { background: #e6f7ff; color: #1890ff; }
+        .status-running { background: #f6ffed; color: #52c41a; }
+        .status-closed { background: #fff2e8; color: #fa8c16; }
+        .status-cancelled { background: #fff1f0; color: #ff4d4f; }
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+            border: 1px solid #d9d9d9;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-danger {
+            background: #ff4d4f;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .search-input {
+            width: 300px;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .filter-select {
+            min-width: 120px;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .table-container {
+            overflow-x: auto;
+            padding: 24px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+            color: #262626;
+        }
+        th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #262626;
+        }
+        td {
+            color: #262626;
+        }
+        tr:hover {
+            background: #fafafa;
+        }
+        
+        /* 侧边栏样式修复 */
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 24px;
+            color: #fff;
+            font-size: 20px;
+            font-weight: bold;
+            border-bottom: 1px solid #112a45;
+            background: #002140;
+        }
+        
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+        
+        .brand-name {
+            color: #fff;
+            font-size: 16px;
+        }
+        
+        .nav-menu {
+            padding: 16px 0;
+            list-style: none;
+        }
+        
+        .nav-item {
+            margin-bottom: 4px;
+        }
+        
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            color: rgba(255,255,255,0.85);
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+        }
+        
+        .nav-link:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        
+        .nav-link.active {
+            background: #1890ff;
+            color: #fff;
+            border-left-color: #fff;
+        }
+        
+        .nav-group {
+            width: 100%;
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            padding: 12px 24px;
+            color: rgba(255,255,255,0.85) !important;
+            text-decoration: none;
+            transition: all 0.3s;
+            border-left: 3px solid transparent;
+            cursor: pointer;
+            justify-content: space-between;
+            text-align: left;
+        }
+        
+        .nav-group:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff !important;
+        }
+        
+        .nav-group-content {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            color: inherit;
+        }
+        
+        .nav-group span {
+            color: inherit;
+        }
+        
+        .nav-icon {
+            margin-right: 12px;
+            width: 16px;
+            text-align: center;
+        }
+        
+        .nav-arrow {
+            transition: transform 0.3s;
+        }
+        
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+        
+        .nav-submenu {
+            display: none;
+            background: rgba(0,0,0,0.1);
+        }
+        
+        .nav-submenu.expanded {
+            display: block;
+        }
+        
+        .nav-subitem {
+            display: block;
+            padding: 8px 24px 8px 52px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        
+        .nav-subitem:hover {
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+        }
+        
+        .nav-subitem.active {
+            background: #1890ff;
+            color: #fff;
+        }
+        
+        /* 顶部导航栏样式 */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .breadcrumb-item {
+            color: #8c8c8c;
+        }
+        
+        .breadcrumb-item:last-child {
+            color: #262626;
+        }
+        
+        .breadcrumb-separator {
+            color: #d9d9d9;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .search-box .search-input {
+            padding: 8px 12px 8px 32px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            width: 200px;
+            font-size: 14px;
+            color: #262626;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            color: #8c8c8c;
+            z-index: 1;
+        }
+        
+        .notification-btn {
+            position: relative;
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #262626;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .notification-btn:hover {
+            background: #f5f5f5;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #ff4d4f;
+            color: white;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 8px;
+            min-width: 16px;
+            text-align: center;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            color: #262626;
+        }
+        
+        .user-menu:hover {
+            background: #f5f5f5;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 侧边导航栏 -->
+        <div class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">P3</div>
+                <div class="brand-name">Portal 3.0</div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        首页
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group expanded" onclick="toggleSubmenu(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="nav-icon">📋</span>
+                            项目管理
+                        </div>
+                        <span class="nav-arrow rotated">▶</span>
+                    </button>
+                    <div class="nav-submenu expanded">
+                        <a href="project-list.html" class="nav-subitem active">项目列表</a>
+                        <a href="project-create.html" class="nav-subitem">新建项目</a>
+                        <a href="#" class="nav-subitem">分红管理</a>
+                        <a href="#" class="nav-subitem">配置管理</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="nav-icon">🎯</span>
+                            绩效管理
+                        </div>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../evaluation-plan/performance-target.html" class="nav-subitem">绩效目标</a>
+                        <a href="../evaluation-plan/performance-evaluation.html" class="nav-subitem">绩效考核</a>
+                        <a href="../evaluation-plan/performance-result.html" class="nav-subitem">考核结果</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="nav-icon">💰</span>
+                            薪酬管理
+                        </div>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../salary/salary-overview.html" class="nav-subitem">薪酬总览</a>
+                        <a href="../salary/department-bonus.html" class="nav-subitem">部门分红</a>
+                        <a href="../salary/bonus-history.html" class="nav-subitem">分红记录</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="../approval/approval-center.html" class="nav-link">
+                        <span class="nav-icon">✅</span>
+                        审批中心
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="nav-icon">🏢</span>
+                            组织管理
+                        </div>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../organization/department-tree.html" class="nav-subitem">部门管理</a>
+                        <a href="../organization/employee-list.html" class="nav-subitem">员工管理</a>
+                        <a href="../organization/position-manage.html" class="nav-subitem">岗位管理</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <div style="display: flex; align-items: center;">
+                            <span class="nav-icon">⚙️</span>
+                            系统设置
+                        </div>
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../system/menu-manage.html" class="nav-subitem">菜单管理</a>
+                        <a href="../system/role-manage.html" class="nav-subitem">角色管理</a>
+                        <a href="../system/operation-log.html" class="nav-subitem">操作日志</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 顶部导航栏 -->
+        <div class="app-header">
+            <div class="breadcrumb">
+                <span class="breadcrumb-item">项目管理</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item">项目列表</span>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索...">
+                </div>
+                <button class="notification-btn">
+                    🔔
+                    <span class="notification-badge">3</span>
+                </button>
+                <div class="user-menu">
+                    <div class="user-avatar">张</div>
+                    <span>张三</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区域 -->
+        <div class="app-main">
+            <!-- 页面头部 -->
+            <div class="project-header">
+                <div>
+                    <h1 style="margin: 0; font-size: 20px; color: #262626;">项目管理</h1>
+                    <p style="margin: 4px 0 0 0; color: #8c8c8c; font-size: 14px;">管理所有项目的立项、执行、结项和分红</p>
+                </div>
+                <div class="action-buttons">
+                    <button class="btn-secondary">导出项目</button>
+                    <button class="btn-primary" onclick="location.href='project-create.html'">+ 新建项目</button>
+                </div>
+            </div>
+
+            <!-- 筛选条件 -->
+            <div class="project-filters">
+                <input type="text" class="search-input" placeholder="搜索项目名称、客户名称...">
+                <select class="filter-select">
+                    <option value="">全部状态</option>
+                    <option value="init">立项中</option>
+                    <option value="running">执行中</option>
+                    <option value="closed">已结项</option>
+                    <option value="cancelled">已取消</option>
+                </select>
+                <select class="filter-select">
+                    <option value="">全部类别</option>
+                    <option value="党建项目">党建项目</option>
+                    <option value="IDC项目">IDC项目</option>
+                    <option value="软件项目">软件项目</option>
+                </select>
+                <select class="filter-select">
+                    <option value="">全部时间</option>
+                    <option value="thisMonth">本月</option>
+                    <option value="thisQuarter">本季度</option>
+                    <option value="thisYear">本年度</option>
+                </select>
+                <button class="btn-secondary">重置</button>
+            </div>
+
+            <!-- 项目列表 -->
+            <div class="project-table">
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox"></th>
+                                <th>项目名称</th>
+                                <th>项目类别</th>
+                                <th>项目状态</th>
+                                <th>项目负责人</th>
+                                <th>客户名称</th>
+                                <th>立项时间</th>
+                                <th>合同金额</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td><a href="project-detail.html" style="color: #1890ff; text-decoration: none;">智慧党建平台建设项目</a></td>
+                                <td>党建项目</td>
+                                <td><span class="status-tag status-running">执行中</span></td>
+                                <td>张三</td>
+                                <td>某市党委组织部</td>
+                                <td>2024-01-15</td>
+                                <td>¥500,000</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-secondary">查看</button>
+                                        <button class="btn-secondary">编辑</button>
+                                        <button class="btn-secondary">结项</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td><a href="project-detail.html" style="color: #1890ff; text-decoration: none;">企业云服务平台</a></td>
+                                <td>软件项目</td>
+                                <td><span class="status-tag status-init">立项中</span></td>
+                                <td>李四</td>
+                                <td>ABC科技有限公司</td>
+                                <td>2024-01-20</td>
+                                <td>¥300,000</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-secondary">查看</button>
+                                        <button class="btn-secondary">编辑</button>
+                                        <button class="btn-danger">取消</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td><a href="project-detail.html" style="color: #1890ff; text-decoration: none;">数据中心机房建设</a></td>
+                                <td>IDC项目</td>
+                                <td><span class="status-tag status-closed">已结项</span></td>
+                                <td>王五</td>
+                                <td>某大型企业集团</td>
+                                <td>2023-10-12</td>
+                                <td>¥1,200,000</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-secondary">查看</button>
+                                        <button class="btn-secondary">分红</button>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><input type="checkbox"></td>
+                                <td><a href="project-detail.html" style="color: #1890ff; text-decoration: none;">智能监控系统</a></td>
+                                <td>软件项目</td>
+                                <td><span class="status-tag status-running">执行中</span></td>
+                                <td>赵六</td>
+                                <td>某制造业公司</td>
+                                <td>2024-01-05</td>
+                                <td>¥800,000</td>
+                                <td>
+                                    <div class="action-buttons">
+                                        <button class="btn-secondary">查看</button>
+                                        <button class="btn-secondary">编辑</button>
+                                        <button class="btn-secondary">结项</button>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 分页 -->
+                <div style="padding: 16px 24px; border-top: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #8c8c8c; font-size: 14px;">共 24 条记录</span>
+                    <div style="display: flex; gap: 8px; align-items: center;">
+                        <button class="btn-secondary">上一页</button>
+                        <span style="padding: 8px 12px; background: #1890ff; color: white; border-radius: 4px;">1</span>
+                        <span style="padding: 8px 12px; color: #666; cursor: pointer;">2</span>
+                        <span style="padding: 8px 12px; color: #666; cursor: pointer;">3</span>
+                        <span style="color: #8c8c8c;">...</span>
+                        <span style="padding: 8px 12px; color: #666; cursor: pointer;">10</span>
+                        <button class="btn-secondary">下一页</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="app-footer">
+            © 2024 Portal 3.0. All rights reserved.
+        </div>
+    </div>
+
+    <script src="../assets/js/navigation.js"></script>
+    <script>
+        // 导航菜单展开/收起
+        function toggleSubmenu(element) {
+            const submenu = element.nextElementSibling;
+            const arrow = element.querySelector('.nav-arrow');
+            
+            element.classList.toggle('expanded');
+            submenu.classList.toggle('expanded');
+            arrow.classList.toggle('rotated');
+        }
+
+        // 简单的交互逻辑
+        document.addEventListener('DOMContentLoaded', function() {
+            // 全选功能
+            const selectAll = document.querySelector('thead input[type="checkbox"]');
+            const checkboxes = document.querySelectorAll('tbody input[type="checkbox"]');
+            
+            selectAll.addEventListener('change', function() {
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+
+            // 搜索功能
+            const searchInput = document.querySelector('.search-input');
+            searchInput.addEventListener('input', function() {
+                console.log('搜索:', this.value);
+                // 这里可以添加实际的搜索逻辑
+            });
+
+            // 筛选功能
+            const filterSelects = document.querySelectorAll('.filter-select');
+            filterSelects.forEach(select => {
+                select.addEventListener('change', function() {
+                    console.log('筛选条件变更:', this.value);
+                    // 这里可以添加实际的筛选逻辑
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

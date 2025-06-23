@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>薪酬总览 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="../assets/css/navigation.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* 框架布局结构 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: 
+                "sidebar header"
+                "sidebar main"
+                "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .app-sidebar {
+            grid-area: sidebar;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+            min-height: calc(100vh - 120px);
+        }
+
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 薪酬总览特有样式 */
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding: 16px 24px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .overview-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .overview-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 24px;
+            text-align: center;
+        }
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            margin: 0 auto 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+        }
+        .icon-total { background: #1890ff; }
+        .icon-basic { background: #52c41a; }
+        .icon-performance { background: #fa8c16; }
+        .icon-bonus { background: #722ed1; }
+        .card-title {
+            font-size: 14px;
+            color: #8c8c8c;
+            margin-bottom: 8px;
+        }
+        .card-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 4px;
+        }
+        .card-change {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+        }
+        .change-up { color: #52c41a; }
+        .change-down { color: #ff4d4f; }
+        .chart-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .chart-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 24px;
+        }
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+        .details-section {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+        .details-card {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .card-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .card-content {
+            padding: 24px;
+        }
+        .salary-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .salary-table th,
+        .salary-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .salary-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #262626;
+        }
+        .bonus-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .bonus-item:last-child {
+            border-bottom: none;
+        }
+        .bonus-info {
+            flex: 1;
+        }
+        .bonus-title {
+            font-weight: 500;
+            color: #262626;
+            margin-bottom: 4px;
+        }
+        .bonus-desc {
+            font-size: 12px;
+            color: #8c8c8c;
+        }
+        .bonus-amount {
+            font-weight: 600;
+            color: #1890ff;
+        }
+        .status-tag {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .status-paid { background: #f6ffed; color: #52c41a; }
+        .status-pending { background: #e6f7ff; color: #1890ff; }
+        .status-processing { background: #fff2e8; color: #fa8c16; }
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+            border: 1px solid #d9d9d9;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .filter-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .tab {
+            padding: 8px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            background: white;
+        }
+        .tab.active {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 侧边导航栏 -->
+        <div class="app-sidebar">
+            <div class="sidebar-header">
+                <div class="logo">P3</div>
+                <div class="brand-name">Portal 3.0</div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item">
+                    <a href="../index.html" class="nav-link">
+                        <span class="nav-icon">🏠</span>
+                        首页
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <span class="nav-icon">📋</span>
+                        项目管理
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../project-manager/project-list.html" class="nav-subitem">项目列表</a>
+                        <a href="../project-manager/project-create.html" class="nav-subitem">新建项目</a>
+                        <a href="../project-manager/project-profit.html" class="nav-subitem">分红管理</a>
+                        <a href="../project-manager/project-setting.html" class="nav-subitem">配置管理</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <span class="nav-icon">🎯</span>
+                        绩效考核
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../evaluation-plan/performance-target.html" class="nav-subitem">绩效目标</a>
+                        <a href="../evaluation-plan/performance-evaluation.html" class="nav-subitem">绩效考核</a>
+                        <a href="../evaluation-plan/performance-result.html" class="nav-subitem">考核结果</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group expanded" onclick="toggleSubmenu(this)">
+                        <span class="nav-icon">💰</span>
+                        薪酬管理
+                        <span class="nav-arrow rotated">▶</span>
+                    </button>
+                    <div class="nav-submenu expanded">
+                        <a href="salary-overview.html" class="nav-subitem active">薪酬总览</a>
+                        <a href="department-bonus.html" class="nav-subitem">部门分红</a>
+                        <a href="bonus-history.html" class="nav-subitem">分红记录</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a href="../approval/approval-center.html" class="nav-link">
+                        <span class="nav-icon">✅</span>
+                        审批中心
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <span class="nav-icon">🏢</span>
+                        组织管理
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../organization/department-tree.html" class="nav-subitem">部门管理</a>
+                        <a href="../organization/employee-list.html" class="nav-subitem">员工管理</a>
+                        <a href="../organization/position-manage.html" class="nav-subitem">岗位管理</a>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <button class="nav-group" onclick="toggleSubmenu(this)">
+                        <span class="nav-icon">⚙️</span>
+                        系统设置
+                        <span class="nav-arrow">▶</span>
+                    </button>
+                    <div class="nav-submenu">
+                        <a href="../system/menu-manage.html" class="nav-subitem">菜单管理</a>
+                        <a href="../system/role-manage.html" class="nav-subitem">角色管理</a>
+                        <a href="../system/operation-log.html" class="nav-subitem">操作日志</a>
+                    </div>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 顶部导航栏 -->
+        <div class="app-header">
+            <div class="breadcrumb">
+                <span class="breadcrumb-item">薪酬管理</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item">薪酬总览</span>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索...">
+                </div>
+                <button class="notification-btn">
+                    🔔
+                    <span class="notification-badge">3</span>
+                </button>
+                <div class="user-menu">
+                    <div class="user-avatar">张</div>
+                    <span>张三</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主内容区域 -->
+        <div class="app-main">
+            <!-- 页面头部 -->
+            <div class="page-header">
+                <div>
+                    <h1 style="margin: 0; font-size: 20px; color: #262626;">薪酬总览</h1>
+                    <p style="margin: 4px 0 0 0; color: #8c8c8c; font-size: 14px;">查看个人薪酬构成、收入趋势和分红明细</p>
+                </div>
+                <div style="display: flex; gap: 12px;">
+                    <select class="btn-secondary" style="padding: 8px 12px;">
+                        <option>2024年</option>
+                        <option>2023年</option>
+                    </select>
+                    <button class="btn-secondary">导出报告</button>
+                </div>
+            </div>
+
+            <!-- 概览卡片 -->
+            <div class="overview-cards">
+                <div class="overview-card">
+                    <div class="card-icon icon-total">💰</div>
+                    <div class="card-title">本月总收入</div>
+                    <div class="card-value">¥28,500</div>
+                    <div class="card-change change-up">
+                        ↗ +15.2% 较上月
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon icon-basic">💼</div>
+                    <div class="card-title">基础工资</div>
+                    <div class="card-value">¥15,000</div>
+                    <div class="card-change">
+                        = 0% 较上月
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon icon-performance">🎯</div>
+                    <div class="card-title">绩效工资</div>
+                    <div class="card-value">¥8,000</div>
+                    <div class="card-change change-up">
+                        ↗ +6.7% 较上月
+                    </div>
+                </div>
+                <div class="overview-card">
+                    <div class="card-icon icon-bonus">🏆</div>
+                    <div class="card-title">项目提成</div>
+                    <div class="card-value">¥5,500</div>
+                    <div class="card-change change-up">
+                        ↗ +83.3% 较上月
+                    </div>
+                </div>
+            </div>
+
+            <!-- 图表区域 -->
+            <div class="chart-section">
+                <!-- 薪酬构成饼图 -->
+                <div class="chart-card">
+                    <div class="chart-title">
+                        本月薪酬构成
+                        <div class="filter-tabs">
+                            <div class="tab active">本月</div>
+                            <div class="tab">本季度</div>
+                            <div class="tab">本年</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="pieChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 收入趋势图 -->
+                <div class="chart-card">
+                    <div class="chart-title">
+                        收入趋势（近6个月）
+                        <div class="filter-tabs">
+                            <div class="tab active">月度</div>
+                            <div class="tab">季度</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="lineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 详细信息 -->
+            <div class="details-section">
+                <!-- 薪酬明细 -->
+                <div class="details-card">
+                    <div class="card-header">
+                        <h3 style="margin: 0; font-size: 16px; font-weight: 600;">本月薪酬明细</h3>
+                        <button class="btn-secondary">查看历史</button>
+                    </div>
+                    <div class="card-content">
+                        <table class="salary-table">
+                            <thead>
+                                <tr>
+                                    <th>项目</th>
+                                    <th>金额</th>
+                                    <th>说明</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>基础工资</td>
+                                    <td>¥15,000</td>
+                                    <td>月度固定工资</td>
+                                    <td><span class="status-tag status-paid">已发放</span></td>
+                                </tr>
+                                <tr>
+                                    <td>绩效工资</td>
+                                    <td>¥8,000</td>
+                                    <td>Q1绩效考核A级</td>
+                                    <td><span class="status-tag status-paid">已发放</span></td>
+                                </tr>
+                                <tr>
+                                    <td>智慧党建项目提成</td>
+                                    <td>¥3,000</td>
+                                    <td>技术负责人</td>
+                                    <td><span class="status-tag status-paid">已发放</span></td>
+                                </tr>
+                                <tr>
+                                    <td>云服务平台项目提成</td>
+                                    <td>¥2,500</td>
+                                    <td>开发工程师</td>
+                                    <td><span class="status-tag status-pending">待发放</span></td>
+                                </tr>
+                                <tr>
+                                    <td>加班补贴</td>
+                                    <td>¥800</td>
+                                    <td>周末加班4次</td>
+                                    <td><span class="status-tag status-processing">审批中</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 分红记录 -->
+                <div class="details-card">
+                    <div class="card-header">
+                        <h3 style="margin: 0; font-size: 16px; font-weight: 600;">分红记录</h3>
+                        <button class="btn-secondary">查看更多</button>
+                    </div>
+                    <div class="card-content">
+                        <div class="bonus-item">
+                            <div class="bonus-info">
+                                <div class="bonus-title">技术部年度分红</div>
+                                <div class="bonus-desc">2023年度部门业绩达标奖励</div>
+                            </div>
+                            <div class="bonus-amount">¥12,000</div>
+                        </div>
+                        <div class="bonus-item">
+                            <div class="bonus-info">
+                                <div class="bonus-title">数据中心项目分红</div>
+                                <div class="bonus-desc">项目结项分红第一期</div>
+                            </div>
+                            <div class="bonus-amount">¥8,500</div>
+                        </div>
+                        <div class="bonus-item">
+                            <div class="bonus-info">
+                                <div class="bonus-title">智慧党建项目分红</div>
+                                <div class="bonus-desc">项目结项分红</div>
+                            </div>
+                            <div class="bonus-amount">¥5,200</div>
+                        </div>
+                        <div class="bonus-item">
+                            <div class="bonus-info">
+                                <div class="bonus-title">优秀员工奖励</div>
+                                <div class="bonus-desc">Q4季度优秀员工</div>
+                            </div>
+                            <div class="bonus-amount">¥3,000</div>
+                        </div>
+                        
+                        <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f0f0f0;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 600;">累计分红总额</span>
+                                <span style="font-size: 18px; font-weight: 600; color: #1890ff;">¥28,700</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 页脚 -->
+        <div class="app-footer">
+            © 2024 Portal 3.0. All rights reserved.
+        </div>
+    </div>
+
+    <script src="../assets/js/navigation.js"></script>
+    <script>
+        // 导航菜单展开/收起
+        function toggleSubmenu(element) {
+            const submenu = element.nextElementSibling;
+            const arrow = element.querySelector('.nav-arrow');
+            
+            element.classList.toggle('expanded');
+            submenu.classList.toggle('expanded');
+            arrow.classList.toggle('rotated');
+        }
+
+        // 薪酬构成饼图
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        new Chart(pieCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['基础工资', '绩效工资', '项目提成', '其他补贴'],
+                datasets: [{
+                    data: [15000, 8000, 5500, 800],
+                    backgroundColor: [
+                        '#52c41a',
+                        '#1890ff',
+                        '#722ed1',
+                        '#fa8c16'
+                    ],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const label = context.label || '';
+                                const value = context.parsed;
+                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                const percentage = ((value / total) * 100).toFixed(1);
+                                return `${label}: ¥${value.toLocaleString()} (${percentage}%)`;
+                            }
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+
+        // 收入趋势线图
+        const lineCtx = document.getElementById('lineChart').getContext('2d');
+        new Chart(lineCtx, {
+            type: 'line',
+            data: {
+                labels: ['10月', '11月', '12月', '1月', '2月', '3月'],
+                datasets: [
+                    {
+                        label: '总收入',
+                        data: [22000, 25500, 24000, 26800, 24700, 28500],
+                        borderColor: '#1890ff',
+                        backgroundColor: 'rgba(24, 144, 255, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: '基础工资',
+                        data: [15000, 15000, 15000, 15000, 15000, 15000],
+                        borderColor: '#52c41a',
+                        backgroundColor: 'transparent',
+                        tension: 0.4
+                    },
+                    {
+                        label: '绩效工资',
+                        data: [7000, 7500, 6000, 7800, 7500, 8000],
+                        borderColor: '#fa8c16',
+                        backgroundColor: 'transparent',
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: '#f0f0f0'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return '¥' + value.toLocaleString();
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            }
+        });
+
+        // 标签切换功能
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('tab')) {
+                const tabGroup = e.target.parentElement;
+                tabGroup.querySelectorAll('.tab').forEach(tab => {
+                    tab.classList.remove('active');
+                });
+                e.target.classList.add('active');
+                
+                console.log('切换到:', e.target.textContent);
+                // 这里可以添加图表数据更新逻辑
+            }
+        });
+    </script>
+</body>
+</html> 

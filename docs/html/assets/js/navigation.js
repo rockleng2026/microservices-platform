@@ -87,9 +87,9 @@ const menuData = [
         name: '项目管理',
         icon: 'fas fa-project-diagram',
         children: [
+            { id: 'project-profit-rules', name: '提成分配规则配置', url: 'project-manager/project-profit-rules.html' },
             { id: 'project-list', name: '项目列表', url: 'project-manager/project-list.html' },
-            { id: 'project-create', name: '项目立项', url: 'project-manager/project-create.html' },
-            { id: 'project-profit-rules', name: '项目提成规则', url: 'project-manager/project-profit-rules.html' }
+            { id: 'project-create', name: '项目立项', url: 'project-manager/project-create.html' }
         ]
     },
     {

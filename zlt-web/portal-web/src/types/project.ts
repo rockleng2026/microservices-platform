@@ -172,11 +172,11 @@ export interface ApprovalRecord {
   createdAt: string;
 }
 
-// API响应格式
+// API响应格式（匹配后端实际返回格式）
 export interface ApiResponse<T = any> {
-  code: number;
-  message: string;
-  data: T;
+  resp_code: number;
+  resp_msg: string;
+  datas: T;
 }
 
 // 分页响应格式

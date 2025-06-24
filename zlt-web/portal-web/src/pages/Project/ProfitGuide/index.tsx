@@ -64,11 +64,11 @@ const ProfitGuidePage: React.FC = () => {
 
       const response = await profitGuideApi.getProfitGuidePage(queryParams);
       
-      if (response.code === 0) {
-        setProfitGuideList(response.data.records);
-        setTotal(response.data.total);
+      if (response.resp_code === 0) {
+        setProfitGuideList(response.datas.records);
+        setTotal(response.datas.total);
       } else {
-        message.error(response.message || '获取数据失败');
+        message.error(response.resp_msg || '获取数据失败');
       }
     } catch (error) {
       message.error('获取数据失败');
@@ -122,11 +122,11 @@ const ProfitGuidePage: React.FC = () => {
       onOk: async () => {
         try {
           const response = await profitGuideApi.deleteProfitGuide(record.id);
-          if (response.code === 0) {
+          if (response.resp_code === 0) {
             message.success('删除成功');
             fetchProfitGuides();
           } else {
-            message.error(response.message || '删除失败');
+            message.error(response.resp_msg || '删除失败');
           }
         } catch (error) {
           message.error('删除失败');
@@ -151,12 +151,12 @@ const ProfitGuidePage: React.FC = () => {
         response = await profitGuideApi.updateProfitGuide(currentGuide!.id, submitData);
       }
 
-      if (response.code === 0) {
+      if (response.resp_code === 0) {
         message.success(modalMode === 'create' ? '创建成功' : '更新成功');
         setModalVisible(false);
         fetchProfitGuides();
       } else {
-        message.error(response.message || '操作失败');
+        message.error(response.resp_msg || '操作失败');
       }
     } catch (error) {
       console.error('Failed to submit profit guide:', error);

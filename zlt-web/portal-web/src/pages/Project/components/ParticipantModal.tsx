@@ -91,13 +91,13 @@ const ParticipantModal: React.FC<ParticipantModalProps> = ({
         values.role
       );
 
-      if (response.code === 0) {
+      if (response.resp_code === 0) {
         message.success('添加成功');
         setShowAddForm(false);
         addForm.resetFields();
         onSuccess();
       } else {
-        message.error(response.message || '添加失败');
+        message.error(response.resp_msg || '添加失败');
       }
     } catch (error) {
       console.error('Failed to add participant:', error);
@@ -122,11 +122,11 @@ const ParticipantModal: React.FC<ParticipantModalProps> = ({
         participant.participantId
       );
 
-      if (response.code === 0) {
+      if (response.resp_code === 0) {
         message.success('删除成功');
         onSuccess();
       } else {
-        message.error(response.message || '删除失败');
+        message.error(response.resp_msg || '删除失败');
       }
     } catch (error) {
       console.error('Failed to delete participant:', error);
@@ -159,13 +159,13 @@ const ParticipantModal: React.FC<ParticipantModalProps> = ({
         values.role
       );
 
-      if (response.code === 0) {
+      if (response.resp_code === 0) {
         message.success('更新成功');
         setEditingParticipant(null);
         editForm.resetFields();
         onSuccess();
       } else {
-        message.error(response.message || '更新失败');
+        message.error(response.resp_msg || '更新失败');
       }
     } catch (error) {
       console.error('Failed to update participant role:', error);

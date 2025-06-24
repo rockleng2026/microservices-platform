@@ -330,4 +330,14 @@ export async function downloadEmployeeTemplate() {
     method: 'GET',
     responseType: 'blob',
   });
+}
+
+/**
+ * 批量查询员工详情
+ */
+export async function getEmployeeBatchDetail(ids: (string|number)[]) {
+  return request(`${API_BASE}/api/organization/employee/batch-detail`, {
+    method: 'POST',
+    data: ids,
+  });
 } 

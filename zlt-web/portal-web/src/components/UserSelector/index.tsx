@@ -36,33 +36,91 @@ const UserSelector: React.FC<UserSelectorProps> = ({
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  // 根据ID获取用户信息
+  const fetchUserById = async (userId: string) => {
+    if (!userId) return null;
+    
+    try {
+      const response = await request(`/api/organization/employee/${userId}`, {
+        method: 'GET',
+      });
+
+      if (response.success && response.data) {
+        return response.data;
+      } else if (response.resp_code === 0 && response.datas) {
+        return response.datas;
+      }
+    } catch (error) {
+      console.error('Failed to fetch user by id:', error);
+    }
+    return null;
+  };
 
   // 获取用户列表
   const fetchUsers = async (keyword?: string) => {
     setLoading(true);
     try {
-      const response = await request('/api/user-center/users/list', {
+      const response = await request('/api/organization/employee/page', {
         method: 'GET',
         params: {
-          keyword: keyword || '',
+          name: keyword || '',
           page: 1,
           size: 100,
         },
       });
 
-      if (response.resp_code === 0) {
-        setUsers(response.datas || []);
+      let userList = [];
+      // 适配不同的返回格式
+      if (response.success && response.data) {
+        if (response.data.records) {
+          userList = response.data.records;
+        } else if (Array.isArray(response.data)) {
+          userList = response.data;
+        }
+      } else if (response.resp_code === 0) {
+        if (response.datas && response.datas.records) {
+          userList = response.datas.records;
+        } else if (Array.isArray(response.datas)) {
+          userList = response.datas;
+        }
       }
+      
+      setUsers(userList);
     } catch (error) {
       console.error('Failed to fetch users:', error);
+      setUsers([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // 初始化时获取用户列表
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  // 当value变化时，获取对应的用户信息
+  useEffect(() => {
+    if (value) {
+      fetchUserById(value).then(user => {
+        if (user) {
+          setSelectedUser(user);
+          // 如果当前用户列表中没有该用户，添加到列表中
+          setUsers(prevUsers => {
+            const exists = prevUsers.some(u => String(u.id) === String(user.id));
+            if (!exists) {
+              return [user, ...prevUsers];
+            }
+            return prevUsers;
+          });
+        }
+      });
+    } else {
+      setSelectedUser(null);
+    }
+  }, [value]);
 
   // 搜索用户
   const handleSearch = (keyword: string) => {
@@ -75,12 +133,12 @@ const UserSelector: React.FC<UserSelectorProps> = ({
   };
 
   // 渲染选项
-  const renderOption = (user: User) => (
-    <Option key={user.id} value={user.id}>
+  const renderOption = (user: any) => (
+    <Option key={String(user.id)} value={String(user.id)}>
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <UserOutlined style={{ marginRight: 8, color: '#1890ff' }} />
         <div>
-          <div>{user.name} ({user.username})</div>
+          <div>{user.name}{user.username ? ` (${user.username})` : ''}</div>
           {user.departmentName && (
             <div style={{ fontSize: '12px', color: '#999' }}>
               {user.departmentName}
@@ -104,6 +162,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({
       onSearch={handleSearch}
       notFoundContent={loading ? <Spin size="small" /> : '暂无数据'}
       mode={mode}
+      optionLabelProp="children"
     >
       {users.map(renderOption)}
     </Select>

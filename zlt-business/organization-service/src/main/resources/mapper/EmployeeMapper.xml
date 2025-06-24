@@ -484,4 +484,32 @@
         ORDER BY employeeCount DESC
     </select>
 
+    <!-- 根据ID查询员工详细信息(包含关联信息) -->
+    <select id="selectDetailById" resultMap="voResultMap">
+        SELECT
+            <include refid="voColumns"/>
+        FROM employee e
+        LEFT JOIN department d ON e.department_id = d.id
+        LEFT JOIN workposition p ON e.position_id = p.id
+        LEFT JOIN employee_grade eg ON e.grade_id = eg.id
+        LEFT JOIN employee creator ON e.created_by = creator.id
+        WHERE e.id = #{id} AND e.delflag = 0
+    </select>
+
+    <!-- 批量查询员工详细信息(包含关联信息) -->
+    <select id="selectDetailByIds" resultMap="voResultMap">
+        SELECT
+            <include refid="voColumns"/>
+        FROM employee e
+        LEFT JOIN department d ON e.department_id = d.id
+        LEFT JOIN workposition p ON e.position_id = p.id
+        LEFT JOIN employee_grade eg ON e.grade_id = eg.id
+        LEFT JOIN employee creator ON e.created_by = creator.id
+        WHERE e.id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND e.delflag = 0
+    </select>
+
 </mapper> 

@@ -23,6 +23,7 @@ import type {
   ProjectParticipantInput,
   FormMode,
 } from '@/types/project';
+import { getEmployeeBatchDetail } from '@/services/organization/employee';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -46,49 +47,155 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
   const [loading, setLoading] = useState(false);
   const [participants, setParticipants] = useState<ProjectParticipantInput[]>([]);
 
+  // 批量查详情
+  const fetchParticipantsDetail = async (rawList: ProjectParticipantInput[], employeeMap?: Map<string, any>) => {
+    const ids = rawList.map(p => p.participantId).filter(Boolean);
+    if (ids.length === 0) {
+      setParticipants(rawList);
+      return;
+    }
+    try {
+      let detailMap = employeeMap;
+      
+      // 如果没有传入employeeMap，则进行批量查询
+      if (!detailMap) {
+        const res = await getEmployeeBatchDetail(ids);
+        detailMap = new Map();
+        if (res && res.data) {
+          res.data.forEach((emp: any) => {
+            detailMap!.set(String(emp.id), emp);
+          });
+        }
+      }
+      
+      const merged = rawList.map(p => {
+        const emp = detailMap!.get(String(p.participantId));
+        return emp ? {
+          ...p,
+          participantName: emp.name,
+          participantUsername: emp.username,
+          participantEmail: emp.email,
+          participantPhone: emp.mobile,
+          departmentName: emp.departmentName,
+        } : p;
+      });
+      setParticipants(merged);
+    } catch (error) {
+      console.error('Failed to fetch participants detail:', error);
+      setParticipants(rawList);
+    }
+  };
+
   // 初始化表单数据
   useEffect(() => {
-    if (visible && project && mode !== 'create') {
-      const formData = {
-        ...project,
-        startTime: project.startTime ? dayjs(project.startTime) : undefined,
-      };
-      form.setFieldsValue(formData);
-      
-      // 解析参与人信息
-      if (project.participants) {
-        try {
-          const participantData = JSON.parse(project.participants);
-          setParticipants(participantData || []);
-        } catch (error) {
-          console.error('Failed to parse participants:', error);
-          setParticipants([]);
+    async function fetchLeaderAndParticipants() {
+      if (visible && project && mode !== 'create') {
+        const formData = {
+          ...project,
+          startTime: project.startTime ? dayjs(project.startTime) : undefined,
+          leaderId: project.leaderId ? String(project.leaderId) : undefined,
+        };
+        
+        // 收集所有需要查询的员工ID
+        const employeeIds: (string|number)[] = [];
+        
+        // 添加项目负责人ID
+        if (project.leaderId && !project.leaderName) {
+          employeeIds.push(Number(project.leaderId));
         }
-      } else {
+        
+        // 添加参与人ID
+        if (project.participantDetails && project.participantDetails.length > 0) {
+          project.participantDetails.forEach(detail => {
+            if (detail.participantId) {
+              employeeIds.push(Number(detail.participantId));
+            }
+          });
+        }
+        
+        console.log('最终查询的员工ID列表:', employeeIds);
+        
+        // 批量查询员工信息
+        if (employeeIds.length > 0) {
+          try {
+            const res = await getEmployeeBatchDetail(employeeIds);
+            if (res && res.data) {
+              const employeeMap = new Map();
+              res.data.forEach((emp: any) => {
+                employeeMap.set(String(emp.id), emp);
+              });
+              
+              // 设置负责人姓名
+              if (project.leaderId && employeeMap.has(String(project.leaderId))) {
+                const leader = employeeMap.get(String(project.leaderId));
+                formData.leaderName = leader.name;
+              }
+              
+              // 设置参与人详情
+              if (project.participantDetails && project.participantDetails.length > 0) {
+                const participantData = project.participantDetails.map(detail => ({
+                  participantId: String(detail.participantId),
+                  role: detail.role
+                }));
+                fetchParticipantsDetail(participantData, employeeMap);
+              } else {
+                setParticipants([]);
+              }
+            }
+          } catch (error) {
+            console.error('Failed to fetch employee details:', error);
+            // 批量查询失败时，直接使用原有数据，不进行单个查询
+            // 保持负责人ID，前端UserSelector会自动显示
+            if (project.participantDetails && project.participantDetails.length > 0) {
+              const participantData = project.participantDetails.map(detail => ({
+                participantId: String(detail.participantId),
+                role: detail.role
+              }));
+              setParticipants(participantData);
+            } else {
+              setParticipants([]);
+            }
+          }
+        } else {
+          // 处理参与人（无需额外查询员工信息）
+          if (project.participantDetails && project.participantDetails.length > 0) {
+            const participantData = project.participantDetails.map(detail => ({
+              participantId: String(detail.participantId),
+              role: detail.role
+            }));
+            fetchParticipantsDetail(participantData);
+          } else {
+            setParticipants([]);
+          }
+        }
+        
+        console.log('设置表单数据:', formData);
+        form.setFieldsValue(formData);
+      } else if (visible && mode === 'create') {
+        form.resetFields();
         setParticipants([]);
       }
-    } else if (visible && mode === 'create') {
-      form.resetFields();
-      setParticipants([]);
     }
+    fetchLeaderAndParticipants();
   }, [visible, project, mode, form]);
 
   // 添加参与人
   const addParticipant = () => {
-    setParticipants([...participants, { participantId: '', role: '' }]);
+    const newList = [...participants, { participantId: '', role: '' }];
+    fetchParticipantsDetail(newList);
   };
 
   // 删除参与人
   const removeParticipant = (index: number) => {
-    const newParticipants = participants.filter((_, i) => i !== index);
-    setParticipants(newParticipants);
+    const newList = participants.filter((_, i) => i !== index);
+    fetchParticipantsDetail(newList);
   };
 
   // 更新参与人
   const updateParticipant = (index: number, field: string, value: string) => {
-    const newParticipants = [...participants];
-    newParticipants[index] = { ...newParticipants[index], [field]: value };
-    setParticipants(newParticipants);
+    const newList = [...participants];
+    newList[index] = { ...newList[index], [field]: value };
+    fetchParticipantsDetail(newList);
   };
 
   // 提交表单
@@ -97,10 +204,12 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
       const values = await form.validateFields();
       setLoading(true);
 
+      const startTime = values.startTime ? values.startTime.format('YYYY-MM-DD') : undefined;
+
       const submitData: ProjectSaveParams = {
         ...values,
-        startTime: values.startTime ? values.startTime.format('YYYY-MM-DD HH:mm:ss') : undefined,
-        participants: participants.length > 0 ? participants : undefined,
+        startTime,
+        participants: participants,
       };
 
       let response;
@@ -110,11 +219,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
         response = await projectApi.updateProject(project!.id, submitData);
       }
 
-      if (response.code === 0) {
+      if (response.resp_code === 0) {
         message.success(mode === 'create' ? '创建成功' : '更新成功');
         onSuccess();
       } else {
-        message.error(response.message || '操作失败');
+        message.error(response.resp_msg || '操作失败');
       }
     } catch (error) {
       console.error('Failed to submit project:', error);
@@ -228,7 +337,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
               <DatePicker
                 style={{ width: '100%' }}
                 placeholder="请选择立项时间"
-                showTime
+                format="YYYY-MM-DD"
               />
             </Form.Item>
           </Col>

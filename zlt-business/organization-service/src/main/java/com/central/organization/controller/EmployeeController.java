@@ -469,6 +469,21 @@ public class EmployeeController {
         return Result.success(result);
     }
 
+    /**
+     * 批量查询员工详情
+     * @param ids 员工ID列表
+     * @return 员工详情列表
+     */
+    @PostMapping("/batch-detail")
+    public Result<List<EmployeeVO>> getEmployeeBatchDetail(@RequestBody List<String> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Result.success(List.of());
+        }
+        List<Long> longIds = ids.stream().map(IdUtils::stringToLong).toList();
+        List<EmployeeVO> employees = employeeService.getByIds(longIds);
+        return Result.success(employees);
+    }
+
     // 内部DTO类定义
 
     /**

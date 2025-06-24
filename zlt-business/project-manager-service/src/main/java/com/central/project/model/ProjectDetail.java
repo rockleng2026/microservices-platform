@@ -4,8 +4,9 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.central.project.utils.IdUtils.LongToString;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -26,20 +27,20 @@ public class ProjectDetail {
     /**
      * 主键
      */
-    @TableId(type = IdType.ASSIGN_ID)
-    @LongToString
+    @TableId(type = IdType.AUTO)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
     
     /**
      * 项目ID
      */
-    @LongToString
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long projectId;
     
     /**
      * 参与人ID（员工ID）
      */
-    @LongToString
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long participantId;
     
     /**
@@ -55,13 +56,13 @@ public class ProjectDetail {
     /**
      * 创建人ID
      */
-    @LongToString
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long createdBy;
     
     /**
      * 修改人ID
      */
-    @LongToString
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long updatedBy;
     
     /**

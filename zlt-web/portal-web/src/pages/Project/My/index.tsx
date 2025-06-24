@@ -84,10 +84,10 @@ const MyProjectPage: React.FC = () => {
     setLoading(true);
     try {
       const response = await projectApi.getProjectsByLeader(userId);
-      if (response.code === 0) {
-        setLeaderProjects(response.data || []);
+      if (response.resp_code === 0) {
+        setLeaderProjects(response.datas || []);
       } else {
-        message.error(response.message || '获取项目列表失败');
+        message.error(response.resp_msg || '获取项目列表失败');
       }
     } catch (error) {
       message.error('获取项目列表失败');
@@ -108,10 +108,10 @@ const MyProjectPage: React.FC = () => {
     setLoading(true);
     try {
       const response = await projectApi.getProjectsByParticipant(userId);
-      if (response.code === 0) {
-        setParticipantProjects(response.data || []);
+      if (response.resp_code === 0) {
+        setParticipantProjects(response.datas || []);
       } else {
-        message.error(response.message || '获取项目列表失败');
+        message.error(response.resp_msg || '获取项目列表失败');
       }
     } catch (error) {
       message.error('获取项目列表失败');

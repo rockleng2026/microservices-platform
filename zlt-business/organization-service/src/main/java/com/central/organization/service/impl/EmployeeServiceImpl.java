@@ -525,4 +525,12 @@ public class EmployeeServiceImpl implements IEmployeeService {
         Boolean exists = employeeMapper.existsEmail(email, excludeId);
         return !Boolean.TRUE.equals(exists);
     }
+
+    @Override
+    public List<EmployeeVO> getByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return employeeMapper.selectDetailByIds(ids);
+    }
 } 

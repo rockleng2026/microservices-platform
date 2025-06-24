@@ -84,9 +84,31 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         
         Project project = baseMapper.selectProjectDetailById(id);
         if (project != null) {
+            // 收集需要查询的员工ID
+            List<Long> employeeIds = new ArrayList<>();
+            
+            // 添加项目负责人ID
+            if (project.getLeaderId() != null) {
+                employeeIds.add(project.getLeaderId());
+            }
+            
             // 查询项目参与人详情
             List<ProjectDetail> participants = projectDetailService.getByProjectId(id);
             project.setParticipantDetails(participants);
+            
+            // 添加参与人ID
+            if (participants != null && !participants.isEmpty()) {
+                participants.forEach(detail -> {
+                    if (detail.getParticipantId() != null) {
+                        employeeIds.add(detail.getParticipantId());
+                    }
+                });
+            }
+            
+            // 批量查询员工信息（这里需要调用organization-service）
+            // TODO: 实现批量查询员工信息的逻辑
+            // 目前先保持现有逻辑，后续可以通过Feign客户端调用organization-service
+            
         }
         
         return project;
@@ -128,27 +150,54 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         }
         
         // 处理项目参与人
-        if (saveDTO.getParticipants() != null && !saveDTO.getParticipants().isEmpty()) {
+        log.info("处理项目参与人，项目ID: {}, 参与人数据: {}", project.getId(), saveDTO.getParticipants());
+        
+        // 如果传递了参与人数据（包括空数组），则需要更新参与人
+        if (saveDTO.getParticipants() != null) {
             // 先删除原有参与人（如果是更新）
             if (saveDTO.getId() != null) {
-                projectDetailService.deleteByProjectId(saveDTO.getId());
+                log.info("删除项目原有参与人，项目ID: {}", saveDTO.getId());
+                boolean deleteResult = projectDetailService.deleteByProjectId(saveDTO.getId());
+                log.info("删除结果: {}", deleteResult);
             }
             
-            // 添加新的参与人
-            for (ProjectSaveDTO.ProjectParticipantDTO participantDTO : saveDTO.getParticipants()) {
-                ProjectDetail detail = new ProjectDetail();
-                detail.setId(IdUtils.generateId());
-                detail.setProjectId(project.getId());
-                detail.setParticipantId(participantDTO.getParticipantId());
-                detail.setRole(participantDTO.getRole());
-                detail.setTenantId(tenantId);
-                detail.setCreatedAt(now);
-                detail.setUpdatedAt(now);
-                detail.setCreatedBy(1L);
-                detail.setUpdatedBy(1L);
-                detail.setDelflag(0);
-                
-                projectDetailService.save(detail);
+            // 如果参与人列表不为空，则添加新的参与人
+            if (!saveDTO.getParticipants().isEmpty()) {
+                // 添加新的参与人
+                for (ProjectSaveDTO.ProjectParticipantDTO participantDTO : saveDTO.getParticipants()) {
+                    Long pid = null;
+                    Object rawId = participantDTO.getParticipantId();
+                    if (rawId != null) {
+                        if (rawId instanceof String strId) {
+                            try { pid = Long.valueOf(strId); } catch (Exception ignored) {}
+                        } else if (rawId instanceof Long lId) {
+                            pid = lId;
+                        } else if (rawId instanceof Integer iId) {
+                            pid = ((Integer) iId).longValue();
+                        }
+                    }
+                    if (pid == null) {
+                        log.warn("跳过无效的参与人ID: {}", rawId);
+                        continue; // 跳过无效ID
+                    }
+
+                    ProjectDetail detail = new ProjectDetail();
+                    // ID使用AUTO_INCREMENT，不需要手动设置
+                    detail.setProjectId(project.getId());
+                    detail.setParticipantId(pid);
+                    detail.setRole(participantDTO.getRole());
+                    detail.setTenantId(tenantId);
+                    detail.setCreatedAt(now);
+                    detail.setUpdatedAt(now);
+                    detail.setCreatedBy(1L);
+                    detail.setUpdatedBy(1L);
+                    detail.setDelflag(0);
+                    
+                    log.info("保存项目参与人: projectId={}, participantId={}, role={}", 
+                        project.getId(), pid, participantDTO.getRole());
+                    boolean saveResult = projectDetailService.save(detail);
+                    log.info("保存结果: {}", saveResult);
+                }
             }
         }
         

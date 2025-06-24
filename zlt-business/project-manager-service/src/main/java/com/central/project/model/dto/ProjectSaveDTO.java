@@ -84,7 +84,7 @@ public class ProjectSaveDTO {
          * 参与人ID
          */
         @NotNull(message = "参与人ID不能为空")
-        private Long participantId;
+        private Object participantId;
         
         /**
          * 参与人角色

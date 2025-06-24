@@ -102,11 +102,11 @@ const ProjectListPage: React.FC = () => {
 
       const response = await projectApi.getProjectPage(queryParams);
       
-      if (response.code === 0) {
-        setProjectList(response.data.records);
-        setTotal(response.data.total);
+      if (response.resp_code === 0) {
+        setProjectList(response.datas.records);
+        setTotal(response.datas.total);
       } else {
-        message.error(response.message || '获取项目列表失败');
+        message.error(response.resp_msg || '获取项目列表失败');
       }
     } catch (error) {
       message.error('获取项目列表失败');
@@ -153,16 +153,38 @@ const ProjectListPage: React.FC = () => {
   };
 
   // 编辑项目
-  const handleEdit = (record: Project) => {
-    setModalMode('edit');
-    setCurrentProject(record);
-    setModalVisible(true);
+  const handleEdit = async (record: Project) => {
+    try {
+      // 调用详情接口获取完整数据
+      const response = await projectApi.getProjectById(record.id);
+      if (response.resp_code === 0) {
+        setModalMode('edit');
+        setCurrentProject(response.datas);
+        setModalVisible(true);
+      } else {
+        message.error(response.resp_msg || '获取项目详情失败');
+      }
+    } catch (error) {
+      message.error('获取项目详情失败');
+      console.error('Failed to fetch project detail:', error);
+    }
   };
 
   // 查看项目
-  const handleView = (record: Project) => {
-    setCurrentProject(record);
-    setDetailVisible(true);
+  const handleView = async (record: Project) => {
+    try {
+      // 调用详情接口获取完整数据
+      const response = await projectApi.getProjectById(record.id);
+      if (response.resp_code === 0) {
+        setCurrentProject(response.datas);
+        setDetailVisible(true);
+      } else {
+        message.error(response.resp_msg || '获取项目详情失败');
+      }
+    } catch (error) {
+      message.error('获取项目详情失败');
+      console.error('Failed to fetch project detail:', error);
+    }
   };
 
   // 管理参与人
@@ -179,11 +201,11 @@ const ProjectListPage: React.FC = () => {
       onOk: async () => {
         try {
           const response = await projectApi.deleteProject(record.id);
-          if (response.code === 0) {
+          if (response.resp_code === 0) {
             message.success('删除成功');
             fetchProjects();
           } else {
-            message.error(response.message || '删除失败');
+            message.error(response.resp_msg || '删除失败');
           }
         } catch (error) {
           message.error('删除失败');
@@ -201,11 +223,11 @@ const ProjectListPage: React.FC = () => {
       onOk: async () => {
         try {
           const response = await projectApi.batchDeleteProjects(selectedRowKeys as string[]);
-          if (response.code === 0) {
+          if (response.resp_code === 0) {
             message.success('批量删除成功');
             fetchProjects();
           } else {
-            message.error(response.message || '批量删除失败');
+            message.error(response.resp_msg || '批量删除失败');
           }
         } catch (error) {
           message.error('批量删除失败');
@@ -223,11 +245,11 @@ const ProjectListPage: React.FC = () => {
       onOk: async () => {
         try {
           const response = await projectApi.updateProjectStatus(record.id, status);
-          if (response.code === 0) {
+          if (response.resp_code === 0) {
             message.success('状态更新成功');
             fetchProjects();
           } else {
-            message.error(response.message || '状态更新失败');
+            message.error(response.resp_msg || '状态更新失败');
           }
         } catch (error) {
           message.error('状态更新失败');

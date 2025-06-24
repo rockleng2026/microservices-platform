@@ -28,14 +28,14 @@
 
     <!-- 基础字段 -->
     <sql id="baseColumns">
-        p.id, p.name, p.category, p.participants, p.leader_id, p.customer_name, 
+        p.id, p.name, p.category, p.leader_id, p.customer_name, 
         p.customer_contact, p.start_time, p.status, p.process_instance_id, p.final_status,
         p.tenant_id, p.created_by, p.updated_by, p.created_at, p.updated_at, p.delflag
     </sql>
 
     <!-- 扩展字段（不包含员工关联信息，避免跨服务查询） -->
     <sql id="extendColumns">
-        p.id, p.name, p.category, p.participants, p.leader_id, p.customer_name, 
+        p.id, p.name, p.category, p.leader_id, p.customer_name, 
         p.customer_contact, p.start_time, p.status, p.process_instance_id, p.final_status,
         p.tenant_id, p.created_by, p.updated_by, p.created_at, p.updated_at, p.delflag,
         (SELECT COUNT(*) FROM project_detail pd WHERE pd.project_id = p.id AND pd.delflag = 0) as participant_count,
@@ -64,8 +64,12 @@
             <if test="params.customerName != null and params.customerName != ''">
                 AND p.customer_name LIKE CONCAT('%', #{params.customerName}, '%')
             </if>
-            <if test="params.startTimeStart != null and params.startTimeStart != ''">
-                AND p.start_time >= #{params.startTimeStart}
+            <if test="params.keyword != null and params.keyword != ''">
+                AND (p.name LIKE CONCAT('%', #{params.keyword}, '%') 
+                     OR p.customer_name LIKE CONCAT('%', #{params.keyword}, '%'))
+            </if>
+            <if test="params.startTimeBegin != null and params.startTimeBegin != ''">
+                AND p.start_time >= #{params.startTimeBegin}
             </if>
             <if test="params.startTimeEnd != null and params.startTimeEnd != ''">
                 AND p.start_time &lt;= #{params.startTimeEnd}
@@ -75,8 +79,8 @@
             </if>
         </where>
         <choose>
-            <when test="params.sortField != null and params.sortField != ''">
-                ORDER BY ${params.sortField} ${params.sortOrder}
+            <when test="params.orderBy != null and params.orderBy != ''">
+                ORDER BY p.${params.orderBy} ${params.orderDirection}
             </when>
             <otherwise>
                 ORDER BY p.created_at DESC

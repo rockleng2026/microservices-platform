@@ -279,4 +279,11 @@ public interface EmployeeMapper {
         Integer getActiveCount();
         Integer getProbationCount();
     }
+
+    /**
+     * 批量查询员工详细信息(包含关联信息)
+     * @param ids 员工ID列表
+     * @return 员工详细信息列表
+     */
+    List<EmployeeVO> selectDetailByIds(@Param("ids") List<Long> ids);
 } 

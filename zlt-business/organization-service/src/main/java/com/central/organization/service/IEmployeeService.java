@@ -245,6 +245,13 @@ public interface IEmployeeService {
     List<EmployeeMapper.DepartmentEmployeeDistributionVO> getDepartmentDistribution();
 
     /**
+     * 批量查询员工详细信息
+     * @param ids 员工ID列表
+     * @return 员工详细信息列表
+     */
+    List<EmployeeVO> getByIds(List<Long> ids);
+
+    /**
      * 分页结果类
      */
     class PageResult<T> {

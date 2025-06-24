@@ -4,8 +4,9 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.central.project.utils.IdUtils.LongToString;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -28,7 +29,7 @@ public class Project {
      * 项目ID
      */
     @TableId(type = IdType.ASSIGN_ID)
-    @LongToString
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
     
     /**
@@ -43,13 +44,15 @@ public class Project {
     
     /**
      * 参与人列表（JSON数组，存员工ID及角色）
+     * @deprecated 该字段已废弃，请使用participantDetails字段和project_detail表
      */
+    @Deprecated
     private String participants;
     
     /**
      * 项目负责人ID
      */
-    @LongToString
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long leaderId;
     
     /**
@@ -91,13 +94,13 @@ public class Project {
     /**
      * 创建人ID
      */
-    @LongToString
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long createdBy;
     
     /**
      * 修改人ID
      */
-    @LongToString
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long updatedBy;
     
     /**
@@ -120,10 +123,28 @@ public class Project {
     // =============== 扩展字段 ===============
     
     /**
+     * 项目负责人姓名
+     */
+    @TableField(exist = false)
+    private String leaderName;
+    
+    /**
      * 项目参与人员详情
      */
     @TableField(exist = false)
     private List<ProjectDetail> participantDetails;
+    
+    /**
+     * 项目参与人数
+     */
+    @TableField(exist = false)
+    private Integer participantCount;
+    
+    /**
+     * 项目运行天数
+     */
+    @TableField(exist = false)
+    private Integer daysRunning;
     
     /**
      * 项目结项信息

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Modal,
   Descriptions,
@@ -24,6 +24,7 @@ import type {
   ProjectStatus,
   ApprovalStatus,
 } from '@/types/project';
+import { getEmployeeDetail } from '@/services/organization/employee';
 
 interface ProjectDetailProps {
   visible: boolean;
@@ -54,27 +55,59 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
   onCancel,
   onEdit,
 }) => {
-  if (!project) return null;
+  const [leaderName, setLeaderName] = useState<string>('');
+  const [participantDetails, setParticipantDetails] = useState<ProjectParticipant[]>([]);
 
-  // 解析参与人信息
-  const getParticipants = (): ProjectParticipant[] => {
-    if (project.participantDetails) {
-      return project.participantDetails;
-    }
-    
-    if (project.participants) {
-      try {
-        return JSON.parse(project.participants) || [];
-      } catch (error) {
-        console.error('Failed to parse participants:', error);
-        return [];
+  useEffect(() => {
+    async function fetchDetails() {
+      if (project) {
+        // 负责人
+        if (project.leaderId && !project.leaderName) {
+          try {
+            const res = await getEmployeeDetail(Number(project.leaderId));
+            if (res && res.data && res.data.name) {
+              setLeaderName(res.data.name);
+            }
+          } catch {}
+        } else {
+          setLeaderName(project.leaderName || '');
+        }
+        // 参与人
+        let participants: ProjectParticipant[] = [];
+        if (project.participantDetails) {
+          participants = project.participantDetails;
+        } else if (project.participants) {
+          try {
+            participants = JSON.parse(project.participants) || [];
+          } catch {}
+        }
+        // 批量查详情
+        const details = await Promise.all(
+          participants.map(async (p: any) => {
+            if (!p.participantName && p.participantId) {
+              try {
+                const res = await getEmployeeDetail(Number(p.participantId));
+                if (res && res.data) {
+                  return {
+                    ...p,
+                    participantName: res.data.name,
+                    departmentName: res.data.departmentName,
+                    participantPhone: res.data.phoneNumber,
+                    participantEmail: res.data.email,
+                  };
+                }
+              } catch {}
+            }
+            return p;
+          })
+        );
+        setParticipantDetails(details);
       }
     }
-    
-    return [];
-  };
+    fetchDetails();
+  }, [project]);
 
-  const participants = getParticipants();
+  if (!project) return null;
 
   // 参与人表格列定义
   const participantColumns: ColumnsType<ProjectParticipant> = [
@@ -150,7 +183,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
           </Descriptions.Item>
           
           <Descriptions.Item label="项目负责人">
-            {project.leaderName || '-'}
+            {leaderName || '-'}
           </Descriptions.Item>
           
           <Descriptions.Item label="客户名称">
@@ -200,10 +233,10 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
 
         <div style={{ marginTop: 24 }}>
           <h4 style={{ marginBottom: 16 }}>项目参与人</h4>
-          {participants.length > 0 ? (
+          {participantDetails.length > 0 ? (
             <Table
               columns={participantColumns}
-              dataSource={participants}
+              dataSource={participantDetails}
               rowKey={(record) => record.id || record.participantId}
               pagination={false}
               size="small"

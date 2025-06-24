@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.project.mapper.ProductProfitDistributionGuideMapper">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="baseResultMap" type="com.central.project.model.ProductProfitDistributionGuide">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="product_name" property="productName" jdbcType="VARCHAR"/>
+        <result column="role" property="role" jdbcType="VARCHAR"/>
+        <result column="commission_type" property="commissionType" jdbcType="VARCHAR"/>
+        <result column="value_range" property="valueRange" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
+        <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
+        <result column="updated_by" property="updatedBy" jdbcType="BIGINT"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="delflag" property="delflag" jdbcType="TINYINT"/>
+        <!-- 扩展字段 -->
+        <result column="creator_name" property="creatorName" jdbcType="VARCHAR"/>
+        <result column="updater_name" property="updaterName" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="baseColumns">
+        g.id, g.product_name, g.role, g.commission_type, g.value_range,
+        g.tenant_id, g.created_by, g.updated_by, g.created_at, g.updated_at, g.delflag
+    </sql>
+
+    <!-- 扩展字段（包含关联信息） -->
+    <sql id="extendColumns">
+        g.id, g.product_name, g.role, g.commission_type, g.value_range,
+        g.tenant_id, g.created_by, g.updated_by, g.created_at, g.updated_at, g.delflag,
+        creator.name as creator_name,
+        updater.name as updater_name
+    </sql>
+
+    <!-- 分页查询分配指导列表 -->
+    <select id="selectGuidePage" resultMap="baseResultMap">
+        SELECT 
+        <include refid="extendColumns"/>
+        FROM product_profit_distribution_guide g
+        LEFT JOIN employee creator ON g.created_by = creator.id AND creator.delflag = 0
+        LEFT JOIN employee updater ON g.updated_by = updater.id AND updater.delflag = 0
+        <where>
+            g.delflag = 0
+            <if test="params.productName != null and params.productName != ''">
+                AND g.product_name LIKE CONCAT('%', #{params.productName}, '%')
+            </if>
+            <if test="params.role != null and params.role != ''">
+                AND g.role = #{params.role}
+            </if>
+            <if test="params.commissionType != null and params.commissionType != ''">
+                AND g.commission_type = #{params.commissionType}
+            </if>
+        </where>
+        <choose>
+            <when test="params.sortField != null and params.sortField != ''">
+                ORDER BY ${params.sortField} ${params.sortOrder}
+            </when>
+            <otherwise>
+                ORDER BY g.created_at DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 根据产品名称查询分配指导 -->
+    <select id="selectByProductName" resultMap="baseResultMap">
+        SELECT 
+        <include refid="baseColumns"/>
+        FROM product_profit_distribution_guide g
+        WHERE g.product_name = #{productName}
+        AND g.delflag = 0
+        ORDER BY g.created_at DESC
+    </select>
+
+    <!-- 根据产品名称和角色查询分配指导 -->
+    <select id="selectByProductNameAndRole" resultMap="baseResultMap">
+        SELECT 
+        <include refid="baseColumns"/>
+        FROM product_profit_distribution_guide g
+        WHERE g.product_name = #{productName}
+        AND g.role = #{role}
+        AND g.delflag = 0
+        ORDER BY g.created_at DESC
+        LIMIT 1
+    </select>
+
+    <!-- 根据角色查询分配指导 -->
+    <select id="selectByRole" resultMap="baseResultMap">
+        SELECT 
+        <include refid="baseColumns"/>
+        FROM product_profit_distribution_guide g
+        WHERE g.role = #{role}
+        AND g.delflag = 0
+        ORDER BY g.created_at DESC
+    </select>
+
+    <!-- 查询所有产品名称 -->
+    <select id="selectAllProductNames" resultType="string">
+        SELECT DISTINCT g.product_name
+        FROM product_profit_distribution_guide g
+        WHERE g.delflag = 0
+        AND g.product_name IS NOT NULL
+        AND g.product_name != ''
+        ORDER BY g.product_name
+    </select>
+
+    <!-- 查询所有角色 -->
+    <select id="selectAllRoles" resultType="string">
+        SELECT DISTINCT g.role
+        FROM product_profit_distribution_guide g
+        WHERE g.delflag = 0
+        AND g.role IS NOT NULL
+        AND g.role != ''
+        ORDER BY g.role
+    </select>
+
+    <!-- 根据提成类型查询分配指导 -->
+    <select id="selectByCommissionType" resultMap="baseResultMap">
+        SELECT 
+        <include refid="baseColumns"/>
+        FROM product_profit_distribution_guide g
+        WHERE g.commission_type = #{commissionType}
+        AND g.delflag = 0
+        ORDER BY g.created_at DESC
+    </select>
+
+</mapper> 

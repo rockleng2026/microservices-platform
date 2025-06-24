@@ -1,0 +1,11 @@
+server:
+  port: 7004
+
+spring:
+  application:
+    name: project-manager-service
+#  cloud:
+#    nacos:
+#      discovery:
+#        metadata:
+#          version: zlt 

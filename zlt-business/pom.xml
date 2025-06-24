@@ -22,5 +22,7 @@
         <module>system-service</module>
         <!-- 多维表格服务 -->
         <module>multi-table-service</module>
+        <!-- 项目管理服务 -->
+        <module>project-manager-service</module>
     </modules>
 </project>

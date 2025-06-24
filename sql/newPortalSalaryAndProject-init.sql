@@ -36,7 +36,7 @@ CREATE TABLE `product_profit_distribution_guide` (
   `product_name` varchar(100) NOT NULL COMMENT '产品名称（如党建项目、IDC项目等）',
   `role` varchar(50) NOT NULL COMMENT '参与角色（如销售、技术、产品经理等）',
   `commission_type` varchar(10) NOT NULL COMMENT '提成类型（比例/金额）',
-  `value_range` varchar(50) COMMENT '数值范围（如1-5、500~10000）',
+  `value_range` varchar(50) COMMENT '数值范围（如1-5、500-10000）',
   `tenant_id` varchar(32) DEFAULT 'default' COMMENT '租户ID',
   `created_by` bigint(20) COMMENT '创建人ID',
   `updated_by` bigint(20) COMMENT '修改人ID',

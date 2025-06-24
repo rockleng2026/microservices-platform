@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.project.mapper.ProjectMapper">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="baseResultMap" type="com.central.project.model.Project">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="name" property="name" jdbcType="VARCHAR"/>
+        <result column="category" property="category" jdbcType="VARCHAR"/>
+        <result column="participants" property="participants" jdbcType="LONGVARCHAR"/>
+        <result column="leader_id" property="leaderId" jdbcType="BIGINT"/>
+        <result column="customer_name" property="customerName" jdbcType="VARCHAR"/>
+        <result column="customer_contact" property="customerContact" jdbcType="VARCHAR"/>
+        <result column="start_time" property="startTime" jdbcType="TIMESTAMP"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="process_instance_id" property="processInstanceId" jdbcType="VARCHAR"/>
+        <result column="final_status" property="finalStatus" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
+        <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
+        <result column="updated_by" property="updatedBy" jdbcType="BIGINT"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="delflag" property="delflag" jdbcType="TINYINT"/>
+        <!-- 扩展字段 -->
+        <result column="leader_name" property="leaderName" jdbcType="VARCHAR"/>
+        <result column="participant_count" property="participantCount" jdbcType="INTEGER"/>
+        <result column="days_running" property="daysRunning" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="baseColumns">
+        p.id, p.name, p.category, p.participants, p.leader_id, p.customer_name, 
+        p.customer_contact, p.start_time, p.status, p.process_instance_id, p.final_status,
+        p.tenant_id, p.created_by, p.updated_by, p.created_at, p.updated_at, p.delflag
+    </sql>
+
+    <!-- 扩展字段（包含关联信息） -->
+    <sql id="extendColumns">
+        p.id, p.name, p.category, p.participants, p.leader_id, p.customer_name, 
+        p.customer_contact, p.start_time, p.status, p.process_instance_id, p.final_status,
+        p.tenant_id, p.created_by, p.updated_by, p.created_at, p.updated_at, p.delflag,
+        e.name as leader_name,
+        (SELECT COUNT(*) FROM project_detail pd WHERE pd.project_id = p.id AND pd.delflag = 0) as participant_count,
+        DATEDIFF(NOW(), p.start_time) as days_running
+    </sql>
+
+    <!-- 分页查询项目列表（带详细信息） -->
+    <select id="selectProjectPage" resultMap="baseResultMap">
+        SELECT 
+        <include refid="extendColumns"/>
+        FROM project p
+        LEFT JOIN employee e ON p.leader_id = e.id AND e.delflag = 0
+        <where>
+            p.delflag = 0
+            <if test="params.name != null and params.name != ''">
+                AND p.name LIKE CONCAT('%', #{params.name}, '%')
+            </if>
+            <if test="params.category != null and params.category != ''">
+                AND p.category = #{params.category}
+            </if>
+            <if test="params.status != null and params.status != ''">
+                AND p.status = #{params.status}
+            </if>
+            <if test="params.leaderId != null">
+                AND p.leader_id = #{params.leaderId}
+            </if>
+            <if test="params.customerName != null and params.customerName != ''">
+                AND p.customer_name LIKE CONCAT('%', #{params.customerName}, '%')
+            </if>
+            <if test="params.startTimeStart != null and params.startTimeStart != ''">
+                AND p.start_time >= #{params.startTimeStart}
+            </if>
+            <if test="params.startTimeEnd != null and params.startTimeEnd != ''">
+                AND p.start_time &lt;= #{params.startTimeEnd}
+            </if>
+            <if test="params.finalStatus != null and params.finalStatus != ''">
+                AND p.final_status = #{params.finalStatus}
+            </if>
+        </where>
+        <choose>
+            <when test="params.sortField != null and params.sortField != ''">
+                ORDER BY ${params.sortField} ${params.sortOrder}
+            </when>
+            <otherwise>
+                ORDER BY p.created_at DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 根据ID查询项目详情（带关联信息） -->
+    <select id="selectProjectDetailById" resultMap="baseResultMap">
+        SELECT 
+        <include refid="extendColumns"/>
+        FROM project p
+        LEFT JOIN employee e ON p.leader_id = e.id AND e.delflag = 0
+        WHERE p.id = #{id} AND p.delflag = 0
+    </select>
+
+    <!-- 根据负责人ID查询项目列表 -->
+    <select id="selectProjectsByLeaderId" resultMap="baseResultMap">
+        SELECT 
+        <include refid="baseColumns"/>
+        FROM project p
+        WHERE p.leader_id = #{leaderId} 
+        AND p.delflag = 0
+        ORDER BY p.created_at DESC
+    </select>
+
+    <!-- 根据参与人ID查询项目列表 -->
+    <select id="selectProjectsByParticipantId" resultMap="baseResultMap">
+        SELECT DISTINCT
+        <include refid="baseColumns"/>
+        FROM project p
+        INNER JOIN project_detail pd ON p.id = pd.project_id
+        WHERE pd.participant_id = #{participantId} 
+        AND p.delflag = 0 
+        AND pd.delflag = 0
+        ORDER BY p.created_at DESC
+    </select>
+
+    <!-- 根据状态查询项目列表 -->
+    <select id="selectProjectsByStatus" resultMap="baseResultMap">
+        SELECT 
+        <include refid="baseColumns"/>
+        FROM project p
+        WHERE p.status = #{status} 
+        AND p.delflag = 0
+        ORDER BY p.created_at DESC
+    </select>
+
+    <!-- 根据类别查询项目列表 -->
+    <select id="selectProjectsByCategory" resultMap="baseResultMap">
+        SELECT 
+        <include refid="baseColumns"/>
+        FROM project p
+        WHERE p.category = #{category} 
+        AND p.delflag = 0
+        ORDER BY p.created_at DESC
+    </select>
+
+    <!-- 查询项目统计信息 -->
+    <select id="selectProjectStatistics" resultType="map">
+        SELECT 
+            COUNT(*) as total_count,
+            COUNT(CASE WHEN status = 'init' THEN 1 END) as init_count,
+            COUNT(CASE WHEN status = 'running' THEN 1 END) as running_count,
+            COUNT(CASE WHEN status = 'closed' THEN 1 END) as closed_count,
+            COUNT(CASE WHEN final_status = 'approved' THEN 1 END) as approved_count,
+            COUNT(CASE WHEN final_status = 'rejected' THEN 1 END) as rejected_count,
+            COUNT(CASE WHEN DATE(created_at) = CURDATE() THEN 1 END) as today_created,
+            COUNT(CASE WHEN YEARWEEK(created_at) = YEARWEEK(NOW()) THEN 1 END) as week_created,
+            COUNT(CASE WHEN YEAR(created_at) = YEAR(NOW()) AND MONTH(created_at) = MONTH(NOW()) THEN 1 END) as month_created
+        FROM project 
+        WHERE delflag = 0
+    </select>
+
+    <!-- 根据时间范围查询项目列表 -->
+    <select id="selectProjectsByDateRange" resultMap="baseResultMap">
+        SELECT 
+        <include refid="baseColumns"/>
+        FROM project p
+        WHERE p.start_time BETWEEN #{startDate} AND #{endDate}
+        AND p.delflag = 0
+        ORDER BY p.start_time DESC
+    </select>
+
+    <!-- 查询即将到期的项目 -->
+    <select id="selectExpiringProjects" resultMap="baseResultMap">
+        SELECT 
+        <include refid="extendColumns"/>
+        FROM project p
+        LEFT JOIN employee e ON p.leader_id = e.id AND e.delflag = 0
+        WHERE p.status = 'running'
+        AND p.delflag = 0
+        AND DATEDIFF(NOW(), p.start_time) >= (#{days} - 7)
+        ORDER BY p.start_time ASC
+    </select>
+
+    <!-- 批量更新项目状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE project 
+        SET status = #{status}, updated_at = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND delflag = 0
+    </update>
+
+</mapper> 

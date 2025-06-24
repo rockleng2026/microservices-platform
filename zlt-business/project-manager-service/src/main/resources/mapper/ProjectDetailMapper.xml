@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.project.mapper.ProjectDetailMapper">
+
+    <!-- 项目明细结果映射 -->
+    <resultMap id="BaseResultMap" type="com.central.project.model.ProjectDetail">
+        <id column="id" jdbcType="BIGINT" property="id"/>
+        <result column="project_id" jdbcType="BIGINT" property="projectId"/>
+        <result column="participant_id" jdbcType="BIGINT" property="participantId"/>
+        <result column="role" jdbcType="VARCHAR" property="role"/>
+        <result column="tenant_id" jdbcType="VARCHAR" property="tenantId"/>
+        <result column="created_at" jdbcType="TIMESTAMP" property="createdAt"/>
+        <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt"/>
+        <result column="created_by" jdbcType="BIGINT" property="createdBy"/>
+        <result column="updated_by" jdbcType="BIGINT" property="updatedBy"/>
+        <result column="delflag" jdbcType="INTEGER" property="delflag"/>
+    </resultMap>
+
+    <!-- 项目明细扩展结果映射（包含用户信息） -->
+    <resultMap id="ProjectDetailWithUserResultMap" type="com.central.project.model.ProjectDetail" extends="BaseResultMap">
+        <result column="participant_name" jdbcType="VARCHAR" property="participantName"/>
+        <result column="participant_username" jdbcType="VARCHAR" property="participantUsername"/>
+        <result column="participant_email" jdbcType="VARCHAR" property="participantEmail"/>
+        <result column="participant_phone" jdbcType="VARCHAR" property="participantPhone"/>
+        <result column="department_name" jdbcType="VARCHAR" property="departmentName"/>
+    </resultMap>
+
+    <!-- 基础列映射 -->
+    <sql id="Base_Column_List">
+        id, project_id, participant_id, role, tenant_id, created_at, updated_at, created_by, updated_by, delflag
+    </sql>
+
+    <!-- 根据项目ID查询项目参与人详情（包含用户信息） -->
+    <select id="selectProjectParticipantsWithUserInfo" resultMap="ProjectDetailWithUserResultMap">
+        SELECT 
+            pd.id,
+            pd.project_id,
+            pd.participant_id,
+            pd.role,
+            pd.tenant_id,
+            pd.created_at,
+            pd.updated_at,
+            pd.created_by,
+            pd.updated_by,
+            pd.delflag,
+            u.username as participant_username,
+            u.nickname as participant_name,
+            u.email as participant_email,
+            u.mobile as participant_phone,
+            d.name as department_name
+        FROM project_detail pd
+        LEFT JOIN sys_user u ON pd.participant_id = u.id
+        LEFT JOIN sys_dept d ON u.dept_id = d.id
+        WHERE pd.project_id = #{projectId}
+          AND pd.delflag = 0
+          AND (u.enabled = 1 OR u.enabled IS NULL)
+        ORDER BY pd.created_at ASC
+    </select>
+
+    <!-- 根据参与人ID查询参与的项目详情 -->
+    <select id="selectProjectsByParticipant" resultMap="BaseResultMap">
+        SELECT 
+            pd.id,
+            pd.project_id,
+            pd.participant_id,
+            pd.role,
+            pd.tenant_id,
+            pd.created_at,
+            pd.updated_at,
+            pd.created_by,
+            pd.updated_by,
+            pd.delflag
+        FROM project_detail pd
+        WHERE pd.participant_id = #{participantId}
+          AND pd.delflag = 0
+        ORDER BY pd.created_at DESC
+    </select>
+
+    <!-- 统计项目的参与人数 -->
+    <select id="countParticipantsByProject" resultType="java.lang.Long">
+        SELECT COUNT(DISTINCT pd.participant_id)
+        FROM project_detail pd
+        WHERE pd.project_id = #{projectId}
+          AND pd.delflag = 0
+    </select>
+
+    <!-- 根据角色统计参与人数 -->
+    <select id="countParticipantsByProjectAndRole" resultType="java.lang.Long">
+        SELECT COUNT(DISTINCT pd.participant_id)
+        FROM project_detail pd
+        WHERE pd.project_id = #{projectId}
+          AND pd.role = #{role}
+          AND pd.delflag = 0
+    </select>
+
+</mapper> 

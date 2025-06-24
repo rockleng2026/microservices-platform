@@ -8,6 +8,9 @@ import {
   Divider,
   Table,
   Card,
+  Statistic,
+  Row,
+  Col,
 } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -16,6 +19,8 @@ import {
   CloseCircleOutlined,
   ClockCircleOutlined,
   UserOutlined,
+  DollarOutlined,
+  CalendarOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type {
@@ -25,6 +30,7 @@ import type {
   ApprovalStatus,
 } from '@/types/project';
 import { getEmployeeDetail } from '@/services/organization/employee';
+import { projectApi } from '@/services/project';
 
 interface ProjectDetailProps {
   visible: boolean;
@@ -57,6 +63,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
 }) => {
   const [leaderName, setLeaderName] = useState<string>('');
   const [participantDetails, setParticipantDetails] = useState<ProjectParticipant[]>([]);
+  const [closureInfo, setClosureInfo] = useState<any>(null);
 
   useEffect(() => {
     async function fetchDetails() {
@@ -102,6 +109,18 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
           })
         );
         setParticipantDetails(details);
+        
+        // 如果项目已结项，加载结项信息
+        if (project.status === 'closed') {
+          try {
+            const closureResponse = await projectApi.getProjectClosure(project.id);
+            if (closureResponse.resp_code === 0 && closureResponse.datas) {
+              setClosureInfo(closureResponse.datas);
+            }
+          } catch (error) {
+            console.error('Failed to load closure info:', error);
+          }
+        }
       }
     }
     fetchDetails();
@@ -247,6 +266,88 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
             </div>
           )}
         </div>
+
+        {project.status === 'closed' && closureInfo && (
+          <>
+            <Divider />
+            <div style={{ marginTop: 24 }}>
+              <h4 style={{ marginBottom: 16 }}>项目结项信息</h4>
+              <Row gutter={16} style={{ marginBottom: 16 }}>
+                <Col span={6}>
+                  <Card>
+                    <Statistic
+                      title="合同金额"
+                      value={closureInfo.contractAmount || 0}
+                      precision={2}
+                      prefix={<DollarOutlined />}
+                      suffix="元"
+                      valueStyle={{ color: '#1890ff' }}
+                    />
+                  </Card>
+                </Col>
+                <Col span={6}>
+                  <Card>
+                    <Statistic
+                      title="实际金额"
+                      value={closureInfo.actualAmount || 0}
+                      precision={2}
+                      prefix={<DollarOutlined />}
+                      suffix="元"
+                      valueStyle={{ color: '#52c41a' }}
+                    />
+                  </Card>
+                </Col>
+                <Col span={6}>
+                  <Card>
+                    <Statistic
+                      title="毛利润"
+                      value={closureInfo.grossProfit || 0}
+                      precision={2}
+                      prefix={<DollarOutlined />}
+                      suffix="元"
+                      valueStyle={{ 
+                        color: (closureInfo.grossProfit || 0) >= 0 ? '#3f8600' : '#cf1322' 
+                      }}
+                    />
+                  </Card>
+                </Col>
+                <Col span={6}>
+                  <Card>
+                    <Statistic
+                      title="毛利率"
+                      value={closureInfo.grossProfitRate || 0}
+                      precision={2}
+                      suffix="%"
+                      valueStyle={{ 
+                        color: (closureInfo.grossProfitRate || 0) >= 0 ? '#3f8600' : '#cf1322' 
+                      }}
+                    />
+                  </Card>
+                </Col>
+              </Row>
+              
+              <Descriptions column={2} size="small" bordered>
+                <Descriptions.Item label="结项时间">
+                  {closureInfo.closureTime ? dayjs(closureInfo.closureTime).format('YYYY-MM-DD HH:mm') : '-'}
+                </Descriptions.Item>
+                <Descriptions.Item label="审批状态">
+                  {closureInfo.finalStatus ? (
+                    <Tag color={closureInfo.finalStatus === 'approved' ? 'success' : 'error'}>
+                      {closureInfo.finalStatus === 'approved' ? '已通过' : '已拒绝'}
+                    </Tag>
+                  ) : (
+                    <Tag color="warning">待审批</Tag>
+                  )}
+                </Descriptions.Item>
+                {closureInfo.remarks && (
+                  <Descriptions.Item label="备注说明" span={2}>
+                    {closureInfo.remarks}
+                  </Descriptions.Item>
+                )}
+              </Descriptions>
+            </div>
+          </>
+        )}
 
         {project.processInstanceId && (
           <>

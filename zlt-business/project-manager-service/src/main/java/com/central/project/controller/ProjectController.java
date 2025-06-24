@@ -3,6 +3,8 @@ package com.central.project.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.central.common.model.Result;
 import com.central.project.model.Project;
+import com.central.project.model.ProjectClosure;
+import com.central.project.model.ProjectProfitDistribution;
 import com.central.project.model.dto.ProjectQueryDTO;
 import com.central.project.model.dto.ProjectSaveDTO;
 import com.central.project.service.IProjectService;
@@ -470,6 +472,134 @@ public class ProjectController {
             return Result.succeed(projects);
         } catch (Exception e) {
             log.error("按类别查询项目失败，category: {}", category, e);
+            return Result.failed(e.getMessage());
+        }
+    }
+    
+    /**
+     * 项目结项完成
+     * @param id 项目ID
+     * @param closureData 结项详细数据
+     * @return 操作结果
+     */
+    @PostMapping("/{id}/closure/complete")
+    @Operation(summary = "项目结项完成", description = "完成项目结项，录入财务数据")
+    public Result<Boolean> completeProjectClosure(
+            @Parameter(description = "项目ID") @PathVariable("id") String id,
+            @RequestBody ProjectClosure closureData) {
+        try {
+            Long projectId = IdUtils.stringToLong(id);
+            if (projectId == null) {
+                return Result.failed("项目ID格式错误");
+            }
+            
+            closureData.setProjectId(projectId);
+            Boolean result = projectService.completeProjectClosure(closureData);
+            return result ? Result.succeed(true, "项目结项完成") : Result.failed("项目结项失败");
+        } catch (Exception e) {
+            log.error("项目结项完成失败，ID: {}", id, e);
+            return Result.failed(e.getMessage());
+        }
+    }
+    
+    /**
+     * 查询项目结项信息
+     * @param id 项目ID
+     * @return 结项信息
+     */
+    @GetMapping("/{id}/closure")
+    @Operation(summary = "查询项目结项信息", description = "获取项目的结项详细信息")
+    public Result<ProjectClosure> getProjectClosure(
+            @Parameter(description = "项目ID") @PathVariable("id") String id) {
+        try {
+            Long projectId = IdUtils.stringToLong(id);
+            if (projectId == null) {
+                return Result.failed("项目ID格式错误");
+            }
+            
+            ProjectClosure closure = projectService.getProjectClosure(projectId);
+            return Result.succeed(closure);
+        } catch (Exception e) {
+            log.error("查询项目结项信息失败，ID: {}", id, e);
+            return Result.failed(e.getMessage());
+        }
+    }
+    
+    /**
+     * 创建项目提成分配方案
+     * @param id 项目ID
+     * @param distributions 分配方案列表
+     * @return 操作结果
+     */
+    @PostMapping("/{id}/profit-distribution")
+    @Operation(summary = "创建项目提成分配方案", description = "为项目创建毛利分配方案")
+    public Result<Boolean> createProfitDistribution(
+            @Parameter(description = "项目ID") @PathVariable("id") String id,
+            @RequestBody List<ProjectProfitDistribution> distributions) {
+        try {
+            Long projectId = IdUtils.stringToLong(id);
+            if (projectId == null) {
+                return Result.failed("项目ID格式错误");
+            }
+            
+            // 设置项目ID
+            distributions.forEach(distribution -> distribution.setProjectId(projectId));
+            
+            Boolean result = projectService.createProfitDistribution(projectId, distributions);
+            return result ? Result.succeed(true, "提成分配方案创建成功") : Result.failed("提成分配方案创建失败");
+        } catch (Exception e) {
+            log.error("创建项目提成分配失败，ID: {}", id, e);
+            return Result.failed(e.getMessage());
+        }
+    }
+    
+    /**
+     * 查询项目提成分配列表
+     * @param id 项目ID
+     * @return 分配列表
+     */
+    @GetMapping("/{id}/profit-distribution")
+    @Operation(summary = "查询项目提成分配列表", description = "获取项目的毛利分配信息")
+    public Result<List<ProjectProfitDistribution>> getProfitDistribution(
+            @Parameter(description = "项目ID") @PathVariable("id") String id) {
+        try {
+            Long projectId = IdUtils.stringToLong(id);
+            if (projectId == null) {
+                return Result.failed("项目ID格式错误");
+            }
+            
+            List<ProjectProfitDistribution> distributions = projectService.getProfitDistribution(projectId);
+            return Result.succeed(distributions);
+        } catch (Exception e) {
+            log.error("查询项目提成分配失败，ID: {}", id, e);
+            return Result.failed(e.getMessage());
+        }
+    }
+    
+    /**
+     * 审批项目提成分配
+     * @param id 项目ID
+     * @param request 审批请求
+     * @return 操作结果
+     */
+    @PostMapping("/{id}/profit-distribution/approve")
+    @Operation(summary = "审批项目提成分配", description = "对项目提成分配方案进行审批")
+    public Result<Boolean> approveProfitDistribution(
+            @Parameter(description = "项目ID") @PathVariable("id") String id,
+            @RequestBody Map<String, Object> request) {
+        try {
+            Long projectId = IdUtils.stringToLong(id);
+            if (projectId == null) {
+                return Result.failed("项目ID格式错误");
+            }
+            
+            Boolean approved = (Boolean) request.get("approved");
+            String reason = (String) request.get("reason");
+            
+            Boolean result = projectService.approveProfitDistribution(projectId, approved, reason);
+            return result ? Result.succeed(true, "提成分配审批成功") : Result.failed("提成分配审批失败");
+        } catch (Exception e) {
+            log.error("项目提成分配审批失败，ID: {}", id, e);
             return Result.failed(e.getMessage());
         }
     }

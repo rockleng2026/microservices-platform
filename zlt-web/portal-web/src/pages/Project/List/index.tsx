@@ -38,6 +38,8 @@ import { projectApi } from '@/services/project';
 import ProjectForm from '../components/ProjectForm';
 import ProjectDetail from '../components/ProjectDetail';
 import ParticipantModal from '../components/ParticipantModal';
+import ProjectClosureModal from '../components/ProjectClosureModal';
+import ProfitDistributionModal from '../components/ProfitDistributionModal';
 import type {
   Project,
   ProjectQueryParams,
@@ -85,6 +87,12 @@ const ProjectListPage: React.FC = () => {
   
   // 参与人弹窗
   const [participantVisible, setParticipantVisible] = useState(false);
+
+  // 项目结项弹窗
+  const [closureVisible, setClosureVisible] = useState(false);
+  
+  // 项目提成弹窗
+  const [profitDistributionVisible, setProfitDistributionVisible] = useState(false);
 
   // 搜索条件
   const [searchParams, setSearchParams] = useState<Partial<ProjectQueryParams>>({});
@@ -237,6 +245,18 @@ const ProjectListPage: React.FC = () => {
     });
   };
 
+  // 项目结项
+  const handleClosure = (record: Project) => {
+    setCurrentProject(record);
+    setClosureVisible(true);
+  };
+
+  // 项目提成
+  const handleProfitDistribution = (record: Project) => {
+    setCurrentProject(record);
+    setProfitDistributionVisible(true);
+  };
+
   // 更新项目状态
   const handleUpdateStatus = (record: Project, status: string) => {
     Modal.confirm({
@@ -364,6 +384,18 @@ const ProjectListPage: React.FC = () => {
             label: '管理参与人',
             icon: <UserOutlined />,
             onClick: () => handleParticipant(record),
+          },
+          {
+            key: 'closure',
+            label: '项目结项',
+            icon: <CheckCircleOutlined />,
+            onClick: () => handleClosure(record),
+          },
+          {
+            key: 'profitDistribution',
+            label: '项目提成',
+            icon: <ExportOutlined />,
+            onClick: () => handleProfitDistribution(record),
           },
           {
             type: 'divider' as const,
@@ -552,6 +584,28 @@ const ProjectListPage: React.FC = () => {
         onCancel={() => setParticipantVisible(false)}
         onSuccess={() => {
           setParticipantVisible(false);
+          fetchProjects();
+        }}
+      />
+
+      {/* 项目结项弹窗 */}
+      <ProjectClosureModal
+        visible={closureVisible}
+        project={currentProject}
+        onCancel={() => setClosureVisible(false)}
+        onSuccess={() => {
+          setClosureVisible(false);
+          fetchProjects();
+        }}
+      />
+
+      {/* 项目提成分配弹窗 */}
+      <ProfitDistributionModal
+        visible={profitDistributionVisible}
+        project={currentProject}
+        onCancel={() => setProfitDistributionVisible(false)}
+        onSuccess={() => {
+          setProfitDistributionVisible(false);
           fetchProjects();
         }}
       />

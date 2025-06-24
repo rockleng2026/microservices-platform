@@ -14,16 +14,16 @@ import java.math.BigDecimal;
 import java.util.Date;
 
 /**
- * 项目结项实体类
- * 记录项目结项的财务信息和审批状态
+ * 项目人员毛利分配实体类
+ * 记录项目结项后的毛利分配给各参与人员
  * 
  * @author Central Team
  * @since 2024-12-25
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("project_closure")
-public class ProjectClosure {
+@TableName("project_profit_distribution")
+public class ProjectProfitDistribution {
     
     /**
      * 主键
@@ -39,30 +39,31 @@ public class ProjectClosure {
     private Long projectId;
     
     /**
-     * 结项时间
+     * 产品毛利分配指导表ID
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Date closureTime;
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long guideId;
     
     /**
-     * 项目合同金额
+     * 分配员工ID
      */
-    private BigDecimal contractAmount;
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long employeeId;
     
     /**
-     * 项目实际金额
+     * 分配角色
      */
-    private BigDecimal actualAmount;
+    private String role;
     
     /**
-     * 项目毛利润
+     * 分配形式（比例/金额）
      */
-    private BigDecimal grossProfit;
+    private String distributionType;
     
     /**
-     * 毛利率（%）
+     * 分配数值
      */
-    private BigDecimal grossProfitRate;
+    private BigDecimal distributionValue;
     
     /**
      * 流程实例ID
@@ -117,8 +118,20 @@ public class ProjectClosure {
     private String projectName;
     
     /**
-     * 创建人姓名
+     * 员工姓名
      */
     @TableField(exist = false)
-    private String creatorName;
+    private String employeeName;
+    
+    /**
+     * 员工部门
+     */
+    @TableField(exist = false)
+    private String departmentName;
+    
+    /**
+     * 计算后的分配金额
+     */
+    @TableField(exist = false)
+    private BigDecimal calculatedAmount;
 } 

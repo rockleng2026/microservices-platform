@@ -3,6 +3,8 @@ package com.central.project.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.central.project.model.Project;
+import com.central.project.model.ProjectClosure;
+import com.central.project.model.ProjectProfitDistribution;
 import com.central.project.model.dto.ProjectQueryDTO;
 import com.central.project.model.dto.ProjectSaveDTO;
 
@@ -176,4 +178,42 @@ public interface IProjectService extends IService<Project> {
      * @return 是否成功
      */
     Boolean updateParticipantRole(Long projectId, Long participantId, String role);
+    
+    /**
+     * 完成项目结项
+     * @param closureData 结项数据
+     * @return 是否成功
+     */
+    Boolean completeProjectClosure(ProjectClosure closureData);
+    
+    /**
+     * 查询项目结项信息
+     * @param projectId 项目ID
+     * @return 结项信息
+     */
+    ProjectClosure getProjectClosure(Long projectId);
+    
+    /**
+     * 创建项目提成分配方案
+     * @param projectId 项目ID
+     * @param distributions 分配方案列表
+     * @return 是否成功
+     */
+    Boolean createProfitDistribution(Long projectId, List<ProjectProfitDistribution> distributions);
+    
+    /**
+     * 查询项目提成分配列表
+     * @param projectId 项目ID
+     * @return 分配列表
+     */
+    List<ProjectProfitDistribution> getProfitDistribution(Long projectId);
+    
+    /**
+     * 审批项目提成分配
+     * @param projectId 项目ID
+     * @param approved 是否通过
+     * @param reason 审批意见
+     * @return 是否成功
+     */
+    Boolean approveProfitDistribution(Long projectId, Boolean approved, String reason);
 } 

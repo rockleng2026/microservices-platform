@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.project.mapper.ProjectClosureMapper">
+
+    <resultMap id="BaseResultMap" type="com.central.project.model.ProjectClosure">
+        <id column="id" property="id" />
+        <result column="project_id" property="projectId" />
+        <result column="closure_time" property="closureTime" />
+        <result column="contract_amount" property="contractAmount" />
+        <result column="actual_amount" property="actualAmount" />
+        <result column="gross_profit" property="grossProfit" />
+        <result column="gross_profit_rate" property="grossProfitRate" />
+        <result column="process_instance_id" property="processInstanceId" />
+        <result column="final_status" property="finalStatus" />
+        <result column="tenant_id" property="tenantId" />
+        <result column="created_by" property="createdBy" />
+        <result column="updated_by" property="updatedBy" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="delflag" property="delflag" />
+    </resultMap>
+
+    <select id="selectByProjectId" resultMap="BaseResultMap">
+        SELECT * FROM project_closure 
+        WHERE project_id = #{projectId} AND delflag = 0
+        ORDER BY created_at DESC
+        LIMIT 1
+    </select>
+
+    <delete id="deleteByProjectId">
+        UPDATE project_closure SET delflag = 1, updated_at = NOW()
+        WHERE project_id = #{projectId} AND delflag = 0
+    </delete>
+
+</mapper> 

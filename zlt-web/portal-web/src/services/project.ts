@@ -186,6 +186,44 @@ export const projectApi = {
       data: { role },
     });
   },
+
+  // 项目结项完成
+  completeProjectClosure: (id: string, closureData: any): Promise<ApiResponse<boolean>> => {
+    return request(`${API_PREFIX}/projects/${id}/closure/complete`, {
+      method: 'POST',
+      data: closureData,
+    });
+  },
+
+  // 查询项目结项信息
+  getProjectClosure: (id: string): Promise<ApiResponse<any>> => {
+    return request(`${API_PREFIX}/projects/${id}/closure`, {
+      method: 'GET',
+    });
+  },
+
+  // 创建项目提成分配方案
+  createProfitDistribution: (id: string, distributions: any[]): Promise<ApiResponse<boolean>> => {
+    return request(`${API_PREFIX}/projects/${id}/profit-distribution`, {
+      method: 'POST',
+      data: distributions,
+    });
+  },
+
+  // 查询项目提成分配列表
+  getProfitDistribution: (id: string): Promise<ApiResponse<any[]>> => {
+    return request(`${API_PREFIX}/projects/${id}/profit-distribution`, {
+      method: 'GET',
+    });
+  },
+
+  // 审批项目提成分配
+  approveProfitDistribution: (id: string, approved: boolean, reason?: string): Promise<ApiResponse<boolean>> => {
+    return request(`${API_PREFIX}/projects/${id}/profit-distribution/approve`, {
+      method: 'POST',
+      data: { approved, reason },
+    });
+  },
 };
 
 /**

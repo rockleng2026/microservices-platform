@@ -6,11 +6,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.central.project.mapper.ProjectMapper;
 import com.central.project.model.Project;
+import com.central.project.model.ProjectClosure;
 import com.central.project.model.ProjectDetail;
+import com.central.project.model.ProjectProfitDistribution;
 import com.central.project.model.dto.ProjectQueryDTO;
 import com.central.project.model.dto.ProjectSaveDTO;
 import com.central.project.service.IProjectService;
 import com.central.project.service.IProjectDetailService;
+import com.central.project.service.IProjectClosureService;
 import com.central.project.utils.IdUtils;
 import com.central.common.context.TenantContextHolder;
 import org.springframework.beans.BeanUtils;
@@ -20,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,6 +39,9 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     
     @Autowired
     private IProjectDetailService projectDetailService;
+    
+    @Autowired
+    private IProjectClosureService projectClosureService;
     
     @Override
     public IPage<Project> getProjectPage(ProjectQueryDTO queryDTO) {
@@ -449,5 +456,95 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         }
         
         return projectDetailService.updateRoleByProjectIdAndParticipantId(projectId, participantId, role);
+    }
+    
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean completeProjectClosure(ProjectClosure closureData) {
+        if (closureData == null || closureData.getProjectId() == null) {
+            return false;
+        }
+        
+        try {
+            // 1. 保存结项数据到 project_closure 表
+            boolean closureResult = projectClosureService.saveClosure(closureData);
+            if (!closureResult) {
+                log.error("保存项目结项数据失败，项目ID: {}", closureData.getProjectId());
+                return false;
+            }
+            
+            // 2. 更新项目状态为已结项
+            Project project = new Project();
+            project.setId(closureData.getProjectId());
+            project.setStatus("closed");
+            project.setUpdatedAt(new Date());
+            project.setUpdatedBy(1L);
+            
+            boolean updateResult = updateById(project);
+            if (!updateResult) {
+                log.error("更新项目状态失败，项目ID: {}", closureData.getProjectId());
+                return false;
+            }
+            
+            log.info("项目结项完成，项目ID: {}, 毛利润: {}, 毛利率: {}%", 
+                closureData.getProjectId(), closureData.getGrossProfit(), closureData.getGrossProfitRate());
+            
+            return true;
+        } catch (Exception e) {
+            log.error("项目结项处理失败，项目ID: {}", closureData.getProjectId(), e);
+            throw e; // 重新抛出异常，触发事务回滚
+        }
+    }
+    
+    @Override
+    public ProjectClosure getProjectClosure(Long projectId) {
+        if (projectId == null) {
+            return null;
+        }
+        
+        return projectClosureService.getByProjectId(projectId);
+    }
+    
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean createProfitDistribution(Long projectId, List<ProjectProfitDistribution> distributions) {
+        if (projectId == null || distributions == null || distributions.isEmpty()) {
+            return false;
+        }
+        
+        // TODO: 实现项目提成分配方案创建
+        // 1. 保存分配方案到 project_profit_distribution 表
+        // 2. 启动审批流程
+        
+        // 临时实现：返回成功
+        log.info("创建项目提成分配方案，项目ID: {}, 分配数量: {}", projectId, distributions.size());
+        return true;
+    }
+    
+    @Override
+    public List<ProjectProfitDistribution> getProfitDistribution(Long projectId) {
+        if (projectId == null) {
+            return new ArrayList<>();
+        }
+        
+        // TODO: 实现从 project_profit_distribution 表查询分配信息
+        // 临时返回空列表
+        return new ArrayList<>();
+    }
+    
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean approveProfitDistribution(Long projectId, Boolean approved, String reason) {
+        if (projectId == null || approved == null) {
+            return false;
+        }
+        
+        // TODO: 实现项目提成分配审批
+        // 1. 更新分配方案的审批状态
+        // 2. 记录审批意见
+        
+        // 临时实现：返回成功
+        log.info("审批项目提成分配，项目ID: {}, 审批结果: {}, 意见: {}", projectId, approved, reason);
+        return true;
     }
 } 

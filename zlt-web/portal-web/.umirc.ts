@@ -52,6 +52,46 @@ export default defineConfig({
           ],
         },
         {
+          path: '/project',
+          name: '项目管理',
+          routes: [
+            {
+              path: '/project',
+              redirect: '/project/list',
+            },
+            {
+              path: '/project/list',
+              name: '项目列表',
+              component: '@/pages/Project/List',
+            },
+            {
+              path: '/project/my',
+              name: '我的项目',
+              component: '@/pages/Project/My',
+            },
+            {
+              path: '/project/approval',
+              name: '项目审批',
+              component: '@/pages/Project/Approval',
+            },
+            {
+              path: '/project/statistics',
+              name: '项目统计',
+              component: '@/pages/Project/Statistics',
+            },
+            {
+              path: '/project/template',
+              name: '项目模板',
+              component: '@/pages/Project/Template',
+            },
+            {
+              path: '/project/profit-guide',
+              name: '产品毛利配置',
+              component: '@/pages/Project/ProfitGuide',
+            },
+          ],
+        },
+        {
           path: '/crm',
           name: 'CRM管理',
           routes: [
@@ -77,6 +117,12 @@ export default defineConfig({
 
   // 代理配置 - 开发环境所有API请求代理到网关
   proxy: {
+    '/api-project': {
+      target: 'http://127.0.0.1:9900',
+      changeOrigin: true,
+      secure: false,
+      logLevel: 'debug',
+    },
     '/api': {
       target: 'http://127.0.0.1:9900',
       changeOrigin: true,

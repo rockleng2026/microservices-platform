@@ -15,9 +15,6 @@
         <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
         <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
         <result column="delflag" property="delflag" jdbcType="TINYINT"/>
-        <!-- 扩展字段 -->
-        <result column="creator_name" property="creatorName" jdbcType="VARCHAR"/>
-        <result column="updater_name" property="updaterName" jdbcType="VARCHAR"/>
     </resultMap>
 
     <!-- 基础字段 -->
@@ -26,12 +23,10 @@
         g.tenant_id, g.created_by, g.updated_by, g.created_at, g.updated_at, g.delflag
     </sql>
 
-    <!-- 扩展字段（包含关联信息） -->
+    <!-- 扩展字段（不包含员工关联信息，避免跨服务查询） -->
     <sql id="extendColumns">
         g.id, g.product_name, g.role, g.commission_type, g.value_range,
-        g.tenant_id, g.created_by, g.updated_by, g.created_at, g.updated_at, g.delflag,
-        creator.name as creator_name,
-        updater.name as updater_name
+        g.tenant_id, g.created_by, g.updated_by, g.created_at, g.updated_at, g.delflag
     </sql>
 
     <!-- 分页查询分配指导列表 -->
@@ -39,8 +34,6 @@
         SELECT 
         <include refid="extendColumns"/>
         FROM product_profit_distribution_guide g
-        LEFT JOIN employee creator ON g.created_by = creator.id AND creator.delflag = 0
-        LEFT JOIN employee updater ON g.updated_by = updater.id AND updater.delflag = 0
         <where>
             g.delflag = 0
             <if test="params.productName != null and params.productName != ''">

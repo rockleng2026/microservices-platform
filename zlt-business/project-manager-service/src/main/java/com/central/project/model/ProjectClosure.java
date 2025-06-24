@@ -116,12 +116,6 @@ public class ProjectClosure {
     private String projectName;
     
     /**
-     * 项目负责人姓名
-     */
-    @TableField(exist = false)
-    private String leaderName;
-    
-    /**
      * 审批状态显示文本
      */
     @TableField(exist = false)

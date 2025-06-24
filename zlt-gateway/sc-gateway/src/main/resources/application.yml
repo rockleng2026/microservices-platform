@@ -61,6 +61,12 @@ spring:
             - Path=/api-multitable/**
           filters:
             - StripPrefix=1
+        - id: project-manager
+          uri: lb://project-manager-service
+          predicates:
+            - Path=/api-project/**
+          filters:
+            - StripPrefix=1
         - id: file
           uri: lb://file-center
           predicates:

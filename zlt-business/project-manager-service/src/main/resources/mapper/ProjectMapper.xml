@@ -22,7 +22,6 @@
         <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
         <result column="delflag" property="delflag" jdbcType="TINYINT"/>
         <!-- 扩展字段 -->
-        <result column="leader_name" property="leaderName" jdbcType="VARCHAR"/>
         <result column="participant_count" property="participantCount" jdbcType="INTEGER"/>
         <result column="days_running" property="daysRunning" jdbcType="INTEGER"/>
     </resultMap>
@@ -34,12 +33,11 @@
         p.tenant_id, p.created_by, p.updated_by, p.created_at, p.updated_at, p.delflag
     </sql>
 
-    <!-- 扩展字段（包含关联信息） -->
+    <!-- 扩展字段（不包含员工关联信息，避免跨服务查询） -->
     <sql id="extendColumns">
         p.id, p.name, p.category, p.participants, p.leader_id, p.customer_name, 
         p.customer_contact, p.start_time, p.status, p.process_instance_id, p.final_status,
         p.tenant_id, p.created_by, p.updated_by, p.created_at, p.updated_at, p.delflag,
-        e.name as leader_name,
         (SELECT COUNT(*) FROM project_detail pd WHERE pd.project_id = p.id AND pd.delflag = 0) as participant_count,
         DATEDIFF(NOW(), p.start_time) as days_running
     </sql>
@@ -49,7 +47,6 @@
         SELECT 
         <include refid="extendColumns"/>
         FROM project p
-        LEFT JOIN employee e ON p.leader_id = e.id AND e.delflag = 0
         <where>
             p.delflag = 0
             <if test="params.name != null and params.name != ''">
@@ -92,7 +89,6 @@
         SELECT 
         <include refid="extendColumns"/>
         FROM project p
-        LEFT JOIN employee e ON p.leader_id = e.id AND e.delflag = 0
         WHERE p.id = #{id} AND p.delflag = 0
     </select>
 
@@ -169,7 +165,6 @@
         SELECT 
         <include refid="extendColumns"/>
         FROM project p
-        LEFT JOIN employee e ON p.leader_id = e.id AND e.delflag = 0
         WHERE p.status = 'running'
         AND p.delflag = 0
         AND DATEDIFF(NOW(), p.start_time) >= (#{days} - 7)

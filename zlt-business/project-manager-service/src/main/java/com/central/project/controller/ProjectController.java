@@ -27,7 +27,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/project")
+@RequestMapping("/api/project/projects")
 @Tag(name = "项目管理", description = "项目管理相关接口")
 @Validated
 public class ProjectController {

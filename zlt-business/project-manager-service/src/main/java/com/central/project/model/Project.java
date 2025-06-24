@@ -120,12 +120,6 @@ public class Project {
     // =============== 扩展字段 ===============
     
     /**
-     * 项目负责人姓名
-     */
-    @TableField(exist = false)
-    private String leaderName;
-    
-    /**
      * 项目参与人员详情
      */
     @TableField(exist = false)

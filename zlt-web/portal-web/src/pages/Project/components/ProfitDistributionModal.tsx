@@ -21,6 +21,8 @@ import {
 import { PlusOutlined, DeleteOutlined, DollarOutlined, TeamOutlined, BankOutlined } from '@ant-design/icons';
 import { ColumnsType } from 'antd/es/table';
 import { projectApi } from '@/services/project';
+import { getEmployeeDetail } from '@/services/organization/employee';
+import { getDepartmentDetail, batchGetEmployeeMainDepartments } from '@/services/organization/department';
 import type { Project } from '@/types/project';
 
 const { Option } = Select;
@@ -66,6 +68,9 @@ const ProfitDistributionModal: React.FC<ProfitDistributionModalProps> = ({
   const [profitPool, setProfitPool] = useState<number>(0); // 50%提成池
   const [departmentAllocations, setDepartmentAllocations] = useState<DepartmentAllocation[]>([]);
   const [totalWeight, setTotalWeight] = useState<number>(0);
+  const [availableDepartments, setAvailableDepartments] = useState<Array<{label: string, value: string, name: string}>>([]);
+  const [employeeDepartmentMap, setEmployeeDepartmentMap] = useState<Map<number, {id: string, name: string}>>(new Map());
+  const [projectDetailData, setProjectDetailData] = useState<any>(null);
 
   // 大部门选项
   const departmentOptions = [
@@ -117,6 +122,177 @@ const ProfitDistributionModal: React.FC<ProfitDistributionModalProps> = ({
     }
   };
 
+  // 从项目参与人中提取部门信息
+  const extractDepartmentsFromProject = async () => {
+    if (!project) {
+      return;
+    }
+
+    console.log('开始提取项目部门信息...');
+    setLoading(true);
+
+    try {
+      // 第一步：获取项目完整详情（包含参与人信息）
+      console.log('获取项目详情...');
+      const projectDetailResponse = await projectApi.getProjectById(project.id);
+      
+      if (projectDetailResponse.resp_code !== 0 || !projectDetailResponse.datas) {
+        throw new Error('获取项目详情失败');
+      }
+
+      const projectDetail = projectDetailResponse.datas;
+      console.log('项目详情:', projectDetail);
+
+      // 第二步：收集所有员工ID（去重）
+      const employeeIdSet = new Set<string>();
+      
+      // 添加项目负责人
+      if (projectDetail.leaderId) {
+        employeeIdSet.add(String(projectDetail.leaderId));
+      }
+      
+      // 添加项目参与人
+      if (projectDetail.participantDetails && projectDetail.participantDetails.length > 0) {
+        projectDetail.participantDetails.forEach(participant => {
+          if (participant.participantId) {
+            employeeIdSet.add(String(participant.participantId));
+          }
+        });
+      }
+
+      const employeeIds = Array.from(employeeIdSet);
+      console.log('需要查询的员工ID:', employeeIds);
+
+      if (employeeIds.length === 0) {
+        throw new Error('未找到项目参与人员');
+      }
+
+      // 第三步：批量查询员工所属大部门
+      console.log('批量查询员工所属大部门...');
+      const batchResponse = await batchGetEmployeeMainDepartments(employeeIds);
+      
+      if (!batchResponse || batchResponse.resp_code !== 0 || !batchResponse.datas) {
+        throw new Error('批量查询员工大部门失败');
+      }
+
+      const batchResult = batchResponse.datas;
+      console.log('批量查询结果:', batchResult);
+
+      const employeeDepartmentMap = new Map<number, {id: string, name: string}>();
+      const departmentOptions: Array<{label: string, value: string, name: string}> = [];
+
+      // 处理查询结果
+      if (batchResult.employeeDepartmentMap) {
+        Object.entries(batchResult.employeeDepartmentMap).forEach(([empId, deptInfo]: [string, any]) => {
+          employeeDepartmentMap.set(Number(empId), {
+            id: deptInfo.id,
+            name: deptInfo.name
+          });
+        });
+      }
+
+      if (batchResult.departments) {
+        batchResult.departments.forEach((dept: any) => {
+          departmentOptions.push({
+            label: dept.name,
+            value: dept.id,
+            name: dept.name
+          });
+        });
+      }
+
+      console.log('员工与大部门映射关系:', employeeDepartmentMap);
+      console.log('大部门选项:', departmentOptions);
+
+      if (departmentOptions.length === 0) {
+        throw new Error('未找到任何有效的大部门信息');
+      }
+
+      // 第四步：设置数据并初始化分配
+      setAvailableDepartments(departmentOptions);
+      setEmployeeDepartmentMap(employeeDepartmentMap);
+      setProjectDetailData(projectDetail);
+
+      // 自动初始化部门分配
+      const averageWeight = Math.floor(100 / departmentOptions.length);
+      const remainder = 100 - (averageWeight * departmentOptions.length);
+      
+      const initialAllocations = departmentOptions.map((dept, index) => ({
+        key: `dept_${Date.now()}_${index}`,
+        departmentName: dept.name,
+        weight: index === 0 ? averageWeight + remainder : averageWeight,
+        totalAmount: 0,
+        employeeAmount: 0,
+        reserveAmount: 0,
+        employeeDistributions: [],
+      }));
+
+      console.log('初始化部门分配:', initialAllocations);
+      setDepartmentAllocations(initialAllocations);
+      
+      message.success(`成功识别到${departmentOptions.length}个参与部门`);
+
+    } catch (error) {
+      console.error('提取部门信息失败:', error);
+      message.error('提取部门信息失败: ' + (error instanceof Error ? error.message : String(error)));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 获取指定部门的员工
+  const getEmployeesForDepartment = (departmentName: string) => {
+    const employees: Array<{value: string, label: string, role: string}> = [];
+
+    if (!projectDetailData || !employeeDepartmentMap) {
+      console.log('项目数据或映射关系未准备好');
+      return employees;
+    }
+
+    console.log(`获取部门${departmentName}的员工...`);
+
+    try {
+      // 从映射关系中找到属于该部门的员工
+      employeeDepartmentMap.forEach((dept, employeeId) => {
+        if (dept.name === departmentName) {
+          // 查找员工的角色信息
+          let employeeName = `员工${employeeId}`;
+          let employeeRole = '参与人';
+
+          // 检查是否是项目负责人
+          if (Number(projectDetailData.leaderId) === employeeId) {
+            employeeName = projectDetailData.leaderName || `负责人${employeeId}`;
+            employeeRole = '项目负责人';
+          } else {
+            // 从参与人列表中查找
+            if (projectDetailData.participantDetails) {
+              const participant = projectDetailData.participantDetails.find(
+                (p: any) => Number(p.participantId) === employeeId
+              );
+              if (participant) {
+                employeeName = participant.participantName || `员工${employeeId}`;
+                employeeRole = participant.role || '参与人';
+              }
+            }
+          }
+
+          employees.push({
+            value: String(employeeId),
+            label: employeeName,
+            role: employeeRole,
+          });
+        }
+      });
+
+      console.log(`部门${departmentName}的员工:`, employees);
+      
+    } catch (error) {
+      console.error(`获取部门${departmentName}员工失败:`, error);
+    }
+
+    return employees;
+  };
+
   // 计算部门分配金额
   const calculateDepartmentAmounts = () => {
     const updated = departmentAllocations.map(dept => {
@@ -132,11 +308,18 @@ const ProfitDistributionModal: React.FC<ProfitDistributionModalProps> = ({
       };
     });
     
-    setDepartmentAllocations(updated);
+    // 只有当数据真正变化时才更新state
+    const hasChanged = updated.some((dept, index) => {
+      const oldDept = departmentAllocations[index];
+      return !oldDept || 
+             dept.totalAmount !== oldDept.totalAmount ||
+             dept.employeeAmount !== oldDept.employeeAmount ||
+             dept.reserveAmount !== oldDept.reserveAmount;
+    });
     
-    // 计算总权重
-    const total = updated.reduce((sum, dept) => sum + dept.weight, 0);
-    setTotalWeight(total);
+    if (hasChanged) {
+      setDepartmentAllocations(updated);
+    }
   };
 
   // 添加部门分配
@@ -318,15 +501,22 @@ const ProfitDistributionModal: React.FC<ProfitDistributionModalProps> = ({
 
   // 监听权重变化，重新计算
   useEffect(() => {
-    if (profitPool > 0) {
+    if (profitPool > 0 && departmentAllocations.length > 0) {
       calculateDepartmentAmounts();
     }
-  }, [departmentAllocations, profitPool]);
+  }, [profitPool]); // 只依赖profitPool，避免循环
+
+  // 监听部门权重变化
+  useEffect(() => {
+    const totalWeight = departmentAllocations.reduce((sum, dept) => sum + dept.weight, 0);
+    setTotalWeight(totalWeight);
+  }, [departmentAllocations.map(d => d.weight).join(',')]); // 只监听权重变化
 
   // 初始化数据
   useEffect(() => {
     if (visible && project) {
       loadProjectClosure();
+      extractDepartmentsFromProject();
     }
   }, [visible, project]);
 
@@ -343,7 +533,7 @@ const ProfitDistributionModal: React.FC<ProfitDistributionModalProps> = ({
           value={value}
           onChange={(val) => updateDepartment(record.key, 'departmentName', val)}
         >
-          {departmentOptions.map(dept => (
+          {availableDepartments.map(dept => (
             <Option key={dept.value} value={dept.value}>
               {dept.label}
             </Option>
@@ -580,10 +770,11 @@ const ProfitDistributionModal: React.FC<ProfitDistributionModalProps> = ({
                           value={emp.employeeId}
                           onChange={(val) => updateEmployee(dept.key, emp.key, 'employeeId', val)}
                         >
-                          {/* TODO: 从员工API获取选项 */}
-                          <Option value="1">张三</Option>
-                          <Option value="2">李四</Option>
-                          <Option value="3">王五</Option>
+                          {getEmployeesForDepartment(dept.departmentName).map(employee => (
+                            <Option key={employee.value} value={employee.value}>
+                              {employee.label}
+                            </Option>
+                          ))}
                         </Select>
                       </Col>
                       <Col span={5}>

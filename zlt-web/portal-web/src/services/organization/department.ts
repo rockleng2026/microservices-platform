@@ -219,4 +219,14 @@ export async function validateDepartmentLevel(parentId?: number | string, gradeI
     method: 'GET',
     params: { parentId, gradeId },
   });
+}
+
+/**
+ * 批量查询员工所属大部门
+ */
+export async function batchGetEmployeeMainDepartments(employeeIds: string[]) {
+  return request(`${API_PREFIX}/batch-main-departments`, {
+    method: 'POST',
+    data: employeeIds,
+  });
 } 

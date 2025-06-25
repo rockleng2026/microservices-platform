@@ -7,7 +7,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.central.common.context.TenantContextHolder;
 import com.central.organization.mapper.DepartmentMapper;
+import com.central.organization.mapper.EmployeeMapper;
 import com.central.organization.model.Department;
+import com.central.organization.model.Employee;
 import com.central.organization.model.dto.DepartmentQueryDTO;
 import com.central.organization.model.dto.DepartmentSaveDTO;
 import com.central.organization.model.vo.DepartmentTreeVO;
@@ -34,6 +36,9 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
     
     @Autowired
     private DepartmentMapper departmentMapper;
+    
+    @Autowired
+    private EmployeeMapper employeeMapper;
     
     @Override
     public List<DepartmentTreeVO> getDepartmentTree(DepartmentQueryDTO query) {
@@ -553,5 +558,111 @@ public class DepartmentServiceImpl extends ServiceImpl<DepartmentMapper, Departm
         
         Integer parentGrade = parent.getGradeId();
         return parentGrade == null ? 2 : Math.min(parentGrade + 1, 7);
+    }
+    
+    @Override
+    public Map<String, Object> batchGetEmployeeMainDepartments(List<String> employeeIds) {
+        Map<String, Object> result = new HashMap<>();
+        Map<String, Map<String, Object>> employeeDepartmentMap = new HashMap<>();
+        Set<Map<String, Object>> departments = new HashSet<>();
+        
+        try {
+            log.info("开始批量查询员工所属大部门 - 员工数: {}", employeeIds.size());
+            
+            for (String employeeIdStr : employeeIds) {
+                try {
+                    Long employeeId = Long.valueOf(employeeIdStr);
+                    
+                    // 调用员工服务获取员工部门信息
+                    // TODO: 这里需要调用 employee-service 的接口
+                    // 临时从数据库直接查询员工信息
+                    Long departmentId = getEmployeeDepartmentId(employeeId);
+                    
+                    if (departmentId != null) {
+                        log.debug("员工{}的部门ID: {}", employeeId, departmentId);
+                        
+                        // 递归查找大部门
+                        Department mainDept = findMainDepartmentRecursive(departmentId);
+                        
+                        if (mainDept != null) {
+                            Map<String, Object> deptInfo = new HashMap<>();
+                            deptInfo.put("id", String.valueOf(mainDept.getId()));
+                            deptInfo.put("name", mainDept.getName());
+                            
+                            employeeDepartmentMap.put(employeeIdStr, deptInfo);
+                            departments.add(deptInfo);
+                            
+                            log.info("员工{}所属大部门: {} (ID:{})", employeeId, mainDept.getName(), mainDept.getId());
+                        } else {
+                            log.warn("员工{}未找到对应的大部门", employeeId);
+                        }
+                    } else {
+                        log.warn("员工{}没有部门信息", employeeId);
+                    }
+                    
+                } catch (Exception e) {
+                    log.warn("查询员工{}部门信息失败: {}", employeeIdStr, e.getMessage());
+                }
+            }
+            
+            result.put("employeeDepartmentMap", employeeDepartmentMap);
+            result.put("departments", new ArrayList<>(departments));
+            
+            log.info("批量查询完成 - 成功映射员工数: {}, 涉及大部门数: {}", 
+                    employeeDepartmentMap.size(), departments.size());
+            
+        } catch (Exception e) {
+            log.error("批量查询员工大部门失败", e);
+            throw new RuntimeException("批量查询员工大部门失败: " + e.getMessage());
+        }
+        
+        return result;
+    }
+    
+    /**
+     * 获取员工的部门ID
+     */
+    private Long getEmployeeDepartmentId(Long employeeId) {
+        try {
+            Employee employee = employeeMapper.selectById(employeeId);
+            if (employee != null) {
+                log.debug("员工{}的部门ID: {}", employeeId, employee.getDepartmentId());
+                return employee.getDepartmentId();
+            } else {
+                log.warn("未找到员工ID为{}的员工信息", employeeId);
+                return null;
+            }
+        } catch (Exception e) {
+            log.error("获取员工{}部门ID失败", employeeId, e);
+            return null;
+        }
+    }
+    
+    /**
+     * 递归查找大部门（gradeId=2 and parentId=1的二级部门）
+     */
+    private Department findMainDepartmentRecursive(Long departmentId) {
+        try {
+            Department department = getById(departmentId);
+            if (department == null) {
+                return null;
+            }
+            
+            // 如果是大部门（gradeId = 2 且 parentId = 1），直接返回
+            if (department.getGradeId() != null && department.getGradeId().equals(2) &&
+                department.getParentId() != null && department.getParentId().equals(1L)) {
+                return department;
+            }
+            
+            // 否则递归查找父部门
+            if (department.getParentId() != null) {
+                return findMainDepartmentRecursive(department.getParentId());
+            }
+            
+            return null;
+        } catch (Exception e) {
+            log.error("递归查找大部门失败 - 部门ID: {}", departmentId, e);
+            return null;
+        }
     }
 } 

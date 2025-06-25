@@ -7,6 +7,7 @@ import com.central.organization.model.dto.DepartmentSaveDTO;
 import com.central.organization.model.vo.DepartmentTreeVO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 部门服务接口
@@ -135,4 +136,11 @@ public interface IDepartmentService extends IService<Department> {
      * @return 是否成功
      */
     Boolean sortDepartments(List<Long> departmentIds);
+    
+    /**
+     * 批量查询员工所属大部门
+     * @param employeeIds 员工ID列表
+     * @return 包含员工与大部门映射关系的结果
+     */
+    Map<String, Object> batchGetEmployeeMainDepartments(List<String> employeeIds);
 } 

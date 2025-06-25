@@ -381,4 +381,20 @@ public class DepartmentController {
             return Result.failed("验证部门级别失败：" + e.getMessage());
         }
     }
+    
+    @Operation(summary = "批量查询员工所属大部门", description = "根据员工ID列表，批量查询其所属的大部门（parent_id=1的二级部门）")
+    @PostMapping("/batch-main-departments")
+    public Result<Map<String, Object>> batchGetEmployeeMainDepartments(@RequestBody List<String> employeeIds) {
+        try {
+            log.info("批量查询员工大部门请求 - 员工ID列表: {}", employeeIds);
+            
+            Map<String, Object> result = departmentService.batchGetEmployeeMainDepartments(employeeIds);
+            
+            log.info("批量查询员工大部门完成 - 员工数: {}, 结果: {}", employeeIds.size(), result);
+            return Result.succeed(result);
+        } catch (Exception e) {
+            log.error("批量查询员工大部门失败", e);
+            return Result.failed("批量查询员工大部门失败：" + e.getMessage());
+        }
+    }
 } 

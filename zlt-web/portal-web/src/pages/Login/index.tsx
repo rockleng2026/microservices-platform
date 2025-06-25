@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_ENDPOINTS, API_PATHS, getApiUrl } from '@/config/api';
 import { Card, Form, Input, Button, Checkbox, message, Typography } from 'antd';
 import { UserOutlined, LockOutlined, SafetyOutlined, ReloadOutlined } from '@ant-design/icons';
 import { history } from 'umi';
@@ -26,8 +27,8 @@ const Login: React.FC = () => {
     const newDeviceId = generateDeviceId();
     setDeviceId(newDeviceId);
     
-    // 直接构建验证码URL，不需要异步调用
-          const captchaImageUrl = `http://127.0.0.1:9900/api-uaa/validata/code/${newDeviceId}`;
+    // 使用统一配置的验证码URL
+    const captchaImageUrl = API_PATHS.CAPTCHA(newDeviceId);
     setCaptchaUrl(captchaImageUrl);
     
     console.log('刷新验证码，设备ID:', newDeviceId);

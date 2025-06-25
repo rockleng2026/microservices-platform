@@ -1,4 +1,4 @@
-import { request } from 'umi';
+import { request } from '@/utils/request';
 // 引入统一API配置
 import { API_ENDPOINTS, API_PATHS, getApiUrl } from '@/config/api';
 
@@ -40,7 +40,7 @@ export async function login(params: LoginParams) {
   formData.append('deviceId', params.deviceId);
   formData.append('validCode', params.validCode);
   formData.append('grant_type', 'password_code');
-  formData.append('scope', 'app');
+  formData.append('account_type', 'portal');
 
   if (params.rememberMe) {
     formData.append('rememberMe', 'true');

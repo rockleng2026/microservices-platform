@@ -1,5 +1,6 @@
-import { request } from '../utils/request';
-import { API_ENDPOINTS, API_PATHS } from '@/config/api';
+import { request } from '@/utils/request';
+// 引入统一API配置
+import { API_ENDPOINTS, API_PATHS, getApiUrl } from '@/config/api';
 
 /**
  * Portal用户相关API接口

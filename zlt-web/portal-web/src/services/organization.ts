@@ -1,4 +1,4 @@
-import { request } from 'umi';
+import { request } from '@/utils/request';
 // 引入统一API配置
 import { API_ENDPOINTS, API_PATHS, getApiUrl } from '@/config/api';
 
@@ -238,5 +238,7 @@ interface Position {
   enabled: boolean;
   sort?: number;
 }
+
+// 类型定义已在 typings.d.ts 中全局声明
 
 export type { Department, Employee, Position, ApiResponse }; 

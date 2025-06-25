@@ -7,6 +7,7 @@ import com.central.project.model.ProjectClosure;
 import com.central.project.model.ProjectProfitDistribution;
 import com.central.project.model.dto.ProjectQueryDTO;
 import com.central.project.model.dto.ProjectSaveDTO;
+import com.central.project.model.dto.ProjectProfitDistributionSaveDTO;
 
 import java.util.List;
 import java.util.Map;
@@ -216,4 +217,11 @@ public interface IProjectService extends IService<Project> {
      * @return 是否成功
      */
     Boolean approveProfitDistribution(Long projectId, Boolean approved, String reason);
+    
+    /**
+     * 保存项目提成分配方案（部门-员工层级）
+     * @param saveDTO 提成分配数据
+     * @return 是否成功
+     */
+    Boolean saveProfitDistribution(ProjectProfitDistributionSaveDTO saveDTO);
 } 

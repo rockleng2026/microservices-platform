@@ -45,7 +45,13 @@ public class ProjectProfitDistribution {
     private Long guideId;
     
     /**
-     * 分配员工ID
+     * 分配部门ID
+     */
+    @JsonSerialize(using = ToStringSerializer.class)
+    private Long deptId;
+    
+    /**
+     * 分配员工ID（可选，部门提成时为空，员工提成时填写）
      */
     @JsonSerialize(using = ToStringSerializer.class)
     private Long employeeId;

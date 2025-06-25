@@ -56,6 +56,11 @@ public class Project {
     private Long leaderId;
     
     /**
+     * 最大分配比例（默认0.5即50%）
+     */
+    private Float maxDistribution;
+    
+    /**
      * 项目客户名称
      */
     private String customerName;

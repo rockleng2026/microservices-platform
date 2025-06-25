@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.central.common.context.LoginUserContextHolder;
 import com.central.project.mapper.ProjectMapper;
 import com.central.project.model.Project;
 import com.central.project.model.ProjectClosure;
@@ -11,9 +12,11 @@ import com.central.project.model.ProjectDetail;
 import com.central.project.model.ProjectProfitDistribution;
 import com.central.project.model.dto.ProjectQueryDTO;
 import com.central.project.model.dto.ProjectSaveDTO;
+import com.central.project.model.dto.ProjectProfitDistributionSaveDTO;
 import com.central.project.service.IProjectService;
 import com.central.project.service.IProjectDetailService;
 import com.central.project.service.IProjectClosureService;
+import com.central.project.service.IProjectProfitDistributionService;
 import com.central.project.utils.IdUtils;
 import com.central.common.context.TenantContextHolder;
 import org.springframework.beans.BeanUtils;
@@ -42,6 +45,9 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     
     @Autowired
     private IProjectClosureService projectClosureService;
+    
+    @Autowired
+    private IProjectProfitDistributionService projectProfitDistributionService;
     
     @Override
     public IPage<Project> getProjectPage(ProjectQueryDTO queryDTO) {
@@ -527,9 +533,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             return new ArrayList<>();
         }
         
-        // TODO: 实现从 project_profit_distribution 表查询分配信息
-        // 临时返回空列表
-        return new ArrayList<>();
+        // 从数据库查询项目提成分配记录
+        return projectProfitDistributionService.getByProjectId(projectId);
     }
     
     @Override
@@ -546,5 +551,117 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         // 临时实现：返回成功
         log.info("审批项目提成分配，项目ID: {}, 审批结果: {}, 意见: {}", projectId, approved, reason);
         return true;
+    }
+    
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean saveProfitDistribution(ProjectProfitDistributionSaveDTO saveDTO) {
+        if (saveDTO == null || saveDTO.getProjectId() == null || 
+            saveDTO.getDepartmentAllocations() == null || saveDTO.getDepartmentAllocations().isEmpty()) {
+            log.error("提成分配数据不完整");
+            return false;
+        }
+        
+        try {
+            Long projectId = saveDTO.getProjectId();
+            Date now = new Date();
+            String tenantId = TenantContextHolder.getTenant();
+            if (!StringUtils.hasText(tenantId)) {
+                tenantId = "default";
+            }
+            
+            // 1. 更新项目的最大分配比例
+            if (saveDTO.getMaxDistributionRatio() != null) {
+                Project project = new Project();
+                project.setId(projectId);
+                project.setMaxDistribution(saveDTO.getMaxDistributionRatio().floatValue() / 100); // 转换为小数
+                project.setUpdatedAt(now);
+                project.setUpdatedBy(LoginUserContextHolder.getUser().getId());
+                updateById(project);
+            }
+            
+            // 2. 先删除项目已有的提成分配记录-以后提成的话审批通过的不能修改
+            // TODO: 先删除项目已有的提成,注意：分配记录-提成已经审批通过的不能修改
+            
+            // 检查是否有已审批通过的提成分配记录
+            Boolean hasApproved = projectProfitDistributionService.hasApprovedDistribution(projectId);
+            if (hasApproved) {
+                log.error("项目已有审批通过的提成分配记录，不能修改，项目ID: {}", projectId);
+                return false;
+            }
+            
+            // 删除项目已有的提成分配记录（未审批的）
+            Boolean deleteResult = projectProfitDistributionService.deleteByProjectId(projectId);
+            log.info("删除项目原有提成分配记录，项目ID: {}, 删除结果: {}", projectId, deleteResult);
+            
+            // 3. 收集所有需要保存的提成分配记录
+            List<ProjectProfitDistribution> allDistributions = new ArrayList<>();
+            Long currentUserId = LoginUserContextHolder.getUser().getId();
+            
+            // 4. 保存部门和员工的提成分配记录
+            for (ProjectProfitDistributionSaveDTO.DepartmentAllocationDTO deptAllocation : saveDTO.getDepartmentAllocations()) {
+                // 保存部门提成分配记录
+                ProjectProfitDistribution deptDistribution = new ProjectProfitDistribution();
+                deptDistribution.setProjectId(projectId);
+                deptDistribution.setDeptId(deptAllocation.getDepartmentId());
+                deptDistribution.setEmployeeId(null); // 部门记录员工ID为空
+                deptDistribution.setRole("部门分配");
+                deptDistribution.setDistributionType("比例");
+                deptDistribution.setDistributionValue(deptAllocation.getWeight());
+                deptDistribution.setTenantId(tenantId);
+                deptDistribution.setCreatedAt(now);
+                deptDistribution.setUpdatedAt(now);
+                deptDistribution.setCreatedBy(1L);
+                deptDistribution.setUpdatedBy(1L);
+                deptDistribution.setDelflag(0);
+                
+                log.info("保存部门提成分配: 项目ID={}, 部门ID={}, 权重={}%", 
+                    projectId, deptAllocation.getDepartmentId(), deptAllocation.getWeight());
+                
+                allDistributions.add(deptDistribution);
+                
+                // 保存员工提成分配记录
+                if (deptAllocation.getEmployeeDistributions() != null && !deptAllocation.getEmployeeDistributions().isEmpty()) {
+                    for (ProjectProfitDistributionSaveDTO.EmployeeDistributionDTO empDistribution : deptAllocation.getEmployeeDistributions()) {
+                        ProjectProfitDistribution empProfitDistribution = new ProjectProfitDistribution();
+                        empProfitDistribution.setProjectId(projectId);
+                        empProfitDistribution.setDeptId(deptAllocation.getDepartmentId());
+                        empProfitDistribution.setEmployeeId(empDistribution.getEmployeeId());
+                        empProfitDistribution.setRole("员工分配");
+                        empProfitDistribution.setDistributionType(empDistribution.getIsFixedAmount() ? "金额" : "比例");
+                        empProfitDistribution.setDistributionValue(
+                            empDistribution.getIsFixedAmount() ? empDistribution.getAmount() : empDistribution.getWeight()
+                        );
+                        empProfitDistribution.setTenantId(tenantId);
+                        empProfitDistribution.setCreatedAt(now);
+                        empProfitDistribution.setUpdatedAt(now);
+                        empProfitDistribution.setCreatedBy(currentUserId);
+                        empProfitDistribution.setUpdatedBy(currentUserId);
+                        empProfitDistribution.setDelflag(0);
+                        
+                        allDistributions.add(empProfitDistribution);
+                        
+                        log.info("准备保存员工提成分配: 项目ID={}, 部门ID={}, 员工ID={}, 类型={}, 数值={}", 
+                            projectId, deptAllocation.getDepartmentId(), empDistribution.getEmployeeId(),
+                            empProfitDistribution.getDistributionType(), empProfitDistribution.getDistributionValue());
+                    }
+                }
+            }
+            
+            // 5. 批量保存所有提成分配记录
+            Boolean batchSaveResult = projectProfitDistributionService.batchSave(allDistributions);
+            if (!batchSaveResult) {
+                log.error("批量保存提成分配记录失败，项目ID: {}", projectId);
+                return false;
+            }
+            
+            log.info("项目提成分配保存成功，项目ID: {}, 部门数量: {}, 总记录数: {}", 
+                projectId, saveDTO.getDepartmentAllocations().size(), allDistributions.size());
+            return true;
+            
+        } catch (Exception e) {
+            log.error("保存项目提成分配失败，项目ID: {}", saveDTO.getProjectId(), e);
+            throw e; // 重新抛出异常，触发事务回滚
+        }
     }
 } 

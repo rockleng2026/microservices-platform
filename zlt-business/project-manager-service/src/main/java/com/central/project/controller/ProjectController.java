@@ -7,6 +7,7 @@ import com.central.project.model.ProjectClosure;
 import com.central.project.model.ProjectProfitDistribution;
 import com.central.project.model.dto.ProjectQueryDTO;
 import com.central.project.model.dto.ProjectSaveDTO;
+import com.central.project.model.dto.ProjectProfitDistributionSaveDTO;
 import com.central.project.service.IProjectService;
 import com.central.project.utils.IdUtils;
 import io.swagger.v3.oas.annotations.Operation;
@@ -600,6 +601,23 @@ public class ProjectController {
             return result ? Result.succeed(true, "提成分配审批成功") : Result.failed("提成分配审批失败");
         } catch (Exception e) {
             log.error("项目提成分配审批失败，ID: {}", id, e);
+            return Result.failed(e.getMessage());
+        }
+    }
+    
+    /**
+     * 保存项目提成分配方案（部门-员工层级）
+     * @param saveDTO 提成分配数据
+     * @return 操作结果
+     */
+    @PostMapping("/profit-distribution/save")
+    @Operation(summary = "保存项目提成分配方案", description = "保存部门-员工层级的毛利分配方案")
+    public Result<Boolean> saveProfitDistribution(@Valid @RequestBody ProjectProfitDistributionSaveDTO saveDTO) {
+        try {
+            Boolean result = projectService.saveProfitDistribution(saveDTO);
+            return result ? Result.succeed(true, "提成分配方案保存成功") : Result.failed("提成分配方案保存失败");
+        } catch (Exception e) {
+            log.error("保存项目提成分配失败，projectId: {}", saveDTO.getProjectId(), e);
             return Result.failed(e.getMessage());
         }
     }

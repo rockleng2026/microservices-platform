@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.project.mapper.ProjectProfitDistributionMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.central.project.model.ProjectProfitDistribution">
+        <id column="id" property="id" />
+        <result column="project_id" property="projectId" />
+        <result column="guide_id" property="guideId" />
+        <result column="dept_id" property="deptId" />
+        <result column="employee_id" property="employeeId" />
+        <result column="role" property="role" />
+        <result column="distribution_type" property="distributionType" />
+        <result column="distribution_value" property="distributionValue" />
+        <result column="process_instance_id" property="processInstanceId" />
+        <result column="final_status" property="finalStatus" />
+        <result column="tenant_id" property="tenantId" />
+        <result column="created_by" property="createdBy" />
+        <result column="updated_by" property="updatedBy" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="delflag" property="delflag" />
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, project_id, guide_id, dept_id, employee_id, role, distribution_type, distribution_value,
+        process_instance_id, final_status, tenant_id, created_by, updated_by, created_at, updated_at, delflag
+    </sql>
+
+    <!-- 根据项目ID查询提成分配记录 -->
+    <select id="selectByProjectId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM project_profit_distribution
+        WHERE project_id = #{projectId} AND delflag = 0
+        ORDER BY created_at ASC
+    </select>
+
+    <!-- 根据项目ID删除提成分配记录 -->
+    <update id="deleteByProjectId">
+        UPDATE project_profit_distribution 
+        SET delflag = 1, updated_at = NOW()
+        WHERE project_id = #{projectId} AND delflag = 0
+    </update>
+
+    <!-- 根据项目ID和审批状态查询提成分配记录 -->
+    <select id="selectByProjectIdAndStatus" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List" />
+        FROM project_profit_distribution
+        WHERE project_id = #{projectId} AND delflag = 0
+        <if test="finalStatus != null and finalStatus != ''">
+            AND final_status = #{finalStatus}
+        </if>
+        ORDER BY created_at ASC
+    </select>
+
+    <!-- 批量插入提成分配记录 -->
+    <insert id="batchInsert">
+        INSERT INTO project_profit_distribution (
+            project_id, guide_id, dept_id, employee_id, role, distribution_type, distribution_value,
+            process_instance_id, final_status, tenant_id, created_by, updated_by, created_at, updated_at, delflag
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (
+                #{item.projectId}, #{item.guideId}, #{item.deptId}, #{item.employeeId}, #{item.role},
+                #{item.distributionType}, #{item.distributionValue}, #{item.processInstanceId}, #{item.finalStatus},
+                #{item.tenantId}, #{item.createdBy}, #{item.updatedBy}, #{item.createdAt}, #{item.updatedAt}, #{item.delflag}
+            )
+        </foreach>
+    </insert>
+
+</mapper> 

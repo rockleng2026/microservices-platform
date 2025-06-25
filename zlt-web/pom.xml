@@ -17,5 +17,6 @@
         <module>layui-web</module>
         <!-- React开发的前端(Ant Design) -->
         <module>react-web</module>
+        <module>portal-web</module>
     </modules>
 </project>

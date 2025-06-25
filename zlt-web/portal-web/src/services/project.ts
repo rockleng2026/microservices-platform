@@ -396,4 +396,14 @@ export const approvalApi = {
       data: { approved, comment },
     });
   },
-}; 
+};
+
+/**
+ * 保存项目提成分配
+ */
+export function saveProfitDistribution(data: any) {
+  return request('/api/project-manager/projects/profit-distribution', {
+    method: 'POST',
+    data,
+  });
+} 

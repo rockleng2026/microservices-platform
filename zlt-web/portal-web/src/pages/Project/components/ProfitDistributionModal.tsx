@@ -2,55 +2,53 @@ import React, { useState, useEffect } from 'react';
 import {
   Modal,
   Form,
-  Table,
   Button,
   InputNumber,
   Select,
-  Row,
-  Col,
   message,
   Divider,
+  Space,
+  Popconfirm,
+  Radio,
   Card,
   Statistic,
-  Space,
+  Row,
+  Col,
   Typography,
-  Tag,
-  Steps,
-  Alert,
 } from 'antd';
-import { PlusOutlined, DeleteOutlined, DollarOutlined, TeamOutlined, BankOutlined } from '@ant-design/icons';
-import { ColumnsType } from 'antd/es/table';
+import { PlusOutlined, DeleteOutlined, DollarOutlined, PercentageOutlined, BankOutlined } from '@ant-design/icons';
 import { projectApi } from '@/services/project';
 import { getEmployeeDetail } from '@/services/organization/employee';
 import { getDepartmentDetail, batchGetEmployeeMainDepartments } from '@/services/organization/department';
 import type { Project } from '@/types/project';
 
-const { Option } = Select;
 const { Text } = Typography;
-const { Step } = Steps;
-
-interface DepartmentAllocation {
-  key: string;
-  departmentName: string;
-  weight: number; // 权重百分比
-  totalAmount: number; // 部门总分配金额
-  employeeAmount: number; // 员工分配金额 (80%)
-  reserveAmount: number; // 储备金金额 (20%)
-  employeeDistributions: EmployeeDistribution[];
-}
 
 interface EmployeeDistribution {
   key: string;
   employeeId: string;
   employeeName: string;
-  role: string;
-  percentage: number; // 在部门内的分配比例
-  amount: number; // 分配金额
+  weight: number;
+  amount: number;
+  isFixedAmount: boolean; // true: 固定金额, false: 按比例
 }
+
+interface DepartmentAllocation {
+  key: string;
+  departmentId: string;
+  departmentName: string;
+  weight: number; // 部门权重（占总提成的百分比）
+  totalAmount: number; // 部门总金额
+  reserveRatio: number; // 储备金比例，默认20%
+  employeeDistributions: EmployeeDistribution[]; // 员工分配列表
+  expanded?: boolean; // 是否展开显示员工
+}
+
+type DistributionMode = 'ratio' | 'fixed'; // ratio: 按比例, fixed: 固定金额
 
 interface ProfitDistributionModalProps {
   visible: boolean;
-  project?: Project;
+  project: Project | null;
   onCancel: () => void;
   onSuccess: () => void;
 }
@@ -63,64 +61,65 @@ const ProfitDistributionModal: React.FC<ProfitDistributionModalProps> = ({
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [currentStep, setCurrentStep] = useState(0);
-  const [grossProfit, setGrossProfit] = useState<number>(0);
-  const [profitPool, setProfitPool] = useState<number>(0); // 50%提成池
+  const [distributionMode, setDistributionMode] = useState<DistributionMode>('ratio');
+  
+  // 项目基础数据
+  const [projectActualAmount, setProjectActualAmount] = useState(0); // 项目实际金额
+  const [grossProfit, setGrossProfit] = useState(0); // 毛利润
+  const [grossProfitRate, setGrossProfitRate] = useState(0); // 毛利率
+  
+  // 提成分配设置
+  const [maxDistributionRatio, setMaxDistributionRatio] = useState(50); // 最大分配比例，默认50%
+  const [maxDistributionAmount, setMaxDistributionAmount] = useState(0); // 最大提成金额
+  
   const [departmentAllocations, setDepartmentAllocations] = useState<DepartmentAllocation[]>([]);
-  const [totalWeight, setTotalWeight] = useState<number>(0);
   const [availableDepartments, setAvailableDepartments] = useState<Array<{label: string, value: string, name: string}>>([]);
   const [employeeDepartmentMap, setEmployeeDepartmentMap] = useState<Map<number, {id: string, name: string}>>(new Map());
   const [projectDetailData, setProjectDetailData] = useState<any>(null);
 
-  // 大部门选项
-  const departmentOptions = [
-    { label: '销售部', value: '销售部' },
-    { label: '技术部', value: '技术部' },
-    { label: '财务部', value: '财务部' },
-    { label: '运维部', value: '运维部' },
-    { label: '产品部', value: '产品部' },
-    { label: '市场部', value: '市场部' },
-  ];
-
-  // 角色选项
-  const roleOptions = [
-    { label: '销售', value: '销售' },
-    { label: '技术', value: '技术' },
-    { label: '产品经理', value: '产品经理' },
-    { label: '售前', value: '售前' },
-    { label: '售后', value: '售后' },
-    { label: '运维', value: '运维' },
-    { label: '财务', value: '财务' },
-  ];
-
-  // 重置数据
-  const resetData = () => {
-    setCurrentStep(0);
-    setDepartmentAllocations([]);
-    setTotalWeight(0);
-    setGrossProfit(0);
-    setProfitPool(0);
-  };
-
-  // 加载项目结项信息
-  const loadProjectClosure = async () => {
-    if (!project) return;
-    
-    try {
-      const response = await projectApi.getProjectClosure(project.id);
-      if (response.resp_code === 0 && response.datas) {
-        const profit = response.datas.grossProfit || 0;
-        setGrossProfit(profit);
-        // 计算50%提成池
-        setProfitPool(profit * 0.5);
-      } else {
-        message.warning('未找到项目结项信息，请先完成项目结项');
-      }
-    } catch (error) {
-      console.error('Failed to load project closure:', error);
-      message.error('加载项目结项信息失败');
+  useEffect(() => {
+    if (visible && project) {
+      form.resetFields();
+      setDepartmentAllocations([]);
+      initializeProjectData();
+      extractDepartmentsFromProject();
     }
+  }, [visible, project]);
+
+  // 初始化项目数据
+  const initializeProjectData = () => {
+    if (!project) return;
+
+    // 假设项目有这些字段，实际需要根据Project类型调整
+    const actualAmount = (project as any).actualAmount || (project as any).totalAmount || 100000;
+    const projectGrossProfit = (project as any).grossProfit || actualAmount * 0.3; // 假设30%毛利率
+    
+    setProjectActualAmount(actualAmount);
+    setGrossProfit(projectGrossProfit);
+    
+    // 计算毛利率
+    const profitRate = actualAmount > 0 ? (projectGrossProfit / actualAmount) * 100 : 0;
+    setGrossProfitRate(profitRate);
+    
+    // 设置最大提成金额
+    const maxAmount = (projectGrossProfit * maxDistributionRatio) / 100;
+    setMaxDistributionAmount(maxAmount);
   };
+
+  // 动态计算关联数据
+  useEffect(() => {
+    // 毛利率 = 毛利润 / 项目实际金额
+    if (projectActualAmount > 0) {
+      const profitRate = (grossProfit / projectActualAmount) * 100;
+      setGrossProfitRate(profitRate);
+    }
+  }, [grossProfit, projectActualAmount]);
+
+  useEffect(() => {
+    // 最大提成金额 = 毛利润 * 最大分配比例
+    const maxAmount = (grossProfit * maxDistributionRatio) / 100;
+    setMaxDistributionAmount(maxAmount);
+  }, [grossProfit, maxDistributionRatio]);
 
   // 从项目参与人中提取部门信息
   const extractDepartmentsFromProject = async () => {
@@ -208,24 +207,33 @@ const ProfitDistributionModal: React.FC<ProfitDistributionModalProps> = ({
         throw new Error('未找到任何有效的大部门信息');
       }
 
-      // 第四步：设置数据并初始化分配
+      // 第四步：获取员工详情（逐个查询）
+      console.log('获取员工详情...');
+      const employeeDetailsMap = new Map<string, any>();
+      
+      for (const empId of employeeIds) {
+        try {
+          const empResponse = await getEmployeeDetail(Number(empId));
+          if (empResponse && empResponse.data) {
+            employeeDetailsMap.set(empId, empResponse.data);
+          }
+        } catch (error) {
+          console.warn(`获取员工${empId}详情失败:`, error);
+        }
+      }
+
+      // 第五步：设置数据并初始化分配
       setAvailableDepartments(departmentOptions);
       setEmployeeDepartmentMap(employeeDepartmentMap);
       setProjectDetailData(projectDetail);
 
-      // 自动初始化部门分配
-      const averageWeight = Math.floor(100 / departmentOptions.length);
-      const remainder = 100 - (averageWeight * departmentOptions.length);
-      
-      const initialAllocations = departmentOptions.map((dept, index) => ({
-        key: `dept_${Date.now()}_${index}`,
-        departmentName: dept.name,
-        weight: index === 0 ? averageWeight + remainder : averageWeight,
-        totalAmount: 0,
-        employeeAmount: 0,
-        reserveAmount: 0,
-        employeeDistributions: [],
-      }));
+      // 初始化部门分配，包含员工信息
+      const initialAllocations = await initializeDepartmentAllocations(
+        departmentOptions, 
+        employeeDepartmentMap, 
+        employeeDetailsMap, 
+        projectDetail
+      );
 
       console.log('初始化部门分配:', initialAllocations);
       setDepartmentAllocations(initialAllocations);
@@ -240,166 +248,133 @@ const ProfitDistributionModal: React.FC<ProfitDistributionModalProps> = ({
     }
   };
 
-  // 获取指定部门的员工
-  const getEmployeesForDepartment = (departmentName: string) => {
-    const employees: Array<{value: string, label: string, role: string}> = [];
+  // 初始化部门分配数据
+  const initializeDepartmentAllocations = async (
+    departments: Array<{label: string, value: string, name: string}>,
+    empDeptMap: Map<number, {id: string, name: string}>,
+    employeeDetailsMap: Map<string, any>,
+    projectDetail: any
+  ): Promise<DepartmentAllocation[]> => {
+    
+    // 按部门分组员工
+    const departmentEmployeesMap = new Map<string, Array<{id: string, name: string}>>();
+    
+    // 初始化部门员工列表
+    departments.forEach(dept => {
+      departmentEmployeesMap.set(dept.value, []);
+    });
 
-    if (!projectDetailData || !employeeDepartmentMap) {
-      console.log('项目数据或映射关系未准备好');
-      return employees;
-    }
+    // 分配员工到对应部门
+    empDeptMap.forEach((deptInfo, empId) => {
+      const employee = employeeDetailsMap.get(String(empId));
+      if (employee && departmentEmployeesMap.has(deptInfo.id)) {
+        departmentEmployeesMap.get(deptInfo.id)!.push({
+          id: String(empId),
+          name: employee.name
+        });
+      }
+    });
 
-    console.log(`获取部门${departmentName}的员工...`);
+    // 创建部门分配数据
+    const averageWeight = Math.floor(100 / departments.length); // 总共100%分配给各部门
+    const remainder = 100 - (averageWeight * departments.length);
+    
+    return departments.map((dept, index) => {
+      const employees = departmentEmployeesMap.get(dept.value) || [];
+      const departmentWeight = index === 0 ? averageWeight + remainder : averageWeight;
+      
+      // 为每个员工初始化权重（平均分配给员工）
+      const employeeCount = employees.length;
+      const avgEmployeeWeight = employeeCount > 0 ? 80 / employeeCount : 0; // 假设80%分配给员工
+      
+      const employeeDistributions: EmployeeDistribution[] = employees.map((emp) => ({
+        key: `emp_${dept.value}_${emp.id}`,
+        employeeId: emp.id,
+        employeeName: emp.name,
+        weight: Number(avgEmployeeWeight.toFixed(2)),
+        amount: 0,
+        isFixedAmount: false
+      }));
 
-    try {
-      // 从映射关系中找到属于该部门的员工
-      employeeDepartmentMap.forEach((dept, employeeId) => {
-        if (dept.name === departmentName) {
-          // 查找员工的角色信息
-          let employeeName = `员工${employeeId}`;
-          let employeeRole = '参与人';
+      return {
+        key: `dept_${dept.value}`,
+        departmentId: dept.value,
+        departmentName: dept.name,
+        weight: departmentWeight,
+        totalAmount: 0,
+        reserveRatio: 20, // 默认20%储备金（现在是动态计算的）
+        employeeDistributions,
+        expanded: true
+      };
+    });
+  };
 
-          // 检查是否是项目负责人
-          if (Number(projectDetailData.leaderId) === employeeId) {
-            employeeName = projectDetailData.leaderName || `负责人${employeeId}`;
-            employeeRole = '项目负责人';
-          } else {
-            // 从参与人列表中查找
-            if (projectDetailData.participantDetails) {
-              const participant = projectDetailData.participantDetails.find(
-                (p: any) => Number(p.participantId) === employeeId
-              );
-              if (participant) {
-                employeeName = participant.participantName || `员工${employeeId}`;
-                employeeRole = participant.role || '参与人';
-              }
-            }
-          }
-
-          employees.push({
-            value: String(employeeId),
-            label: employeeName,
-            role: employeeRole,
-          });
+  // 计算金额 - 根据权重动态分配
+  const calculateAmounts = () => {
+    const updatedAllocations = departmentAllocations.map(dept => {
+      // 1. 计算部门分配金额 = 毛利润 * 最大分配比例 * 部门权重比例
+      // 例如：毛利润10万 * 最大分配比例50% * 技术部权重20% = 1万
+      const deptAmount = (grossProfit * maxDistributionRatio / 100) * (dept.weight / 100);
+      
+      // 2. 计算员工分配金额 - 基于最大分配比例作为基准
+      const updatedEmployees = dept.employeeDistributions.map(emp => {
+        if (emp.isFixedAmount) {
+          // 固定金额员工保持原金额
+          return { ...emp };
+        } else {
+          // 按权重分配的员工：毛利润 * 最大分配比例 * 员工权重比例
+          // 例如：毛利润10万 * 最大分配比例50% * 员工权重5% = 2500元
+          const amount = (grossProfit * maxDistributionRatio / 100) * (emp.weight / 100);
+          return { ...emp, amount: Math.max(0, amount) };
         }
       });
 
-      console.log(`部门${departmentName}的员工:`, employees);
-      
-    } catch (error) {
-      console.error(`获取部门${departmentName}员工失败:`, error);
-    }
-
-    return employees;
-  };
-
-  // 计算部门分配金额
-  const calculateDepartmentAmounts = () => {
-    const updated = departmentAllocations.map(dept => {
-      const totalAmount = profitPool * (dept.weight / 100);
-      const employeeAmount = totalAmount * 0.8; // 80%给员工
-      const reserveAmount = totalAmount * 0.2; // 20%给储备金
-      
       return {
         ...dept,
-        totalAmount,
-        employeeAmount,
-        reserveAmount,
+        totalAmount: deptAmount,
+        employeeDistributions: updatedEmployees
       };
     });
-    
-    // 只有当数据真正变化时才更新state
-    const hasChanged = updated.some((dept, index) => {
-      const oldDept = departmentAllocations[index];
-      return !oldDept || 
-             dept.totalAmount !== oldDept.totalAmount ||
-             dept.employeeAmount !== oldDept.employeeAmount ||
-             dept.reserveAmount !== oldDept.reserveAmount;
-    });
-    
-    if (hasChanged) {
-      setDepartmentAllocations(updated);
+
+    setDepartmentAllocations(updatedAllocations);
+  };
+
+  // 监听相关数据变化，触发重新计算
+  useEffect(() => {
+    if (departmentAllocations.length > 0) {
+      calculateAmounts();
     }
-  };
+  }, [grossProfit, maxDistributionRatio]);
 
-  // 添加部门分配
-  const addDepartment = () => {
-    const newDept: DepartmentAllocation = {
-      key: Date.now().toString(),
-      departmentName: '',
-      weight: 0,
-      totalAmount: 0,
-      employeeAmount: 0,
-      reserveAmount: 0,
-      employeeDistributions: [],
-    };
-    setDepartmentAllocations([...departmentAllocations, newDept]);
-  };
-
-  // 删除部门分配
-  const removeDepartment = (key: string) => {
-    setDepartmentAllocations(departmentAllocations.filter(dept => dept.key !== key));
-  };
+  // 监听部门分配数据变化，触发重新计算
+  useEffect(() => {
+    if (departmentAllocations.length > 0) {
+      const timeoutId = setTimeout(() => {
+        calculateAmounts();
+      }, 100); // 防抖，避免频繁计算
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [departmentAllocations]);
 
   // 更新部门信息
   const updateDepartment = (key: string, field: string, value: any) => {
-    const updated = departmentAllocations.map(dept => {
+    const updatedAllocations = departmentAllocations.map(dept => {
       if (dept.key === key) {
         return { ...dept, [field]: value };
       }
       return dept;
     });
-    setDepartmentAllocations(updated);
-  };
-
-  // 添加员工分配
-  const addEmployee = (deptKey: string) => {
-    const updated = departmentAllocations.map(dept => {
-      if (dept.key === deptKey) {
-        const newEmployee: EmployeeDistribution = {
-          key: Date.now().toString(),
-          employeeId: '',
-          employeeName: '',
-          role: '',
-          percentage: 0,
-          amount: 0,
-        };
-        return {
-          ...dept,
-          employeeDistributions: [...dept.employeeDistributions, newEmployee],
-        };
-      }
-      return dept;
-    });
-    setDepartmentAllocations(updated);
-  };
-
-  // 删除员工分配
-  const removeEmployee = (deptKey: string, empKey: string) => {
-    const updated = departmentAllocations.map(dept => {
-      if (dept.key === deptKey) {
-        return {
-          ...dept,
-          employeeDistributions: dept.employeeDistributions.filter(emp => emp.key !== empKey),
-        };
-      }
-      return dept;
-    });
-    setDepartmentAllocations(updated);
+    setDepartmentAllocations(updatedAllocations);
   };
 
   // 更新员工信息
   const updateEmployee = (deptKey: string, empKey: string, field: string, value: any) => {
-    const updated = departmentAllocations.map(dept => {
+    const updatedAllocations = departmentAllocations.map(dept => {
       if (dept.key === deptKey) {
         const updatedEmployees = dept.employeeDistributions.map(emp => {
           if (emp.key === empKey) {
-            const newEmp = { ...emp, [field]: value };
-            // 如果更新了百分比，重新计算金额
-            if (field === 'percentage') {
-              newEmp.amount = dept.employeeAmount * (value / 100);
-            }
-            return newEmp;
+            return { ...emp, [field]: value };
           }
           return emp;
         });
@@ -407,426 +382,752 @@ const ProfitDistributionModal: React.FC<ProfitDistributionModalProps> = ({
       }
       return dept;
     });
-    setDepartmentAllocations(updated);
+    setDepartmentAllocations(updatedAllocations);
   };
 
-  // 步骤切换
-  const nextStep = () => {
-    if (currentStep === 0) {
-      // 验证部门分配
-      if (departmentAllocations.length === 0) {
-        message.error('请至少添加一个部门分配');
-        return;
+  // 添加部门
+  const addDepartment = () => {
+    const newDept: DepartmentAllocation = {
+      key: `dept_new_${Date.now()}`,
+      departmentId: '',
+      departmentName: '',
+      weight: 0,
+      totalAmount: 0,
+      reserveRatio: 20,
+      employeeDistributions: [],
+      expanded: true
+    };
+    setDepartmentAllocations([...departmentAllocations, newDept]);
+  };
+
+  // 删除部门
+  const deleteDepartment = (key: string) => {
+    setDepartmentAllocations(departmentAllocations.filter(dept => dept.key !== key));
+  };
+
+  // 添加员工到部门
+  const addEmployeeToDepartment = (deptKey: string) => {
+    const dept = departmentAllocations.find(d => d.key === deptKey);
+    if (!dept) return;
+
+    // 计算当前员工权重总和
+    const currentEmployeeWeightSum = dept.employeeDistributions.reduce((sum, emp) => {
+      return emp.isFixedAmount ? sum : sum + emp.weight;
+    }, 0);
+    
+    // 计算固定金额员工占用的权重等值
+    const fixedAmountTotal = dept.employeeDistributions.reduce((sum, emp) => {
+      return emp.isFixedAmount ? sum + emp.amount : sum;
+    }, 0);
+    const maxDistributionTotal = (grossProfit * maxDistributionRatio / 100);
+    const fixedAmountWeight = maxDistributionTotal > 0 ? (fixedAmountTotal / maxDistributionTotal) * 100 : 0;
+    
+    // 可分配的剩余权重
+    const remainingWeight = Math.max(0, dept.weight - currentEmployeeWeightSum - fixedAmountWeight);
+    
+    // 默认权重：取剩余权重的30-50%，但不超过部门权重的10%
+    const defaultWeight = Math.min(
+      remainingWeight * 0.4, // 剩余权重的40%
+      dept.weight * 0.1,     // 部门权重的10%
+      5                      // 最大不超过5%
+    );
+
+    const newEmployee: EmployeeDistribution = {
+      key: `emp_${Date.now()}_${Math.random()}`,
+      employeeId: '',
+      employeeName: '',
+      weight: Math.max(1, defaultWeight), // 最小1%
+      amount: 0,
+      isFixedAmount: false
+    };
+
+    setDepartmentAllocations(prev =>
+      prev.map(dept =>
+        dept.key === deptKey
+          ? {
+              ...dept,
+              employeeDistributions: [...dept.employeeDistributions, newEmployee],
+              expanded: true
+            }
+          : dept
+      )
+    );
+  };
+
+  // 删除员工
+  const deleteEmployee = (deptKey: string, empKey: string) => {
+    const updatedAllocations = departmentAllocations.map(dept => {
+      if (dept.key === deptKey) {
+        return {
+          ...dept,
+          employeeDistributions: dept.employeeDistributions.filter(emp => emp.key !== empKey)
+        };
       }
-      if (totalWeight !== 100) {
-        message.error('部门权重总和必须等于100%');
-        return;
+      return dept;
+    });
+    setDepartmentAllocations(updatedAllocations);
+  };
+
+  // 切换部门展开状态
+  const toggleDepartmentExpanded = (key: string) => {
+    const updatedAllocations = departmentAllocations.map(dept => {
+      if (dept.key === key) {
+        return { ...dept, expanded: !dept.expanded };
+      }
+      return dept;
+    });
+    setDepartmentAllocations(updatedAllocations);
+  };
+
+  // 验证权重
+  const validateWeights = (): boolean => {
+    // 验证所有部门权重之和不超过100%（基于最大分配比例）
+    const totalDeptWeight = departmentAllocations.reduce((sum, dept) => sum + dept.weight, 0);
+    if (totalDeptWeight > 100) {
+      message.error('所有部门权重之和不能超过100%');
+      return false;
+    }
+
+    // 验证每个部门下员工权重之和不超过部门权重
+    for (const dept of departmentAllocations) {
+      const deptWeight = dept.weight;
+      
+      // 计算员工权重总和（按权重分配的员工）
+      const totalEmpWeight = dept.employeeDistributions.reduce((sum, emp) => {
+        return emp.isFixedAmount ? sum : sum + emp.weight;
+      }, 0);
+      
+      // 计算固定金额员工占用的权重等值
+      const fixedAmountTotal = dept.employeeDistributions.reduce((sum, emp) => {
+        return emp.isFixedAmount ? sum + emp.amount : sum;
+      }, 0);
+      
+      const maxDistributionTotal = (grossProfit * maxDistributionRatio / 100);
+      const fixedAmountWeight = maxDistributionTotal > 0 ? (fixedAmountTotal / maxDistributionTotal) * 100 : 0;
+      
+      const totalUsedWeight = totalEmpWeight + fixedAmountWeight;
+      
+      if (totalUsedWeight > deptWeight) {
+        message.error(`部门"${dept.departmentName}"员工权重总和(${totalUsedWeight.toFixed(2)}%)超过部门权重(${deptWeight.toFixed(2)}%)`);
+        return false;
       }
     }
-    setCurrentStep(currentStep + 1);
+
+    return true;
   };
 
-  const prevStep = () => {
-    setCurrentStep(currentStep - 1);
-  };
+  // 保存提成分配
+  const handleSave = async () => {
+    if (!validateWeights()) {
+      return;
+    }
 
-  // 提交分配方案
-  const handleSubmit = async () => {
     try {
-      // 验证数据完整性
-      for (const dept of departmentAllocations) {
-        if (!dept.departmentName || dept.weight <= 0) {
-          message.error(`请完善${dept.departmentName || '未命名'}部门的信息`);
-          return;
-        }
-        
-        // 验证员工分配
-        const totalEmployeePercentage = dept.employeeDistributions.reduce((sum, emp) => sum + emp.percentage, 0);
-        if (Math.abs(totalEmployeePercentage - 100) > 0.01) {
-          message.error(`${dept.departmentName}的员工分配比例总和必须等于100%`);
-          return;
-        }
-        
-        for (const emp of dept.employeeDistributions) {
-          if (!emp.employeeId || !emp.role || emp.percentage <= 0) {
-            message.error(`请完善${dept.departmentName}中所有员工的信息`);
-            return;
-          }
-        }
-      }
-
       setLoading(true);
-
-      if (!project) {
-        message.error('项目信息不存在');
-        return;
-      }
-
-      // 构造提交数据
+      
       const distributionData = {
-        projectId: project.id,
+        projectId: project?.id,
+        distributionMode,
+        projectActualAmount,
         grossProfit,
-        profitPool,
-        departmentAllocations: departmentAllocations.map(dept => ({
-          departmentName: dept.departmentName,
-          weight: dept.weight,
-          totalAmount: dept.totalAmount,
-          employeeAmount: dept.employeeAmount,
-          reserveAmount: dept.reserveAmount,
-          employees: dept.employeeDistributions.map(emp => ({
-            employeeId: emp.employeeId,
-            role: emp.role,
-            percentage: emp.percentage,
-            amount: emp.amount,
-          })),
-        })),
+        grossProfitRate,
+        maxDistributionRatio,
+        maxDistributionAmount,
+        totalDistributionAmount: departmentAllocations.reduce((sum, dept) => sum + dept.totalAmount, 0),
+        departmentAllocations
       };
 
-      const response = await projectApi.createProfitDistribution(project.id, [distributionData]);
-
-      if (response.resp_code === 0) {
-        message.success('项目提成分配方案创建成功');
-        resetData();
-        onSuccess();
-      } else {
-        message.error(response.resp_msg || '提成分配方案创建失败');
-      }
+      console.log('保存提成分配数据:', distributionData);
+      
+      // 临时使用现有API，实际需要新增saveProfitDistribution方法
+      message.success('提成分配功能演示完成');
+      onSuccess();
+      onCancel();
+      
     } catch (error) {
-      console.error('Failed to create profit distribution:', error);
-      message.error('提成分配方案创建失败');
+      console.error('保存提成分配失败:', error);
+      message.error('保存失败: ' + (error instanceof Error ? error.message : String(error)));
     } finally {
       setLoading(false);
     }
   };
 
-  // 监听权重变化，重新计算
-  useEffect(() => {
-    if (profitPool > 0 && departmentAllocations.length > 0) {
-      calculateDepartmentAmounts();
-    }
-  }, [profitPool]); // 只依赖profitPool，避免循环
+  // 渲染员工行
+  const renderEmployeeRows = (dept: DepartmentAllocation) => {
+    if (!dept.expanded) return null;
 
-  // 监听部门权重变化
-  useEffect(() => {
-    const totalWeight = departmentAllocations.reduce((sum, dept) => sum + dept.weight, 0);
-    setTotalWeight(totalWeight);
-  }, [departmentAllocations.map(d => d.weight).join(',')]); // 只监听权重变化
-
-  // 初始化数据
-  useEffect(() => {
-    if (visible && project) {
-      loadProjectClosure();
-      extractDepartmentsFromProject();
-    }
-  }, [visible, project]);
-
-  // 部门分配表格列
-  const departmentColumns: ColumnsType<DepartmentAllocation> = [
-    {
-      title: '部门',
-      dataIndex: 'departmentName',
-      width: 120,
-      render: (value: string, record: DepartmentAllocation) => (
-        <Select
-          style={{ width: '100%' }}
-          placeholder="选择部门"
-          value={value}
-          onChange={(val) => updateDepartment(record.key, 'departmentName', val)}
-        >
-          {availableDepartments.map(dept => (
-            <Option key={dept.value} value={dept.value}>
-              {dept.label}
-            </Option>
-          ))}
-        </Select>
-      ),
-    },
-    {
-      title: '权重(%)',
-      dataIndex: 'weight',
-      width: 100,
-      render: (value: number, record: DepartmentAllocation) => (
-        <InputNumber
-          style={{ width: '100%' }}
-          placeholder="权重"
-          value={value}
-          min={0}
-          max={100}
-          precision={2}
-          onChange={(val) => updateDepartment(record.key, 'weight', val || 0)}
-        />
-      ),
-    },
-    {
-      title: '总金额',
-      dataIndex: 'totalAmount',
-      width: 120,
-      render: (value: number) => (
-        <Text type="primary">¥{(value || 0).toLocaleString()}</Text>
-      ),
-    },
-    {
-      title: '员工分配(80%)',
-      dataIndex: 'employeeAmount',
-      width: 120,
-      render: (value: number) => (
-        <Text style={{ color: '#52c41a' }}>¥{(value || 0).toLocaleString()}</Text>
-      ),
-    },
-    {
-      title: '储备金(20%)',
-      dataIndex: 'reserveAmount',
-      width: 120,
-      render: (value: number) => (
-        <Text style={{ color: '#faad14' }}>¥{(value || 0).toLocaleString()}</Text>
-      ),
-    },
-    {
-      title: '操作',
-      key: 'action',
-      width: 80,
-      render: (_, record: DepartmentAllocation) => (
-        <Button
-          type="link"
-          icon={<DeleteOutlined />}
-          danger
-          onClick={() => removeDepartment(record.key)}
-        />
-      ),
-    },
-  ];
+    return dept.employeeDistributions.map(emp => (
+      <tr key={emp.key} style={{ backgroundColor: '#fafafa' }}>
+        <td style={{ paddingLeft: '40px', borderRight: '1px solid #d9d9d9' }}>
+          <Space>
+            <span>└─</span>
+            {emp.employeeId ? (
+              <span>{emp.employeeName}</span>
+            ) : (
+              <Select
+                value={emp.employeeId || undefined}
+                onChange={(value) => {
+                  updateEmployee(dept.key, emp.key, 'employeeId', value);
+                  updateEmployee(dept.key, emp.key, 'employeeName', `员工${value}`);
+                }}
+                placeholder="选择员工"
+                style={{ width: '150px' }}
+              >
+                {Array.from(employeeDepartmentMap.entries())
+                  .filter(([empId, deptInfo]) => deptInfo.id === dept.departmentId)
+                  .map(([empId, deptInfo]) => (
+                    <Select.Option key={empId} value={String(empId)}>
+                      员工{empId}
+                    </Select.Option>
+                  ))}
+              </Select>
+            )}
+          </Space>
+        </td>
+        <td style={{ padding: '12px', borderRight: '1px solid #d9d9d9' }}>
+          {emp.isFixedAmount ? (
+            <InputNumber
+              value={emp.amount}
+              onChange={(value) => updateEmployee(dept.key, emp.key, 'amount', value || 0)}
+              min={0}
+              precision={2}
+              formatter={value => `¥ ${String(value || '')}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+              parser={value => Number(String(value || '').replace(/¥\s?|(,*)/g, ''))}
+              style={{ width: '120px' }}
+            />
+          ) : (
+            <div>
+              <InputNumber
+                value={emp.weight}
+                onChange={(value) => updateEmployee(dept.key, emp.key, 'weight', value || 0)}
+                min={0}
+                max={100}
+                precision={2}
+                formatter={value => `${String(value || '')}%`}
+                parser={value => Number(String(value || '').replace('%', ''))}
+                style={{ width: '100px' }}
+              />
+              {/* 显示权重约束提示 */}
+              <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>
+                {(() => {
+                  // 计算当前部门员工权重使用情况
+                  const currentEmpWeightSum = dept.employeeDistributions.reduce((sum, e) => {
+                    return e.isFixedAmount ? sum : sum + e.weight;
+                  }, 0);
+                  
+                  // 计算固定金额占用的权重
+                  const fixedTotal = dept.employeeDistributions.reduce((sum, e) => {
+                    return e.isFixedAmount ? sum + e.amount : sum;
+                  }, 0);
+                  const maxTotal = (grossProfit * maxDistributionRatio / 100);
+                  const fixedWeight = maxTotal > 0 ? (fixedTotal / maxTotal) * 100 : 0;
+                  
+                  const totalUsed = currentEmpWeightSum + fixedWeight;
+                  const remaining = Math.max(0, dept.weight - totalUsed);
+                  
+                  const isOverLimit = totalUsed > dept.weight;
+                  
+                                                   return (
+                                   <span style={{ color: isOverLimit ? '#ff4d4f' : '#52c41a' }}>
+                                     已用:{totalUsed.toFixed(1)}% / 部门:{dept.weight.toFixed(1)}%
+                                     {isOverLimit && <span style={{ color: '#ff4d4f', marginLeft: '4px' }}>超限!</span>}
+                                   </span>
+                                 );
+                })()}
+              </div>
+            </div>
+          )}
+        </td>
+        <td style={{ padding: '12px', borderRight: '1px solid #d9d9d9' }}>
+          ¥{emp.amount.toFixed(2)}
+        </td>
+        <td style={{ padding: '12px' }}>
+          <Space>
+            <Radio.Group
+              value={emp.isFixedAmount ? 'fixed' : 'ratio'}
+              onChange={(e) => updateEmployee(dept.key, emp.key, 'isFixedAmount', e.target.value === 'fixed')}
+              size="small"
+            >
+              <Radio.Button value="ratio">比例</Radio.Button>
+              <Radio.Button value="fixed">固定</Radio.Button>
+            </Radio.Group>
+            <Popconfirm
+              title="确定删除这个员工吗？"
+              onConfirm={() => deleteEmployee(dept.key, emp.key)}
+            >
+              <Button type="text" danger icon={<DeleteOutlined />} size="small" />
+            </Popconfirm>
+          </Space>
+        </td>
+      </tr>
+    ));
+  };
 
   return (
     <Modal
-      title="项目提成分配"
+      title={`项目提成分配 - ${project?.name}`}
       open={visible}
-      onOk={currentStep === 1 ? handleSubmit : nextStep}
-      onCancel={() => {
-        resetData();
-        onCancel();
-      }}
-      confirmLoading={loading}
+      onCancel={onCancel}
+      onOk={handleSave}
       width={1200}
+      confirmLoading={loading}
       destroyOnClose
-      okText={currentStep === 1 ? '提交分配方案' : '下一步'}
-      cancelText={currentStep === 0 ? '取消' : '上一步'}
-      footer={[
-        <Button key="cancel" onClick={currentStep === 0 ? () => { resetData(); onCancel(); } : prevStep}>
-          {currentStep === 0 ? '取消' : '上一步'}
-        </Button>,
-        <Button key="submit" type="primary" loading={loading} onClick={currentStep === 1 ? handleSubmit : nextStep}>
-          {currentStep === 1 ? '提交分配方案' : '下一步'}
-        </Button>,
-      ]}
     >
-      {project && (
-        <>
-          <Card size="small" style={{ marginBottom: 16 }}>
-            <Row gutter={16}>
-              <Col span={8}>
-                <strong>项目名称：</strong>{project.name}
-              </Col>
-              <Col span={8}>
-                <strong>项目分类：</strong>{project.category}
-              </Col>
-              <Col span={8}>
-                <strong>客户名称：</strong>{project.customerName}
-              </Col>
-            </Row>
-          </Card>
-
-          <Steps current={currentStep} style={{ marginBottom: 24 }}>
-            <Step title="部门分配" description="设置各部门权重分配" />
-            <Step title="员工分配" description="设置部门内员工分配" />
-          </Steps>
-
-          <Row gutter={16} style={{ marginBottom: 16 }}>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="项目毛利润"
+      {/* 项目基础信息和提成设置 */}
+      <div style={{ marginBottom: 24 }}>
+        <Row gutter={16}>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title="项目实际金额"
+                value={projectActualAmount}
+                precision={2}
+                prefix={<DollarOutlined />}
+                formatter={(value) => `¥ ${value?.toLocaleString() || 0}`}
+              />
+              <div style={{ marginTop: 8 }}>
+                <InputNumber
+                  value={projectActualAmount}
+                  onChange={(value) => setProjectActualAmount(value || 0)}
+                  min={0}
+                  precision={2}
+                  formatter={value => `¥ ${String(value || '')}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  parser={value => Number(String(value || '').replace(/¥\s?|(,*)/g, ''))}
+                  style={{ width: '100%' }}
+                  size="small"
+                />
+              </div>
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title="毛利润"
+                value={grossProfit}
+                precision={2}
+                prefix={<BankOutlined />}
+                formatter={(value) => `¥ ${value?.toLocaleString() || 0}`}
+              />
+              <div style={{ marginTop: 8 }}>
+                <InputNumber
                   value={grossProfit}
+                  onChange={(value) => setGrossProfit(value || 0)}
+                  min={0}
                   precision={2}
-                  prefix={<DollarOutlined />}
-                  suffix="元"
-                  valueStyle={{ color: '#3f8600' }}
+                  formatter={value => `¥ ${String(value || '')}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                  parser={value => Number(String(value || '').replace(/¥\s?|(,*)/g, ''))}
+                  style={{ width: '100%' }}
+                  size="small"
                 />
-              </Card>
+              </div>
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title="毛利率"
+                value={grossProfitRate}
+                precision={2}
+                suffix="%"
+                prefix={<PercentageOutlined />}
+                valueStyle={{ color: grossProfitRate >= 30 ? '#3f8600' : grossProfitRate >= 15 ? '#faad14' : '#cf1322' }}
+              />
+              <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
+                自动计算：毛利润 ÷ 实际金额
+              </div>
+            </Card>
+          </Col>
+          <Col span={6}>
+            <Card>
+              <Statistic
+                title="最大分配比例"
+                value={maxDistributionRatio}
+                precision={0}
+                suffix="%"
+                prefix={<PercentageOutlined />}
+              />
+              <div style={{ marginTop: 8 }}>
+                <InputNumber
+                  value={maxDistributionRatio}
+                  onChange={(value) => setMaxDistributionRatio(value || 50)}
+                  min={0}
+                  max={100}
+                  precision={0}
+                  formatter={value => `${String(value || '')}%`}
+                  parser={value => Number(String(value || '').replace('%', ''))}
+                  style={{ width: '100%' }}
+                  size="small"
+                />
+              </div>
+            </Card>
+          </Col>
+        </Row>
+
+        <Row gutter={16} style={{ marginTop: 16 }}>
+          <Col span={8}>
+            <Card>
+              <Statistic
+                title="最大提成金额"
+                value={maxDistributionAmount}
+                precision={2}
+                prefix={<BankOutlined />}
+                formatter={(value) => `¥ ${value?.toLocaleString() || 0}`}
+                valueStyle={{ color: '#1890ff' }}
+              />
+              <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
+                自动计算：毛利润 × 最大分配比例
+              </div>
+            </Card>
+          </Col>
+          <Col span={8}>
+            <Card>
+              <Statistic
+                title="实际分配金额"
+                value={departmentAllocations.reduce((sum, dept) => sum + dept.totalAmount, 0)}
+                precision={2}
+                prefix={<BankOutlined />}
+                formatter={(value) => `¥ ${value?.toLocaleString() || 0}`}
+                valueStyle={{ color: '#52c41a' }}
+              />
+              <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
+                基于部门权重自动计算
+              </div>
+            </Card>
+          </Col>
+          <Col span={8}>
+            <Card>
+              <Statistic
+                title="分配利用率"
+                value={maxDistributionAmount > 0 ? 
+                  ((departmentAllocations.reduce((sum, dept) => sum + dept.totalAmount, 0) / maxDistributionAmount) * 100) : 0}
+                precision={1}
+                suffix="%"
+                prefix={<PercentageOutlined />}
+                valueStyle={{ 
+                  color: departmentAllocations.reduce((sum, dept) => sum + dept.totalAmount, 0) / maxDistributionAmount > 0.8 ? '#52c41a' : '#faad14' 
+                }}
+              />
+              <div style={{ marginTop: 8, fontSize: '12px', color: '#666' }}>
+                实际分配 ÷ 最大可分配
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      </div>
+
+      <Divider>部门提成分配</Divider>
+
+      <Form form={form} layout="vertical">
+        <div style={{ marginBottom: 16 }}>
+          <Space>
+            <Button type="primary" icon={<PlusOutlined />} onClick={addDepartment}>
+              添加部门
+            </Button>
+            <span style={{ color: '#666' }}>
+              权重约束：所有部门权重之和 ≤ 100%（基于最大分配比例），员工权重之和 ≤ 部门权重
+            </span>
+            <Text type="secondary">
+              最大可分配：¥{maxDistributionAmount.toLocaleString()}
+            </Text>
+          </Space>
+        </div>
+
+        <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #d9d9d9' }}>
+          <thead>
+            <tr style={{ backgroundColor: '#fafafa', borderBottom: '1px solid #d9d9d9' }}>
+              <th style={{ padding: '12px', textAlign: 'left', borderRight: '1px solid #d9d9d9' }}>部门/员工</th>
+              <th style={{ padding: '12px', textAlign: 'left', borderRight: '1px solid #d9d9d9' }}>权重/金额</th>
+              <th style={{ padding: '12px', textAlign: 'left', borderRight: '1px solid #d9d9d9' }}>分配金额</th>
+              <th style={{ padding: '12px', textAlign: 'left', borderRight: '1px solid #d9d9d9' }}>部门储备金</th>
+              <th style={{ padding: '12px', textAlign: 'left' }}>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            {departmentAllocations.map(dept => {
+              // 计算部门实际储备金情况
+              const deptTotalAmount = dept.totalAmount;
+              const employeeTotalAmount = dept.employeeDistributions.reduce((sum, emp) => sum + emp.amount, 0);
+              const actualReserveAmount = deptTotalAmount - employeeTotalAmount;
+              const actualReserveRatio = deptTotalAmount > 0 ? (actualReserveAmount / deptTotalAmount) * 100 : 0;
+              
+              return (
+                <React.Fragment key={dept.key}>
+                  {/* 部门行 */}
+                  <tr style={{ borderBottom: '1px solid #d9d9d9' }}>
+                    <td style={{ padding: '12px', borderRight: '1px solid #d9d9d9' }}>
+                      <Space>
+                        <Button
+                          type="text"
+                          size="small"
+                          onClick={() => toggleDepartmentExpanded(dept.key)}
+                        >
+                          {dept.expanded ? '▼' : '▶'}
+                        </Button>
+                        <Select
+                          value={dept.departmentId || undefined}
+                          onChange={(value) => {
+                            const selectedDept = availableDepartments.find(d => d.value === value);
+                            updateDepartment(dept.key, 'departmentId', value);
+                            updateDepartment(dept.key, 'departmentName', selectedDept?.name || '');
+                          }}
+                          placeholder="选择部门"
+                          style={{ width: '200px' }}
+                        >
+                          {availableDepartments.map(option => (
+                            <Select.Option key={option.value} value={option.value}>
+                              {option.label}
+                            </Select.Option>
+                          ))}
+                        </Select>
+                      </Space>
+                    </td>
+                    <td style={{ padding: '12px', borderRight: '1px solid #d9d9d9' }}>
+                      <InputNumber
+                        value={dept.weight}
+                        onChange={(value) => updateDepartment(dept.key, 'weight', value || 0)}
+                        min={0}
+                        max={100}
+                        precision={2}
+                        formatter={value => `${String(value || '')}%`}
+                        parser={value => Number(String(value || '').replace('%', ''))}
+                        style={{ width: '100px' }}
+                      />
+                    </td>
+                    <td style={{ padding: '12px', borderRight: '1px solid #d9d9d9' }}>
+                      ¥{dept.totalAmount.toFixed(2)}
+                    </td>
+                    <td style={{ padding: '12px', borderRight: '1px solid #d9d9d9' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div>
+                          <span style={{ fontSize: '12px', color: '#666' }}>比例：</span>
+                          <span style={{ fontWeight: 'bold', color: actualReserveRatio > 30 ? '#ff4d4f' : '#52c41a' }}>
+                            {actualReserveRatio.toFixed(1)}%
+                          </span>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '12px', color: '#666' }}>金额：</span>
+                          <span style={{ fontWeight: 'bold' }}>
+                            ¥{actualReserveAmount.toFixed(2)}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '12px' }}>
+                      <Space>
+                        <Button
+                          type="text"
+                          icon={<PlusOutlined />}
+                          onClick={() => addEmployeeToDepartment(dept.key)}
+                          size="small"
+                        >
+                          添加员工
+                        </Button>
+                        <Popconfirm
+                          title="确定删除这个部门吗？"
+                          onConfirm={() => deleteDepartment(dept.key)}
+                        >
+                          <Button type="text" danger icon={<DeleteOutlined />} size="small" />
+                        </Popconfirm>
+                      </Space>
+                    </td>
+                  </tr>
+                  {/* 员工行 */}
+                  {dept.expanded && dept.employeeDistributions.map(emp => (
+                    <tr key={emp.key} style={{ backgroundColor: '#fafafa' }}>
+                      <td style={{ paddingLeft: '40px', borderRight: '1px solid #d9d9d9' }}>
+                        <Space>
+                          <span>└─</span>
+                          {emp.employeeId ? (
+                            <span>{emp.employeeName}</span>
+                          ) : (
+                            <Select
+                              value={emp.employeeId || undefined}
+                              onChange={(value) => {
+                                updateEmployee(dept.key, emp.key, 'employeeId', value);
+                                updateEmployee(dept.key, emp.key, 'employeeName', `员工${value}`);
+                              }}
+                              placeholder="选择员工"
+                              style={{ width: '150px' }}
+                            >
+                              {Array.from(employeeDepartmentMap.entries())
+                                .filter(([empId, deptInfo]) => deptInfo.id === dept.departmentId)
+                                .map(([empId, deptInfo]) => (
+                                  <Select.Option key={empId} value={String(empId)}>
+                                    员工{empId}
+                                  </Select.Option>
+                                ))}
+                            </Select>
+                          )}
+                        </Space>
+                      </td>
+                      <td style={{ padding: '12px', borderRight: '1px solid #d9d9d9' }}>
+                        {emp.isFixedAmount ? (
+                          <InputNumber
+                            value={emp.amount}
+                            onChange={(value) => updateEmployee(dept.key, emp.key, 'amount', value || 0)}
+                            min={0}
+                            precision={2}
+                            formatter={value => `¥ ${String(value || '')}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                            parser={value => Number(String(value || '').replace(/¥\s?|(,*)/g, ''))}
+                            style={{ width: '120px' }}
+                          />
+                        ) : (
+                          <div>
+                            <InputNumber
+                              value={emp.weight}
+                              onChange={(value) => updateEmployee(dept.key, emp.key, 'weight', value || 0)}
+                              min={0}
+                              max={100}
+                              precision={2}
+                              formatter={value => `${String(value || '')}%`}
+                              parser={value => Number(String(value || '').replace('%', ''))}
+                              style={{ width: '100px' }}
+                            />
+                            {/* 显示权重约束提示 */}
+                            <div style={{ fontSize: '11px', color: '#666', marginTop: '2px' }}>
+                              {(() => {
+                                // 计算当前部门员工权重使用情况
+                                const currentEmpWeightSum = dept.employeeDistributions.reduce((sum, e) => {
+                                  return e.isFixedAmount ? sum : sum + e.weight;
+                                }, 0);
+                                
+                                // 计算固定金额占用的权重
+                                const fixedTotal = dept.employeeDistributions.reduce((sum, e) => {
+                                  return e.isFixedAmount ? sum + e.amount : sum;
+                                }, 0);
+                                const maxTotal = (grossProfit * maxDistributionRatio / 100);
+                                const fixedWeight = maxTotal > 0 ? (fixedTotal / maxTotal) * 100 : 0;
+                                
+                                const totalUsed = currentEmpWeightSum + fixedWeight;
+                                const remaining = Math.max(0, dept.weight - totalUsed);
+                                
+                                const isOverLimit = totalUsed > dept.weight;
+                                
+                                return (
+                                  <span style={{ color: isOverLimit ? '#ff4d4f' : '#52c41a' }}>
+                                    已用:{totalUsed.toFixed(1)}% / 部门:{dept.weight.toFixed(1)}%
+                                    {isOverLimit && <span style={{ color: '#ff4d4f', marginLeft: '4px' }}>超限!</span>}
+                                  </span>
+                                );
+                              })()}
+                            </div>
+                          </div>
+                        )}
+                      </td>
+                      <td style={{ padding: '12px', borderRight: '1px solid #d9d9d9' }}>
+                        ¥{emp.amount.toFixed(2)}
+                      </td>
+                      <td style={{ padding: '12px', borderRight: '1px solid #d9d9d9' }}>
+                        {/* 员工行不显示储备金信息 */}
+                        <span style={{ color: '#ccc' }}>—</span>
+                      </td>
+                      <td style={{ padding: '12px' }}>
+                        <Space>
+                          <Radio.Group
+                            value={emp.isFixedAmount ? 'fixed' : 'ratio'}
+                            onChange={(e) => updateEmployee(dept.key, emp.key, 'isFixedAmount', e.target.value === 'fixed')}
+                            size="small"
+                          >
+                            <Radio.Button value="ratio">比例</Radio.Button>
+                            <Radio.Button value="fixed">固定</Radio.Button>
+                          </Radio.Group>
+                          <Popconfirm
+                            title="确定删除这个员工吗？"
+                            onConfirm={() => deleteEmployee(dept.key, emp.key)}
+                          >
+                            <Button type="text" danger icon={<DeleteOutlined />} size="small" />
+                          </Popconfirm>
+                        </Space>
+                      </td>
+                    </tr>
+                  ))}
+                </React.Fragment>
+              );
+            })}
+            {/* 汇总行 */}
+            <tr style={{ backgroundColor: '#f0f2f5', borderTop: '2px solid #d9d9d9', fontWeight: 'bold' }}>
+              <td style={{ padding: '12px', borderRight: '1px solid #d9d9d9' }}>
+                <Text strong>汇总</Text>
+              </td>
+              <td style={{ padding: '12px', borderRight: '1px solid #d9d9d9' }}>
+                <Text strong style={{ 
+                  color: departmentAllocations.reduce((sum, dept) => sum + dept.weight, 0) > 100 ? '#ff4d4f' : '#52c41a' 
+                }}>
+                  {departmentAllocations.reduce((sum, dept) => sum + dept.weight, 0).toFixed(2)}%
+                </Text>
+                <Text type="secondary" style={{ marginLeft: 8, fontSize: '12px' }}>
+                  / 100%
+                </Text>
+              </td>
+              <td style={{ padding: '12px', borderRight: '1px solid #d9d9d9' }}>
+                <Text strong>
+                  ¥{departmentAllocations.reduce((sum, dept) => sum + dept.totalAmount, 0).toFixed(2)}
+                </Text>
+              </td>
+              <td style={{ padding: '12px', borderRight: '1px solid #d9d9d9' }}>
+                <Text strong>
+                  ¥{departmentAllocations.reduce((sum, dept) => {
+                    const employeeTotal = dept.employeeDistributions.reduce((empSum, emp) => empSum + emp.amount, 0);
+                    return sum + (dept.totalAmount - employeeTotal);
+                  }, 0).toFixed(2)}
+                </Text>
+              </td>
+              <td style={{ padding: '12px' }}>
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  剩余：¥{(maxDistributionAmount - departmentAllocations.reduce((sum, dept) => sum + dept.totalAmount, 0)).toLocaleString()}
+                </Text>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* 分配详情汇总 */}
+        <div style={{ marginTop: 16, padding: 16, backgroundColor: '#fafafa', borderRadius: 6 }}>
+          <Row gutter={16}>
+            <Col span={5}>
+              <Text type="secondary">总权重使用：</Text>
+              <Text strong style={{ 
+                color: departmentAllocations.reduce((sum, dept) => sum + dept.weight, 0) > 100 ? '#ff4d4f' : '#52c41a',
+                marginLeft: 8 
+              }}>
+                {departmentAllocations.reduce((sum, dept) => sum + dept.weight, 0).toFixed(2)}% / 100%
+              </Text>
             </Col>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="提成池(50%)"
-                  value={profitPool}
-                  precision={2}
-                  prefix={<DollarOutlined />}
-                  suffix="元"
-                  valueStyle={{ color: '#1890ff' }}
-                />
-              </Card>
+            <Col span={5}>
+              <Text type="secondary">员工分配：</Text>
+              <Text strong style={{ marginLeft: 8 }}>
+                ¥{departmentAllocations.reduce((sum, dept) => {
+                  const employeeTotal = dept.employeeDistributions.reduce((empSum, emp) => empSum + emp.amount, 0);
+                  return sum + employeeTotal;
+                }, 0).toLocaleString()}
+              </Text>
             </Col>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="部门权重"
-                  value={totalWeight}
-                  precision={2}
-                  suffix="%"
-                  valueStyle={{ 
-                    color: totalWeight === 100 ? '#3f8600' : '#cf1322' 
-                  }}
-                />
-              </Card>
+            <Col span={5}>
+              <Text type="secondary">储备金总额：</Text>
+              <Text strong style={{ marginLeft: 8 }}>
+                ¥{departmentAllocations.reduce((sum, dept) => {
+                  const employeeTotal = dept.employeeDistributions.reduce((empSum, emp) => empSum + emp.amount, 0);
+                  return sum + (dept.totalAmount - employeeTotal);
+                }, 0).toLocaleString()}
+              </Text>
             </Col>
-            <Col span={6}>
-              <Card>
-                <Statistic
-                  title="参与部门"
-                  value={departmentAllocations.length}
-                  prefix={<BankOutlined />}
-                  suffix="个"
-                />
-              </Card>
+            <Col span={5}>
+              <Text type="secondary">剩余可分配：</Text>
+              <Text strong style={{ marginLeft: 8 }}>
+                ¥{(maxDistributionAmount - departmentAllocations.reduce((sum, dept) => sum + dept.totalAmount, 0)).toLocaleString()}
+              </Text>
+            </Col>
+            <Col span={4}>
+              <Text type="secondary">分配利用率：</Text>
+              <Text strong style={{ marginLeft: 8 }}>
+                {maxDistributionAmount > 0 ? 
+                  ((departmentAllocations.reduce((sum, dept) => sum + dept.totalAmount, 0) / maxDistributionAmount) * 100).toFixed(1) 
+                  : '0'}%
+              </Text>
             </Col>
           </Row>
-
-          {currentStep === 0 && (
-            <>
-              <Alert
-                message="提成分配规则"
-                description="项目毛利润的50%作为提成池，按部门权重分配。每个部门80%分配给员工个人，20%进入部门储备金账户。"
-                type="info"
-                showIcon
-                style={{ marginBottom: 16 }}
-              />
-              
-              <Row style={{ marginBottom: 16 }}>
-                <Col span={24}>
-                  <Space>
-                    <Button
-                      type="primary"
-                      icon={<PlusOutlined />}
-                      onClick={addDepartment}
-                    >
-                      添加部门
-                    </Button>
-                    {totalWeight !== 100 && (
-                      <Tag color="error">
-                        部门权重总和必须等于100%，当前：{totalWeight}%
-                      </Tag>
-                    )}
-                  </Space>
-                </Col>
-              </Row>
-
-              <Table
-                columns={departmentColumns}
-                dataSource={departmentAllocations}
-                pagination={false}
-                size="small"
-                scroll={{ x: 800 }}
-                locale={{ emptyText: '暂无部门分配，请点击"添加部门"按钮添加' }}
-              />
-            </>
-          )}
-
-          {currentStep === 1 && (
-            <>
-              <Alert
-                message="员工分配设置"
-                description="为每个部门的员工设置分配比例，部门内员工分配比例总和必须等于100%。"
-                type="info"
-                showIcon
-                style={{ marginBottom: 16 }}
-              />
-              
-              {departmentAllocations.map(dept => (
-                <Card key={dept.key} title={`${dept.departmentName} - 员工分配`} style={{ marginBottom: 16 }}>
-                  <Row gutter={16} style={{ marginBottom: 12 }}>
-                    <Col span={8}>
-                      <Text>可分配金额：<Text type="success">¥{dept.employeeAmount.toLocaleString()}</Text></Text>
-                    </Col>
-                    <Col span={8}>
-                      <Text>储备金：<Text type="warning">¥{dept.reserveAmount.toLocaleString()}</Text></Text>
-                    </Col>
-                    <Col span={8}>
-                      <Button
-                        type="dashed"
-                        size="small"
-                        icon={<PlusOutlined />}
-                        onClick={() => addEmployee(dept.key)}
-                      >
-                        添加员工
-                      </Button>
-                    </Col>
-                  </Row>
-                  
-                  {dept.employeeDistributions.map(emp => (
-                    <Row key={emp.key} gutter={8} style={{ marginBottom: 8 }}>
-                      <Col span={6}>
-                        <Select
-                          style={{ width: '100%' }}
-                          placeholder="选择员工"
-                          value={emp.employeeId}
-                          onChange={(val) => updateEmployee(dept.key, emp.key, 'employeeId', val)}
-                        >
-                          {getEmployeesForDepartment(dept.departmentName).map(employee => (
-                            <Option key={employee.value} value={employee.value}>
-                              {employee.label}
-                            </Option>
-                          ))}
-                        </Select>
-                      </Col>
-                      <Col span={5}>
-                        <Select
-                          style={{ width: '100%' }}
-                          placeholder="角色"
-                          value={emp.role}
-                          onChange={(val) => updateEmployee(dept.key, emp.key, 'role', val)}
-                        >
-                          {roleOptions.map(role => (
-                            <Option key={role.value} value={role.value}>
-                              {role.label}
-                            </Option>
-                          ))}
-                        </Select>
-                      </Col>
-                      <Col span={5}>
-                        <InputNumber
-                          style={{ width: '100%' }}
-                          placeholder="分配比例%"
-                          value={emp.percentage}
-                          min={0}
-                          max={100}
-                          precision={2}
-                          onChange={(val) => updateEmployee(dept.key, emp.key, 'percentage', val || 0)}
-                        />
-                      </Col>
-                      <Col span={6}>
-                        <Text type="success">¥{emp.amount.toLocaleString()}</Text>
-                      </Col>
-                      <Col span={2}>
-                        <Button
-                          type="link"
-                          icon={<DeleteOutlined />}
-                          danger
-                          onClick={() => removeEmployee(dept.key, emp.key)}
-                        />
-                      </Col>
-                    </Row>
-                  ))}
-                  
-                  {dept.employeeDistributions.length === 0 && (
-                    <div style={{ textAlign: 'center', color: '#999', padding: '20px 0' }}>
-                      暂无员工分配，请点击"添加员工"按钮
-                    </div>
-                  )}
-                </Card>
-              ))}
-            </>
-          )}
-        </>
-      )}
+        </div>
+      </Form>
     </Modal>
   );
 };

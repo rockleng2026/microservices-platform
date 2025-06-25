@@ -55,6 +55,7 @@ CREATE TABLE `project` (
   `category` varchar(50) COMMENT '项目类别（如党建、IDC、软件等）',
   `participants` text COMMENT '参与人列表（JSON数组，存员工ID及角色）',
   `leader_id` bigint(20) COMMENT '项目负责人ID',
+  `max_distribution` float DEFAULT 0.5 COMMENT '最大分配比例默认50%即0.5'
   `customer_name` varchar(100) COMMENT '项目客户名称',
   `customer_contact` varchar(100) COMMENT '项目客户代表',
   `start_time` datetime COMMENT '立项时间',
@@ -117,7 +118,8 @@ CREATE TABLE `project_profit_distribution` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键',
   `project_id` bigint(20) NOT NULL COMMENT '项目ID',
   `guide_id` bigint(20) COMMENT '产品毛利分配指导表ID',
-  `employee_id` bigint(20) NOT NULL COMMENT '分配员工ID',
+  `dept_id` BIGINT(20) NOT NULL COMMENT '分配员工ID',
+  `employee_id` BIGINT(20)  COMMENT '分配员工ID',
   `role` varchar(50) NOT NULL COMMENT '分配角色',
   `distribution_type` varchar(10) NOT NULL COMMENT '分配形式（比例/金额）',
   `distribution_value` decimal(10,2) NOT NULL COMMENT '分配数值',

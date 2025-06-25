@@ -67,21 +67,150 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
   const [closureInfo, setClosureInfo] = useState<any>(null);
   const [profitDistributionData, setProfitDistributionData] = useState<any[]>([]);
 
+  // 将缓存提升到组件级别，避免重复创建
+  const employeeCacheRef = React.useRef<Map<string, any>>(new Map());
+  const departmentCacheRef = React.useRef<Map<string, any>>(new Map());
+  
+  // 请求去重：存储正在进行的API请求Promise
+  const employeeRequestsRef = React.useRef<Map<string, Promise<any>>>(new Map());
+  const departmentRequestsRef = React.useRef<Map<string, Promise<any>>>(new Map());
+  
+  // 缓存统计
+  const cacheStatsRef = React.useRef({
+    employee: { hits: 0, misses: 0, deduped: 0 },
+    department: { hits: 0, misses: 0, deduped: 0 }
+  });
+
+  // 获取员工详情的通用函数，带缓存和请求去重
+  const getEmployeeWithCache = React.useCallback(async (empId: string) => {
+    const cache = employeeCacheRef.current;
+    const requests = employeeRequestsRef.current;
+    const stats = cacheStatsRef.current.employee;
+    
+    // 1. 检查缓存
+    if (cache.has(empId)) {
+      stats.hits++;
+      console.log(`📋 从缓存获取员工${empId}:`, cache.get(empId).name, `(命中率: ${((stats.hits / (stats.hits + stats.misses + stats.deduped)) * 100).toFixed(1)}%)`);
+      return cache.get(empId);
+    }
+    
+    // 2. 检查是否有正在进行的请求
+    if (requests.has(empId)) {
+      stats.deduped++;
+      console.log(`🔄 等待进行中的员工${empId}请求 (去重: ${stats.deduped})`);
+      return await requests.get(empId);
+    }
+    
+    // 3. 发起新的API请求
+    stats.misses++;
+    const requestPromise = (async () => {
+      try {
+        const res = await getEmployeeDetail(Number(empId));
+        let employeeData = null;
+        
+        // 适配两种响应格式
+        if (res && res.resp_code === 0 && res.datas) {
+          employeeData = res.datas;
+        } else if (res && res.success && res.data) {
+          employeeData = res.data;
+        }
+        
+        if (employeeData) {
+          cache.set(empId, employeeData);
+          console.log(`✅ API获取员工${empId}详情成功:`, employeeData.name, `(缓存大小: ${cache.size})`);
+          return employeeData;
+        }
+      } catch (error) {
+        console.warn(`❌ 获取员工${empId}详情失败:`, error);
+      } finally {
+        // 请求完成后清理
+        requests.delete(empId);
+      }
+      return null;
+    })();
+    
+    // 存储请求Promise
+    requests.set(empId, requestPromise);
+    return await requestPromise;
+  }, []);
+
+  // 获取部门详情的通用函数，带缓存和请求去重
+  const getDepartmentWithCache = React.useCallback(async (deptId: string) => {
+    const cache = departmentCacheRef.current;
+    const requests = departmentRequestsRef.current;
+    const stats = cacheStatsRef.current.department;
+    
+    // 1. 检查缓存
+    if (cache.has(deptId)) {
+      stats.hits++;
+      console.log(`📋 从缓存获取部门${deptId}:`, cache.get(deptId).name, `(命中率: ${((stats.hits / (stats.hits + stats.misses + stats.deduped)) * 100).toFixed(1)}%)`);
+      return cache.get(deptId);
+    }
+    
+    // 2. 检查是否有正在进行的请求
+    if (requests.has(deptId)) {
+      stats.deduped++;
+      console.log(`🔄 等待进行中的部门${deptId}请求 (去重: ${stats.deduped})`);
+      return await requests.get(deptId);
+    }
+    
+    // 3. 发起新的API请求
+    stats.misses++;
+    const requestPromise = (async () => {
+      try {
+        const res = await getDepartmentDetail(deptId);
+        let departmentData = null;
+        
+        // 适配两种响应格式
+        if (res && res.resp_code === 0 && res.datas) {
+          departmentData = res.datas;
+        } else if (res && res.success && res.data) {
+          departmentData = res.data;
+        }
+        
+        if (departmentData) {
+          cache.set(deptId, departmentData);
+          console.log(`✅ API获取部门${deptId}详情成功:`, departmentData.name, `(缓存大小: ${cache.size})`);
+          return departmentData;
+        }
+      } catch (error) {
+        console.warn(`❌ 获取部门${deptId}详情失败:`, error);
+      } finally {
+        // 请求完成后清理
+        requests.delete(deptId);
+      }
+      return null;
+    })();
+    
+    // 存储请求Promise
+    requests.set(deptId, requestPromise);
+    return await requestPromise;
+  }, []);
+
+  // 清理缓存的函数（可选，在组件卸载时调用）
+  React.useEffect(() => {
+    return () => {
+      // 组件卸载时清理缓存（如果需要的话）
+      // employeeCacheRef.current.clear();
+      // departmentCacheRef.current.clear();
+      console.log('🧹 ProjectDetail组件卸载，保留缓存以供复用');
+    };
+  }, []);
+
   useEffect(() => {
     async function fetchDetails() {
       if (project) {
-        // 负责人
+        console.log('🚀 开始加载项目详情数据:', project.id);
+
+        // 1. 处理项目负责人
         if (project.leaderId && !project.leaderName) {
-          try {
-            const res = await getEmployeeDetail(Number(project.leaderId));
-            if (res && res.data && res.data.name) {
-              setLeaderName(res.data.name);
-            }
-          } catch {}
+          const leaderData = await getEmployeeWithCache(String(project.leaderId));
+          setLeaderName(leaderData?.name || '');
         } else {
           setLeaderName(project.leaderName || '');
         }
-        // 参与人
+
+        // 2. 处理项目参与人
         let participants: ProjectParticipant[] = [];
         if (project.participantDetails) {
           participants = project.participantDetails;
@@ -90,29 +219,28 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
             participants = JSON.parse(project.participants) || [];
           } catch {}
         }
-        // 批量查详情
+
+        // 批量获取参与人详情
         const details = await Promise.all(
           participants.map(async (p: any) => {
             if (!p.participantName && p.participantId) {
-              try {
-                const res = await getEmployeeDetail(Number(p.participantId));
-                if (res && res.resp_code === 0 && res.datas) {
-                  return {
-                    ...p,
-                    participantName: res.datas.name,
-                    departmentName: res.datas.departmentName,
-                    participantPhone: res.datas.phoneNumber,
-                    participantEmail: res.datas.email,
-                  };
-                }
-              } catch {}
+              const empData = await getEmployeeWithCache(String(p.participantId));
+              if (empData) {
+                return {
+                  ...p,
+                  participantName: empData.name,
+                  departmentName: empData.departmentName,
+                  participantPhone: empData.mobile || empData.phoneNumber,
+                  participantEmail: empData.email,
+                };
+              }
             }
             return p;
           })
         );
         setParticipantDetails(details);
         
-        // 如果项目已结项，加载结项信息
+        // 3. 如果项目已结项，加载结项信息
         if (project.status === 'closed') {
           try {
             const closureResponse = await projectApi.getProjectClosure(project.id);
@@ -124,8 +252,10 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
           }
         }
         
-        // 检查是否有提成分配数据
+        // 4. 处理提成分配数据
         if (project.hasProfitDistribution && project.profitDistributions) {
+          console.log('🎯 开始处理提成分配数据，原始数据:', project.profitDistributions);
+          
           // 为提成分配数据补充部门名称和员工姓名
           const enrichedDistributions = await Promise.all(
             project.profitDistributions.map(async (distribution: any) => {
@@ -133,31 +263,25 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
               
               // 获取部门名称
               if (distribution.deptId && !distribution.departmentName) {
-                try {
-                  const deptRes = await getDepartmentDetail(distribution.deptId);
-                  if (deptRes && deptRes.resp_code === 0 && deptRes.datas && deptRes.datas.name) {
-                    enriched.departmentName = deptRes.datas.name;
-                  }
-                } catch (error) {
-                  console.error(`Failed to get department ${distribution.deptId}:`, error);
+                const deptData = await getDepartmentWithCache(String(distribution.deptId));
+                if (deptData) {
+                  enriched.departmentName = deptData.name;
                 }
               }
               
-              // 获取员工姓名（通过员工ID关联项目参与人）
+              // 获取员工姓名
               if (distribution.employeeId && !distribution.employeeName) {
-                // 首先从已加载的参与人详情中查找
-                const participant = details.find(p => p.participantId === distribution.employeeId);
+                // 优先从已加载的参与人详情中查找
+                const participant = details.find(p => String(p.participantId) === String(distribution.employeeId));
                 if (participant && participant.participantName) {
                   enriched.employeeName = participant.participantName;
+                  console.log(`👤 从参与人中获取员工${distribution.employeeId}姓名:`, participant.participantName);
                 } else {
-                  // 如果参与人详情中没有，直接通过员工API获取
-                  try {
-                    const empRes = await getEmployeeDetail(Number(distribution.employeeId));
-                    if (empRes && empRes.resp_code === 0 && empRes.datas && empRes.datas.name) {
-                      enriched.employeeName = empRes.datas.name;
-                    }
-                  } catch (error) {
-                    console.error(`Failed to get employee ${distribution.employeeId}:`, error);
+                  // 如果参与人详情中没有，通过缓存函数获取
+                  const empData = await getEmployeeWithCache(String(distribution.employeeId));
+                  if (empData) {
+                    enriched.employeeName = empData.name;
+                    console.log(`👤 从API获取员工${distribution.employeeId}姓名:`, empData.name);
                   }
                 }
               }
@@ -166,15 +290,36 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
             })
           );
           
+          console.log('🎯 提成分配数据处理完成:', enrichedDistributions);
           setProfitDistributionData(enrichedDistributions);
         } else {
-          // 清空之前的数据
           setProfitDistributionData([]);
         }
+
+        const empStats = cacheStatsRef.current.employee;
+        const deptStats = cacheStatsRef.current.department;
+        console.log('📊 项目详情数据加载完成, 缓存统计:', {
+          员工缓存: {
+            大小: employeeCacheRef.current.size,
+            命中: empStats.hits,
+            未命中: empStats.misses,
+            去重: empStats.deduped,
+            命中率: empStats.hits + empStats.misses + empStats.deduped > 0 ? `${((empStats.hits / (empStats.hits + empStats.misses + empStats.deduped)) * 100).toFixed(1)}%` : '0%',
+            IDs: Array.from(employeeCacheRef.current.keys())
+          },
+          部门缓存: {
+            大小: departmentCacheRef.current.size,
+            命中: deptStats.hits,
+            未命中: deptStats.misses,
+            去重: deptStats.deduped,
+            命中率: deptStats.hits + deptStats.misses + deptStats.deduped > 0 ? `${((deptStats.hits / (deptStats.hits + deptStats.misses + deptStats.deduped)) * 100).toFixed(1)}%` : '0%',
+            IDs: Array.from(departmentCacheRef.current.keys())
+          }
+        });
       }
     }
     fetchDetails();
-  }, [project]);
+  }, [project, getEmployeeWithCache, getDepartmentWithCache]);
 
   if (!project) return null;
 

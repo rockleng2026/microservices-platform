@@ -621,4 +621,27 @@ public class ProjectController {
             return Result.failed(e.getMessage());
         }
     }
+    
+    /**
+     * 获取项目提成分配初始化数据
+     * @param id 项目ID
+     * @return 初始化数据
+     */
+    @GetMapping("/{id}/profit-distribution/init")
+    @Operation(summary = "获取项目提成分配初始化数据", description = "获取项目结项数据和已保存的提成分配数据")
+    public Result<Map<String, Object>> getProfitDistributionInitData(
+            @Parameter(description = "项目ID") @PathVariable("id") String id) {
+        try {
+            Long projectId = IdUtils.stringToLong(id);
+            if (projectId == null) {
+                return Result.failed("项目ID格式错误");
+            }
+            
+            Map<String, Object> initData = projectService.getProfitDistributionInitData(projectId);
+            return Result.succeed(initData);
+        } catch (Exception e) {
+            log.error("获取项目提成分配初始化数据失败，ID: {}", id, e);
+            return Result.failed(e.getMessage());
+        }
+    }
 } 

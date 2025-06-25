@@ -55,11 +55,12 @@ CREATE TABLE `project` (
   `category` varchar(50) COMMENT '项目类别（如党建、IDC、软件等）',
   `participants` text COMMENT '参与人列表（JSON数组，存员工ID及角色）',
   `leader_id` bigint(20) COMMENT '项目负责人ID',
-  `max_distribution` float DEFAULT 0.5 COMMENT '最大分配比例默认50%即0.5'
+  `max_distribution` float DEFAULT 0.5 COMMENT '最大分配比例默认50%即0.5',
   `customer_name` varchar(100) COMMENT '项目客户名称',
   `customer_contact` varchar(100) COMMENT '项目客户代表',
   `start_time` datetime COMMENT '立项时间',
   `status` varchar(20) DEFAULT 'init' COMMENT '项目状态（如init、running、closed等）',
+  `profit_distribution_status` varchar(20) DEFAULT NULL COMMENT '项目提成分配状态(not_set:未设置，awaiting_approval:待审批,in_approval：审批中,approved:审批通过,approval_failed:审批失败,partially_settled部分计提，Settled：已计提完毕)',
   `process_instance_id` varchar(64) COMMENT '流程实例ID',
   `final_status` varchar(20) DEFAULT NULL COMMENT '最终审批状态（如approved、rejected等）',
   `tenant_id` varchar(32) DEFAULT 'default' COMMENT '租户ID',
@@ -454,3 +455,9 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- ===================================================================
 -- 脚本执行完成
 -- =================================================================== 
+
+-- 为现有项目表添加利润计提状态字段（如果不存在）
+ALTER TABLE project ADD COLUMN IF NOT EXISTS profit_distribution_status VARCHAR(50) DEFAULT 'not_set' COMMENT '利润计提状态：not_set未设置,awaiting_approval待审批,in_approval审批中,approved审批通过,approval_failed审批失败,partially_settled部分计提,settled已计提完毕' AFTER final_status;
+
+-- 添加索引（如果不存在）
+ALTER TABLE project ADD INDEX IF NOT EXISTS `idx_profit_distribution_status` (`profit_distribution_status`); 

@@ -68,6 +68,17 @@ const APPROVAL_STATUS_CONFIG = {
   rejected: { text: '已拒绝', color: 'error' },
 };
 
+// 利润计提状态配置
+const PROFIT_DISTRIBUTION_STATUS_CONFIG = {
+  not_set: { text: '未设置', color: 'default' },
+  awaiting_approval: { text: '待审批', color: 'warning' },
+  in_approval: { text: '审批中', color: 'processing' },
+  approved: { text: '审批通过', color: 'success' },
+  approval_failed: { text: '审批失败', color: 'error' },
+  partially_settled: { text: '部分计提', color: 'orange' },
+  settled: { text: '已计提完毕', color: 'green' },
+};
+
 const ProjectListPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [projectList, setProjectList] = useState<Project[]>([]);
@@ -348,6 +359,31 @@ const ProjectListPage: React.FC = () => {
         const config = APPROVAL_STATUS_CONFIG[status];
         return (
           <Tag color={config?.color}>
+            {config?.text || status}
+          </Tag>
+        );
+      },
+    },
+    {
+      title: '计提状态',
+      dataIndex: 'profitDistributionStatus',
+      key: 'profitDistributionStatus',
+      width: 120,
+      render: (status: string) => {
+        if (!status || status === 'not_set') {
+          return <Tag color="default">未设置</Tag>;
+        }
+        const statusMap = {
+          awaiting_approval: { text: '待审批', color: 'warning' },
+          in_approval: { text: '审批中', color: 'processing' },
+          approved: { text: '审批通过', color: 'success' },
+          approval_failed: { text: '审批失败', color: 'error' },
+          partially_settled: { text: '部分计提', color: 'orange' },
+          settled: { text: '已计提完毕', color: 'green' },
+        };
+        const config = statusMap[status as keyof typeof statusMap];
+        return (
+          <Tag color={config?.color || 'default'}>
             {config?.text || status}
           </Tag>
         );

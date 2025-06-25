@@ -30,6 +30,7 @@ import type {
   ApprovalStatus,
 } from '@/types/project';
 import { getEmployeeDetail } from '@/services/organization/employee';
+import { getDepartmentDetail } from '@/services/organization/department';
 import { projectApi } from '@/services/project';
 
 interface ProjectDetailProps {
@@ -64,6 +65,7 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
   const [leaderName, setLeaderName] = useState<string>('');
   const [participantDetails, setParticipantDetails] = useState<ProjectParticipant[]>([]);
   const [closureInfo, setClosureInfo] = useState<any>(null);
+  const [profitDistributionData, setProfitDistributionData] = useState<any[]>([]);
 
   useEffect(() => {
     async function fetchDetails() {
@@ -94,13 +96,13 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
             if (!p.participantName && p.participantId) {
               try {
                 const res = await getEmployeeDetail(Number(p.participantId));
-                if (res && res.data) {
+                if (res && res.resp_code === 0 && res.datas) {
                   return {
                     ...p,
-                    participantName: res.data.name,
-                    departmentName: res.data.departmentName,
-                    participantPhone: res.data.phoneNumber,
-                    participantEmail: res.data.email,
+                    participantName: res.datas.name,
+                    departmentName: res.datas.departmentName,
+                    participantPhone: res.datas.phoneNumber,
+                    participantEmail: res.datas.email,
                   };
                 }
               } catch {}
@@ -120,6 +122,54 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
           } catch (error) {
             console.error('Failed to load closure info:', error);
           }
+        }
+        
+        // 检查是否有提成分配数据
+        if (project.hasProfitDistribution && project.profitDistributions) {
+          // 为提成分配数据补充部门名称和员工姓名
+          const enrichedDistributions = await Promise.all(
+            project.profitDistributions.map(async (distribution: any) => {
+              const enriched = { ...distribution };
+              
+              // 获取部门名称
+              if (distribution.deptId && !distribution.departmentName) {
+                try {
+                  const deptRes = await getDepartmentDetail(distribution.deptId);
+                  if (deptRes && deptRes.resp_code === 0 && deptRes.datas && deptRes.datas.name) {
+                    enriched.departmentName = deptRes.datas.name;
+                  }
+                } catch (error) {
+                  console.error(`Failed to get department ${distribution.deptId}:`, error);
+                }
+              }
+              
+              // 获取员工姓名（通过员工ID关联项目参与人）
+              if (distribution.employeeId && !distribution.employeeName) {
+                // 首先从已加载的参与人详情中查找
+                const participant = details.find(p => p.participantId === distribution.employeeId);
+                if (participant && participant.participantName) {
+                  enriched.employeeName = participant.participantName;
+                } else {
+                  // 如果参与人详情中没有，直接通过员工API获取
+                  try {
+                    const empRes = await getEmployeeDetail(Number(distribution.employeeId));
+                    if (empRes && empRes.resp_code === 0 && empRes.datas && empRes.datas.name) {
+                      enriched.employeeName = empRes.datas.name;
+                    }
+                  } catch (error) {
+                    console.error(`Failed to get employee ${distribution.employeeId}:`, error);
+                  }
+                }
+              }
+              
+              return enriched;
+            })
+          );
+          
+          setProfitDistributionData(enrichedDistributions);
+        } else {
+          // 清空之前的数据
+          setProfitDistributionData([]);
         }
       }
     }
@@ -237,6 +287,29 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
                 </Tag>
               );
             })() : '-'}
+          </Descriptions.Item>
+          
+          <Descriptions.Item label="计提状态">
+            {(() => {
+              const status = project.profitDistributionStatus;
+              if (!status || status === 'not_set') {
+                return <Tag color="default">未设置</Tag>;
+              }
+              const statusMap = {
+                awaiting_approval: { text: '待审批', color: 'warning' },
+                in_approval: { text: '审批中', color: 'processing' },
+                approved: { text: '审批通过', color: 'success' },
+                approval_failed: { text: '审批失败', color: 'error' },
+                partially_settled: { text: '部分计提', color: 'orange' },
+                settled: { text: '已计提完毕', color: 'green' },
+              };
+              const config = statusMap[status as keyof typeof statusMap];
+              return (
+                <Tag color={config?.color || 'default'}>
+                  {config?.text || status}
+                </Tag>
+              );
+            })()}
           </Descriptions.Item>
           
           <Descriptions.Item label="创建时间">
@@ -359,6 +432,276 @@ const ProjectDetail: React.FC<ProjectDetailProps> = ({
                   {project.processInstanceId}
                 </Descriptions.Item>
               </Descriptions>
+            </div>
+          </>
+        )}
+        
+        {/* 项目提成分配信息 */}
+        {project.hasProfitDistribution && profitDistributionData.length > 0 && (
+          <>
+            <Divider />
+            <div style={{ marginTop: 24 }}>
+              <h4 style={{ marginBottom: 16 }}>项目提成分配</h4>
+              
+              {(() => {
+                // 按角色分组提成分配数据（基于role字段：部门分配、员工分配）
+                const departmentDistributions = profitDistributionData.filter(item => item.role === '部门分配');
+                const employeeDistributions = profitDistributionData.filter(item => item.role === '员工分配');
+                
+                // 按部门分组员工数据
+                const employeeByDept = employeeDistributions.reduce((acc, emp) => {
+                  const deptId = emp.deptId;
+                  if (!acc[deptId]) acc[deptId] = [];
+                  acc[deptId].push(emp);
+                  return acc;
+                }, {} as Record<string, any[]>);
+                
+                return (
+                  <>
+                    {/* 项目提成概览（从结项信息获取） */}
+                    {closureInfo && (
+                      <Row gutter={16} style={{ marginBottom: 16 }}>
+                        <Col span={6}>
+                          <Card>
+                            <Statistic
+                              title="项目实际金额"
+                              value={closureInfo.actualAmount || 0}
+                              precision={2}
+                              prefix={<DollarOutlined />}
+                              suffix="元"
+                              valueStyle={{ color: '#1890ff' }}
+                            />
+                          </Card>
+                        </Col>
+                        <Col span={6}>
+                          <Card>
+                            <Statistic
+                              title="项目毛利润"
+                              value={closureInfo.grossProfit || 0}
+                              precision={2}
+                              prefix={<DollarOutlined />}
+                              suffix="元"
+                              valueStyle={{ color: '#52c41a' }}
+                            />
+                          </Card>
+                        </Col>
+                        <Col span={6}>
+                          <Card>
+                            <Statistic
+                              title="毛利率"
+                              value={closureInfo.grossProfitRate || 0}
+                              precision={1}
+                              suffix="%"
+                              valueStyle={{ color: '#fa8c16' }}
+                            />
+                          </Card>
+                        </Col>
+                        <Col span={6}>
+                          <Card>
+                            <Statistic
+                              title="提成池总额"
+                              value={(closureInfo.grossProfit || 0) * ((project as any).maxDistribution || 0.5)}
+                              precision={2}
+                              prefix={<DollarOutlined />}
+                              suffix="元"
+                              valueStyle={{ color: '#eb2f96' }}
+                            />
+                          </Card>
+                        </Col>
+                      </Row>
+                    )}
+                    
+                    {/* 部门分配详情 */}
+                    {departmentDistributions.length > 0 && (
+                      <div style={{ marginTop: 16 }}>
+                        <h5>部门分配详情</h5>
+                        <Table
+                          columns={[
+                            {
+                              title: '部门ID',
+                              dataIndex: 'deptId',
+                              key: 'deptId',
+                              width: 100,
+                            },
+                            {
+                              title: '部门名称',
+                              dataIndex: 'departmentName',
+                              key: 'departmentName',
+                              render: (text: string, record: any) => text || `部门${record.deptId}`,
+                            },
+                            {
+                              title: '分配类型',
+                              dataIndex: 'distributionType',
+                              key: 'distributionType',
+                              render: (type: string) => (
+                                <Tag color="blue">{type}</Tag>
+                              ),
+                            },
+                            {
+                              title: '分配值',
+                              dataIndex: 'distributionValue',
+                              key: 'distributionValue',
+                              render: (value: number, record: any) => {
+                                const isAmount = record.distributionType === '金额';
+                                return isAmount ? 
+                                  `¥${(value || 0).toFixed(2)}` : 
+                                  `${(value || 0).toFixed(1)}%`;
+                              },
+                            },
+                            {
+                              title: '计算金额',
+                              key: 'calculatedAmount',
+                              render: (_, record: any) => {
+                                if (closureInfo && record.distributionType === '比例') {
+                                  const amount = (closureInfo.grossProfit || 0) * ((project as any).maxDistribution || 0.5) * (record.distributionValue / 100);
+                                  return `¥${amount.toFixed(2)}`;
+                                }
+                                return `¥${(record.distributionValue || 0).toFixed(2)}`;
+                              },
+                            },
+                            {
+                              title: '状态',
+                              dataIndex: 'finalStatus',
+                              key: 'finalStatus',
+                              render: (status: string) => {
+                                if (!status) return <Tag color="warning">待审批</Tag>;
+                                const statusConfig = {
+                                  'pending': { text: '待审批', color: 'warning' },
+                                  'approved': { text: '已通过', color: 'success' },
+                                  'rejected': { text: '已拒绝', color: 'error' },
+                                };
+                                const config = statusConfig[status as keyof typeof statusConfig] || 
+                                             { text: status, color: 'default' };
+                                return <Tag color={config.color}>{config.text}</Tag>;
+                              },
+                            },
+                          ]}
+                          dataSource={departmentDistributions}
+                          rowKey={(record) => record.id}
+                          pagination={false}
+                          size="small"
+                          expandable={{
+                            expandedRowRender: (record) => {
+                              const deptEmployees = employeeByDept[record.deptId] || [];
+                              if (deptEmployees.length === 0) {
+                                return <div style={{ padding: '8px 0', color: '#999' }}>该部门暂无员工分配</div>;
+                              }
+                              
+                              return (
+                                <Table
+                                  columns={[
+                                    {
+                                      title: '员工ID',
+                                      dataIndex: 'employeeId',
+                                      key: 'employeeId',
+                                      width: 100,
+                                    },
+                                    {
+                                      title: '员工姓名',
+                                      dataIndex: 'employeeName',
+                                      key: 'employeeName',
+                                      render: (text: string, empRecord: any) => (
+                                        <Space>
+                                          <UserOutlined />
+                                          {text || `员工${empRecord.employeeId}`}
+                                        </Space>
+                                      ),
+                                    },
+                                    {
+                                      title: '分配类型',
+                                      dataIndex: 'distributionType',
+                                      key: 'distributionType',
+                                      render: (type: string) => (
+                                        <Tag color={type === '金额' ? 'green' : 'blue'}>
+                                          {type}
+                                        </Tag>
+                                      ),
+                                    },
+                                    {
+                                      title: '分配值',
+                                      dataIndex: 'distributionValue',
+                                      key: 'distributionValue',
+                                      render: (value: number, empRecord: any) => {
+                                        const isAmount = empRecord.distributionType === '金额';
+                                        return isAmount ? 
+                                          `¥${(value || 0).toFixed(2)}` : 
+                                          `${(value || 0).toFixed(1)}%`;
+                                      },
+                                    },
+                                    {
+                                      title: '计算金额',
+                                      key: 'calculatedAmount',
+                                      render: (_, empRecord: any) => {
+                                        if (closureInfo && empRecord.distributionType === '比例') {
+                                          const amount = (closureInfo.grossProfit || 0) * ((project as any).maxDistribution || 0.5) * (empRecord.distributionValue / 100);
+                                          return `¥${amount.toFixed(2)}`;
+                                        }
+                                        return `¥${(empRecord.distributionValue || 0).toFixed(2)}`;
+                                      },
+                                    },
+                                    {
+                                      title: '状态',
+                                      dataIndex: 'finalStatus',
+                                      key: 'finalStatus',
+                                      render: (status: string) => {
+                                        if (!status) return <Tag color="warning">待审批</Tag>;
+                                        const statusConfig = {
+                                          'pending': { text: '待审批', color: 'warning' },
+                                          'approved': { text: '已通过', color: 'success' },
+                                          'rejected': { text: '已拒绝', color: 'error' },
+                                        };
+                                        const config = statusConfig[status as keyof typeof statusConfig] || 
+                                                     { text: status, color: 'default' };
+                                        return <Tag color={config.color}>{config.text}</Tag>;
+                                      },
+                                    },
+                                  ]}
+                                  dataSource={deptEmployees}
+                                  rowKey={(empRecord) => empRecord.id}
+                                  pagination={false}
+                                  size="small"
+                                  showHeader={false}
+                                />
+                              );
+                            },
+                            rowExpandable: (record) => (employeeByDept[record.deptId] && employeeByDept[record.deptId].length > 0),
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* 提成分配汇总 */}
+                    <div style={{ marginTop: 16, padding: 16, backgroundColor: '#f5f5f5', borderRadius: 6 }}>
+                      <Row gutter={16}>
+                        <Col span={8}>
+                          <Statistic
+                            title="参与部门数"
+                            value={departmentDistributions.length}
+                            suffix="个"
+                          />
+                        </Col>
+                        <Col span={8}>
+                          <Statistic
+                            title="参与员工数"
+                            value={employeeDistributions.length}
+                            suffix="人"
+                          />
+                        </Col>
+                        <Col span={8}>
+                          <Statistic
+                            title="总权重"
+                            value={departmentDistributions.reduce((sum, item) => 
+                              sum + (item.distributionType === '比例' ? item.distributionValue : 0), 0
+                            )}
+                            precision={1}
+                            suffix="%"
+                          />
+                        </Col>
+                      </Row>
+                    </div>
+                  </>
+                );
+              })()}
             </div>
           </>
         )}

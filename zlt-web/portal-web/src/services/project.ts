@@ -224,6 +224,21 @@ export const projectApi = {
       data: { approved, reason },
     });
   },
+
+  // 保存项目提成分配方案
+  saveProfitDistribution: (data: any) => {
+    return request(`${API_PREFIX}/projects/profit-distribution/save`, {
+      method: 'POST',
+      data,
+    });
+  },
+
+  // 获取项目提成分配初始化数据
+  getProfitDistributionInitData: (projectId: string) => {
+    return request(`${API_PREFIX}/projects/${projectId}/profit-distribution/init`, {
+      method: 'GET',
+    });
+  },
 };
 
 /**
@@ -398,12 +413,4 @@ export const approvalApi = {
   },
 };
 
-/**
- * 保存项目提成分配
- */
-export function saveProfitDistribution(data: any) {
-  return request('/api/project-manager/projects/profit-distribution', {
-    method: 'POST',
-    data,
-  });
-} 
+ 

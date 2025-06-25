@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -116,6 +117,19 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
                         employeeIds.add(detail.getParticipantId());
                     }
                 });
+            }
+            
+            // 查询项目结项信息
+            ProjectClosure closure = projectClosureService.getByProjectId(id);
+            project.setClosure(closure);
+            
+            // 查询项目提成分配信息
+            List<ProjectProfitDistribution> profitDistributions = projectProfitDistributionService.getByProjectId(id);
+            project.setProfitDistributions(profitDistributions);
+            project.setHasProfitDistribution(profitDistributions != null && !profitDistributions.isEmpty());
+            
+            if (project.getHasProfitDistribution()) {
+                log.info("项目已有提成分配记录，项目ID: {}, 记录数量: {}", id, profitDistributions.size());
             }
             
             // 批量查询员工信息（这里需要调用organization-service）
@@ -583,12 +597,13 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             // 2. 先删除项目已有的提成分配记录-以后提成的话审批通过的不能修改
             // TODO: 先删除项目已有的提成,注意：分配记录-提成已经审批通过的不能修改
             
-            // 检查是否有已审批通过的提成分配记录
-            Boolean hasApproved = projectProfitDistributionService.hasApprovedDistribution(projectId);
-            if (hasApproved) {
-                log.error("项目已有审批通过的提成分配记录，不能修改，项目ID: {}", projectId);
-                return false;
-            }
+            // 检查是否有已审批通过的提成分配 -这个要改成校验profit_distribution_status的状态是这4个状态时in_approval：审批中,approved:审批通过,partially_settled部分计提，Settled：已计提完毕不允许编辑计提配置
+            //
+//            Boolean hasApproved = projectProfitDistributionService.hasApprovedDistribution(projectId);
+//            if (hasApproved) {
+//                log.error("项目已有审批通过的提成分配记录，不能修改，项目ID: {}", projectId);
+//                return false;
+//            }
             
             // 删除项目已有的提成分配记录（未审批的）
             Boolean deleteResult = projectProfitDistributionService.deleteByProjectId(projectId);
@@ -611,8 +626,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
                 deptDistribution.setTenantId(tenantId);
                 deptDistribution.setCreatedAt(now);
                 deptDistribution.setUpdatedAt(now);
-                deptDistribution.setCreatedBy(1L);
-                deptDistribution.setUpdatedBy(1L);
+                deptDistribution.setCreatedBy(LoginUserContextHolder.getUser().getId());
+                deptDistribution.setUpdatedBy(LoginUserContextHolder.getUser().getId());
                 deptDistribution.setDelflag(0);
                 
                 log.info("保存部门提成分配: 项目ID={}, 部门ID={}, 权重={}%", 
@@ -655,7 +670,15 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
                 return false;
             }
             
-            log.info("项目提成分配保存成功，项目ID: {}, 部门数量: {}, 总记录数: {}", 
+            // 6. 更新项目的利润计提状态为待审批
+            Project projectForStatus = new Project();
+            projectForStatus.setId(projectId);
+            projectForStatus.setProfitDistributionStatus("awaiting_approval");
+            projectForStatus.setUpdatedAt(now);
+            projectForStatus.setUpdatedBy(currentUserId);
+            updateById(projectForStatus);
+            
+            log.info("项目提成分配保存成功，项目ID: {}, 部门数量: {}, 总记录数: {}, 状态更新为待审批", 
                 projectId, saveDTO.getDepartmentAllocations().size(), allDistributions.size());
             return true;
             
@@ -663,5 +686,114 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
             log.error("保存项目提成分配失败，项目ID: {}", saveDTO.getProjectId(), e);
             throw e; // 重新抛出异常，触发事务回滚
         }
+    }
+    
+    /**
+     * 获取项目提成分配初始化数据
+     * @param projectId 项目ID
+     * @return 初始化数据
+     */
+    @Override
+    public Map<String, Object> getProfitDistributionInitData(Long projectId) {
+        Map<String, Object> initData = new HashMap<>();
+        
+        // 1. 获取项目基本信息
+        Project project = baseMapper.selectById(projectId);
+        if (project == null) {
+            throw new RuntimeException("项目不存在");
+        }
+        
+        // 2. 获取项目结项信息（包含实际金额、毛利润等）
+        ProjectClosure closure = projectClosureService.getByProjectId(projectId);
+        initData.put("project", project);
+        initData.put("closure", closure);
+        
+        // 3. 获取已保存的提成分配数据
+        List<ProjectProfitDistribution> existingDistributions = projectProfitDistributionService.getByProjectId(projectId);
+        initData.put("existingDistributions", existingDistributions);
+        
+        // 4. 检查是否已有提成分配
+        boolean hasExistingData = existingDistributions != null && !existingDistributions.isEmpty();
+        initData.put("hasExistingData", hasExistingData);
+        
+        // 5. 如果有已保存的数据，重构为层级结构（部门-员工）
+        if (hasExistingData) {
+            Map<String, Object> hierarchicalData = reorganizeDistributionData(existingDistributions);
+            initData.put("hierarchicalData", hierarchicalData);
+        }
+        
+        // 6. 从结项数据获取默认值
+        if (closure != null) {
+            initData.put("actualAmount", closure.getActualAmount());
+            initData.put("grossProfit", closure.getGrossProfit());
+            if (closure.getActualAmount() != null && closure.getActualAmount().compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal grossProfitRate = closure.getGrossProfit().divide(closure.getActualAmount(), 4, RoundingMode.HALF_UP);
+                initData.put("grossProfitRate", grossProfitRate);
+            } else {
+                initData.put("grossProfitRate", BigDecimal.ZERO);
+            }
+        }
+        
+        log.info("获取项目提成分配初始化数据, 项目ID: {}, 是否有已保存数据: {}", projectId, hasExistingData);
+        
+        return initData;
+    }
+    
+    /**
+     * 重新组织提成分配数据为层级结构
+     * @param distributions 原始分配数据
+     * @return 层级结构数据
+     */
+    private Map<String, Object> reorganizeDistributionData(List<ProjectProfitDistribution> distributions) {
+        Map<String, Object> result = new HashMap<>();
+        
+        // 按分配角色分组 (用role字段区分部门分配和员工分配)
+        Map<String, List<ProjectProfitDistribution>> groupedByRole = distributions.stream()
+                .collect(Collectors.groupingBy(ProjectProfitDistribution::getRole));
+        
+        // 获取部门分配记录 (role为"部门分配")
+        List<ProjectProfitDistribution> deptDistributions = groupedByRole.getOrDefault("部门分配", new ArrayList<>());
+        
+        // 获取员工分配记录 (role为"员工分配")
+        List<ProjectProfitDistribution> empDistributions = groupedByRole.getOrDefault("员工分配", new ArrayList<>());
+        
+        // 按部门分组员工数据
+        Map<Long, List<ProjectProfitDistribution>> empByDept = empDistributions.stream()
+                .filter(emp -> emp.getDeptId() != null)
+                .collect(Collectors.groupingBy(ProjectProfitDistribution::getDeptId));
+        
+        // 构建部门-员工层级结构
+        List<Map<String, Object>> departmentData = new ArrayList<>();
+        for (ProjectProfitDistribution dept : deptDistributions) {
+            Map<String, Object> deptMap = new HashMap<>();
+            deptMap.put("departmentId", dept.getDeptId());
+            deptMap.put("departmentName", dept.getDepartmentName() != null ? dept.getDepartmentName() : "部门" + dept.getDeptId());
+            deptMap.put("weight", dept.getDistributionValue() != null ? dept.getDistributionValue() : BigDecimal.ZERO);
+            deptMap.put("amount", dept.getCalculatedAmount() != null ? dept.getCalculatedAmount() : BigDecimal.ZERO);
+            
+            // 添加该部门的员工数据
+            List<ProjectProfitDistribution> deptEmployees = empByDept.getOrDefault(dept.getDeptId(), new ArrayList<>());
+            
+            // 将员工分配数据转换为前端需要的格式
+            List<Map<String, Object>> employeeList = deptEmployees.stream().map(emp -> {
+                Map<String, Object> empMap = new HashMap<>();
+                empMap.put("employeeId", emp.getEmployeeId());
+                empMap.put("employeeName", emp.getEmployeeName() != null ? emp.getEmployeeName() : "员工" + emp.getEmployeeId());
+                empMap.put("distributionType", emp.getDistributionType());
+                empMap.put("distributionValue", emp.getDistributionValue() != null ? emp.getDistributionValue() : BigDecimal.ZERO);
+                return empMap;
+            }).collect(Collectors.toList());
+            
+            deptMap.put("employees", employeeList);
+            departmentData.add(deptMap);
+        }
+        
+        result.put("departments", departmentData);
+        
+        // 注意：当前的分配记录结构主要存储部门和员工分配信息
+        // 项目基础信息（如actualAmount, grossProfit等）应该从ProjectClosure获取
+        // 这里暂时不设置这些字段，在上层方法中从closure获取
+        
+        return result;
     }
 } 

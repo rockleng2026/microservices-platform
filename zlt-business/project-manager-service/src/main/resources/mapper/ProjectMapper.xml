@@ -15,6 +15,7 @@
         <result column="status" property="status" jdbcType="VARCHAR"/>
         <result column="process_instance_id" property="processInstanceId" jdbcType="VARCHAR"/>
         <result column="final_status" property="finalStatus" jdbcType="VARCHAR"/>
+        <result column="profit_distribution_status" property="profitDistributionStatus" jdbcType="VARCHAR"/>
         <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
         <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
         <result column="updated_by" property="updatedBy" jdbcType="BIGINT"/>
@@ -30,6 +31,7 @@
     <sql id="baseColumns">
         p.id, p.name, p.category, p.leader_id, p.customer_name, 
         p.customer_contact, p.start_time, p.status, p.process_instance_id, p.final_status,
+        p.profit_distribution_status,
         p.tenant_id, p.created_by, p.updated_by, p.created_at, p.updated_at, p.delflag
     </sql>
 
@@ -37,6 +39,7 @@
     <sql id="extendColumns">
         p.id, p.name, p.category, p.leader_id, p.customer_name, 
         p.customer_contact, p.start_time, p.status, p.process_instance_id, p.final_status,
+        p.profit_distribution_status,
         p.tenant_id, p.created_by, p.updated_by, p.created_at, p.updated_at, p.delflag,
         (SELECT COUNT(*) FROM project_detail pd WHERE pd.project_id = p.id AND pd.delflag = 0) as participant_count,
         DATEDIFF(NOW(), p.start_time) as days_running
@@ -76,6 +79,17 @@
             </if>
             <if test="params.finalStatus != null and params.finalStatus != ''">
                 AND p.final_status = #{params.finalStatus}
+            </if>
+            <if test="params.profitDistributionStatus != null and params.profitDistributionStatus != ''">
+                AND p.profit_distribution_status = #{params.profitDistributionStatus}
+            </if>
+            <if test="params.participantId != null">
+                AND EXISTS (
+                    SELECT 1 FROM project_detail pd 
+                    WHERE pd.project_id = p.id 
+                    AND pd.participant_id = #{params.participantId}
+                    AND pd.delflag = 0
+                )
             </if>
         </where>
         <choose>

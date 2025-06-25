@@ -1,7 +1,7 @@
 import { request } from '@/utils/request';
 
-// API基础地址
-const API_BASE = 'http://127.0.0.1:9900/api-portal';
+// API前缀 - 通过网关代理
+const API_PREFIX = '/api/organization/employee';
 
 export interface Employee {
   id: number;
@@ -94,7 +94,7 @@ export interface EmployeeImportData {
  * 分页查询员工列表
  */
 export async function getEmployeePage(params: EmployeePageParams) {
-  return request(`${API_BASE}/api/organization/employee/page`, {
+  return request(`${API_PREFIX}/page`, {
     method: 'GET',
     params,
   });
@@ -104,7 +104,7 @@ export async function getEmployeePage(params: EmployeePageParams) {
  * 获取员工详情
  */
 export async function getEmployeeDetail(id: number) {
-  return request(`${API_BASE}/api/organization/employee/${id}`, {
+  return request(`${API_PREFIX}/${id}`, {
     method: 'GET',
   });
 }
@@ -113,7 +113,7 @@ export async function getEmployeeDetail(id: number) {
  * 创建员工
  */
 export async function createEmployee(data: Partial<Employee>) {
-  return request(`${API_BASE}/api/organization/employee/save`, {
+  return request(`${API_PREFIX}/save`, {
     method: 'POST',
     data,
   });
@@ -123,7 +123,7 @@ export async function createEmployee(data: Partial<Employee>) {
  * 更新员工
  */
 export async function updateEmployee(id: number, data: Partial<Employee>) {
-  return request(`${API_BASE}/api/organization/employee/save`, {
+  return request(`${API_PREFIX}/save`, {
     method: 'POST',
     data: {
       ...data,
@@ -136,7 +136,7 @@ export async function updateEmployee(id: number, data: Partial<Employee>) {
  * 删除员工
  */
 export async function deleteEmployee(id: number) {
-  return request(`${API_BASE}/api/organization/employee/${id}`, {
+  return request(`${API_PREFIX}/${id}`, {
     method: 'DELETE',
   });
 }
@@ -145,7 +145,7 @@ export async function deleteEmployee(id: number) {
  * 批量删除员工
  */
 export async function deleteEmployees(ids: number[]) {
-  return request(`${API_BASE}/api/organization/employee/batch`, {
+  return request(`${API_PREFIX}/batch`, {
     method: 'DELETE',
     data: ids,
   });
@@ -155,7 +155,7 @@ export async function deleteEmployees(ids: number[]) {
  * 更新员工状态
  */
 export async function updateEmployeeStatus(id: number, status: number) {
-  return request(`${API_BASE}/api/organization/employee/${id}/status`, {
+  return request(`${API_PREFIX}/${id}/status`, {
     method: 'PUT',
     params: { status },
   });
@@ -165,7 +165,7 @@ export async function updateEmployeeStatus(id: number, status: number) {
  * 员工调动
  */
 export async function transferEmployee(id: number, newDepartmentId: number, newPositionId?: number) {
-  return request(`${API_BASE}/api/organization/employee/${id}/transfer`, {
+  return request(`${API_PREFIX}/${id}/transfer`, {
     method: 'PUT',
     params: { 
       newDepartmentId, 
@@ -178,7 +178,7 @@ export async function transferEmployee(id: number, newDepartmentId: number, newP
  * 员工转正
  */
 export async function confirmEmployee(id: number) {
-  return request(`${API_BASE}/api/organization/employee/${id}/confirm`, {
+  return request(`${API_PREFIX}/${id}/confirm`, {
     method: 'PUT',
   });
 }
@@ -187,7 +187,7 @@ export async function confirmEmployee(id: number) {
  * 员工离职
  */
 export async function resignEmployee(id: number, leaveDate: string, leaveReason: string) {
-  return request(`${API_BASE}/api/organization/employee/${id}/resign`, {
+  return request(`${API_PREFIX}/${id}/resign`, {
     method: 'PUT',
     params: { 
       leaveDate, 
@@ -200,7 +200,7 @@ export async function resignEmployee(id: number, leaveDate: string, leaveReason:
  * 根据部门查询员工
  */
 export async function getEmployeesByDepartment(departmentId: number, includeSubDepartments: boolean = false) {
-  return request(`${API_BASE}/api/organization/employee/department/${departmentId}`, {
+  return request(`${API_PREFIX}/department/${departmentId}`, {
     method: 'GET',
     params: { includeSubDepartments },
   });
@@ -210,7 +210,7 @@ export async function getEmployeesByDepartment(departmentId: number, includeSubD
  * 根据岗位查询员工
  */
 export async function getEmployeesByPosition(positionId: number) {
-  return request(`${API_BASE}/api/organization/employee/position/${positionId}`, {
+  return request(`${API_PREFIX}/position/${positionId}`, {
     method: 'GET',
   });
 }
@@ -219,7 +219,7 @@ export async function getEmployeesByPosition(positionId: number) {
  * 获取员工统计信息
  */
 export async function getEmployeeStatistics(departmentId?: number) {
-  return request(`${API_BASE}/api/organization/employee/statistics`, {
+  return request(`${API_PREFIX}/statistics`, {
     method: 'GET',
     params: { departmentId },
   });
@@ -229,7 +229,7 @@ export async function getEmployeeStatistics(departmentId?: number) {
  * 获取即将到期试用期员工
  */
 export async function getExpiringProbationEmployees(days: number = 7) {
-  return request(`${API_BASE}/api/organization/employee/expiring-probation`, {
+  return request(`${API_PREFIX}/expiring-probation`, {
     method: 'GET',
     params: { days },
   });
@@ -239,7 +239,7 @@ export async function getExpiringProbationEmployees(days: number = 7) {
  * 获取生日员工
  */
 export async function getBirthdayEmployees(startDate: string, endDate: string) {
-  return request(`${API_BASE}/api/organization/employee/birthday`, {
+  return request(`${API_PREFIX}/birthday`, {
     method: 'GET',
     params: { startDate, endDate },
   });
@@ -249,7 +249,7 @@ export async function getBirthdayEmployees(startDate: string, endDate: string) {
  * 验证工号是否可用
  */
 export async function checkEmpNoAvailable(empNo: string, excludeId?: number) {
-  return request(`${API_BASE}/api/organization/employee/check-emp-no`, {
+  return request(`${API_PREFIX}/check-emp-no`, {
     method: 'GET',
     params: { empNo, excludeId },
   });
@@ -259,7 +259,7 @@ export async function checkEmpNoAvailable(empNo: string, excludeId?: number) {
  * 验证身份证号是否可用
  */
 export async function checkIdCardNoAvailable(idCardNo: string, excludeId?: number) {
-  return request(`${API_BASE}/api/organization/employee/check-id-card`, {
+  return request(`${API_PREFIX}/check-id-card`, {
     method: 'GET',
     params: { idCardNo, excludeId },
   });
@@ -269,7 +269,7 @@ export async function checkIdCardNoAvailable(idCardNo: string, excludeId?: numbe
  * 验证手机号是否可用
  */
 export async function checkPhoneNumberAvailable(phoneNumber: string, excludeId?: number) {
-  return request(`${API_BASE}/api/organization/employee/check-phone`, {
+  return request(`${API_PREFIX}/check-phone`, {
     method: 'GET',
     params: { phoneNumber, excludeId },
   });
@@ -279,7 +279,7 @@ export async function checkPhoneNumberAvailable(phoneNumber: string, excludeId?:
  * 验证邮箱是否可用
  */
 export async function checkEmailAvailable(email: string, excludeId?: number) {
-  return request(`${API_BASE}/api/organization/employee/check-email`, {
+  return request(`${API_PREFIX}/check-email`, {
     method: 'GET',
     params: { email, excludeId },
   });
@@ -292,7 +292,7 @@ export async function importEmployees(file: File) {
   const formData = new FormData();
   formData.append('file', file);
   
-  return request(`${API_BASE}/api/organization/employee/import`, {
+  return request(`${API_PREFIX}/import`, {
     method: 'POST',
     data: formData,
     headers: {
@@ -305,7 +305,7 @@ export async function importEmployees(file: File) {
  * 导出员工
  */
 export async function exportEmployees(departmentId?: number) {
-  return request(`${API_BASE}/api/organization/employee/export`, {
+  return request(`${API_PREFIX}/export`, {
     method: 'GET',
     params: { departmentId },
     responseType: 'blob',
@@ -316,7 +316,7 @@ export async function exportEmployees(departmentId?: number) {
  * 生成工号
  */
 export async function generateEmpNo(departmentId: number) {
-  return request(`${API_BASE}/api/organization/employee/generate-emp-no`, {
+  return request(`${API_PREFIX}/generate-emp-no`, {
     method: 'GET',
     params: { departmentId },
   });
@@ -326,7 +326,7 @@ export async function generateEmpNo(departmentId: number) {
  * 下载员工导入模板
  */
 export async function downloadEmployeeTemplate() {
-  return request(`${API_BASE}/api/organization/employee/download-template`, {
+  return request(`${API_PREFIX}/download-template`, {
     method: 'GET',
     responseType: 'blob',
   });
@@ -336,7 +336,7 @@ export async function downloadEmployeeTemplate() {
  * 批量查询员工详情
  */
 export async function getEmployeeBatchDetail(ids: (string|number)[]) {
-  return request(`${API_BASE}/api/organization/employee/batch-detail`, {
+  return request(`${API_PREFIX}/batch-detail`, {
     method: 'POST',
     data: ids,
   });

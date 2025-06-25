@@ -82,6 +82,11 @@ public class ProjectQueryDTO {
     private String finalStatus;
     
     /**
+     * 利润计提状态
+     */
+    private String profitDistributionStatus;
+    
+    /**
      * 排序字段
      */
     private String orderBy = "created_at";

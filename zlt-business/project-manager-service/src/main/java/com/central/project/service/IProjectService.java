@@ -219,9 +219,16 @@ public interface IProjectService extends IService<Project> {
     Boolean approveProfitDistribution(Long projectId, Boolean approved, String reason);
     
     /**
-     * 保存项目提成分配方案（部门-员工层级）
-     * @param saveDTO 提成分配数据
-     * @return 是否成功
+     * 保存项目提成分配方案
+     * @param saveDTO 提成分配保存DTO
+     * @return 保存结果
      */
     Boolean saveProfitDistribution(ProjectProfitDistributionSaveDTO saveDTO);
+    
+    /**
+     * 获取项目提成分配初始化数据
+     * @param projectId 项目ID
+     * @return 初始化数据
+     */
+    Map<String, Object> getProfitDistributionInitData(Long projectId);
 } 

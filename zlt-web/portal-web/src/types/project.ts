@@ -18,6 +18,17 @@ export enum ApprovalStatus {
   REJECTED = 'rejected',
 }
 
+// 利润计提状态枚举
+export enum ProfitDistributionStatus {
+  NOT_SET = 'not_set',
+  AWAITING_APPROVAL = 'awaiting_approval',
+  IN_APPROVAL = 'in_approval',
+  APPROVED = 'approved',
+  APPROVAL_FAILED = 'approval_failed',
+  PARTIALLY_SETTLED = 'partially_settled',
+  SETTLED = 'settled',
+}
+
 // 表单模式
 export type FormMode = 'create' | 'edit' | 'view';
 
@@ -48,12 +59,18 @@ export interface Project {
   status: ProjectStatus;
   processInstanceId?: string;
   finalStatus?: ApprovalStatus;
+  profitDistributionStatus?: string;
   tenantId: string;
   createdBy?: string;
   updatedBy?: string;
   createdAt: string;
   updatedAt: string;
   delflag: number;
+  
+  // 项目提成分配相关字段
+  profitDistributions?: ProjectProfitDistribution[];
+  hasProfitDistribution?: boolean;
+  closure?: ProjectClosure;
 }
 
 // 项目查询参数
@@ -190,4 +207,42 @@ export interface PageResult<T = any> {
 
 // 表格操作类型
 export type TableAction = 'view' | 'edit' | 'delete' | 'approval' | 'participant';
+
+// 项目结项信息
+export interface ProjectClosure {
+  id?: string;
+  projectId: string;
+  contractAmount?: number;
+  actualAmount?: number;
+  grossProfit?: number;
+  grossProfitRate?: number;
+  closureTime?: string;
+  finalStatus?: ApprovalStatus;
+  remarks?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+// 项目提成分配记录
+export interface ProjectProfitDistribution {
+  id?: string;
+  projectId: string;
+  type: 'project' | 'department' | 'employee';
+  departmentId?: string;
+  departmentName?: string;
+  employeeId?: string;
+  employeeName?: string;
+  distributionType: '比例' | '金额';
+  distributionValue: number;
+  weight?: number;
+  amount?: number;
+  actualAmount?: number;
+  grossProfit?: number;
+  maxDistributionRatio?: number;
+  actualCommissionAmount?: number;
+  reserveFundRatio?: number;
+  status?: 'pending' | 'approved' | 'rejected';
+  createdAt?: string;
+  updatedAt?: string;
+}
 

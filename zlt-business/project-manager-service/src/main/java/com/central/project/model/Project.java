@@ -92,6 +92,11 @@ public class Project {
     private String finalStatus;
     
     /**
+     * 利润计提状态
+     */
+    private String profitDistributionStatus;
+    
+    /**
      * 租户ID
      */
     private String tenantId;
@@ -168,4 +173,22 @@ public class Project {
      */
     @TableField(exist = false)
     private String finalStatusText;
+    
+    /**
+     * 利润计提状态显示文本
+     */
+    @TableField(exist = false)
+    private String profitDistributionStatusText;
+    
+    /**
+     * 项目提成分配信息
+     */
+    @TableField(exist = false)
+    private List<ProjectProfitDistribution> profitDistributions;
+    
+    /**
+     * 是否已有提成分配
+     */
+    @TableField(exist = false)
+    private Boolean hasProfitDistribution;
 } 

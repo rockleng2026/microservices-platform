@@ -13,8 +13,8 @@ const SERVICE_CONFIG = {
   
   // 测试环境配置
   test: {
-    GATEWAY_URL: 'http://test-gateway.example.com:9900',
-    API_BASE_URL: 'http://test-gateway.example.com:9900',
+    GATEWAY_URL: 'http://117.72.61.156:9900',
+    API_BASE_URL: 'http://117.72.61.156:9900',
   },
   
   // 生产环境配置

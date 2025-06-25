@@ -27,7 +27,7 @@ const Login: React.FC = () => {
     setDeviceId(newDeviceId);
     
     // 直接构建验证码URL，不需要异步调用
-    const captchaImageUrl = `http://127.0.0.1:9900/api-uaa/validata/code/${newDeviceId}`;
+          const captchaImageUrl = `http://127.0.0.1:9900/api-uaa/validata/code/${newDeviceId}`;
     setCaptchaUrl(captchaImageUrl);
     
     console.log('刷新验证码，设备ID:', newDeviceId);

@@ -1,11 +1,12 @@
 import { request } from '../utils/request';
-import { API_ENDPOINTS, API_PATHS } from '@/config/api';
+import { API_ENDPOINTS, API_PATHS, getApiUrl } from '@/config/api';
 
 /**
  * Portal用户相关API接口
+ * 使用统一的API配置管理
  */
 
-// 响应适配器 - 将后端响应格式转换为前端期望的格式
+// 响应适配器
 function adaptResponse<T>(response: any): { success: boolean; data: T; message: string } {
   if (response.resp_code === 0) {
     return {
@@ -22,7 +23,7 @@ function adaptResponse<T>(response: any): { success: boolean; data: T; message: 
   }
 }
 
-// Portal用户信息接口
+// 接口类型定义
 interface PortalUser {
   id: number;
   username: string;
@@ -116,7 +117,7 @@ export async function getCurrentUserMenus(options?: { [key: string]: any }) {
  * 切换用户当前岗位
  */
 export async function switchUserPosition(positionId: number, options?: { [key: string]: any }) {
-  const response = await request(`${API_ENDPOINTS.PORTAL}/users/switch-position`, {
+  const response = await request(getApiUrl('/users/switch-position', 'PORTAL'), {
     method: 'POST',
     params: { positionId },
     ...(options || {}),
@@ -151,7 +152,7 @@ export async function saveUserPersonalConfig(config: UserPersonalConfig, options
  * 更新用户默认岗位
  */
 export async function updateDefaultPosition(positionId: number, options?: { [key: string]: any }) {
-  const response = await request(`${API_ENDPOINTS.PORTAL}/users/default-position`, {
+  const response = await request(getApiUrl('/users/default-position', 'PORTAL'), {
     method: 'POST',
     params: { positionId },
     ...(options || {}),

@@ -1,106 +1,101 @@
-// 使用fetch API实现request函数
-const request = async (url: string, options: any) => {
-  console.log('发送请求到:', url);
-  console.log('请求选项:', options);
-  
-  const response = await fetch(url, {
-    method: options.method || 'GET',
-    headers: options.headers || {},
-    body: options.data,
-  });
-  
-  console.log('响应状态:', response.status);
-  
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('请求失败，响应文本:', errorText);
-    throw new Error(`HTTP ${response.status}: ${errorText}`);
-  }
-  
-  const result = await response.json();
-  console.log('响应结果:', result);
-  return result;
-};
+import { request } from 'umi';
+// 引入统一API配置
+import { API_ENDPOINTS, API_PATHS, getApiUrl } from '@/config/api';
 
-// API基础地址 - 与layui-web保持一致
-const API_BASE = 'http://127.0.0.1:9900';
+interface LoginParams {
+  username: string;
+  password: string;
+  deviceId: string;
+  validCode: string;
+  rememberMe?: boolean;
+}
+
+interface LoginResult {
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  token_type: string;
+  scope: string;
+}
+
+interface ApiResponse<T = any> {
+  success: boolean;
+  message?: string;
+  data?: T;
+  resp_code?: number;
+  resp_msg?: string;
+  datas?: T;
+}
+
+// 使用统一配置的API基础地址
+const API_BASE = API_ENDPOINTS.GATEWAY;
 
 /**
- * 获取图形验证码 (返回图片URL)
- * 与layui-web保持一致的实现方式
+ * 用户登录
  */
-export async function getCaptcha(deviceId: string) {
-  // 直接返回验证码图片的完整URL，与layui-web项目保持一致
-  return `${API_BASE}/api-uaa/validata/code/${deviceId}`;
+export async function login(params: LoginParams) {
+  const formData = new FormData();
+  formData.append('username', params.username);
+  formData.append('password', params.password);
+  formData.append('deviceId', params.deviceId);
+  formData.append('validCode', params.validCode);
+  formData.append('grant_type', 'password_code');
+  formData.append('scope', 'app');
+
+  if (params.rememberMe) {
+    formData.append('rememberMe', 'true');
+  }
+
+  return request<ApiResponse<LoginResult>>(API_PATHS.LOGIN, {
+    method: 'POST',
+    data: formData,
+    headers: {
+      'Authorization': 'Basic d2ViQXBwOndlYkFwcA==',
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    requestType: 'form',
+  });
 }
 
 /**
- * Portal用户登录（带验证码）
+ * 用户登出
  */
-export async function login(data: {
-  username: string;
-  password: string;
-  validCode: string;
-  deviceId: string;
-  client_id: string;
-  client_secret: string;
-  account_type?: string;
-}) {
-  // 使用HTTP Basic认证方式 - 完全参照layui-web的实现
-  const credentials = btoa(`${data.client_id}:${data.client_secret}`);
-  console.log('Basic认证凭据:', `${data.client_id}:${data.client_secret}`);
-  console.log('Base64编码后:', credentials);
-  
-  // 构建查询参数 - 完全参照layui-web的实现
-  const params = new URLSearchParams({
-    grant_type: 'password_code',
-    username: data.username,
-    password: data.password,
-    validCode: data.validCode,
-    deviceId: data.deviceId,
+export async function logout() {
+  const token = localStorage.getItem('access_token');
+  return request(API_PATHS.LOGOUT, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
   });
+}
+
+/**
+ * 刷新令牌
+ */
+export async function refreshToken() {
+  const refresh_token = localStorage.getItem('refresh_token');
   
-  if (data.account_type) {
-    params.append('account_type', data.account_type);
-  }
-  
-  const requestUrl = `${API_BASE}/api-uaa/oauth/token?${params.toString()}`;
-  console.log('登录请求URL:', requestUrl);
-  
-  try {
-    const result = await request(requestUrl, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Basic ${credentials}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
-    
-    console.log('登录响应:', result);
-    
-    // 检查响应格式
-    if (result) {
-      // 如果resp_code存在，按照标准格式处理
-      if (result.resp_code !== undefined) {
-        return result;
-      }
-      // 如果直接返回token，包装成标准格式
-      else if (result.access_token) {
-        return {
-          resp_code: 0,
-          resp_msg: 'ok',
-          datas: result
-        };
-      }
-    }
-    
-    // 如果都不匹配，返回错误
-    throw new Error(result?.resp_msg || result?.error_description || '登录响应格式错误');
-    
-  } catch (error: any) {
-    console.error('登录请求失败:', error);
-    throw error;
-  }
+  const formData = new FormData();
+  formData.append('grant_type', 'refresh_token');
+  formData.append('refresh_token', refresh_token || '');
+
+  return request<ApiResponse<LoginResult>>(API_PATHS.LOGIN, {
+    method: 'POST',
+    data: formData,
+    headers: {
+      'Authorization': 'Basic d2ViQXBwOndlYkFwcA==',
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    requestType: 'form',
+  });
+}
+
+/**
+ * 获取验证码
+ */
+export async function getCaptcha(deviceId: string) {
+  return API_PATHS.CAPTCHA(deviceId);
 }
 
 /**
@@ -108,13 +103,32 @@ export async function login(data: {
  */
 export async function getCurrentUser() {
   const token = localStorage.getItem('access_token');
-  return request(`${API_BASE}/api-portal/users/current`, {
+  return request(API_PATHS.CURRENT_USER, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
     },
   });
 }
+
+/**
+ * 修改密码
+ */
+export async function changePassword(params: {
+  oldPassword: string;
+  newPassword: string;
+}) {
+  const token = localStorage.getItem('access_token');
+  return request(getApiUrl('/api-portal/users/change-password', 'PORTAL'), {
+    method: 'POST',
+    data: params,
+    headers: {
+      'Authorization': `Bearer ${token}`,
+    },
+  });
+}
+
+export type { LoginParams, LoginResult, ApiResponse };
 
 /**
  * 获取当前用户菜单权限
@@ -150,50 +164,39 @@ export async function switchPosition(positionId: number) {
 }
 
 /**
- * 用户登出
- * 参考layui-web和react-web的最佳实践
+ * 快速退出（不调用后端接口）
+ * 在网络异常或紧急情况下使用
  */
-export async function logout() {
-  const token = localStorage.getItem('access_token');
-  
-  console.log('开始执行退出登录...');
-  
-  // 如果没有token，直接清理本地存储并跳转
-  if (!token) {
-    console.warn('未找到访问令牌，直接清理本地存储');
-    clearLocalStorage();
-    redirectToLogin();
-    return;
-  }
-  
-  try {
-    // 调用后端退出接口 - 使用标准的OAuth2退出端点
-    console.log('调用后端退出接口:', `${API_BASE}/api-uaa/oauth/remove/token`);
-    
-    const response = await request(`${API_BASE}/api-uaa/oauth/remove/token`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    });
-    
-    console.log('退出接口响应:', response);
-    
-  } catch (error: any) {
-    console.warn('退出接口调用失败，但继续执行本地清理:', error);
-    
-    // 即使后端接口失败，也要继续清理本地存储
-    // 这是参考react-web的做法，确保用户总是能够退出
-  }
-  
-  // 清除本地存储
+export async function quickLogout() {
+  console.log('执行快速退出...');
   clearLocalStorage();
-  
-  // 跳转到登录页面
   redirectToLogin();
+}
+
+/**
+ * 检查登录状态
+ * 用于路由守卫和组件状态检查
+ */
+export function isLoggedIn(): boolean {
+  const token = localStorage.getItem('access_token');
+  const expiresAt = localStorage.getItem('token_expires_at');
   
-  console.log('退出登录完成');
+  if (!token) {
+    return false;
+  }
+  
+  // 检查token是否过期
+  if (expiresAt) {
+    const now = Date.now();
+    const expiry = parseInt(expiresAt, 10);
+    if (now >= expiry) {
+      console.warn('Token已过期');
+      clearLocalStorage();
+      return false;
+    }
+  }
+  
+  return true;
 }
 
 /**
@@ -244,40 +247,4 @@ function redirectToLogin() {
     // 如果已经在登录页面，直接替换为登录页面
     window.location.replace('/login');
   }
-}
-
-/**
- * 快速退出（不调用后端接口）
- * 在网络异常或紧急情况下使用
- */
-export async function quickLogout() {
-  console.log('执行快速退出...');
-  clearLocalStorage();
-  redirectToLogin();
-}
-
-/**
- * 检查登录状态
- * 用于路由守卫和组件状态检查
- */
-export function isLoggedIn(): boolean {
-  const token = localStorage.getItem('access_token');
-  const expiresAt = localStorage.getItem('token_expires_at');
-  
-  if (!token) {
-    return false;
-  }
-  
-  // 检查token是否过期
-  if (expiresAt) {
-    const now = Date.now();
-    const expiry = parseInt(expiresAt, 10);
-    if (now >= expiry) {
-      console.warn('Token已过期');
-      clearLocalStorage();
-      return false;
-    }
-  }
-  
-  return true;
 } 

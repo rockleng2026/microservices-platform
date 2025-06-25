@@ -1,7 +1,6 @@
 import { request } from 'umi';
-
-// API基础地址
-const API_BASE = 'http://127.0.0.1:9900/api-portal';
+// 引入统一API配置
+import { API_ENDPOINTS, API_PATHS, getApiUrl } from '@/config/api';
 
 /**
  * 部门管理API
@@ -9,7 +8,7 @@ const API_BASE = 'http://127.0.0.1:9900/api-portal';
 
 // 获取部门树
 export async function getDepartmentTree(params?: any) {
-  return request<ApiResponse<Department[]>>(`${API_BASE}/api/organization/departments/tree`, {
+  return request<ApiResponse<Department[]>>(getApiUrl('/api/organization/departments/tree', 'ORGANIZATION'), {
     method: 'GET',
     params,
   });
@@ -32,7 +31,7 @@ export async function getDepartmentById(id: number) {
 
 // 创建部门
 export async function createDepartment(data: Partial<Department>) {
-  return request<ApiResponse<Department>>('/api/organization/departments', {
+  return request<ApiResponse<Department>>(getApiUrl('/api/organization/departments', 'ORGANIZATION'), {
     method: 'POST',
     data,
   });
@@ -48,7 +47,7 @@ export async function updateDepartment(id: number, data: Partial<Department>) {
 
 // 删除部门
 export async function deleteDepartment(id: number) {
-  return request<ApiResponse<void>>(`/api/organization/departments/${id}`, {
+  return request<ApiResponse<string>>(`/api/organization/departments/${id}`, {
     method: 'DELETE',
   });
 }
@@ -58,23 +57,23 @@ export async function deleteDepartment(id: number) {
  */
 
 // 获取员工列表
-export async function getEmployees(params?: TableSearchParams) {
-  return request<ApiResponse<PageResponse<Employee>>>('/api/organization/employees', {
+export async function getEmployeeList(params?: any) {
+  return request<ApiResponse<Employee[]>>(getApiUrl('/api/organization/employees', 'ORGANIZATION'), {
     method: 'GET',
     params,
   });
 }
 
 // 获取员工详情
-export async function getEmployeeById(id: number) {
-  return request<ApiResponse<Employee>>(`/api/organization/employees/${id}`, {
+export async function getEmployeeDetail(id: number) {
+  return request<ApiResponse<Employee>>(getApiUrl(`/api/organization/employees/${id}`, 'ORGANIZATION'), {
     method: 'GET',
   });
 }
 
 // 创建员工
 export async function createEmployee(data: Partial<Employee>) {
-  return request<ApiResponse<Employee>>('/api/organization/employees', {
+  return request<ApiResponse<Employee>>(getApiUrl('/api/organization/employees', 'ORGANIZATION'), {
     method: 'POST',
     data,
   });
@@ -82,7 +81,7 @@ export async function createEmployee(data: Partial<Employee>) {
 
 // 更新员工
 export async function updateEmployee(id: number, data: Partial<Employee>) {
-  return request<ApiResponse<Employee>>(`/api/organization/employees/${id}`, {
+  return request<ApiResponse<Employee>>(getApiUrl(`/api/organization/employees/${id}`, 'ORGANIZATION'), {
     method: 'PUT',
     data,
   });
@@ -90,7 +89,7 @@ export async function updateEmployee(id: number, data: Partial<Employee>) {
 
 // 删除员工
 export async function deleteEmployee(id: number) {
-  return request<ApiResponse<void>>(`/api/organization/employees/${id}`, {
+  return request<ApiResponse<string>>(getApiUrl(`/api/organization/employees/${id}`, 'ORGANIZATION'), {
     method: 'DELETE',
   });
 }
@@ -120,39 +119,124 @@ export async function exportEmployees(params?: any) {
  */
 
 // 获取岗位列表
-export async function getWorkPositions(params?: TableSearchParams) {
-  return request<ApiResponse<PageResponse<WorkPosition>>>('/api/organization/positions', {
+export async function getPositionList(params?: any) {
+  return request<ApiResponse<Position[]>>(getApiUrl('/api/organization/positions', 'ORGANIZATION'), {
     method: 'GET',
     params,
   });
 }
 
 // 获取岗位详情
-export async function getWorkPositionById(id: number) {
-  return request<ApiResponse<WorkPosition>>(`/api/organization/positions/${id}`, {
+export async function getPositionDetail(id: number) {
+  return request<ApiResponse<Position>>(getApiUrl(`/api/organization/positions/${id}`, 'ORGANIZATION'), {
     method: 'GET',
   });
 }
 
 // 创建岗位
-export async function createWorkPosition(data: Partial<WorkPosition>) {
-  return request<ApiResponse<WorkPosition>>('/api/organization/positions', {
+export async function createPosition(data: Partial<Position>) {
+  return request<ApiResponse<Position>>(getApiUrl('/api/organization/positions', 'ORGANIZATION'), {
     method: 'POST',
     data,
   });
 }
 
 // 更新岗位
-export async function updateWorkPosition(id: number, data: Partial<WorkPosition>) {
-  return request<ApiResponse<WorkPosition>>(`/api/organization/positions/${id}`, {
+export async function updatePosition(id: number, data: Partial<Position>) {
+  return request<ApiResponse<Position>>(getApiUrl(`/api/organization/positions/${id}`, 'ORGANIZATION'), {
     method: 'PUT',
     data,
   });
 }
 
 // 删除岗位
-export async function deleteWorkPosition(id: number) {
-  return request<ApiResponse<void>>(`/api/organization/positions/${id}`, {
+export async function deletePosition(id: number) {
+  return request<ApiResponse<string>>(getApiUrl(`/api/organization/positions/${id}`, 'ORGANIZATION'), {
     method: 'DELETE',
   });
-} 
+}
+
+// 类型定义
+interface ApiResponse<T = any> {
+  success: boolean;
+  message?: string;
+  data?: T;
+  resp_code?: number;
+  resp_msg?: string;
+  datas?: T;
+}
+
+interface Department {
+  id: number;
+  name: string;
+  shortName?: string;
+  parentId?: number;
+  parentName?: string;
+  level: number;
+  sort: number;
+  manager?: string;
+  managerId?: number;
+  phone?: string;
+  email?: string;
+  address?: string;
+  description?: string;
+  enabled: boolean;
+  children?: Department[];
+  path?: string;
+}
+
+interface Employee {
+  id: number;
+  empNo: string;
+  name: string;
+  nameEn?: string;
+  gender: number;
+  birthDate?: string;
+  age?: number;
+  idCard?: string;
+  mobile?: string;
+  email?: string;
+  avatar?: string;
+  departmentId: number;
+  departmentName?: string;
+  positionId?: number;
+  positionName?: string;
+  secondaryPositionIds?: string;
+  secondaryPositions?: Position[];
+  gradeId?: number;
+  gradeName?: string;
+  employmentType: number;
+  employmentStatus: number;
+  entryDate?: string;
+  workDays?: number;
+  education?: string;
+  probationEndDate?: string;
+  regularizationDate?: string;
+  leaveDate?: string;
+  leaveReason?: string;
+  workYears?: number;
+  educationLevel?: string;
+  graduationSchool?: string;
+  major?: string;
+  maritalStatus?: number;
+  address?: string;
+  emergencyContact?: string;
+  emergencyPhone?: string;
+  enabled: boolean;
+}
+
+interface Position {
+  id: number;
+  name: string;
+  shortName?: string;
+  deptId?: number;
+  deptName?: string;
+  workgrade?: number;
+  workcontent?: string;
+  functionIDs?: string;
+  permissions?: string;
+  enabled: boolean;
+  sort?: number;
+}
+
+export type { Department, Employee, Position, ApiResponse }; 

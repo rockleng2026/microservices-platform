@@ -151,7 +151,8 @@ export default defineConfig({
 
   // 构建配置
   define: {
-    API_BASE_URL: process.env.NODE_ENV === 'development' ? 'http://127.0.0.1:9900' : '',
+    API_BASE_URL: process.env.API_GATEWAY_URL || 'http://127.0.0.1:9900',
+    API_GATEWAY_URL: process.env.API_GATEWAY_URL || 'http://127.0.0.1:9900',
   },
 
 }); 

@@ -201,3 +201,55 @@ A: 检查生产环境的API地址配置，确认服务器网络连通性。
 ✅ **部署简化**：支持环境变量覆盖，便于CI/CD集成  
 
 现在您可以方便地进行环境切换和部署管理了！🚀 
+
+
+## @zlt-web/portal-web/.umirc.ts 和 @zlt-web/portal-web/src/config/api.ts 这2个文件都有配置url  两者的区别是什么 
+
+很好的问题！这两个文件确实都涉及API地址配置，但它们的作用范围和使用场景完全不同。让我详细解释一下：
+📁 .umirc.ts - UmiJS框架配置文件
+🎯 作用范围
+开发环境专用：只在 npm run dev 时生效
+代理配置：配置前端开发服务器的HTTP代理规则
+构建时配置：影响UmiJS的编译和构建过程
+🔧 主要功能
+📁 src/config/api.ts - 应用级API配置文件
+🎯 作用范围
+所有环境通用：开发、测试、生产环境都使用
+运行时配置：在浏览器中执行时的API调用配置
+应用逻辑：被业务代码直接引用和使用
+🔄 两者的区别和关系
+📊 对比表格
+特性	   .umirc.ts	         src/config/api.ts
+生效环境	仅开发环境 (npm run dev)	所有环境（开发/测试/生产）
+作用时机	构建时/代理转发时	   运行时/API调用时
+配置类型	开发服务器代理配置	 应用业务逻辑配置
+使用方式	UmiJS自动读取	      业务代码手动导入
+配置内容	proxy、define、    路由等	API端点、路径、环境配置
+打包后	不包含在最终代码中	  打包进最终的JS代码中
+🔧 .umirc.ts 的作用
+Apply to appData.json
+工作流程：
+浏览器发送请求：http://localhost:8001/api-project/api/project/projects/page
+UmiJS开发服务器拦截请求
+代理转发到：http://117.72.61.156:9900/api-project/api/project/projects/page
+🎯 src/config/api.ts 的作用
+Apply to appData.json
+使用示例：
+Apply to appData.json
+🚀 生产环境的区别
+开发环境 (npm run dev)
+前端地址：http://localhost:8001
+代理工作：.umirc.ts 的 proxy 配置生效
+API调用：使用相对路径 /api-project/...，由代理转发
+生产环境 (npm run build)
+前端地址：http://117.72.61.156:9900/api-portal/
+代理失效：.umirc.ts 的 proxy 配置不生效
+API调用：使用 src/config/api.ts 中的完整URL
+💡 最佳实践建议
+保持一致性：两个文件中的API地址应该保持一致
+环境变量：生产环境使用环境变量覆盖默认配置
+统一管理：通过 src/config/api.ts 统一管理所有API端点
+开发调试：通过 .umirc.ts 的 logLevel: 'debug' 查看代理日志
+🔄 推荐的配置策略
+Apply to appData.json
+这样既能确保开发环境的代理正常工作，又能保证生产环境的API调用正确！

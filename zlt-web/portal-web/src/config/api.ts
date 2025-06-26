@@ -41,7 +41,7 @@ export const API_ENDPOINTS = {
 export const API_PATHS = {
   // 认证相关
   LOGIN: `${API_ENDPOINTS.UAA}/oauth/token`,
-  LOGOUT: `${API_ENDPOINTS.UAA}/oauth/logout`,
+  LOGOUT: `${API_ENDPOINTS.UAA}/oauth/remove/token`,
   CAPTCHA: (deviceId: string) => `${API_ENDPOINTS.UAA}/validata/code/${deviceId}`,
   
   // 用户相关

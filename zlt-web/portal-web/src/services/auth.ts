@@ -27,7 +27,7 @@ interface ApiResponse<T = any> {
   datas?: T;
 }
 
-// 使用统一配置的API基础地址
+// 使用统一配置的API基础地址（开发环境为空，使用相对路径）
 const API_BASE = API_ENDPOINTS.GATEWAY;
 
 /**
@@ -59,15 +59,46 @@ export async function login(params: LoginParams) {
 
 /**
  * 用户登出
+ * @param redirectUri 可选的登出后重定向地址
  */
-export async function logout() {
+export async function logout(redirectUri?: string) {
   const token = localStorage.getItem('access_token');
-  return request(API_PATHS.LOGOUT, {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token}`,
-    },
+  
+  if (!token) {
+    console.warn('未找到access_token，执行快速退出');
+    quickLogout();
+    return;
+  }
+
+  const params = new URLSearchParams({
+    access_token: token,
   });
+  
+  if (redirectUri) {
+    params.append('redirect_uri', redirectUri);
+  }
+
+  try {
+    const result = await request(`${API_PATHS.LOGOUT}?${params.toString()}`, {
+      method: 'GET',
+    });
+    
+    // 清除本地存储
+    clearLocalStorage();
+    
+    // 如果没有redirect_uri或者后端返回JSON，手动跳转到登录页
+    if (!redirectUri) {
+      redirectToLogin();
+    }
+    
+    return result;
+  } catch (error) {
+    console.error('退出登录请求失败:', error);
+    // 即使接口失败，也要清除本地存储并跳转
+    clearLocalStorage();
+    redirectToLogin();
+    throw error;
+  }
 }
 
 /**
@@ -137,8 +168,8 @@ export type { LoginParams, LoginResult, ApiResponse };
 export async function getCurrentUserMenus(positionId?: number) {
   const token = localStorage.getItem('access_token');
   const url = positionId 
-    ? `${API_BASE}/api-portal/api/menus/current?positionId=${positionId}`
-    : `${API_BASE}/api-portal/api/menus/current`;
+    ? `/api-portal/api/menus/current?positionId=${positionId}`
+    : `/api-portal/api/menus/current`;
   
   return request(url, {
     method: 'GET',
@@ -153,7 +184,7 @@ export async function getCurrentUserMenus(positionId?: number) {
  */
 export async function switchPosition(positionId: number) {
   const token = localStorage.getItem('access_token');
-  return request(`${API_BASE}/api-portal/users/switch-position`, {
+  return request(`/api-portal/users/switch-position`, {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,

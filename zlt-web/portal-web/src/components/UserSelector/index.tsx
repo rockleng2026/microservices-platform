@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Select, Spin } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
-import { request } from '@/utils/request';
+import { getEmployeeDetail, getEmployeePage } from '@/services/organization/employee';
 
 const { Option } = Select;
 
@@ -43,9 +43,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({
     if (!userId) return null;
     
     try {
-      const response = await request(`/api/organization/employee/${userId}`, {
-        method: 'GET',
-      });
+      const response = await getEmployeeDetail(parseInt(userId));
 
       if (response.success && response.data) {
         return response.data;
@@ -62,13 +60,10 @@ const UserSelector: React.FC<UserSelectorProps> = ({
   const fetchUsers = async (keyword?: string) => {
     setLoading(true);
     try {
-      const response = await request('/api/organization/employee/page', {
-        method: 'GET',
-        params: {
-          name: keyword || '',
-          page: 1,
-          size: 100,
-        },
+      const response = await getEmployeePage({
+        keyword: keyword || '',
+        page: 1,
+        size: 100,
       });
 
       let userList = [];

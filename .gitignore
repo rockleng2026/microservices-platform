@@ -2,6 +2,7 @@
 logs/
 target/
 .txlcn/
+**/node_modules
 
 *.iml
 *.versionsBackup

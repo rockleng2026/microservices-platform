@@ -27,9 +27,24 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
   
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [positions, setPositions] = useState<WorkPosition[]>([]);
-  const [currentPosition, setCurrentPosition] = useState<WorkPosition | null>(null);
+  const [currentPosition, setCurrentPosition] = useState<WorkPosition | null>(() => {
+    // 组件初始化时先从全局状态恢复岗位信息
+    const savedPosition = getCurrentPosition();
+    if (savedPosition) {
+      console.log('UserMenu: 初始化时从全局状态恢复岗位:', savedPosition);
+      // 转换类型：GlobalUserPosition -> WorkPosition
+      return {
+        ...savedPosition,
+        id: parseInt(savedPosition.id), // string -> number
+        departmentId: savedPosition.deptId ? parseInt(savedPosition.deptId) : undefined,
+      } as WorkPosition;
+    }
+    return null;
+  });
   const [loading, setLoading] = useState(true);
   const [initialized, setInitialized] = useState(false);
+  
+
 
   // 加载用户信息和菜单权限
   const loadUserData = async () => {
@@ -45,12 +60,16 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
       const userResponse = await getCurrentUser();
       console.log('UserMenu: 获取用户信息响应:', userResponse);
       
-      if (userResponse && userResponse.resp_code === 0) {
-        console.log('UserMenu: 设置用户信息:', userResponse.datas);
-        setUserInfo(userResponse.datas);
+      // 兼容新旧两种API响应格式
+      const isSuccess = userResponse && (userResponse.resp_code === 0 || userResponse.success === true);
+      const userData = userResponse?.datas || userResponse?.data;
+      
+      if (isSuccess && userData) {
+        console.log('UserMenu: 设置用户信息:', userData);
+        setUserInfo(userData);
         
         // 从用户信息中提取岗位信息，并获取当前岗位
-        const targetPosition = extractPositionsFromUserInfo(userResponse.datas);
+        const targetPosition = extractPositionsFromUserInfo(userData);
         
         setInitialized(true);
         
@@ -59,7 +78,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
         await loadUserMenus(targetPosition?.id);
       } else {
         console.log('UserMenu: 用户信息获取失败', userResponse);
-        message.error(userResponse?.resp_msg || '获取用户信息失败');
+        message.error(userResponse?.resp_msg || userResponse?.message || '获取用户信息失败');
         
         setInitialized(true);
         // 即使用户信息获取失败，也尝试加载菜单（可能是匿名访问）
@@ -87,13 +106,14 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
       
       // 检查用户信息中是否包含岗位列表
       const userPositions = userInfo.positions || [];
+      const employeeDeptName = userInfo.employee?.departmentName;
       
       if (userPositions.length > 0) {
-        // 为岗位添加类型标识
+        // 为岗位添加类型标识，部门名称现在由后端直接返回
         const enhancedPositions = userPositions.map((pos: any, index: number) => ({
           ...pos,
           type: index === 0 ? 'MAIN' : 'SUB', // 第一个岗位为主岗位，其余为分管岗位
-          isMain: index === 0
+          isMain: index === 0,
         }));
         
         setPositions(enhancedPositions);
@@ -115,21 +135,45 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
         
         // 如果没有保存的岗位或保存的岗位无效，使用默认岗位
         if (!targetPosition) {
-          targetPosition = userInfo.currentPosition || enhancedPositions[0];
+          // 使用 currentPosition 并补充部门名称
+          const apiCurrentPosition = userInfo.currentPosition;
+          console.log('UserMenu: API返回的当前岗位信息:', apiCurrentPosition);
+          console.log('UserMenu: 员工部门名称:', employeeDeptName);
+          if (apiCurrentPosition) {
+            targetPosition = {
+              ...apiCurrentPosition,
+              // 优先使用API返回的部门名称，后端已经关联查询了部门信息
+              deptName: apiCurrentPosition.deptName || employeeDeptName || '未知部门',
+            };
+            console.log('UserMenu: 使用API当前岗位，补充后的岗位信息:', targetPosition);
+          } else {
+            targetPosition = enhancedPositions[0];
+            console.log('UserMenu: API无当前岗位，使用第一个岗位:', targetPosition);
+          }
         }
         
         if (targetPosition) {
+          console.log('UserMenu: 准备设置当前岗位，岗位信息:', {
+            id: targetPosition.id,
+            name: targetPosition.name,
+            deptName: targetPosition.deptName,
+            departmentId: targetPosition.departmentId,
+            departmentName: targetPosition.departmentName,
+            fullObject: targetPosition
+          });
+          
           setCurrentPosition(targetPosition);
           // 保存到全局状态（如果还没保存的话）
           if (!savedPosition || savedPosition.id !== String(targetPosition.id)) {
             const globalPosition: GlobalUserPosition = {
               ...targetPosition,
               id: String(targetPosition.id),
-              deptId: targetPosition.deptId ? String(targetPosition.deptId) : undefined,
+              deptId: targetPosition.departmentId ? String(targetPosition.departmentId) : undefined,
+              deptName: targetPosition.deptName,
             };
             saveCurrentPosition(globalPosition);
           }
-          console.log('UserMenu: 设置当前岗位:', targetPosition);
+          console.log('UserMenu: 设置当前岗位成功，最终岗位:', targetPosition);
           return targetPosition;
         }
       } else {
@@ -152,10 +196,14 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
       const menuResponse = await getCurrentUserMenus(targetPositionId);
       console.log('UserMenu: 获取菜单权限响应:', menuResponse);
       
-      if (menuResponse && menuResponse.resp_code === 0) {
-        console.log('UserMenu: 准备传递菜单数据给父组件:', menuResponse.datas);
+      // 兼容新旧两种API响应格式
+      const isMenuSuccess = menuResponse && (menuResponse.resp_code === 0 || menuResponse.success === true);
+      const menuData = menuResponse?.datas || menuResponse?.data;
+      
+      if (isMenuSuccess && menuData) {
+        console.log('UserMenu: 准备传递菜单数据给父组件:', menuData);
         if (onMenuUpdate) {
-          onMenuUpdate(menuResponse.datas);
+          onMenuUpdate(menuData);
           console.log('UserMenu: 已调用onMenuUpdate');
         }
       } else {
@@ -276,6 +324,12 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
         <Space>
           <Avatar size={32} icon={<UserOutlined />} />
           <span>加载中...</span>
+          {/* 如果有初始岗位信息，显示岗位名称而不是"加载中" */}
+          {currentPosition && (
+            <span style={{ marginLeft: 8, fontSize: '12px', color: '#666' }}>
+              {currentPosition.name}
+            </span>
+          )}
         </Space>
       </div>
     );
@@ -293,6 +347,15 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
       </div>
     );
   }
+
+  // 调试信息：显示当前状态
+  console.log('UserMenu: 渲染时状态', {
+    currentPositionName: currentPosition?.name,
+    currentPositionId: currentPosition?.id,
+    loading: loading,
+    userInfo: !!userInfo,
+    currentPositionObj: currentPosition
+  });
 
   return (
     <div className="user-menu">
@@ -317,7 +380,7 @@ const UserMenu: React.FC<UserMenuProps> = ({ onMenuUpdate }) => {
                   {userInfo.user?.nickname || userInfo.employee?.name || userInfo.user?.username}
                 </div>
                 <div className="user-position" style={{ fontSize: '12px', color: '#666' }}>
-                  {currentPosition?.name || '未分配岗位'}
+                  {currentPosition?.name || (loading ? '正在加载岗位...' : '未分配岗位')}
                   {currentPosition?.deptName && (
                     <span style={{ marginLeft: 4, color: '#999' }}>- {currentPosition.deptName}</span>
                   )}

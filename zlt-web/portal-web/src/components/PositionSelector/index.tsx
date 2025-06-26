@@ -58,7 +58,11 @@ const PositionSelector: React.FC<PositionSelectorProps> = ({
       
       console.log('PositionSelector: 获取岗位菜单响应', menuResponse);
       
-      if (menuResponse && menuResponse.resp_code === 0) {
+      // 兼容新旧两种API响应格式
+      const isMenuSuccess = menuResponse && (menuResponse.resp_code === 0 || menuResponse.success === true);
+      const menuData = menuResponse?.datas || menuResponse?.data;
+      
+      if (isMenuSuccess && menuData) {
         setSelectedPosition(targetPosition);
         message.success(`已切换到岗位：${targetPosition.name}`);
         
@@ -77,7 +81,7 @@ const PositionSelector: React.FC<PositionSelectorProps> = ({
         const event = new CustomEvent('positionChanged', {
           detail: { 
             position: targetPosition,
-            menus: menuResponse.datas,
+            menus: menuData,
             timestamp: new Date().toISOString()
           }
         });
@@ -87,7 +91,7 @@ const PositionSelector: React.FC<PositionSelectorProps> = ({
         
         console.log('PositionSelector: 岗位切换成功，已保存到全局状态并触发全局事件');
       } else {
-        const errorMsg = menuResponse?.resp_msg || '岗位切换失败';
+        const errorMsg = menuResponse?.resp_msg || menuResponse?.message || '岗位切换失败';
         console.error('PositionSelector: 岗位切换失败', menuResponse);
         message.error(errorMsg);
       }
@@ -99,35 +103,78 @@ const PositionSelector: React.FC<PositionSelectorProps> = ({
     }
   };
 
+  // 调试信息
+  console.log('PositionSelector: 渲染状态', {
+    selectedPosition: selectedPosition?.name,
+    selectedId: selectedPosition?.id,
+    selectedDeptName: selectedPosition?.deptName,
+    positionsCount: positions.length,
+    loading,
+    selectedPositionObj: selectedPosition,
+    positionsList: positions.map(p => ({ id: p.id, name: p.name, deptName: p.deptName }))
+  });
+
   return (
     <div className="position-selector">
       <Space align="center">
         <SwapOutlined style={{ color: '#666' }} />
-        <Select
-          value={selectedPosition?.id}
-          placeholder="选择岗位"
-          style={{ minWidth: 160 }}
-          loading={loading}
-          onChange={handlePositionChange}
-          optionLabelProp="label"
-          size="small"
-        >
-          {positions.map(position => (
-            <Select.Option 
-              key={position.id} 
-              value={position.id} 
-              label={position.name}
-            >
-              <Space>
-                <Avatar size="small" icon={<UserOutlined />} />
-                <div>
-                  <div style={{ fontWeight: 500 }}>{position.name}</div>
-                  <div style={{ fontSize: 12, color: '#999' }}>{position.deptName}</div>
-                </div>
-              </Space>
-            </Select.Option>
-          ))}
-        </Select>
+        {positions.length > 0 ? (
+          <Select
+            value={selectedPosition?.id}
+            placeholder="选择岗位"
+            style={{ minWidth: 160 }}
+            loading={loading}
+            onChange={handlePositionChange}
+            optionLabelProp="label"
+            size="small"
+            notFoundContent="未找到岗位"
+            showSearch={false}
+            // 自定义样式，确保选中值显示为黑色
+            dropdownStyle={{ zIndex: 1050 }}
+          >
+            {/* 如果当前岗位不在正式列表中，先添加当前岗位作为选项 */}
+            {selectedPosition && !positions.find(p => p.id === selectedPosition.id) && (
+              <Select.Option 
+                key={selectedPosition.id} 
+                value={selectedPosition.id} 
+                label={selectedPosition.name}
+              >
+                <Space>
+                  <Avatar size="small" icon={<UserOutlined />} />
+                  <div>
+                    <div style={{ fontWeight: 500 }}>{selectedPosition.name}</div>
+                    <div style={{ fontSize: 12, color: '#999' }}>{selectedPosition.deptName}</div>
+                  </div>
+                </Space>
+              </Select.Option>
+            )}
+            {positions.map(position => (
+              <Select.Option 
+                key={position.id} 
+                value={position.id} 
+                label={position.name}
+              >
+                <Space>
+                  <Avatar size="small" icon={<UserOutlined />} />
+                  <div>
+                    <div style={{ fontWeight: 500 }}>{position.name}</div>
+                    <div style={{ fontSize: 12, color: '#999' }}>{position.deptName}</div>
+                  </div>
+                </Space>
+              </Select.Option>
+            ))}
+          </Select>
+        ) : (
+          // 当岗位列表还没加载时，直接显示当前岗位名称
+          <div style={{ 
+            minWidth: 160, 
+            padding: '4px 8px', 
+            fontSize: '14px',
+            color: selectedPosition ? '#000' : '#999'
+          }}>
+            {selectedPosition?.name || (loading ? '正在加载...' : '暂无岗位')}
+          </div>
+        )}
       </Space>
       {selectedPosition && (
         <div className="current-position-info">

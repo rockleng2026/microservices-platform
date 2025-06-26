@@ -133,4 +133,10 @@ public class Workposition implements Serializable {
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updatedBy;
+
+    /**
+     * 部门名称（关联查询字段，不存储到数据库）
+     */
+    @TableField(exist = false)
+    private String deptName;
 } 

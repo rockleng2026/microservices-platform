@@ -157,7 +157,16 @@ public class PortalUserServiceImpl implements PortalUserService {
             // 6. 获取当前岗位详细信息
             if (currentPositionId != null) {
                 Workposition currentPosition = workpositionMapper.selectById(currentPositionId);
-                user.setCurrentPosition(currentPosition);
+                if (currentPosition != null) {
+                    // 关联部门名称
+                    if (currentPosition.getDepartmentId() != null) {
+                        Department department = departmentMapper.selectById(currentPosition.getDepartmentId());
+                        if (department != null) {
+                            currentPosition.setDeptName(department.getName());
+                        }
+                    }
+                    user.setCurrentPosition(currentPosition);
+                }
                 
                 // 7. 获取当前岗位的菜单权限--这个不需要关联-菜单信息留给菜单功能接口查询
                 // 注List<MenuPermission> menus = getCurrentUserMenus(userId);
@@ -198,6 +207,13 @@ public class PortalUserServiceImpl implements PortalUserService {
             if (employee.getPositionId() != null) {
                 Workposition mainPosition = workpositionMapper.selectById(employee.getPositionId());
                 if (mainPosition != null) {
+                    // 关联部门名称
+                    if (mainPosition.getDepartmentId() != null) {
+                        Department department = departmentMapper.selectById(mainPosition.getDepartmentId());
+                        if (department != null) {
+                            mainPosition.setDeptName(department.getName());
+                        }
+                    }
                     positions.add(mainPosition);
                 }
             }
@@ -228,12 +244,19 @@ public class PortalUserServiceImpl implements PortalUserService {
                     position.setUpdatedAt(vo.getUpdatedAt());
                     position.setCreatedBy(vo.getCreatedBy());
                     position.setUpdatedBy(vo.getUpdatedBy());
+                    
+                    // 关联部门名称
+                    if (position.getDepartmentId() != null) {
+                        Department department = departmentMapper.selectById(position.getDepartmentId());
+                        if (department != null) {
+                            position.setDeptName(department.getName());
+                        }
+                    }
+                    
                     return position;
                 }).collect(java.util.stream.Collectors.toList());
                 positions.addAll(subPositions);
             }
-
-
 
             return positions;
         } catch (Exception e) {

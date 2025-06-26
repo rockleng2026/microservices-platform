@@ -118,25 +118,25 @@ export default defineConfig({
   // 代理配置 - 开发环境所有API请求代理到网关
   proxy: {
     '/api-project': {
-      target: 'http://117.72.61.156:9900',
+      target: 'http://127.0.0.1:9900',
       changeOrigin: true,
       secure: false,
       logLevel: 'debug',
     },
     '/api-portal': {
-      target: 'http://117.72.61.156:9900',
+      target: 'http://127.0.0.1:9900',
       changeOrigin: true,
       secure: false,
       logLevel: 'debug',
     },
     '/api-uaa': {
-      target: 'http://117.72.61.156:9900',
+      target: 'http://127.0.0.1:9900',
       changeOrigin: true,
       secure: false,
       logLevel: 'debug',
     },
     '/api-organization': {
-      target: 'http://117.72.61.156:9900',
+      target: 'http://127.0.0.1:9900',
       changeOrigin: true,
       secure: false,
       logLevel: 'debug',
@@ -169,8 +169,8 @@ export default defineConfig({
 
   // 构建配置
   define: {
-    API_BASE_URL: process.env.API_GATEWAY_URL || 'http://117.72.61.156:9900',
-    API_GATEWAY_URL: process.env.API_GATEWAY_URL || 'http://117.72.61.156:9900',
+    API_BASE_URL: process.env.API_GATEWAY_URL || 'http://127.0.0.1:9900',
+    API_GATEWAY_URL: process.env.API_GATEWAY_URL || 'http://127.0.0.1:9900',
   },
 
   // 修复：禁用可能导致问题的UMI功能

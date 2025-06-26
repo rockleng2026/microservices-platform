@@ -4,7 +4,7 @@ echo 🚀 Portal Web 部署脚本
 echo ========================
 
 REM 设置默认值
-if "%API_GATEWAY_URL%"=="" set API_GATEWAY_URL=http://127.0.0.1:9900
+if "%API_GATEWAY_URL%"=="" set API_GATEWAY_URL=http://117.72.61.156:9900
 if "%NODE_ENV%"=="" set NODE_ENV=production
 
 echo 📋 部署配置：

@@ -23,7 +23,7 @@ echo ""
 
 # 设置环境变量
 export NODE_ENV=test
-export API_GATEWAY_URL=${API_GATEWAY_URL:-"http://test-gateway.example.com:9900"}
+export API_GATEWAY_URL=${API_GATEWAY_URL:-"http://117.72.61.156:9900"}
 
 print_info "开始构建测试环境..."
 print_info "API网关地址: $API_GATEWAY_URL"

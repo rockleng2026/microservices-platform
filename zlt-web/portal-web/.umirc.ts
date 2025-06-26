@@ -147,9 +147,6 @@ export default defineConfig({
   // 快速刷新
   fastRefresh: true,
 
-  // 开发服务器端口配置
-  port: process.env.PORT ? parseInt(process.env.PORT) : 8001,
-
   // 构建配置
   define: {
     API_BASE_URL: process.env.API_GATEWAY_URL || 'http://127.0.0.1:9900',

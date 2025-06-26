@@ -21,8 +21,9 @@ echo "    Portal Web - 测试环境构建"
 echo "=========================================="
 echo ""
 
-# 设置环境变量
-export NODE_ENV=test
+# 设置环境变量 - 使用production模式确保依赖正确构建
+export NODE_ENV=production
+export UMI_ENV=test
 export API_GATEWAY_URL=${API_GATEWAY_URL:-"http://117.72.61.156:9900"}
 
 print_info "开始构建测试环境..."

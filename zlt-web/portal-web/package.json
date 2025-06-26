@@ -4,8 +4,9 @@
   "description": "Portal 3.0 React Frontend Application",
   "main": "index.js",
   "scripts": {
-    "build": "umi build",
-    "dev": "set PORT=8065 && umi dev",
+    "build": "umi build", 
+    "dev": "PORT=8065 umi dev",
+    "dev:win": "set PORT=8065 && umi dev",
     "format": "prettier --write '**/*.{js,jsx,ts,tsx,css,md,json}'",
     "start": "npm run dev",
     "test": "umi test",

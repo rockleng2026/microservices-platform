@@ -1,7 +1,7 @@
 import { request } from '@/utils/request';
 
 // API前缀 - 通过网关代理
-const API_PREFIX = '/api/organization/employee';
+const API_PREFIX = '/api-organization/api/organization/employee';
 
 export interface Employee {
   id: number;

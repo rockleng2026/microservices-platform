@@ -141,12 +141,6 @@ export default defineConfig({
       secure: false,
       logLevel: 'debug',
     },
-    '/api': {
-      target: 'http://117.72.61.156:9900',
-      changeOrigin: true,
-      secure: false,
-      logLevel: 'debug',
-    },
   },
 
   // 构建输出配置

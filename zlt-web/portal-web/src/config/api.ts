@@ -8,8 +8,8 @@ const ENV = process.env.NODE_ENV || 'development';
 // 基础API地址配置
 const SERVICE_CONFIG = {
   development: {
-    GATEWAY_URL: 'http://117.72.61.156:9900',
-    API_BASE_URL: 'http://117.72.61.156:9900',
+    GATEWAY_URL: '', // 开发环境使用相对路径，由代理处理
+    API_BASE_URL: '',
   },
   test: {
     GATEWAY_URL: 'http://117.72.61.156:9900',

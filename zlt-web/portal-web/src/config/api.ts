@@ -1,72 +1,44 @@
 /**
- * API 服务配置
- * 统一管理所有后端服务的 BASE_URL，方便环境切换
+ * API配置统一管理
  */
 
-// 基础服务地址配置
+// 获取当前环境
+const ENV = process.env.NODE_ENV || 'development';
+
+// 基础API地址配置
 const SERVICE_CONFIG = {
-  // 开发环境配置
   development: {
-    GATEWAY_URL: 'http://127.0.0.1:9900',
-    API_BASE_URL: 'http://127.0.0.1:9900',
+    GATEWAY_URL: 'http://117.72.61.156:9900',
+    API_BASE_URL: 'http://117.72.61.156:9900',
   },
-  
-  // 测试环境配置
   test: {
     GATEWAY_URL: 'http://117.72.61.156:9900',
     API_BASE_URL: 'http://117.72.61.156:9900',
   },
-  
-  // 生产环境配置
   production: {
-    GATEWAY_URL: 'http://prod-gateway.example.com:9900',
-    API_BASE_URL: 'http://prod-gateway.example.com:9900',
+    GATEWAY_URL: process.env.API_GATEWAY_URL || 'http://117.72.61.156:9900',
+    API_BASE_URL: process.env.API_GATEWAY_URL || 'http://117.72.61.156:9900',
   }
 };
 
-// 当前环境
-const CURRENT_ENV = process.env.NODE_ENV || 'development';
+// 当前环境配置
+const currentConfig = SERVICE_CONFIG[ENV as keyof typeof SERVICE_CONFIG];
 
-// 获取当前环境配置
-const getCurrentConfig = () => {
-  return SERVICE_CONFIG[CURRENT_ENV as keyof typeof SERVICE_CONFIG] || SERVICE_CONFIG.development;
-};
-
-// 导出当前环境的配置
-const currentConfig = getCurrentConfig();
-
-// API 基础地址
+// 导出基础配置
 export const API_BASE_URL = currentConfig.API_BASE_URL;
 export const GATEWAY_URL = currentConfig.GATEWAY_URL;
 
-// 各服务的 API 地址
+// 服务端点配置
 export const API_ENDPOINTS = {
-  // 网关基础地址
   GATEWAY: GATEWAY_URL,
-  
-  // UAA 认证服务
-  UAA: `${API_BASE_URL}/api-uaa`,
-  
-  // Portal 门户服务
-  PORTAL: `${API_BASE_URL}/api-portal`,
-  
-  // 组织架构服务
-  ORGANIZATION: `${API_BASE_URL}/api-portal`,
-  
-  // 项目管理服务
-  PROJECT: `${API_BASE_URL}/api-project`,
-  
-  // 多表单服务
-  MULTITABLE: `${API_BASE_URL}/api-multitable`,
-  
-  // 文件服务
-  FILE: `${API_BASE_URL}/api-file`,
-  
-  // 系统管理服务
-  SYSTEM: `${API_BASE_URL}/api-system`,
+  UAA: `${GATEWAY_URL}/api-uaa`,
+  PORTAL: `${GATEWAY_URL}/api-portal`,
+  ORGANIZATION: `${GATEWAY_URL}/api-organization`,
+  PROJECT: `${GATEWAY_URL}/api-project`,
+  USER: `${GATEWAY_URL}/api-user`,
 };
 
-// 常用的完整API路径
+// 常用API路径
 export const API_PATHS = {
   // 认证相关
   LOGIN: `${API_ENDPOINTS.UAA}/oauth/token`,
@@ -75,75 +47,34 @@ export const API_PATHS = {
   
   // 用户相关
   CURRENT_USER: `${API_ENDPOINTS.PORTAL}/users/current`,
-  USER_MENUS: `${API_ENDPOINTS.PORTAL}/users/menus`,
   USER_POSITIONS: `${API_ENDPOINTS.PORTAL}/users/positions`,
-  USER_CONFIG: `${API_ENDPOINTS.PORTAL}/users/personal-config`,
+  SWITCH_POSITION: `${API_ENDPOINTS.PORTAL}/users/switch-position`,
+  USER_MENUS: `${API_ENDPOINTS.PORTAL}/users/menus`,
   
-  // 组织架构相关
-  DEPARTMENTS: `${API_ENDPOINTS.ORGANIZATION}/api/organization/departments`,
-  EMPLOYEES: `${API_ENDPOINTS.ORGANIZATION}/api/organization/employees`,
-  POSITIONS: `${API_ENDPOINTS.ORGANIZATION}/api/organization/positions`,
-  
-  // 项目管理相关
-  PROJECTS: `${API_ENDPOINTS.PROJECT}/api/projects`,
-  PROJECT_CLOSURE: `${API_ENDPOINTS.PROJECT}/api/project-closure`,
-  PROJECT_PROFIT: `${API_ENDPOINTS.PROJECT}/api/profit-distribution`,
+  // 组织架构
+  DEPARTMENTS: `${API_ENDPOINTS.ORGANIZATION}/departments`,
+  EMPLOYEES: `${API_ENDPOINTS.ORGANIZATION}/employees`,
+  POSITIONS: `${API_ENDPOINTS.ORGANIZATION}/positions`,
 };
 
-// 环境信息
-export const ENV_INFO = {
-  current: CURRENT_ENV,
-  isDevelopment: CURRENT_ENV === 'development',
-  isTest: CURRENT_ENV === 'test',
-  isProduction: CURRENT_ENV === 'production',
+// 工具函数
+export const getApiUrl = (path: string, service: keyof typeof API_ENDPOINTS = 'GATEWAY') => {
+  const baseUrl = API_ENDPOINTS[service];
+  return `${baseUrl}${path}`;
+};
+
+// 动态环境切换（仅开发环境）
+export const switchEnvironment = (env: keyof typeof SERVICE_CONFIG) => {
+  if (ENV === 'development') {
+    console.warn('⚠️ 动态切换环境仅在开发环境可用');
+  }
 };
 
 // 调试信息（仅开发环境）
-if (ENV_INFO.isDevelopment) {
+if (ENV === 'development') {
   console.log('🔧 API 配置信息:', {
-    environment: CURRENT_ENV,
+    environment: ENV,
     baseUrl: API_BASE_URL,
     endpoints: API_ENDPOINTS,
   });
-}
-
-/**
- * 获取完整的API URL
- * @param path API路径
- * @param serviceKey 服务标识
- * @returns 完整的URL
- */
-export function getApiUrl(path: string, serviceKey?: keyof typeof API_ENDPOINTS): string {
-  if (path.startsWith('http')) {
-    return path; // 已经是完整URL
-  }
-  
-  const baseUrl = serviceKey ? API_ENDPOINTS[serviceKey] : API_BASE_URL;
-  const cleanPath = path.startsWith('/') ? path : `/${path}`;
-  
-  return `${baseUrl}${cleanPath}`;
-}
-
-/**
- * 更新环境配置（仅用于运行时切换，如开发调试）
- * @param env 环境名称
- */
-export function switchEnvironment(env: keyof typeof SERVICE_CONFIG): void {
-  if (ENV_INFO.isDevelopment) {
-    console.warn('🔄 切换API环境到:', env);
-    const newConfig = SERVICE_CONFIG[env];
-    Object.assign(currentConfig, newConfig);
-  } else {
-    console.warn('⚠️ 非开发环境不允许运行时切换环境配置');
-  }
-}
-
-export default {
-  API_BASE_URL,
-  GATEWAY_URL,
-  API_ENDPOINTS,
-  API_PATHS,
-  ENV_INFO,
-  getApiUrl,
-  switchEnvironment,
-}; 
+} 

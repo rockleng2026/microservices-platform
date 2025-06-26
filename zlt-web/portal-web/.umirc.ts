@@ -147,6 +147,17 @@ export default defineConfig({
   // 快速刷新
   fastRefresh: true,
 
+  // 样式配置
+  cssLoader: {},
+  lessLoader: {},
+  
+  // 主题配置
+  theme: {
+    'primary-color': '#1890ff',
+    'border-radius-base': '6px',
+    'box-shadow-base': '0 2px 8px rgba(0, 0, 0, 0.15)',
+  },
+
   // 构建配置
   define: {
     API_BASE_URL: process.env.API_GATEWAY_URL || 'http://127.0.0.1:9900',

@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "umi build", 
-    "dev": "PORT=8065 umi dev",
-    "dev:win": "set PORT=8065 && umi dev",
+    "dev": "PORT=8001 umi dev",
+    "dev:win": "set PORT=8001 && umi dev",
     "format": "prettier --write '**/*.{js,jsx,ts,tsx,css,md,json}'",
     "start": "npm run dev",
     "test": "umi test",

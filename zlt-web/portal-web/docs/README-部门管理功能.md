@@ -211,7 +211,7 @@ proxy: {
 ```
 
 ### 访问地址
-- **开发环境**：`http://127.0.0.1:8065/organization/departments`
+- **开发环境**：`http://127.0.0.1:8001/organization/departments`
 - **生产环境**：`http://127.0.0.1:9900/api-portal/organization/departments`
 
 ## 使用说明
@@ -276,7 +276,7 @@ proxy: {
 
 **部门管理页面URL：**
 ```
-http://localhost:8065/organization/departments
+http://localhost:8001/organization/departments
 ```
 
 ### 路由配置
@@ -359,7 +359,7 @@ npm install
 npm start
 ```
 
-访问地址：http://localhost:8065
+访问地址：http://localhost:8001
 
 ### 后端启动
 ```bash

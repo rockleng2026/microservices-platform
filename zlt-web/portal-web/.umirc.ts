@@ -148,7 +148,7 @@ export default defineConfig({
   fastRefresh: true,
 
   // 开发服务器端口配置
-  port: process.env.PORT ? parseInt(process.env.PORT) : 8065,
+  port: process.env.PORT ? parseInt(process.env.PORT) : 8001,
 
   // 构建配置
   define: {

@@ -72,7 +72,7 @@ fi
 print_info "设置测试环境变量..."
 export NODE_ENV=test
 export API_GATEWAY_URL=${API_GATEWAY_URL:-"http://test-gateway.example.com:9900"}
-export PORT=${PORT:-8065}
+export PORT=${PORT:-8001}
 
 print_success "环境变量设置完成:"
 echo "  - NODE_ENV: $NODE_ENV"

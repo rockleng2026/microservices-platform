@@ -33,7 +33,6 @@ export const API_ENDPOINTS = {
   GATEWAY: GATEWAY_URL,
   UAA: `${GATEWAY_URL}/api-uaa`,
   PORTAL: `${GATEWAY_URL}/api-portal`,
-  ORGANIZATION: `${GATEWAY_URL}/api-organization`,
   PROJECT: `${GATEWAY_URL}/api-project`,
   USER: `${GATEWAY_URL}/api-user`,
 };
@@ -52,9 +51,9 @@ export const API_PATHS = {
   USER_MENUS: `${API_ENDPOINTS.PORTAL}/users/menus`,
   
   // 组织架构
-  DEPARTMENTS: `${API_ENDPOINTS.ORGANIZATION}/departments`,
-  EMPLOYEES: `${API_ENDPOINTS.ORGANIZATION}/employees`,
-  POSITIONS: `${API_ENDPOINTS.ORGANIZATION}/positions`,
+  DEPARTMENTS: `${API_ENDPOINTS.PORTAL}/departments`,
+  EMPLOYEES: `${API_ENDPOINTS.PORTAL}/employees`,
+  POSITIONS: `${API_ENDPOINTS.PORTAL}/positions`,
 };
 
 // 工具函数

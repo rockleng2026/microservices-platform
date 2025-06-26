@@ -1,7 +1,7 @@
 import { request } from '@/utils/request';
 
 // API前缀 - 通过网关代理
-const API_PREFIX = '/api/workposition';
+const API_PREFIX = '/api-portal/api/workposition';
 
 // 岗位数据类型定义
 export interface WorkPosition {

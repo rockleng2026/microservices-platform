@@ -8,7 +8,7 @@ import { API_ENDPOINTS, API_PATHS, getApiUrl } from '@/config/api';
 
 // 获取部门树
 export async function getDepartmentTree(params?: any) {
-  return request<ApiResponse<Department[]>>(getApiUrl('/api/organization/departments/tree', 'ORGANIZATION'), {
+  return request<ApiResponse<Department[]>>(getApiUrl('/api/organization/departments/tree', 'PORTAL'), {
     method: 'GET',
     params,
   });
@@ -31,7 +31,7 @@ export async function getDepartmentById(id: number) {
 
 // 创建部门
 export async function createDepartment(data: Partial<Department>) {
-  return request<ApiResponse<Department>>(getApiUrl('/api/organization/departments', 'ORGANIZATION'), {
+  return request<ApiResponse<Department>>(getApiUrl('/api/organization/departments', 'PORTAL'), {
     method: 'POST',
     data,
   });
@@ -58,7 +58,7 @@ export async function deleteDepartment(id: number) {
 
 // 获取员工列表
 export async function getEmployeeList(params?: any) {
-  return request<ApiResponse<Employee[]>>(getApiUrl('/api/organization/employees', 'ORGANIZATION'), {
+  return request<ApiResponse<Employee[]>>(getApiUrl('/api/organization/employees', 'PORTAL'), {
     method: 'GET',
     params,
   });
@@ -66,14 +66,14 @@ export async function getEmployeeList(params?: any) {
 
 // 获取员工详情
 export async function getEmployeeDetail(id: number) {
-  return request<ApiResponse<Employee>>(getApiUrl(`/api/organization/employees/${id}`, 'ORGANIZATION'), {
+  return request<ApiResponse<Employee>>(getApiUrl(`/api/organization/employees/${id}`, 'PORTAL'), {
     method: 'GET',
   });
 }
 
 // 创建员工
 export async function createEmployee(data: Partial<Employee>) {
-  return request<ApiResponse<Employee>>(getApiUrl('/api/organization/employees', 'ORGANIZATION'), {
+  return request<ApiResponse<Employee>>(getApiUrl('/api/organization/employees', 'PORTAL'), {
     method: 'POST',
     data,
   });
@@ -81,7 +81,7 @@ export async function createEmployee(data: Partial<Employee>) {
 
 // 更新员工
 export async function updateEmployee(id: number, data: Partial<Employee>) {
-  return request<ApiResponse<Employee>>(getApiUrl(`/api/organization/employees/${id}`, 'ORGANIZATION'), {
+  return request<ApiResponse<Employee>>(getApiUrl(`/api/organization/employees/${id}`, 'PORTAL'), {
     method: 'PUT',
     data,
   });
@@ -89,7 +89,7 @@ export async function updateEmployee(id: number, data: Partial<Employee>) {
 
 // 删除员工
 export async function deleteEmployee(id: number) {
-  return request<ApiResponse<string>>(getApiUrl(`/api/organization/employees/${id}`, 'ORGANIZATION'), {
+  return request<ApiResponse<string>>(getApiUrl(`/api/organization/employees/${id}`, 'PORTAL'), {
     method: 'DELETE',
   });
 }
@@ -120,7 +120,7 @@ export async function exportEmployees(params?: any) {
 
 // 获取岗位列表
 export async function getPositionList(params?: any) {
-  return request<ApiResponse<Position[]>>(getApiUrl('/api/organization/positions', 'ORGANIZATION'), {
+  return request<ApiResponse<Position[]>>(getApiUrl('/api/organization/positions', 'PORTAL'), {
     method: 'GET',
     params,
   });
@@ -128,14 +128,14 @@ export async function getPositionList(params?: any) {
 
 // 获取岗位详情
 export async function getPositionDetail(id: number) {
-  return request<ApiResponse<Position>>(getApiUrl(`/api/organization/positions/${id}`, 'ORGANIZATION'), {
+  return request<ApiResponse<Position>>(getApiUrl(`/api/organization/positions/${id}`, 'PORTAL'), {
     method: 'GET',
   });
 }
 
 // 创建岗位
 export async function createPosition(data: Partial<Position>) {
-  return request<ApiResponse<Position>>(getApiUrl('/api/organization/positions', 'ORGANIZATION'), {
+  return request<ApiResponse<Position>>(getApiUrl('/api/organization/positions', 'PORTAL'), {
     method: 'POST',
     data,
   });
@@ -143,7 +143,7 @@ export async function createPosition(data: Partial<Position>) {
 
 // 更新岗位
 export async function updatePosition(id: number, data: Partial<Position>) {
-  return request<ApiResponse<Position>>(getApiUrl(`/api/organization/positions/${id}`, 'ORGANIZATION'), {
+  return request<ApiResponse<Position>>(getApiUrl(`/api/organization/positions/${id}`, 'PORTAL'), {
     method: 'PUT',
     data,
   });
@@ -151,7 +151,7 @@ export async function updatePosition(id: number, data: Partial<Position>) {
 
 // 删除岗位
 export async function deletePosition(id: number) {
-  return request<ApiResponse<string>>(getApiUrl(`/api/organization/positions/${id}`, 'ORGANIZATION'), {
+  return request<ApiResponse<string>>(getApiUrl(`/api/organization/positions/${id}`, 'PORTAL'), {
     method: 'DELETE',
   });
 }

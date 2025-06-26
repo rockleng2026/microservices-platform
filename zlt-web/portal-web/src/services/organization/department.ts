@@ -1,7 +1,7 @@
 import { request } from '@/utils/request';
 
 // API基础地址
-const API_PREFIX = '/api-organization/api/organization/departments';
+const API_PREFIX = '/api-portal/api/organization/departments';
 
 interface ApiResponse<T = any> {
   success: boolean;

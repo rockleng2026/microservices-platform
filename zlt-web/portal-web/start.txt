@@ -1,0 +1,1 @@
+setsid npm run dev > ./logs/dev.log 2>&1

@@ -100,16 +100,41 @@ const PositionPermissions: React.FC<PositionPermissionsProps> = ({
       const result = await getMenuTree();
       console.log('权限配置 - 菜单树数据:', result);
       
-      if (result.resp_code === 0) {
-        const menuData = result.datas || [];
-        console.log('权限配置 - 设置菜单树数据:', menuData);
-        setMenuTree(menuData);
+      // 兼容不同的响应格式
+      let menuData = [];
+      if (result && typeof result === 'object') {
+        if (result.resp_code === 0 || result.success === true) {
+          // 支持两种格式：{resp_code: 0, datas: []} 和 {success: true, data: []}
+          menuData = result.datas || result.data || [];
+        } else if (Array.isArray(result)) {
+          // 直接返回数组格式
+          menuData = result;
+        } else {
+          const errorMsg = result.resp_msg || result.message || '加载菜单树失败';
+          message.error(errorMsg);
+          return;
+        }
       } else {
-        message.error(result.resp_msg || '加载菜单树失败');
+        message.error('菜单数据格式异常');
+        return;
       }
+      
+      console.log('权限配置 - 设置菜单树数据:', menuData);
+      setMenuTree(menuData);
     } catch (error) {
       console.error('加载菜单树失败:', error);
-      message.error('加载菜单树失败');
+      
+      // 根据错误类型给出更友好的提示
+      let errorMessage = '加载菜单树失败';
+      if (error instanceof SyntaxError && error.message.includes('JSON')) {
+        errorMessage = '服务器返回数据格式错误，请检查后端服务是否正常运行';
+      } else if (error instanceof TypeError && error.message.includes('fetch')) {
+        errorMessage = '无法连接到服务器，请检查网络连接';
+      } else if (error instanceof Error && error.message) {
+        errorMessage = `加载失败: ${error.message}`;
+      }
+      
+      message.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -390,7 +415,6 @@ const PositionPermissions: React.FC<PositionPermissionsProps> = ({
                 onCheck={handleMenuCheck}
                 treeData={convertMenuTreeData(menuTree)}
                 height={350}
-                titleRender={(nodeData) => nodeData.title}
               />
             </div>
           </TabPane>

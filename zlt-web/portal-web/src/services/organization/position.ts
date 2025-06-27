@@ -223,7 +223,7 @@ export async function getWorkPositionPermissions(positionId: string) {
  * 获取菜单树（用于权限配置）
  */
 export async function getMenuTree() {
-  return request('/api/menus/tree', {
+  return request('/api-portal/api/menus/tree', {
     method: 'GET',
   });
 }

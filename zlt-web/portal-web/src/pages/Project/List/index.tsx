@@ -30,6 +30,8 @@ import {
   CheckCircleOutlined,
   CloseCircleOutlined,
   ClockCircleOutlined,
+  CalculatorOutlined,
+  FileTextOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import type { ActionType } from '@ant-design/pro-components';
@@ -40,6 +42,9 @@ import ProjectDetail from '../components/ProjectDetail';
 import ParticipantModal from '../components/ParticipantModal';
 import ProjectClosureModal from '../components/ProjectClosureModal';
 import ProfitDistributionModal from '../components/ProfitDistributionModal';
+import SalesRevenueDistributionModal from '../components/SalesRevenueDistributionModal';
+import SalesRevenueProjectDetailModal from '../components/SalesRevenueProjectDetailModal';
+import SalesRevenueDistributionEditModal from '../components/SalesRevenueDistributionEditModal';
 import type {
   Project,
   ProjectQueryParams,
@@ -104,6 +109,15 @@ const ProjectListPage: React.FC = () => {
   
   // 项目提成弹窗
   const [profitDistributionVisible, setProfitDistributionVisible] = useState(false);
+  
+  // 销售额提成分配弹窗
+  const [salesRevenueDistributionVisible, setSalesRevenueDistributionVisible] = useState(false);
+  
+  // 销售额项目明细弹窗
+  const [salesRevenueDetailVisible, setSalesRevenueDetailVisible] = useState(false);
+  
+  // 销售额提成编辑分配弹窗
+  const [salesRevenueEditVisible, setSalesRevenueEditVisible] = useState(false);
 
   // 搜索条件
   const [searchParams, setSearchParams] = useState<Partial<ProjectQueryParams>>({});
@@ -266,6 +280,24 @@ const ProjectListPage: React.FC = () => {
   const handleProfitDistribution = (record: Project) => {
     setCurrentProject(record);
     setProfitDistributionVisible(true);
+  };
+
+  // 销售额提成分配示例
+  const handleSalesRevenueDistribution = (record: Project) => {
+    setCurrentProject(record);
+    setSalesRevenueDistributionVisible(true);
+  };
+
+  // 销售额项目明细示例
+  const handleSalesRevenueDetail = (record: Project) => {
+    setCurrentProject(record);
+    setSalesRevenueDetailVisible(true);
+  };
+
+  // 销售额提成编辑分配示例
+  const handleSalesRevenueEdit = (record: Project) => {
+    setCurrentProject(record);
+    setSalesRevenueEditVisible(true);
   };
 
   // 更新项目状态
@@ -432,6 +464,24 @@ const ProjectListPage: React.FC = () => {
             label: '项目提成',
             icon: <ExportOutlined />,
             onClick: () => handleProfitDistribution(record),
+          },
+          {
+            key: 'salesRevenueDistribution',
+            label: '销售额提成分配示例',
+            icon: <CalculatorOutlined />,
+            onClick: () => handleSalesRevenueDistribution(record),
+          },
+          {
+            key: 'salesRevenueDetail',
+            label: '销售额项目明细示例',
+            icon: <FileTextOutlined />,
+            onClick: () => handleSalesRevenueDetail(record),
+          },
+          {
+            key: 'salesRevenueEdit',
+            label: '销售额提成编辑分配示例',
+            icon: <EditOutlined />,
+            onClick: () => handleSalesRevenueEdit(record),
           },
           {
             type: 'divider' as const,
@@ -638,10 +688,39 @@ const ProjectListPage: React.FC = () => {
       {/* 项目提成分配弹窗 */}
       <ProfitDistributionModal
         visible={profitDistributionVisible}
-        project={currentProject}
+        project={currentProject || null}
         onCancel={() => setProfitDistributionVisible(false)}
         onSuccess={() => {
           setProfitDistributionVisible(false);
+          fetchProjects();
+        }}
+      />
+
+      {/* 销售额提成分配示例弹窗 */}
+      <SalesRevenueDistributionModal
+        visible={salesRevenueDistributionVisible}
+        project={currentProject || null}
+        onCancel={() => setSalesRevenueDistributionVisible(false)}
+        onSuccess={() => {
+          setSalesRevenueDistributionVisible(false);
+          fetchProjects();
+        }}
+      />
+
+      {/* 销售额项目明细示例弹窗 */}
+      <SalesRevenueProjectDetailModal
+        visible={salesRevenueDetailVisible}
+        project={currentProject || null}
+        onCancel={() => setSalesRevenueDetailVisible(false)}
+      />
+
+      {/* 销售额提成编辑分配示例弹窗 */}
+      <SalesRevenueDistributionEditModal
+        visible={salesRevenueEditVisible}
+        project={currentProject || null}
+        onCancel={() => setSalesRevenueEditVisible(false)}
+        onSuccess={() => {
+          setSalesRevenueEditVisible(false);
           fetchProjects();
         }}
       />

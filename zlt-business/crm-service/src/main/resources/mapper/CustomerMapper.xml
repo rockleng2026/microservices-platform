@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.crm.mapper.CustomerMapper">
+
+    <resultMap id="BaseResultMap" type="com.central.crm.model.Customer">
+        <id column="customer_id" property="customerId" jdbcType="BIGINT"/>
+        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
+        <result column="customer_name" property="customerName" jdbcType="VARCHAR"/>
+        <result column="customer_type" property="customerType" jdbcType="VARCHAR"/>
+        <result column="customer_status" property="customerStatus" jdbcType="VARCHAR"/>
+        <result column="customer_source" property="customerSource" jdbcType="VARCHAR"/>
+        <result column="owner_employee_id" property="ownerEmployeeId" jdbcType="BIGINT"/>
+        <result column="contact_phone" property="contactPhone" jdbcType="VARCHAR"/>
+        <result column="contact_email" property="contactEmail" jdbcType="VARCHAR"/>
+        <result column="contact_address" property="contactAddress" jdbcType="VARCHAR"/>
+        <result column="industry" property="industry" jdbcType="VARCHAR"/>
+        <result column="company_scale" property="companyScale" jdbcType="VARCHAR"/>
+        <result column="annual_revenue" property="annualRevenue" jdbcType="DECIMAL"/>
+        <result column="website" property="website" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="LONGVARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_by" property="updatedBy" jdbcType="BIGINT"/>
+        <result column="is_deleted" property="isDeleted" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        customer_id, tenant_id, customer_name, customer_type, customer_status, customer_source,
+        owner_employee_id, contact_phone, contact_email, contact_address, industry,
+        company_scale, annual_revenue, website, description, created_at, created_by,
+        updated_at, updated_by, is_deleted
+    </sql>
+
+    <!-- 分页查询客户列表 -->
+    <select id="selectCustomerPage" resultType="com.central.crm.model.Customer">
+        SELECT 
+            c.*,
+            e.name as ownerEmployeeName
+        FROM customer c
+        LEFT JOIN employee e ON c.owner_employee_id = e.id
+        WHERE c.is_deleted = 0
+        <if test="params.customerName != null and params.customerName != ''">
+            AND c.customer_name LIKE CONCAT('%', #{params.customerName}, '%')
+        </if>
+        <if test="params.customerType != null and params.customerType != ''">
+            AND c.customer_type = #{params.customerType}
+        </if>
+        <if test="params.customerStatus != null and params.customerStatus != ''">
+            AND c.customer_status = #{params.customerStatus}
+        </if>
+        <if test="params.customerSource != null and params.customerSource != ''">
+            AND c.customer_source = #{params.customerSource}
+        </if>
+        <if test="params.ownerEmployeeId != null and params.ownerEmployeeId != ''">
+            AND c.owner_employee_id = #{params.ownerEmployeeId}
+        </if>
+        <if test="params.industry != null and params.industry != ''">
+            AND c.industry = #{params.industry}
+        </if>
+        <if test="params.contactPhone != null and params.contactPhone != ''">
+            AND c.contact_phone LIKE CONCAT('%', #{params.contactPhone}, '%')
+        </if>
+        <if test="params.contactEmail != null and params.contactEmail != ''">
+            AND c.contact_email LIKE CONCAT('%', #{params.contactEmail}, '%')
+        </if>
+        <if test="params.startDate != null and params.startDate != ''">
+            AND c.created_at >= #{params.startDate}
+        </if>
+        <if test="params.endDate != null and params.endDate != ''">
+            AND c.created_at &lt;= #{params.endDate}
+        </if>
+        ORDER BY c.created_at DESC
+    </select>
+
+    <!-- 查询客户统计信息 -->
+    <select id="selectCustomerStatistics" resultType="map">
+        SELECT 
+            COUNT(*) as totalCount,
+            COUNT(CASE WHEN DATE(created_at) = CURDATE() THEN 1 END) as todayCount,
+            COUNT(CASE WHEN DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN 1 END) as weekCount,
+            COUNT(CASE WHEN DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) THEN 1 END) as monthCount,
+            COUNT(CASE WHEN customer_type = 'individual' THEN 1 END) as individualCount,
+            COUNT(CASE WHEN customer_type = 'corporate' THEN 1 END) as corporateCount,
+            COUNT(CASE WHEN customer_status = 'potential' THEN 1 END) as potentialCount,
+            COUNT(CASE WHEN customer_status = 'confirmed' THEN 1 END) as confirmedCount,
+            COUNT(CASE WHEN customer_status = 'lost' THEN 1 END) as lostCount
+        FROM customer 
+        WHERE is_deleted = 0
+        <if test="params.startDate != null and params.startDate != ''">
+            AND created_at >= #{params.startDate}
+        </if>
+        <if test="params.endDate != null and params.endDate != ''">
+            AND created_at &lt;= #{params.endDate}
+        </if>
+        <if test="params.ownerEmployeeId != null and params.ownerEmployeeId != ''">
+            AND owner_employee_id = #{params.ownerEmployeeId}
+        </if>
+    </select>
+
+    <!-- 查询客户分布统计 -->
+    <select id="selectCustomerDistribution" resultType="map">
+        <choose>
+            <when test="params.groupBy == 'customerSource'">
+                SELECT 
+                    customer_source as name,
+                    COUNT(*) as count
+                FROM customer 
+                WHERE is_deleted = 0
+                GROUP BY customer_source
+                ORDER BY count DESC
+            </when>
+            <when test="params.groupBy == 'customerType'">
+                SELECT 
+                    customer_type as name,
+                    COUNT(*) as count
+                FROM customer 
+                WHERE is_deleted = 0
+                GROUP BY customer_type
+                ORDER BY count DESC
+            </when>
+            <when test="params.groupBy == 'industry'">
+                SELECT 
+                    industry as name,
+                    COUNT(*) as count
+                FROM customer 
+                WHERE is_deleted = 0 AND industry IS NOT NULL
+                GROUP BY industry
+                ORDER BY count DESC
+            </when>
+            <when test="params.groupBy == 'customerStatus'">
+                SELECT 
+                    customer_status as name,
+                    COUNT(*) as count
+                FROM customer 
+                WHERE is_deleted = 0
+                GROUP BY customer_status
+                ORDER BY count DESC
+            </when>
+            <otherwise>
+                SELECT 
+                    customer_source as name,
+                    COUNT(*) as count
+                FROM customer 
+                WHERE is_deleted = 0
+                GROUP BY customer_source
+                ORDER BY count DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 检查客户名称重复 -->
+    <select id="checkCustomerNameExists" resultType="int">
+        SELECT COUNT(*)
+        FROM customer
+        WHERE customer_name = #{customerName}
+        AND is_deleted = 0
+        <if test="customerId != null">
+            AND customer_id != #{customerId}
+        </if>
+    </select>
+
+    <!-- 检查客户电话重复 -->
+    <select id="checkPhoneExists" resultType="int">
+        SELECT COUNT(*)
+        FROM customer
+        WHERE contact_phone = #{phone}
+        AND is_deleted = 0
+        <if test="customerId != null">
+            AND customer_id != #{customerId}
+        </if>
+    </select>
+
+    <!-- 检查客户邮箱重复 -->
+    <select id="checkEmailExists" resultType="int">
+        SELECT COUNT(*)
+        FROM customer
+        WHERE contact_email = #{email}
+        AND is_deleted = 0
+        <if test="customerId != null">
+            AND customer_id != #{customerId}
+        </if>
+    </select>
+
+    <!-- 更新客户负责人 -->
+    <update id="updateCustomerOwner">
+        UPDATE customer 
+        SET owner_employee_id = #{newOwnerEmployeeId},
+            updated_at = NOW()
+        WHERE customer_id = #{customerId}
+        AND is_deleted = 0
+    </update>
+
+    <!-- 批量更新客户状态 -->
+    <update id="batchUpdateCustomerStatus">
+        UPDATE customer 
+        SET customer_status = #{status},
+            updated_at = NOW(),
+            updated_by = #{updatedBy}
+        WHERE customer_id IN
+        <foreach collection="customerIds" item="customerId" open="(" separator="," close=")">
+            #{customerId}
+        </foreach>
+        AND is_deleted = 0
+    </update>
+
+    <!-- 查询高价值客户 -->
+    <select id="selectHighValueCustomers" resultType="com.central.crm.model.Customer">
+        SELECT <include refid="Base_Column_List"/>
+        FROM customer
+        WHERE is_deleted = 0
+        AND annual_revenue >= #{minRevenue}
+        ORDER BY annual_revenue DESC
+        <if test="limit != null">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <!-- 查询即将流失的客户 -->
+    <select id="selectChurnRiskCustomers" resultType="map">
+        SELECT 
+            c.customer_id,
+            c.customer_name,
+            c.customer_type,
+            c.owner_employee_id,
+            e.name as ownerEmployeeName,
+            MAX(f.follow_time) as lastFollowTime,
+            DATEDIFF(NOW(), MAX(f.follow_time)) as daysSinceLastFollow
+        FROM customer c
+        LEFT JOIN customer_follow f ON c.customer_id = f.customer_id
+        LEFT JOIN employee e ON c.owner_employee_id = e.id
+        WHERE c.is_deleted = 0
+        AND c.customer_status = 'confirmed'
+        GROUP BY c.customer_id, c.customer_name, c.customer_type, c.owner_employee_id, e.name
+        HAVING daysSinceLastFollow > #{daysSinceLastFollow}
+        ORDER BY daysSinceLastFollow DESC
+    </select>
+
+</mapper>

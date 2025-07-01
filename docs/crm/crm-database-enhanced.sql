@@ -1,14 +1,34 @@
 -- CRM客户关系管理系统 - 增强版数据库设计
 -- 基于原有设计，添加租户支持和独立的商机表
 
--- 创建数据库
-CREATE DATABASE IF NOT EXISTS crm_system DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE crm_system;
-
-
--- ================================
 -- 1. 客户管理相关表
 -- ================================
+
+-- 客户主表
+DROP TABLE IF EXISTS customer;
+CREATE TABLE customer (
+                          customer_id BIGINT NOT NULL AUTO_INCREMENT COMMENT '客户唯一标识',
+                          tenant_id VARCHAR(32) DEFAULT 'default' COMMENT '租户ID',
+                          customer_type ENUM('个人','企业') NOT NULL DEFAULT '个人' COMMENT '客户类型',
+                          customer_status ENUM('意向','正式','流失') NOT NULL DEFAULT '意向' COMMENT '客户状态',
+                          customer_name VARCHAR(100) NOT NULL COMMENT '客户名称/企业名称',
+                          customer_source VARCHAR(50) NULL COMMENT '来源渠道(线上/展会/转介绍等)',
+                          customer_level ENUM('A','B','C','D') NULL COMMENT '客户等级',
+                          owner_employee_id INT NOT NULL COMMENT '业务负责人',
+    -- 审计字段
+                          created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+                          created_by INT NOT NULL COMMENT '创建人ID',
+                          updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+                          updated_by INT NULL COMMENT '更新人ID',
+                          is_deleted TINYINT(1) NOT NULL DEFAULT 0 COMMENT '删除标记(0:正常 1:删除)',
+
+                          PRIMARY KEY (customer_id),
+                          INDEX idx_customer_name (customer_name),
+                          INDEX idx_owner_employee (owner_employee_id),
+                          INDEX idx_customer_status (customer_status),
+                          INDEX idx_customer_type (customer_type),
+                          INDEX idx_created_at (created_at)
+) ENGINE=InnoDB COMMENT='客户主表';
 
 -- 商机表（新增）
 DROP TABLE IF EXISTS opportunity;
@@ -35,36 +55,9 @@ CREATE TABLE opportunity (
     INDEX idx_tenant_id (tenant_id),
     INDEX idx_customer_id (customer_id),
     INDEX idx_stage (stage),
-    INDEX idx_owner_employee (owner_employee_id),
-    FOREIGN KEY (tenant_id) REFERENCES tenant(tenant_id)
+    INDEX idx_owner_employee (owner_employee_id)
 ) ENGINE=InnoDB COMMENT='商机表';
 
-
--- 客户主表
-DROP TABLE IF EXISTS customer;
-CREATE TABLE customer (
-    customer_id BIGINT NOT NULL AUTO_INCREMENT COMMENT '客户唯一标识',
-    tenant_id VARCHAR(32) DEFAULT 'default' COMMENT '租户ID',
-    customer_type ENUM('个人','企业') NOT NULL DEFAULT '个人' COMMENT '客户类型',
-    customer_status ENUM('意向','正式','流失') NOT NULL DEFAULT '意向' COMMENT '客户状态',
-    customer_name VARCHAR(100) NOT NULL COMMENT '客户名称/企业名称',
-    customer_source VARCHAR(50) NULL COMMENT '来源渠道(线上/展会/转介绍等)',
-    customer_level ENUM('A','B','C','D') NULL COMMENT '客户等级',
-    owner_employee_id INT NOT NULL COMMENT '业务负责人',
-    -- 审计字段
-    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    created_by INT NOT NULL COMMENT '创建人ID',
-    updated_at DATETIME NULL ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    updated_by INT NULL COMMENT '更新人ID',
-    is_deleted TINYINT(1) NOT NULL DEFAULT 0 COMMENT '删除标记(0:正常 1:删除)',
-    
-    PRIMARY KEY (customer_id),
-    INDEX idx_customer_name (customer_name),
-    INDEX idx_owner_employee (owner_employee_id),
-    INDEX idx_customer_status (customer_status),
-    INDEX idx_customer_type (customer_type),
-    INDEX idx_created_at (created_at)
-) ENGINE=InnoDB COMMENT='客户主表';
 
 -- 个人客户扩展表
 DROP TABLE IF EXISTS individual_customer;

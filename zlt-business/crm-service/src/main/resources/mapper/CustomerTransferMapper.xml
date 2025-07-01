@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.crm.mapper.CustomerTransferMapper">
+
+    <resultMap id="BaseResultMap" type="com.central.crm.model.CustomerTransfer">
+        <id column="transfer_id" property="transferId" jdbcType="BIGINT"/>
+        <result column="customer_id" property="customerId" jdbcType="BIGINT"/>
+        <result column="from_employee_id" property="fromEmployeeId" jdbcType="BIGINT"/>
+        <result column="to_employee_id" property="toEmployeeId" jdbcType="BIGINT"/>
+        <result column="transfer_reason" property="transferReason" jdbcType="VARCHAR"/>
+        <result column="transfer_time" property="transferTime" jdbcType="TIMESTAMP"/>
+        <result column="process_instance_id" property="processInstanceId" jdbcType="VARCHAR"/>
+        <result column="approval_status" property="approvalStatus" jdbcType="VARCHAR"/>
+        <result column="approval_time" property="approvalTime" jdbcType="TIMESTAMP"/>
+        <result column="approval_notes" property="approvalNotes" jdbcType="LONGVARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_by" property="updatedBy" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        transfer_id, customer_id, from_employee_id, to_employee_id, transfer_reason,
+        transfer_time, process_instance_id, approval_status, approval_time, approval_notes,
+        created_at, created_by, updated_at, updated_by
+    </sql>
+
+    <!-- 分页查询移交记录列表 -->
+    <select id="selectTransferPage" resultType="com.central.crm.model.CustomerTransfer">
+        SELECT 
+            t.*,
+            c.customer_name as customerName
+        FROM customer_transfer t
+        LEFT JOIN customer c ON t.customer_id = c.customer_id
+        WHERE 1=1
+        <if test="params.approvalStatus != null and params.approvalStatus != ''">
+            AND t.approval_status = #{params.approvalStatus}
+        </if>
+        <if test="params.fromEmployeeId != null and params.fromEmployeeId != ''">
+            AND t.from_employee_id = #{params.fromEmployeeId}
+        </if>
+        <if test="params.toEmployeeId != null and params.toEmployeeId != ''">
+            AND t.to_employee_id = #{params.toEmployeeId}
+        </if>
+        <if test="params.customerId != null and params.customerId != ''">
+            AND t.customer_id = #{params.customerId}
+        </if>
+        <if test="params.startDate != null and params.startDate != ''">
+            AND t.transfer_time >= #{params.startDate}
+        </if>
+        <if test="params.endDate != null and params.endDate != ''">
+            AND t.transfer_time &lt;= #{params.endDate}
+        </if>
+        ORDER BY t.transfer_time DESC
+    </select>
+
+    <!-- 查询待审批的移交申请 -->
+    <select id="selectPendingApprovals" resultType="com.central.crm.model.CustomerTransfer">
+        SELECT 
+            t.*,
+            c.customer_name as customerName
+        FROM customer_transfer t
+        LEFT JOIN customer c ON t.customer_id = c.customer_id
+        WHERE t.approval_status = 'pending'
+        <if test="params.approverId != null and params.approverId != ''">
+            AND t.to_employee_id = #{params.approverId}
+        </if>
+        ORDER BY t.transfer_time DESC
+    </select>
+
+    <!-- 根据客户ID查询移交记录 -->
+    <select id="selectByCustomerId" resultType="com.central.crm.model.CustomerTransfer">
+        SELECT <include refid="Base_Column_List"/>
+        FROM customer_transfer
+        WHERE customer_id = #{customerId}
+        ORDER BY transfer_time DESC
+    </select>
+
+    <!-- 查询移交统计信息 -->
+    <select id="selectTransferStatistics" resultType="map">
+        SELECT 
+            COUNT(*) as totalCount,
+            COUNT(CASE WHEN approval_status = 'pending' THEN 1 END) as pendingCount,
+            COUNT(CASE WHEN approval_status = 'approved' THEN 1 END) as approvedCount,
+            COUNT(CASE WHEN approval_status = 'rejected' THEN 1 END) as rejectedCount,
+            COUNT(CASE WHEN DATE(transfer_time) = CURDATE() THEN 1 END) as todayCount,
+            COUNT(CASE WHEN DATE(transfer_time) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN 1 END) as weekCount,
+            COUNT(CASE WHEN DATE(transfer_time) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) THEN 1 END) as monthCount
+        FROM customer_transfer 
+        WHERE 1=1
+        <if test="params.startDate != null and params.startDate != ''">
+            AND transfer_time >= #{params.startDate}
+        </if>
+        <if test="params.endDate != null and params.endDate != ''">
+            AND transfer_time &lt;= #{params.endDate}
+        </if>
+        <if test="params.employeeId != null and params.employeeId != ''">
+            AND (from_employee_id = #{params.employeeId} OR to_employee_id = #{params.employeeId})
+        </if>
+    </select>
+
+</mapper>

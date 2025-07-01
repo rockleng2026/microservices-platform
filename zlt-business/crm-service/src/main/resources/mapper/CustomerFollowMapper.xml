@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.crm.mapper.CustomerFollowMapper">
+
+    <resultMap id="BaseResultMap" type="com.central.crm.model.CustomerFollow">
+        <id column="follow_id" property="followId" jdbcType="BIGINT"/>
+        <result column="customer_id" property="customerId" jdbcType="BIGINT"/>
+        <result column="employee_id" property="employeeId" jdbcType="BIGINT"/>
+        <result column="follow_type" property="followType" jdbcType="VARCHAR"/>
+        <result column="follow_time" property="followTime" jdbcType="TIMESTAMP"/>
+        <result column="next_follow_time" property="nextFollowTime" jdbcType="TIMESTAMP"/>
+        <result column="content" property="content" jdbcType="LONGVARCHAR"/>
+        <result column="stage" property="stage" jdbcType="VARCHAR"/>
+        <result column="probability" property="probability" jdbcType="INTEGER"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_by" property="updatedBy" jdbcType="BIGINT"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        follow_id, customer_id, employee_id, follow_type, follow_time, next_follow_time,
+        content, stage, probability, created_at, created_by, updated_at, updated_by
+    </sql>
+
+    <!-- 分页查询跟进记录列表 -->
+    <select id="selectFollowPage" resultType="com.central.crm.model.CustomerFollow">
+        SELECT 
+            f.*,
+            c.customer_name as customerName,
+            e.name as employeeName
+        FROM customer_follow f
+        LEFT JOIN customer c ON f.customer_id = c.customer_id
+        LEFT JOIN employee e ON f.employee_id = e.id
+        WHERE 1=1
+        <if test="params.followType != null and params.followType != ''">
+            AND f.follow_type = #{params.followType}
+        </if>
+        <if test="params.stage != null and params.stage != ''">
+            AND f.stage = #{params.stage}
+        </if>
+        <if test="params.customerId != null and params.customerId != ''">
+            AND f.customer_id = #{params.customerId}
+        </if>
+        <if test="params.employeeId != null and params.employeeId != ''">
+            AND f.employee_id = #{params.employeeId}
+        </if>
+        <if test="params.startDate != null and params.startDate != ''">
+            AND f.follow_time >= #{params.startDate}
+        </if>
+        <if test="params.endDate != null and params.endDate != ''">
+            AND f.follow_time &lt;= #{params.endDate}
+        </if>
+        <if test="params.customerName != null and params.customerName != ''">
+            AND c.customer_name LIKE CONCAT('%', #{params.customerName}, '%')
+        </if>
+        ORDER BY f.follow_time DESC
+    </select>
+
+    <!-- 根据客户ID查询跟进记录 -->
+    <select id="selectByCustomerId" resultType="com.central.crm.model.CustomerFollow">
+        SELECT <include refid="Base_Column_List"/>
+        FROM customer_follow
+        WHERE customer_id = #{customerId}
+        ORDER BY follow_time DESC
+    </select>
+
+    <!-- 查询待跟进客户列表 -->
+    <select id="selectPendingFollowList" resultType="map">
+        SELECT 
+            c.customer_id as customerId,
+            c.customer_name as customerName,
+            c.customer_type as customerType,
+            c.customer_status as customerStatus,
+            c.owner_employee_id as ownerEmployeeId,
+            MAX(f.follow_time) as lastFollowTime,
+            MIN(f.next_follow_time) as nextFollowTime,
+            COUNT(f.follow_id) as followCount
+        FROM customer c
+        LEFT JOIN customer_follow f ON c.customer_id = f.customer_id
+        WHERE c.is_deleted = 0
+        <if test="params.employeeId != null and params.employeeId != ''">
+            AND c.owner_employee_id = #{params.employeeId}
+        </if>
+        <if test="params.needFollowUp != null and params.needFollowUp == true">
+            AND (f.next_follow_time IS NULL OR f.next_follow_time &lt;= NOW())
+        </if>
+        GROUP BY c.customer_id, c.customer_name, c.customer_type, c.customer_status, c.owner_employee_id
+        ORDER BY nextFollowTime ASC, lastFollowTime DESC
+    </select>
+
+    <!-- 查询跟进统计信息 -->
+    <select id="selectFollowStatistics" resultType="map">
+        SELECT 
+            COUNT(*) as totalCount,
+            COUNT(CASE WHEN DATE(follow_time) = CURDATE() THEN 1 END) as todayCount,
+            COUNT(CASE WHEN DATE(follow_time) >= DATE_SUB(CURDATE(), INTERVAL 7 DAY) THEN 1 END) as weekCount,
+            COUNT(CASE WHEN DATE(follow_time) >= DATE_SUB(CURDATE(), INTERVAL 30 DAY) THEN 1 END) as monthCount,
+            COUNT(CASE WHEN next_follow_time IS NOT NULL AND next_follow_time &lt;= NOW() THEN 1 END) as pendingCount,
+            COUNT(DISTINCT customer_id) as customerCount
+        FROM customer_follow 
+        WHERE 1=1
+        <if test="params.startDate != null and params.startDate != ''">
+            AND follow_time >= #{params.startDate}
+        </if>
+        <if test="params.endDate != null and params.endDate != ''">
+            AND follow_time &lt;= #{params.endDate}
+        </if>
+        <if test="params.employeeId != null and params.employeeId != ''">
+            AND employee_id = #{params.employeeId}
+        </if>
+    </select>
+
+    <!-- 查询最近跟进记录 -->
+    <select id="selectRecentFollows" resultType="com.central.crm.model.CustomerFollow">
+        SELECT 
+            f.*,
+            c.customer_name as customerName
+        FROM customer_follow f
+        LEFT JOIN customer c ON f.customer_id = c.customer_id
+        WHERE f.follow_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        <if test="params.employeeId != null and params.employeeId != ''">
+            AND f.employee_id = #{params.employeeId}
+        </if>
+        ORDER BY f.follow_time DESC
+        <if test="params.limit != null">
+            LIMIT #{params.limit}
+        </if>
+    </select>
+
+</mapper>

@@ -24,5 +24,7 @@
         <module>multi-table-service</module>
         <!-- 项目管理服务 -->
         <module>project-manager-service</module>
+        <!-- CRM客户关系管理服务 -->
+        <module>crm-service</module>
     </modules>
 </project>

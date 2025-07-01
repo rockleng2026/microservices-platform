@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.crm.mapper.OpportunityMapper">
+
+    <resultMap id="BaseResultMap" type="com.central.crm.model.Opportunity">
+        <id column="opportunity_id" property="opportunityId" jdbcType="BIGINT"/>
+        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
+        <result column="customer_id" property="customerId" jdbcType="BIGINT"/>
+        <result column="opportunity_name" property="opportunityName" jdbcType="VARCHAR"/>
+        <result column="opportunity_source" property="opportunitySource" jdbcType="VARCHAR"/>
+        <result column="stage" property="stage" jdbcType="VARCHAR"/>
+        <result column="probability" property="probability" jdbcType="INTEGER"/>
+        <result column="expected_amount" property="expectedAmount" jdbcType="DECIMAL"/>
+        <result column="expected_close_date" property="expectedCloseDate" jdbcType="DATE"/>
+        <result column="owner_employee_id" property="ownerEmployeeId" jdbcType="BIGINT"/>
+        <result column="competitor" property="competitor" jdbcType="VARCHAR"/>
+        <result column="description" property="description" jdbcType="LONGVARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="created_by" property="createdBy" jdbcType="BIGINT"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_by" property="updatedBy" jdbcType="BIGINT"/>
+        <result column="is_deleted" property="isDeleted" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        opportunity_id, tenant_id, customer_id, opportunity_name, opportunity_source,
+        stage, probability, expected_amount, expected_close_date, owner_employee_id,
+        competitor, description, created_at, created_by, updated_at, updated_by, is_deleted
+    </sql>
+
+    <!-- 分页查询商机列表 -->
+    <select id="selectOpportunityPage" resultType="com.central.crm.model.Opportunity">
+        SELECT 
+            o.*,
+            c.customer_name as customerName
+        FROM opportunity o
+        LEFT JOIN customer c ON o.customer_id = c.customer_id
+        WHERE o.is_deleted = 0
+        <if test="params.opportunityName != null and params.opportunityName != ''">
+            AND o.opportunity_name LIKE CONCAT('%', #{params.opportunityName}, '%')
+        </if>
+        <if test="params.stage != null and params.stage != ''">
+            AND o.stage = #{params.stage}
+        </if>
+        <if test="params.customerId != null and params.customerId != ''">
+            AND o.customer_id = #{params.customerId}
+        </if>
+        <if test="params.ownerEmployeeId != null and params.ownerEmployeeId != ''">
+            AND o.owner_employee_id = #{params.ownerEmployeeId}
+        </if>
+        <if test="params.startDate != null and params.startDate != ''">
+            AND o.created_at >= #{params.startDate}
+        </if>
+        <if test="params.endDate != null and params.endDate != ''">
+            AND o.created_at &lt;= #{params.endDate}
+        </if>
+        ORDER BY o.created_at DESC
+    </select>
+
+    <!-- 查询商机漏斗统计 -->
+    <select id="selectFunnelStatistics" resultType="map">
+        SELECT 
+            stage as stageName,
+            COUNT(*) as count,
+            SUM(IFNULL(expected_amount, 0)) as totalAmount,
+            AVG(IFNULL(probability, 0)) as avgProbability
+        FROM opportunity 
+        WHERE is_deleted = 0
+        <if test="params.startDate != null and params.startDate != ''">
+            AND created_at >= #{params.startDate}
+        </if>
+        <if test="params.endDate != null and params.endDate != ''">
+            AND created_at &lt;= #{params.endDate}
+        </if>
+        <if test="params.ownerEmployeeId != null and params.ownerEmployeeId != ''">
+            AND owner_employee_id = #{params.ownerEmployeeId}
+        </if>
+        GROUP BY stage
+        ORDER BY 
+            CASE stage 
+                WHEN 'initial' THEN 1
+                WHEN 'analysis' THEN 2
+                WHEN 'proposal' THEN 3
+                WHEN 'negotiation' THEN 4
+                WHEN 'contract' THEN 5
+                WHEN 'won' THEN 6
+                WHEN 'lost' THEN 7
+                ELSE 8
+            END
+    </select>
+
+    <!-- 查询商机成交统计 -->
+    <select id="selectWinStatistics" resultType="map">
+        SELECT 
+            COUNT(*) as totalCount,
+            COUNT(CASE WHEN stage = 'won' THEN 1 END) as wonCount,
+            COUNT(CASE WHEN stage = 'lost' THEN 1 END) as lostCount,
+            COUNT(CASE WHEN stage NOT IN ('won', 'lost') THEN 1 END) as activeCount,
+            SUM(CASE WHEN stage = 'won' THEN IFNULL(expected_amount, 0) ELSE 0 END) as totalAmount,
+            AVG(CASE WHEN stage = 'won' THEN IFNULL(expected_amount, 0) ELSE NULL END) as avgAmount
+        FROM opportunity 
+        WHERE is_deleted = 0
+        <if test="params.startDate != null and params.startDate != ''">
+            AND created_at >= #{params.startDate}
+        </if>
+        <if test="params.endDate != null and params.endDate != ''">
+            AND created_at &lt;= #{params.endDate}
+        </if>
+        <if test="params.ownerEmployeeId != null and params.ownerEmployeeId != ''">
+            AND owner_employee_id = #{params.ownerEmployeeId}
+        </if>
+    </select>
+
+    <!-- 根据客户ID查询商机列表 -->
+    <select id="selectByCustomerId" resultType="com.central.crm.model.Opportunity">
+        SELECT <include refid="Base_Column_List"/>
+        FROM opportunity
+        WHERE customer_id = #{customerId} AND is_deleted = 0
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 查询商机趋势统计 -->
+    <select id="selectTrendStatistics" resultType="map">
+        <choose>
+            <when test="params.granularity == 'day'">
+                SELECT 
+                    DATE(created_at) as date,
+                    COUNT(*) as count,
+                    SUM(IFNULL(expected_amount, 0)) as amount
+                FROM opportunity 
+                WHERE is_deleted = 0
+                <if test="params.startDate != null and params.startDate != ''">
+                    AND created_at >= #{params.startDate}
+                </if>
+                <if test="params.endDate != null and params.endDate != ''">
+                    AND created_at &lt;= #{params.endDate}
+                </if>
+                GROUP BY DATE(created_at)
+                ORDER BY DATE(created_at)
+            </when>
+            <when test="params.granularity == 'week'">
+                SELECT 
+                    YEARWEEK(created_at) as week,
+                    COUNT(*) as count,
+                    SUM(IFNULL(expected_amount, 0)) as amount
+                FROM opportunity 
+                WHERE is_deleted = 0
+                <if test="params.startDate != null and params.startDate != ''">
+                    AND created_at >= #{params.startDate}
+                </if>
+                <if test="params.endDate != null and params.endDate != ''">
+                    AND created_at &lt;= #{params.endDate}
+                </if>
+                GROUP BY YEARWEEK(created_at)
+                ORDER BY YEARWEEK(created_at)
+            </when>
+            <otherwise>
+                SELECT 
+                    DATE_FORMAT(created_at, '%Y-%m') as month,
+                    COUNT(*) as count,
+                    SUM(IFNULL(expected_amount, 0)) as amount
+                FROM opportunity 
+                WHERE is_deleted = 0
+                <if test="params.startDate != null and params.startDate != ''">
+                    AND created_at >= #{params.startDate}
+                </if>
+                <if test="params.endDate != null and params.endDate != ''">
+                    AND created_at &lt;= #{params.endDate}
+                </if>
+                GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+                ORDER BY DATE_FORMAT(created_at, '%Y-%m')
+            </otherwise>
+        </choose>
+    </select>
+
+</mapper>

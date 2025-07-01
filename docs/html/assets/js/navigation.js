@@ -29,13 +29,16 @@ const menuData = [
     },
     {
         id: 'crm',
-        name: '客户管理',
+        name: 'CRM管理',
         icon: 'fas fa-users',
         children: [
-            { id: 'customer-list', name: '客户列表', url: 'crm/customer-list.html' },
-            { id: 'customer-detail', name: '客户详情', url: 'crm/customer-detail.html' },
+            { id: 'crm-index', name: 'CRM首页', url: 'crm/index.html' },
+            { id: 'crm-dashboard', name: 'CRM工作台', url: 'crm/dashboard.html' },
+            { id: 'customer-list', name: '客户管理', url: 'crm/customer-list.html' },
+            { id: 'opportunity-list', name: '商机管理', url: 'crm/opportunity-list.html' },
             { id: 'follow-record', name: '跟进记录', url: 'crm/follow-record.html' },
-            { id: 'customer-transfer', name: '客户交接', url: 'crm/customer-transfer.html' }
+            { id: 'customer-transfer', name: '客户移交', url: 'crm/customer-transfer.html' },
+            { id: 'crm-reports', name: '报表分析', url: 'crm/reports.html' }
         ]
     },
     {
@@ -253,16 +256,22 @@ class NavigationManager {
 
     // 解析URL路径
     resolveUrl(url) {
+        if (!url) return '#';
+        
+        // 获取当前页面的完整路径
+        const currentFullPath = window.location.pathname;
+        
+        // 如果是根目录的index.html，直接使用相对路径
+        if (currentFullPath.endsWith('/html/index.html') || this.basePath === './') {
+            return url;
+        }
+        
+        // 如果是根目录的index.html链接，特殊处理
         if (url === 'index.html') {
             return this.basePath + 'index.html';
         }
         
-        // 如果当前在根目录（index.html），直接使用相对路径
-        if (this.currentPath === 'index.html' || this.basePath === './') {
-            return url;
-        }
-        
-        // 如果在子目录，需要回到根目录
+        // 如果在子目录中，需要回到html根目录
         return this.basePath + url;
     }
 

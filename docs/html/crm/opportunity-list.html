@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商机管理 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <style>
+        .app-layout {
+            display: grid;
+            grid-template-areas: "sidebar header" "sidebar main";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .app-sidebar {
+            grid-area: sidebar;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* 导航菜单样式 */
+        .nav-menu {
+            padding: 20px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666 !important;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            width: 100%;
+            overflow: visible;
+        }
+
+        .nav-link:hover {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        .nav-group {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-group:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-group.expanded {
+            background: rgba(24, 144, 255, 0.05);
+            color: #1890ff;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #fafafa;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 10px 20px 10px 52px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-subitem:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .nav-subitem.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: #1890ff;
+        }
+
+        .nav-subitem.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .funnel-view {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .funnel-stage {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            overflow: hidden;
+        }
+
+        .stage-header {
+            padding: 16px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stage-title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .stage-count {
+            background: #1890ff;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        .opportunity-card {
+            padding: 12px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+        }
+
+        .opportunity-card:hover {
+            background: #f8f9fa;
+        }
+
+        .opp-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .opp-customer {
+            color: #666;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .opp-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: #999;
+        }
+
+        .opp-amount {
+            color: #fa8c16;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="app-sidebar"></aside>
+        
+        <header class="app-header">
+            <div class="breadcrumb">
+                <span class="breadcrumb-item">Portal 3.0</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item">CRM管理</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item">商机管理</span>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索商机...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">3</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">销</div>
+                    <span>销售经理</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="page-header">
+                <h1 class="page-title">🎯 商机管理</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="createOpportunity()">
+                        ➕ 新建商机
+                    </button>
+                </div>
+            </div>
+
+            <div class="funnel-view">
+                <div class="funnel-stage">
+                    <div class="stage-header">
+                        <span class="stage-title">初步接触</span>
+                        <span class="stage-count">45</span>
+                    </div>
+                    <div class="opportunity-card" onclick="viewOpportunity(1)">
+                        <div class="opp-title">华为ERP项目</div>
+                        <div class="opp-customer">华为技术有限公司</div>
+                        <div class="opp-meta">
+                            <span class="opp-amount">¥850,000</span>
+                            <span>张销售</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="funnel-stage">
+                    <div class="stage-header">
+                        <span class="stage-title">需求分析</span>
+                        <span class="stage-count">28</span>
+                    </div>
+                    <div class="opportunity-card" onclick="viewOpportunity(2)">
+                        <div class="opp-title">字节跳动数据中台</div>
+                        <div class="opp-customer">字节跳动</div>
+                        <div class="opp-meta">
+                            <span class="opp-amount">¥1,200,000</span>
+                            <span>张销售</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="funnel-stage">
+                    <div class="stage-header">
+                        <span class="stage-title">方案报价</span>
+                        <span class="stage-count">15</span>
+                    </div>
+                    <div class="opportunity-card" onclick="viewOpportunity(3)">
+                        <div class="opp-title">百度AI平台</div>
+                        <div class="opp-customer">百度在线</div>
+                        <div class="opp-meta">
+                            <span class="opp-amount">¥950,000</span>
+                            <span>王销售</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function viewOpportunity(id) {
+            window.location.href = `opportunity-detail.html?id=${id}`;
+        }
+
+        function createOpportunity() {
+            window.location.href = 'opportunity-create.html';
+        }
+    </script>
+
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html>

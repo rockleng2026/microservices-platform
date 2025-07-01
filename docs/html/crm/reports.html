@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>报表分析 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <style>
+        .app-layout {
+            display: grid;
+            grid-template-areas: "sidebar header" "sidebar main";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .app-sidebar {
+            grid-area: sidebar;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* 导航菜单样式 */
+        .nav-menu {
+            padding: 20px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666 !important;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            width: 100%;
+            overflow: visible;
+        }
+
+        .nav-link:hover {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        .nav-group {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-group:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-group.expanded {
+            background: rgba(24, 144, 255, 0.05);
+            color: #1890ff;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #fafafa;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 10px 20px 10px 52px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-subitem:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .nav-subitem.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: #1890ff;
+        }
+
+        .nav-subitem.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 8px;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+        }
+
+        .stat-card.revenue::before { background: #1890ff; }
+        .stat-card.customers::before { background: #52c41a; }
+        .stat-card.opportunities::before { background: #fa8c16; }
+        .stat-card.conversion::before { background: #722ed1; }
+
+        .stat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .stat-title {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .stat-change {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+        }
+
+        .stat-change.positive { color: #52c41a; }
+        .stat-change.negative { color: #ff4d4f; }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .chart-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .chart-body {
+            padding: 24px;
+        }
+
+        .trend-chart {
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            border: 2px dashed #e8e8e8;
+            border-radius: 8px;
+        }
+
+        .ranking-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+
+        .ranking-number {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            margin-right: 12px;
+        }
+
+        .ranking-number.top1 { background: #ffd700; color: white; }
+        .ranking-number.top2 { background: #c0c0c0; color: white; }
+        .ranking-number.top3 { background: #cd7f32; color: white; }
+
+        .ranking-info {
+            flex: 1;
+        }
+
+        .ranking-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 2px;
+        }
+
+        .ranking-value {
+            font-weight: 600;
+            color: #1890ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="app-sidebar"></aside>
+        
+        <header class="app-header">
+            <div class="breadcrumb">
+                <span class="breadcrumb-item">Portal 3.0</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item">CRM管理</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item">报表分析</span>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索报表...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">2</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">销</div>
+                    <span>销售经理</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="page-header">
+                <h1 class="page-title">📊 报表分析</h1>
+                <div class="header-actions">
+                    <button class="btn">📈 导出报告</button>
+                    <button class="btn btn-primary">🔄 刷新数据</button>
+                </div>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card revenue">
+                    <div class="stat-header">
+                        <span class="stat-title">本月营收</span>
+                        <div class="stat-icon">💰</div>
+                    </div>
+                    <div class="stat-value">¥2.85M</div>
+                    <div class="stat-change positive">
+                        <span>↗ +12.5% 较上月</span>
+                    </div>
+                </div>
+
+                <div class="stat-card customers">
+                    <div class="stat-header">
+                        <span class="stat-title">新增客户</span>
+                        <div class="stat-icon">👥</div>
+                    </div>
+                    <div class="stat-value">156</div>
+                    <div class="stat-change positive">
+                        <span>↗ +18.2% 较上月</span>
+                    </div>
+                </div>
+
+                <div class="stat-card opportunities">
+                    <div class="stat-header">
+                        <span class="stat-title">新增商机</span>
+                        <div class="stat-icon">🎯</div>
+                    </div>
+                    <div class="stat-value">89</div>
+                    <div class="stat-change positive">
+                        <span>↗ +25.4% 较上月</span>
+                    </div>
+                </div>
+
+                <div class="stat-card conversion">
+                    <div class="stat-header">
+                        <span class="stat-title">转化率</span>
+                        <div class="stat-icon">📈</div>
+                    </div>
+                    <div class="stat-value">34.2%</div>
+                    <div class="stat-change negative">
+                        <span>↘ -2.1% 较上月</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">📈 销售趋势分析</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div class="trend-chart">
+                            📊 销售趋势图表<br><small>（集成图表库后显示）</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3 class="chart-title">🏆 销售排行榜</h3>
+                    </div>
+                    <div class="chart-body">
+                        <div class="ranking-item">
+                            <div class="ranking-number top1">1</div>
+                            <div class="ranking-info">
+                                <div class="ranking-name">张销售</div>
+                            </div>
+                            <div class="ranking-value">¥850K</div>
+                        </div>
+
+                        <div class="ranking-item">
+                            <div class="ranking-number top2">2</div>
+                            <div class="ranking-info">
+                                <div class="ranking-name">李销售</div>
+                            </div>
+                            <div class="ranking-value">¥720K</div>
+                        </div>
+
+                        <div class="ranking-item">
+                            <div class="ranking-number top3">3</div>
+                            <div class="ranking-info">
+                                <div class="ranking-name">王销售</div>
+                            </div>
+                            <div class="ranking-value">¥680K</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html>

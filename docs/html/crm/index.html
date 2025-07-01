@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM首页 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <style>
+        /* 基础布局 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: "sidebar header" "sidebar main" "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .app-sidebar {
+            grid-area: sidebar;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* 导航菜单样式 */
+        .nav-menu {
+            padding: 20px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666 !important;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            width: 100%;
+            overflow: visible;
+        }
+
+        .nav-link:hover {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        .nav-group {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-group:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-group.expanded {
+            background: rgba(24, 144, 255, 0.05);
+            color: #1890ff;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #fafafa;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 10px 20px 10px 52px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-subitem:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .nav-subitem.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: #1890ff;
+        }
+
+        .nav-subitem.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        /* 面包屑导航 */
+        .breadcrumb {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .breadcrumb-item {
+            color: #8c8c8c;
+        }
+        
+        .breadcrumb-item:last-child {
+            color: #262626;
+        }
+        
+        .breadcrumb-separator {
+            color: #d9d9d9;
+        }
+        
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .search-box {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        
+        .search-box .search-input {
+            padding: 8px 12px 8px 32px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            width: 200px;
+            font-size: 14px;
+            color: #262626;
+        }
+        
+        .search-icon {
+            position: absolute;
+            left: 10px;
+            color: #8c8c8c;
+            z-index: 1;
+        }
+        
+        .notification-btn {
+            position: relative;
+            background: none;
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            color: #262626;
+            border-radius: 4px;
+            transition: background-color 0.2s;
+        }
+        
+        .notification-btn:hover {
+            background: #f5f5f5;
+        }
+        
+        .notification-badge {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: #ff4d4f;
+            color: white;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 8px;
+            min-width: 16px;
+            text-align: center;
+        }
+        
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            color: #262626;
+        }
+        
+        .user-menu:hover {
+            background: #f5f5f5;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+
+        /* CRM首页特有样式 */
+        .crm-welcome {
+            background: linear-gradient(135deg, #1890ff 0%, #722ed1 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .crm-welcome h1 {
+            font-size: 32px;
+            margin: 0 0 12px 0;
+            font-weight: 700;
+        }
+
+        .crm-welcome p {
+            font-size: 16px;
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .module-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .module-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+            border-color: #1890ff;
+        }
+
+        .module-icon {
+            font-size: 40px;
+            margin-bottom: 16px;
+        }
+
+        .module-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .module-description {
+            color: #666;
+            font-size: 14px;
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            background: #1890ff;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #40a9ff;
+            transform: translateY(-1px);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .app-layout {
+                grid-template-areas: "header" "main" "footer";
+                grid-template-columns: 1fr;
+            }
+
+            .app-sidebar {
+                position: fixed;
+                left: -240px;
+                width: 240px;
+                transition: left 0.3s ease;
+                z-index: 1000;
+                background: white;
+            }
+
+            .modules-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .crm-welcome {
+                padding: 24px;
+            }
+
+            .crm-welcome h1 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 左侧导航 -->
+        <aside class="app-sidebar">
+            <!-- 导航内容将由navigation.js动态生成 -->
+        </aside>
+
+        <!-- 头部区域 -->
+        <header class="app-header">
+            <div class="breadcrumb">
+                <span class="breadcrumb-item">Portal 3.0</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item">CRM管理</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item">CRM首页</span>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索功能...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">3</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">销</div>
+                    <span>销售经理</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <!-- 欢迎区域 -->
+            <div class="crm-welcome">
+                <h1>🎯 CRM客户关系管理系统</h1>
+                <p>现代化SaaS多租户客户关系管理平台 - 让销售更简单，让业务更高效</p>
+            </div>
+
+            <!-- 功能模块 -->
+            <div class="modules-grid">
+                <div class="module-card" onclick="navigateTo('dashboard.html')">
+                    <div class="module-icon">🏠</div>
+                    <h3 class="module-title">CRM工作台</h3>
+                    <p class="module-description">全面的业务概览，实时数据看板，个性化工作台</p>
+                    <a href="dashboard.html" class="btn" onclick="event.stopPropagation()">🚀 进入工作台</a>
+                </div>
+
+                <div class="module-card" onclick="navigateTo('customer-list.html')">
+                    <div class="module-icon">👥</div>
+                    <h3 class="module-title">客户管理</h3>
+                    <p class="module-description">全生命周期客户管理，支持个人和企业客户</p>
+                    <a href="customer-list.html" class="btn" onclick="event.stopPropagation()">👤 客户列表</a>
+                </div>
+
+                <div class="module-card" onclick="navigateTo('opportunity-list.html')">
+                    <div class="module-icon">🎯</div>
+                    <h3 class="module-title">商机管理</h3>
+                    <p class="module-description">销售漏斗管理，商机跟进，转化率优化</p>
+                    <a href="opportunity-list.html" class="btn" onclick="event.stopPropagation()">🎯 商机漏斗</a>
+                </div>
+
+                <div class="module-card" onclick="navigateTo('follow-record.html')">
+                    <div class="module-icon">📝</div>
+                    <h3 class="module-title">跟进记录</h3>
+                    <p class="module-description">详细的客户沟通记录，跟进任务管理</p>
+                    <a href="follow-record.html" class="btn" onclick="event.stopPropagation()">📋 跟进记录</a>
+                </div>
+
+                <div class="module-card" onclick="navigateTo('customer-transfer.html')">
+                    <div class="module-icon">🔄</div>
+                    <h3 class="module-title">客户移交</h3>
+                    <p class="module-description">规范的客户移交流程，确保业务连续性</p>
+                    <a href="customer-transfer.html" class="btn" onclick="event.stopPropagation()">🔄 客户移交</a>
+                </div>
+
+                <div class="module-card" onclick="navigateTo('reports.html')">
+                    <div class="module-icon">📊</div>
+                    <h3 class="module-title">报表分析</h3>
+                    <p class="module-description">深度数据分析，业务洞察，决策支持</p>
+                    <a href="reports.html" class="btn" onclick="event.stopPropagation()">📈 数据分析</a>
+                </div>
+            </div>
+        </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            © 2024 Portal 3.0 企业管理平台 - CRM客户关系管理系统
+        </footer>
+    </div>
+
+    <script>
+        function navigateTo(page) {
+            window.location.href = page;
+        }
+
+        // 页面加载动画
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.module-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.5s ease';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 50);
+                }, index * 100);
+            });
+        });
+    </script>
+    
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html>

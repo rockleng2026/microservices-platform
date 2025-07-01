@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商机详情 - Portal 3.0</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <style>
+        .app-layout {
+            display: grid;
+            grid-template-areas: "sidebar header" "sidebar main";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+        }
+
+        .app-sidebar {
+            grid-area: sidebar;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        /* 侧边栏样式 */
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* 导航菜单样式 */
+        .nav-menu {
+            padding: 20px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666 !important;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            width: 100%;
+            overflow: visible;
+        }
+
+        .nav-link:hover {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        .nav-group {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-group:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-group.expanded {
+            background: rgba(24, 144, 255, 0.05);
+            color: #1890ff;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #fafafa;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 10px 20px 10px 52px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-subitem:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .nav-subitem.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: #1890ff;
+        }
+
+        .nav-subitem.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .opportunity-header {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .opp-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .opp-customer {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+
+        .opp-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .tag-stage {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .tag-amount {
+            background: #fff7e6;
+            color: #fa8c16;
+        }
+
+        .tag-probability {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            color: #333;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 8px;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .progress-section {
+            margin-top: 20px;
+        }
+
+        .progress-stages {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .stage-item {
+            flex: 1;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+        }
+
+        .stage-item.completed {
+            background: #1890ff;
+        }
+
+        .stage-item.current {
+            background: linear-gradient(90deg, #1890ff 50%, #f0f0f0 50%);
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin: 0;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .info-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 4px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 32px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 12px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e8e8e8;
+        }
+
+        .timeline-item {
+            position: relative;
+            margin-bottom: 24px;
+            background: #fafafa;
+            padding: 16px;
+            border-radius: 8px;
+            border-left: 3px solid #1890ff;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 20px;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #1890ff;
+        }
+
+        .timeline-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .timeline-title {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .timeline-date {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .timeline-content {
+            color: #666;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <aside class="app-sidebar"></aside>
+        
+        <header class="app-header">
+            <div class="breadcrumb">
+                <span class="breadcrumb-item">Portal 3.0</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item">CRM管理</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item">商机管理</span>
+                <span class="breadcrumb-separator">/</span>
+                <span class="breadcrumb-item">商机详情</span>
+            </div>
+            
+            <div class="header-actions">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" placeholder="搜索商机...">
+                </div>
+                
+                <button class="notification-btn">
+                    <span>🔔</span>
+                    <span class="notification-badge">3</span>
+                </button>
+                
+                <div class="user-menu">
+                    <div class="user-avatar">销</div>
+                    <span>销售经理</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="app-main">
+            <div class="opportunity-header">
+                <h1 class="opp-title">华为ERP项目升级</h1>
+                <p class="opp-customer">华为技术有限公司</p>
+                <div class="opp-tags">
+                    <span class="tag tag-stage">需求分析</span>
+                    <span class="tag tag-amount">¥850,000</span>
+                    <span class="tag tag-probability">成交概率 65%</span>
+                </div>
+                
+                <div class="progress-section">
+                    <div class="progress-stages">
+                        <div class="stage-item completed"></div>
+                        <div class="stage-item completed"></div>
+                        <div class="stage-item current"></div>
+                        <div class="stage-item"></div>
+                        <div class="stage-item"></div>
+                        <div class="stage-item"></div>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px;">
+                    <button class="btn">✏️ 编辑</button>
+                    <button class="btn">📝 添加跟进</button>
+                    <button class="btn btn-primary">⬆️ 推进阶段</button>
+                </div>
+            </div>
+
+            <div class="content-grid">
+                <div class="main-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">📋 基本信息</h3>
+                            <button class="btn">编辑</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-grid">
+                                <div class="info-item">
+                                    <span class="info-label">商机名称</span>
+                                    <span class="info-value">华为ERP项目升级</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">预计金额</span>
+                                    <span class="info-value">¥850,000</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">销售阶段</span>
+                                    <span class="info-value">需求分析</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">负责人</span>
+                                    <span class="info-value">张销售</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">🕒 跟进记录</h3>
+                            <button class="btn btn-primary">添加跟进</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="timeline">
+                                <div class="timeline-item">
+                                    <div class="timeline-header">
+                                        <span class="timeline-title">📞 客户需求沟通</span>
+                                        <span class="timeline-date">2024-03-15 14:30</span>
+                                    </div>
+                                    <div class="timeline-content">
+                                        与华为IT部门王总进行深入沟通，了解现有ERP系统痛点，客户对新系统的库存管理和财务模块很感兴趣。
+                                    </div>
+                                </div>
+                                
+                                <div class="timeline-item">
+                                    <div class="timeline-header">
+                                        <span class="timeline-title">🤝 现场产品演示</span>
+                                        <span class="timeline-date">2024-03-10 10:00</span>
+                                    </div>
+                                    <div class="timeline-content">
+                                        在华为总部进行产品演示，客户对库存管理模块表现出浓厚兴趣，会议效果良好。
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-content">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">👤 客户信息</h3>
+                            <button class="btn">查看详情</button>
+                        </div>
+                        <div class="card-body">
+                            <div class="info-item">
+                                <span class="info-label">公司名称</span>
+                                <span class="info-value">华为技术有限公司</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">联系人</span>
+                                <span class="info-value">王总 (IT部门)</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">联系电话</span>
+                                <span class="info-value">138-0010-8888</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/navigation.js"></script>
+</body>
+</html>

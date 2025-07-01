@@ -29,7 +29,10 @@
 ├── zlt-gateway/sc-gateway -- API网关[9900]
 ├── zlt-register -- 注册中心Nacos[8848]
 ├── zlt-business -- 业务模块
-│   ├── user-center -- 用户中心[7000]
+│   ├── system-service 系统管理[7001] 包含租户管理
+│   ├── organization-service 组织模块[7002] 包含部门管理 用户管理 岗位管理 员工管理
+│   ├── multi-table-service 多维表格[7003] 包含部门管理 用户管理 岗位管理 员工管理
+│   ├── project-manager-service 项目管理[7004] 
 │   ├── file-center -- 文件中心[5000]
 │   ├── code-generator -- 代码生成器[7300]
 │   └── search-center -- 搜索中心[7100]
@@ -57,7 +60,7 @@
 zlt-web/
 ├── react-web -- React主前端[8066]
 │   └── src/main/frontend -- 前端源码(Ant Design Pro)
-├── portal-web -- 新系统前段[8065]│ 
+├── portal-web -- 新系统前段[8001]│ 
 ├── multi-table-web -- 新系统前段[8064]│    
 └── layui-web -- LayUI备选前端[8066]
     └── src/main/resources/static -- 前端源码

@@ -96,9 +96,33 @@ export default defineConfig({
           name: 'CRM管理',
           routes: [
             {
+              path: '/crm',
+              redirect: '/crm/dashboard',
+            },
+            {
+              path: '/crm/dashboard',
+              name: 'CRM工作台',
+              component: '@/pages/CRM/Dashboard',
+            },
+            {
               path: '/crm/customers',
               name: '客户管理',
               component: '@/pages/CRM/Customers',
+            },
+            {
+              path: '/crm/opportunities',
+              name: '商机管理',
+              component: '@/pages/CRM/Opportunities',
+            },
+            {
+              path: '/crm/follow-records',
+              name: '跟进记录',
+              component: '@/pages/CRM/FollowRecords',
+            },
+            {
+              path: '/crm/transfers',
+              name: '客户移交',
+              component: '@/pages/CRM/Transfers',
             },
           ],
         },
@@ -136,6 +160,12 @@ export default defineConfig({
       logLevel: 'debug',
     },
     '/api-organization': {
+      target: 'http://117.72.61.156:9900',
+      changeOrigin: true,
+      secure: false,
+      logLevel: 'debug',
+    },
+    '/api-crm': {
       target: 'http://117.72.61.156:9900',
       changeOrigin: true,
       secure: false,

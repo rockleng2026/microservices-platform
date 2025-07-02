@@ -8,6 +8,8 @@ import com.central.crm.model.Opportunity;
 import com.central.crm.service.OpportunityService;
 import com.central.crm.feign.EmployeeFeignService;
 import com.central.common.model.Result;
+import com.central.common.context.LoginUserContextHolder;
+import com.central.common.model.LoginAppUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,17 @@ public class OpportunityServiceImpl extends ServiceImpl<OpportunityMapper, Oppor
     @Autowired
     private EmployeeFeignService employeeFeignService;
 
+    /**
+     * 获取当前用户ID
+     */
+    private Long getCurrentUserId() {
+        LoginAppUser currentUser = LoginUserContextHolder.getUser();
+        if (currentUser != null) {
+            return currentUser.getId();
+        }
+        return 1L; // 默认值
+    }
+
     @Override
     public IPage<Opportunity> selectOpportunityPage(Page<Opportunity> page, Map<String, Object> params) {
         IPage<Opportunity> resultPage = baseMapper.selectOpportunityPage(page, params);
@@ -42,7 +55,7 @@ public class OpportunityServiceImpl extends ServiceImpl<OpportunityMapper, Oppor
     /**
      * 填充员工名称
      */
-    private void fillEmployeeNames(List<Opportunity> opportunities) {
+    public void fillEmployeeNames(List<Opportunity> opportunities) {
         if (opportunities == null || opportunities.isEmpty()) {
             return;
         }
@@ -93,8 +106,9 @@ public class OpportunityServiceImpl extends ServiceImpl<OpportunityMapper, Oppor
     @Transactional(rollbackFor = Exception.class)
     public boolean createOpportunity(Opportunity opportunity) {
         try {
-            // 设置创建时间
+            // 设置创建时间和创建人
             opportunity.setCreatedAt(new Date());
+            opportunity.setCreatedBy(getCurrentUserId());
             
             // 设置初始状态
             if (opportunity.getStage() == null) {
@@ -116,8 +130,9 @@ public class OpportunityServiceImpl extends ServiceImpl<OpportunityMapper, Oppor
     @Transactional(rollbackFor = Exception.class)
     public boolean updateOpportunity(Opportunity opportunity) {
         try {
-            // 设置更新时间
+            // 设置更新时间和更新人
             opportunity.setUpdatedAt(new Date());
+            opportunity.setUpdatedBy(getCurrentUserId());
             return updateById(opportunity);
         } catch (Exception e) {
             log.error("更新商机失败", e);

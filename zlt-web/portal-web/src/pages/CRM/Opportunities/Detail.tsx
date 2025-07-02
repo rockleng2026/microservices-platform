@@ -61,7 +61,7 @@ interface OpportunityDetail {
   stage: string;
   probability?: number;
   expectedAmount?: number;
-  closeDate?: string;
+  expectedCloseDate?: string;
   ownerEmployeeId: string;
   ownerEmployeeName?: string;
   description?: string;
@@ -186,7 +186,7 @@ const OpportunityDetail: React.FC = () => {
     setEditModalVisible(true);
     editForm.setFieldsValue({
       ...opportunity,
-      closeDate: opportunity.closeDate ? dayjs(opportunity.closeDate) : undefined
+      expectedCloseDate: opportunity.expectedCloseDate ? dayjs(opportunity.expectedCloseDate) : undefined
     });
   };
 
@@ -195,7 +195,7 @@ const OpportunityDetail: React.FC = () => {
       const values = await editForm.validateFields();
       const formData = {
         ...values,
-        closeDate: values.closeDate?.format('YYYY-MM-DD')
+        expectedCloseDate: values.expectedCloseDate?.format('YYYY-MM-DD')
       };
 
       await updateOpportunity(opportunity!.opportunityId, formData);
@@ -389,7 +389,7 @@ const OpportunityDetail: React.FC = () => {
                 {opportunity.probability ? `${opportunity.probability}%` : '-'}
               </Descriptions.Item>
               <Descriptions.Item label="预计成交日期">
-                {opportunity.closeDate ? dayjs(opportunity.closeDate).format('YYYY-MM-DD') : '-'}
+                {opportunity.expectedCloseDate ? dayjs(opportunity.expectedCloseDate).format('YYYY-MM-DD') : '-'}
               </Descriptions.Item>
               <Descriptions.Item label="创建时间" span={2}>
                 {dayjs(opportunity.createdAt).format('YYYY-MM-DD HH:mm:ss')}
@@ -511,7 +511,7 @@ const OpportunityDetail: React.FC = () => {
               </Form.Item>
             </Col>
             <Col span={8}>
-              <Form.Item name="closeDate" label="预计成交日期">
+              <Form.Item name="expectedCloseDate" label="预计成交日期">
                 <DatePicker style={{ width: '100%' }} />
               </Form.Item>
             </Col>

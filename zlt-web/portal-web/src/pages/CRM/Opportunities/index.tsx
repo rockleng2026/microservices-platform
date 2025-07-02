@@ -23,7 +23,8 @@ import {
   Progress,
   Dropdown,
   Menu,
-  Table
+  Table,
+  AutoComplete
 } from 'antd';
 import {
   PlusOutlined,
@@ -64,7 +65,7 @@ interface Opportunity {
   stage: string;
   probability?: number;
   expectedAmount?: number;
-  closeDate?: string;
+  expectedCloseDate?: string;
   ownerEmployeeId: string;
   ownerEmployeeName?: string;
   opportunitySource?: string;
@@ -210,14 +211,33 @@ const OpportunityList: React.FC = () => {
 
   const loadEmployees = async () => {
     try {
-      const response = await getEmployeeList();
+      // 调用分页接口获取员工列表
+      const response = await getEmployeeList({ pageNum: 1, pageSize: 1000 });
+      console.log('员工列表响应:', response);
+      
       if (response.success || response.resp_code === 0) {
         const data = response.data || response.datas;
-        // organization服务直接返回数组，不是分页结构
-        setEmployeeList(Array.isArray(data) ? data : []);
+        console.log('原始数据:', data);
+        
+        // 处理不同的数据结构
+        let employees: any[] = [];
+        
+        if (Array.isArray(data)) {
+          // 直接是数组
+          employees = data;
+        } else if (data && typeof data === 'object') {
+          // 是对象，尝试获取数据数组
+          const dataObj = data as any;
+          employees = dataObj.data || dataObj.records || dataObj.list || [];
+        }
+        
+        console.log('处理后的员工列表:', employees);
+        setEmployeeList(Array.isArray(employees) ? employees : []);
       }
     } catch (error) {
       console.error('员工列表加载错误:', error);
+      // 设置空数组作为fallback
+      setEmployeeList([]);
     }
   };
 
@@ -241,15 +261,29 @@ const OpportunityList: React.FC = () => {
       ...opportunity,
       customerId: opportunity.customerId ? String(opportunity.customerId) : undefined,
       ownerEmployeeId: opportunity.ownerEmployeeId ? String(opportunity.ownerEmployeeId) : undefined,
-      closeDate: opportunity.closeDate ? dayjs(opportunity.closeDate) : undefined,
+      expectedCloseDate: opportunity.expectedCloseDate ? dayjs(opportunity.expectedCloseDate) : undefined,
     };
     form.setFieldsValue(formData);
   };
 
-  // 获取当前用户ID（这里需要从登录状态中获取，先mock一个值）
+  // 获取当前用户ID
   const getCurrentUserId = () => {
-    // TODO: 从用户上下文或localStorage中获取当前用户ID
-    return '1'; // 临时mock值
+    // 从用户上下文或localStorage中获取当前用户ID
+    const userInfo = localStorage.getItem('userInfo');
+    if (userInfo) {
+      try {
+        const user = JSON.parse(userInfo);
+        return String(user.id || user.userId || '');
+      } catch (e) {
+        console.error('解析用户信息失败:', e);
+      }
+    }
+    
+    // 如果有员工列表，返回第一个员工的ID作为默认值
+    if (employeeList.length > 0) {
+      return String(employeeList[0].id);
+    }
+    return ''; // 如果没有员工列表，返回空字符串
   };
 
   const handleDelete = async (opportunityId: string) => {
@@ -270,8 +304,12 @@ const OpportunityList: React.FC = () => {
         // 处理长整型ID字段
         customerId: values.customerId ? String(values.customerId) : undefined,
         ownerEmployeeId: values.ownerEmployeeId ? String(values.ownerEmployeeId) : undefined,
-        closeDate: values.closeDate?.format('YYYY-MM-DD')
+        // 将前端的expectedCloseDate映射为后端的closeDate
+        closeDate: values.expectedCloseDate?.format('YYYY-MM-DD')
       };
+      
+      // 删除重复字段
+      delete formData.expectedCloseDate;
 
       if (editingOpportunity) {
         await updateOpportunity(editingOpportunity.opportunityId, formData);
@@ -501,8 +539,8 @@ const OpportunityList: React.FC = () => {
     },
     {
       title: '预计成交日期',
-      dataIndex: 'closeDate',
-      key: 'closeDate',
+      dataIndex: 'expectedCloseDate',
+      key: 'expectedCloseDate',
       width: 120,
       render: (date: string) => date ? dayjs(date).format('YYYY-MM-DD') : '-'
     },
@@ -706,20 +744,22 @@ const OpportunityList: React.FC = () => {
                 label="商机来源"
                 rules={[{ required: true, message: '请选择或输入商机来源' }]}
               >
-                <Select
+                <AutoComplete
                   placeholder="请选择或输入商机来源"
-                  showSearch
-                  allowClear
-                >
-                  <Option value="客户介绍">客户介绍</Option>
-                  <Option value="老客户">老客户</Option>
-                  <Option value="展会获取">展会获取</Option>
-                  <Option value="网络推广">网络推广</Option>
-                  <Option value="电话营销">电话营销</Option>
-                  <Option value="门店访问">门店访问</Option>
-                  <Option value="社交媒体">社交媒体</Option>
-                  <Option value="合作伙伴">合作伙伴</Option>
-                </Select>
+                  options={[
+                    { value: '客户介绍' },
+                    { value: '老客户' },
+                    { value: '展会获取' },
+                    { value: '网络推广' },
+                    { value: '电话营销' },
+                    { value: '门店访问' },
+                    { value: '社交媒体' },
+                    { value: '合作伙伴' },
+                  ]}
+                  filterOption={(input, option) =>
+                    option!.value.toUpperCase().indexOf(input.toUpperCase()) !== -1
+                  }
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -785,7 +825,7 @@ const OpportunityList: React.FC = () => {
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="closeDate" label="预计成交日期">
+              <Form.Item name="expectedCloseDate" label="预计成交日期">
                 <DatePicker style={{ width: '100%' }} />
               </Form.Item>
             </Col>

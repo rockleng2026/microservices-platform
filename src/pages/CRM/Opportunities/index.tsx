@@ -44,6 +44,7 @@ const { Option } = Select;
 
 interface Opportunity {
   id: string;
+  opportunityId?: string;
   opportunityName: string;
   customerId: string;
   customerName: string;
@@ -242,6 +243,7 @@ const OpportunityManagement: React.FC = () => {
     setEditingOpportunity(record);
     form.setFieldsValue({
       ...record,
+      id: record.opportunityId || record.id,
       expectedCloseDate: record.expectedCloseDate ? dayjs(record.expectedCloseDate) : null
     });
     setIsModalVisible(true);
@@ -268,14 +270,17 @@ const OpportunityManagement: React.FC = () => {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
-      const opportunityData: OpportunityForm = {
+      const opportunityData = {
         ...values,
-        expectedCloseDate: values.expectedCloseDate?.format('YYYY-MM-DD HH:mm:ss')
+        closeDate: values.expectedCloseDate?.format('YYYY-MM-DD')
       };
+      
+      delete opportunityData.expectedCloseDate;
 
       let response;
       if (editingOpportunity) {
-        response = await updateOpportunity(editingOpportunity.id, opportunityData);
+        const opportunityId = editingOpportunity.opportunityId || editingOpportunity.id;
+        response = await updateOpportunity(opportunityId, opportunityData);
       } else {
         response = await createOpportunity(opportunityData);
       }
@@ -355,7 +360,7 @@ const OpportunityManagement: React.FC = () => {
       dataIndex: 'createTime',
       key: 'createTime',
       width: 120,
-      render: (time) => dayjs(time).format('YYYY-MM-DD')
+      render: (time) => time ? dayjs(time).format('YYYY-MM-DD') : '-'
     },
     {
       title: '操作',

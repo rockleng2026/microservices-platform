@@ -130,4 +130,9 @@ public interface OpportunityService extends IService<Opportunity> {
      * 商机状态统计
      */
     Map<String, Object> getOpportunityStatusStatistics(Map<String, Object> params);
+
+    /**
+     * 填充员工名称
+     */
+    void fillEmployeeNames(List<Opportunity> opportunities);
 }

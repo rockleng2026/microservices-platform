@@ -14,6 +14,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,11 @@ public class OpportunityController {
     public Result<Opportunity> getOpportunityById(@PathVariable Long id) {
         try {
             Opportunity opportunity = opportunityService.getById(id);
+            if (opportunity != null) {
+                // 填充员工名称
+                List<Opportunity> opportunities = Arrays.asList(opportunity);
+                opportunityService.fillEmployeeNames(opportunities);
+            }
             return Result.succeed(opportunity);
         } catch (Exception e) {
             log.error("查询商机详情失败", e);
@@ -92,10 +98,55 @@ public class OpportunityController {
     /**
      * 更新商机
      */
-    @PutMapping
+    @PutMapping("/{id}")
     @Operation(summary = "更新商机")
-    public Result<String> updateOpportunity(@Valid @RequestBody Opportunity opportunity) {
+    public Result<String> updateOpportunity(@PathVariable Long id, @Valid @RequestBody Map<String, Object> requestData) {
         try {
+            // 创建商机对象
+            Opportunity opportunity = new Opportunity();
+            opportunity.setOpportunityId(id); // 确保ID一致
+            
+            // 手动映射字段
+            if (requestData.get("opportunityName") != null) {
+                opportunity.setOpportunityName(String.valueOf(requestData.get("opportunityName")));
+            }
+            if (requestData.get("customerId") != null) {
+                opportunity.setCustomerId(Long.valueOf(String.valueOf(requestData.get("customerId"))));
+            }
+            if (requestData.get("opportunitySource") != null) {
+                opportunity.setOpportunitySource(String.valueOf(requestData.get("opportunitySource")));
+            }
+            if (requestData.get("ownerEmployeeId") != null) {
+                opportunity.setOwnerEmployeeId(Long.valueOf(String.valueOf(requestData.get("ownerEmployeeId"))));
+            }
+            if (requestData.get("stage") != null) {
+                opportunity.setStage(String.valueOf(requestData.get("stage")));
+            }
+            if (requestData.get("probability") != null) {
+                opportunity.setProbability(Integer.valueOf(String.valueOf(requestData.get("probability"))));
+            }
+            if (requestData.get("expectedAmount") != null) {
+                opportunity.setExpectedAmount(new java.math.BigDecimal(String.valueOf(requestData.get("expectedAmount"))));
+            }
+            if (requestData.get("description") != null) {
+                opportunity.setDescription(String.valueOf(requestData.get("description")));
+            }
+            if (requestData.get("competitor") != null) {
+                opportunity.setCompetitor(String.valueOf(requestData.get("competitor")));
+            }
+            
+            // 处理特殊字段映射：closeDate -> expectedCloseDate
+            if (requestData.get("closeDate") != null) {
+                String closeDateStr = String.valueOf(requestData.get("closeDate"));
+                try {
+                    // 解析日期字符串为Date对象
+                    java.text.SimpleDateFormat sdf = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                    opportunity.setExpectedCloseDate(sdf.parse(closeDateStr));
+                } catch (Exception e) {
+                    log.warn("解析预期成交日期失败: " + closeDateStr, e);
+                }
+            }
+            
             boolean success = opportunityService.updateOpportunity(opportunity);
             return success ? Result.succeed("更新成功") : Result.failed("更新失败");
         } catch (Exception e) {

@@ -62,8 +62,10 @@ public class DashboardServiceImpl implements DashboardService {
             overview.put("pendingFollows", followStats.get("pendingCount"));
             
             // 计算转化率
-            Integer totalOpp = (Integer) opportunityStats.get("totalCount");
-            Integer wonOpp = (Integer) opportunityStats.get("wonCount");
+            Long totalOppLong = (Long) opportunityStats.get("totalCount");
+            Long wonOppLong = (Long) opportunityStats.get("wonCount");
+            Integer totalOpp = totalOppLong != null ? totalOppLong.intValue() : 0;
+            Integer wonOpp = wonOppLong != null ? wonOppLong.intValue() : 0;
             Double conversionRate = totalOpp > 0 ? (wonOpp * 100.0 / totalOpp) : 0.0;
             overview.put("conversionRate", String.format("%.1f%%", conversionRate));
             

@@ -112,6 +112,24 @@ const convertLongFields = (data: any): any => {
   return data;
 };
 
+// 处理API响应数据格式统一化
+const handleResponse = (response: any): any => {
+  if (!response) return response;
+  
+  // 处理老版本API格式 {resp_code: 0, datas: {...}} 转换为新格式 {success: true, data: {...}}
+  if (response.resp_code !== undefined) {
+    return {
+      success: response.resp_code === 0,
+      data: response.datas || response.data,
+      message: response.resp_msg || '',
+      code: response.resp_code
+    };
+  }
+  
+  // 如果已经是新格式，直接返回
+  return response;
+};
+
 // 客户管理
 export const getCustomerList = (params: any) =>
   request('/api-crm/api/customer/page', { 
@@ -258,7 +276,7 @@ export const getFollowRecords = (params: any) =>
       startDate: params.startDate,
       endDate: params.endDate
     }
-  }).then(convertLongFields);
+  }).then(handleResponse).then(convertLongFields);
 
 export const getFollowRecordById = (followId: number | string) =>
   request(`/api-crm/api/customer-follow/${followId}`, { method: 'GET' })
@@ -282,7 +300,7 @@ export const getFollowStatistics = (params: any) =>
       startDate: params.startDate,
       endDate: params.endDate
     }
-  }).then(convertLongFields);
+  }).then(handleResponse).then(convertLongFields);
 
 export const getPendingFollowList = (params: any) =>
   request('/api-crm/api/customer-follow/pending', { 
@@ -291,7 +309,7 @@ export const getPendingFollowList = (params: any) =>
       employeeId: params.employeeId,
       days: params.days || 30
     }
-  }).then(convertLongFields);
+  }).then(handleResponse).then(convertLongFields);
 
 // 客户移交
 export const getTransferRecords = (params: any) =>
@@ -341,7 +359,7 @@ export const getDashboardOverview = (params: any = {}) =>
       endDate: params.endDate,
       ownerEmployeeId: params.ownerEmployeeId
     }
-  }).then(convertLongFields);
+  }).then(handleResponse).then(convertLongFields);
 
 export const getCustomerStats = (params: any = {}) =>
   request('/api-crm/api/dashboard/customer-stats', { 
@@ -383,6 +401,12 @@ export const getEmployeeList = (params: any = {}) =>
       search: params.search
     }
   }).then(convertLongFields);
+
+// 商机详情接口
+export const getOpportunityDetail = (opportunityId: string) =>
+  request(`/api-crm/api/opportunity/${opportunityId}`, { 
+    method: 'GET'
+  }).then(handleResponse).then(convertLongFields);
 
 export const getEmployeesByDepartment = (departmentId: number | string) =>
   request(`/api-crm/api/employee/department/${departmentId}`, { 

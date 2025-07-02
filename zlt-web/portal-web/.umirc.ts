@@ -115,6 +115,12 @@ export default defineConfig({
               component: '@/pages/CRM/Opportunities',
             },
             {
+              path: '/crm/opportunities/:id',
+              name: '商机详情',
+              component: '@/pages/CRM/Opportunities/Detail',
+              hideInMenu: true,
+            },
+            {
               path: '/crm/follow-records',
               name: '跟进记录',
               component: '@/pages/CRM/FollowRecords',

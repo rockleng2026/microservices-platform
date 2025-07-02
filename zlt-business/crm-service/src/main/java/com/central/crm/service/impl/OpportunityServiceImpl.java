@@ -6,11 +6,15 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.central.crm.mapper.OpportunityMapper;
 import com.central.crm.model.Opportunity;
 import com.central.crm.service.OpportunityService;
+import com.central.crm.feign.EmployeeFeignService;
+import com.central.common.model.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 商机管理Service实现类
@@ -22,9 +26,67 @@ import java.util.*;
 @Service
 public class OpportunityServiceImpl extends ServiceImpl<OpportunityMapper, Opportunity> implements OpportunityService {
 
+    @Autowired
+    private EmployeeFeignService employeeFeignService;
+
     @Override
     public IPage<Opportunity> selectOpportunityPage(Page<Opportunity> page, Map<String, Object> params) {
-        return baseMapper.selectOpportunityPage(page, params);
+        IPage<Opportunity> resultPage = baseMapper.selectOpportunityPage(page, params);
+        
+        // 填充员工名称
+        fillEmployeeNames(resultPage.getRecords());
+        
+        return resultPage;
+    }
+    
+    /**
+     * 填充员工名称
+     */
+    private void fillEmployeeNames(List<Opportunity> opportunities) {
+        if (opportunities == null || opportunities.isEmpty()) {
+            return;
+        }
+        
+        try {
+            // 收集所有员工ID
+            Set<Long> employeeIds = opportunities.stream()
+                    .map(Opportunity::getOwnerEmployeeId)
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.toSet());
+            
+            if (employeeIds.isEmpty()) {
+                return;
+            }
+            
+            // 转换为字符串列表（因为接口需要String类型）
+            List<String> employeeIdStrs = employeeIds.stream()
+                    .map(String::valueOf)
+                    .collect(Collectors.toList());
+            
+            // 批量查询员工信息
+            Result<List<Map<String, Object>>> employeeResult = employeeFeignService.getEmployeeBatchDetail(employeeIdStrs);
+            
+            if (employeeResult != null && employeeResult.getDatas() != null) {
+                // 构建员工ID到姓名的映射
+                Map<Long, String> employeeNameMap = employeeResult.getDatas().stream()
+                        .collect(Collectors.toMap(
+                                emp -> Long.valueOf(emp.get("id").toString()),
+                                emp -> emp.get("name") != null ? emp.get("name").toString() : "未知",
+                                (existing, replacement) -> existing  // 处理重复key
+                        ));
+                
+                // 填充员工姓名
+                opportunities.forEach(opportunity -> {
+                    if (opportunity.getOwnerEmployeeId() != null) {
+                        String employeeName = employeeNameMap.get(opportunity.getOwnerEmployeeId());
+                        opportunity.setOwnerEmployeeName(employeeName != null ? employeeName : "未知");
+                    }
+                });
+            }
+        } catch (Exception e) {
+            log.error("填充员工名称失败", e);
+            // 不抛出异常，避免影响主业务逻辑
+        }
     }
 
     @Override

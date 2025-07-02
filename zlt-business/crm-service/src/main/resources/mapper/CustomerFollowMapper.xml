@@ -27,11 +27,9 @@
     <select id="selectFollowPage" resultType="com.central.crm.model.CustomerFollow">
         SELECT 
             f.*,
-            c.customer_name as customerName,
-            e.name as employeeName
+            c.customer_name as customerName
         FROM customer_follow f
         LEFT JOIN customer c ON f.customer_id = c.customer_id
-        LEFT JOIN employee e ON f.employee_id = e.id
         WHERE 1=1
         <if test="params.followType != null and params.followType != ''">
             AND f.follow_type = #{params.followType}

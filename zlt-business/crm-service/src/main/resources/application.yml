@@ -58,18 +58,23 @@ management:
   endpoint:
     health:
       show-details: always
-
-# 租户配置
-tenant:
-  enable: true
-  default-tenant-id: default
-  ignoreTables:
-    - individual_customer
-    - corporate_customer
-    - customer_follow
-    - customer_tag
-    - customer_tag_relation
-    - customer_transfer
+zlt:
+  tenant:
+    enable: false
+    ignoreTables:
+      - individual_customer
+      - corporate_customer
+      - customer_follow
+      - customer_tag
+      - customer_tag_relation
+      - customer_transfer
+    ignoreSqls:
+      - com.central.crm.mapper.CustomerMapper.selectCustomerPage
+      - com.central.crm.mapper.CustomerMapper.selectCustomerStatistics
+      - com.central.crm.mapper.CustomerMapper.selectCustomerDistribution
+      - com.central.crm.mapper.CustomerMapper.checkCustomerNameExists
+      - com.central.crm.mapper.CustomerMapper.checkPhoneExists
+      - com.central.crm.mapper.CustomerMapper.checkPhoneExists
 
 # 文件上传配置  
 file:

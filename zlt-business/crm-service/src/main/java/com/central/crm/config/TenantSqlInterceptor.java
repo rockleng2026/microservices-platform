@@ -34,8 +34,8 @@ public class TenantSqlInterceptor implements Interceptor {
     
     // 需要自动添加租户条件的CRM表
     private static final List<String> TENANT_TABLES = List.of(
-        "customer", "individual_customer", "corporate_customer", 
-        "opportunity", "customer_follow", "customer_transfer"
+//        "customer", "individual_customer", "corporate_customer",
+//        "opportunity"
     );
     
     @Override
@@ -125,7 +125,7 @@ public class TenantSqlInterceptor implements Interceptor {
         for (String table : TENANT_TABLES) {
             if (lowerSql.contains(" from " + table + " ") || 
                 lowerSql.contains(" from " + table + " as ") ||
-                lowerSql.startsWith("select") && lowerSql.contains(table)) {
+                lowerSql.startsWith("select") && lowerSql.contains(" "+table+ " ")) {
                 return true;
             }
         }

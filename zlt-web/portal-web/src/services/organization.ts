@@ -15,8 +15,8 @@ export async function getDepartmentTree(params?: any) {
 }
 
 // 获取部门列表
-export async function getDepartments(params?: TableSearchParams) {
-  return request<ApiResponse<PageResponse<Department>>>('/api/organization/departments', {
+export async function getDepartments(params?: any) {
+  return request<ApiResponse<any>>('/api/organization/departments', {
     method: 'GET',
     params,
   });
@@ -58,7 +58,7 @@ export async function deleteDepartment(id: number) {
 
 // 获取员工列表
 export async function getEmployeeList(params?: any) {
-  return request<ApiResponse<Employee[]>>(getApiUrl('/api/organization/employees', 'PORTAL'), {
+  return request<ApiResponse<Employee[]>>(getApiUrl('/api/organization/employee/page', 'PORTAL'), {
     method: 'GET',
     params,
   });

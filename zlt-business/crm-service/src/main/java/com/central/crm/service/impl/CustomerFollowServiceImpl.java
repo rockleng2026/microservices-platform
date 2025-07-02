@@ -4,15 +4,19 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.central.crm.feign.EmployeeFeignService;
 import com.central.crm.mapper.CustomerFollowMapper;
 import com.central.crm.model.CustomerFollow;
 import com.central.crm.service.CustomerFollowService;
+import com.central.common.model.Result;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 客户跟进Service实现类
@@ -24,9 +28,61 @@ import java.util.*;
 @Service
 public class CustomerFollowServiceImpl extends ServiceImpl<CustomerFollowMapper, CustomerFollow> implements CustomerFollowService {
 
+    @Autowired
+    private EmployeeFeignService employeeFeignService;
+
     @Override
     public IPage<CustomerFollow> selectFollowPage(Page<CustomerFollow> page, Map<String, Object> params) {
-        return baseMapper.selectFollowPage(page, params);
+        IPage<CustomerFollow> followPage = baseMapper.selectFollowPage(page, params);
+        
+        // 填充员工信息
+        if (followPage.getRecords() != null && !followPage.getRecords().isEmpty()) {
+            fillEmployeeNames(followPage.getRecords());
+        }
+        
+        return followPage;
+    }
+    
+    /**
+     * 批量填充员工姓名
+     */
+    private void fillEmployeeNames(List<CustomerFollow> follows) {
+        try {
+            // 提取所有员工ID
+            List<String> employeeIds = follows.stream()
+                    .map(follow -> follow.getEmployeeId().toString())
+                    .distinct()
+                    .collect(Collectors.toList());
+            
+            if (employeeIds.isEmpty()) {
+                return;
+            }
+            
+            // 批量查询员工信息
+            Result<List<Map<String, Object>>> result = employeeFeignService.getEmployeeBatchDetail(employeeIds);
+            if (result != null && result.getDatas() != null) {
+                Map<Long, String> employeeNameMap = result.getDatas().stream()
+                        .collect(Collectors.toMap(
+                                emp -> Long.valueOf(emp.get("id").toString()),
+                                emp -> emp.get("name").toString(),
+                                (existing, replacement) -> existing
+                        ));
+                
+                // 设置员工姓名
+                follows.forEach(follow -> {
+                    String employeeName = employeeNameMap.get(follow.getEmployeeId());
+                    follow.setEmployeeName(employeeName != null ? employeeName : "未知员工");
+                });
+            } else {
+                log.warn("获取员工信息失败，result: {}", result);
+                // 设置默认值
+                follows.forEach(follow -> follow.setEmployeeName("未知员工"));
+            }
+        } catch (Exception e) {
+            log.error("填充员工姓名失败", e);
+            // 设置默认值
+            follows.forEach(follow -> follow.setEmployeeName("未知员工"));
+        }
     }
 
     @Override

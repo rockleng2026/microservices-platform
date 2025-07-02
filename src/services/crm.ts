@@ -1,6 +1,257 @@
-import { request } from "@/utils/request";
+import request from '../utils/request';
 
-// CRM枚举类定义 - 前端显示中文，传入后端使用英文
+// 统一处理响应数据格式兼容性
+const handleResponse = (response: any) => {
+  // 兼容新旧数据格式
+  if (response.resp_code === 0) {
+    return {
+      success: true,
+      data: response.datas || response.data
+    };
+  } else if (response.success) {
+    return response;
+  } else {
+    return {
+      success: false,
+      message: response.resp_msg || response.message || '请求失败'
+    };
+  }
+};
+
+// 处理长整型字段精度丢失问题
+const convertLongFields = (data: any) => {
+  if (!data) return data;
+  
+  const convert = (obj: any): any => {
+    if (obj === null || obj === undefined) return obj;
+    
+    if (Array.isArray(obj)) {
+      return obj.map(convert);
+    }
+    
+    if (typeof obj === 'object') {
+      const converted: any = {};
+      Object.keys(obj).forEach(key => {
+        const value = obj[key];
+        // 对于可能是长整型的字段，转换为字符串
+        if (typeof value === 'number' && (
+          key.endsWith('Id') || 
+          key === 'id' || 
+          key === 'customerId' || 
+          key === 'ownerId' ||
+          key === 'tenantId'
+        )) {
+          converted[key] = String(value);
+        } else {
+          converted[key] = convert(value);
+        }
+      });
+      return converted;
+    }
+    
+    return obj;
+  };
+  
+  return convert(data);
+};
+
+// ==================== 客户管理相关API ====================
+
+// 分页查询客户列表
+export const getCustomerList = (params: any) => {
+  return request.post('/crm/customer/page', convertLongFields(params))
+    .then(handleResponse);
+};
+
+// 获取客户详情
+export const getCustomerDetail = (customerId: string) => {
+  return request.get(`/crm/customer/${customerId}`);
+};
+
+// 创建客户
+export const createCustomer = (data: any) => {
+  return request.post('/crm/customer/create', convertLongFields(data));
+};
+
+// 更新客户
+export const updateCustomer = (customerId: string, data: any) => {
+  return request.post(`/crm/customer/update/${customerId}`, convertLongFields(data));
+};
+
+// 删除客户
+export const deleteCustomer = (customerId: string) => {
+  return request.delete(`/crm/customer/${customerId}`);
+};
+
+// 批量删除客户
+export const batchDeleteCustomers = (customerIds: string[]) => {
+  return request.post('/crm/customer/batch-delete', { customerIds });
+};
+
+// 客户验证
+export const validateCustomer = (data: any) => {
+  return request.post('/crm/customer/validate', convertLongFields(data));
+};
+
+// 批量更新客户状态
+export const batchUpdateCustomerStatus = (data: any) => {
+  return request.post('/crm/customer/batch-status', convertLongFields(data));
+};
+
+// 获取客户统计
+export const getCustomerStatistics = (params: any) => {
+  return request.post('/crm/customer/statistics', convertLongFields(params));
+};
+
+// ==================== 商机管理相关API ====================
+
+// 分页查询商机列表
+export const getOpportunityList = (params: any) => {
+  return request.post('/crm/opportunity/page', convertLongFields(params));
+};
+
+// 获取商机详情
+export const getOpportunityDetail = (opportunityId: string) => {
+  return request.get(`/crm/opportunity/${opportunityId}`);
+};
+
+// 创建商机
+export const createOpportunity = (data: any) => {
+  return request.post('/crm/opportunity/create', convertLongFields(data));
+};
+
+// 更新商机
+export const updateOpportunity = (opportunityId: string, data: any) => {
+  return request.post(`/crm/opportunity/update/${opportunityId}`, convertLongFields(data));
+};
+
+// 删除商机
+export const deleteOpportunity = (opportunityId: string) => {
+  return request.delete(`/crm/opportunity/${opportunityId}`);
+};
+
+// 获取商机统计
+export const getOpportunityStatistics = (params: any) => {
+  return request.post('/crm/opportunity/statistics', convertLongFields(params));
+};
+
+// ==================== 跟进记录相关API ====================
+
+// 分页查询跟进记录列表
+export const getFollowRecordList = (params: any) => {
+  return request.post('/crm/follow/page', convertLongFields(params));
+};
+
+// 获取跟进记录详情
+export const getFollowRecordDetail = (followId: string) => {
+  return request.get(`/crm/follow/${followId}`);
+};
+
+// 创建跟进记录
+export const createFollowRecord = (data: any) => {
+  return request.post('/crm/follow/create', convertLongFields(data));
+};
+
+// 更新跟进记录
+export const updateFollowRecord = (followId: string, data: any) => {
+  return request.post(`/crm/follow/update/${followId}`, convertLongFields(data));
+};
+
+// 删除跟进记录
+export const deleteFollowRecord = (followId: string) => {
+  return request.delete(`/crm/follow/${followId}`);
+};
+
+// 获取待跟进客户
+export const getPendingFollowups = (params: any) => {
+  return request.post('/crm/follow/pending', convertLongFields(params));
+};
+
+// 获取跟进统计
+export const getFollowStatistics = (params: any) => {
+  return request.post('/crm/follow/statistics', convertLongFields(params));
+};
+
+// 获取最近跟进记录
+export const getRecentFollowups = (params: any) => {
+  return request.post('/crm/follow/recent', convertLongFields(params));
+};
+
+// ==================== 客户移交相关API ====================
+
+// 分页查询移交记录列表
+export const getTransferList = (params: any) => {
+  return request.post('/crm/transfer/page', convertLongFields(params));
+};
+
+// 获取移交记录详情
+export const getTransferDetail = (transferId: string) => {
+  return request.get(`/crm/transfer/${transferId}`);
+};
+
+// 创建移交记录
+export const createTransfer = (data: any) => {
+  return request.post('/crm/transfer/create', convertLongFields(data));
+};
+
+// 审核移交申请
+export const approveTransfer = (transferId: string, data: any) => {
+  return request.post(`/crm/transfer/approve/${transferId}`, convertLongFields(data));
+};
+
+// 拒绝移交申请
+export const rejectTransfer = (transferId: string, data: any) => {
+  return request.post(`/crm/transfer/reject/${transferId}`, convertLongFields(data));
+};
+
+// ==================== 工作台相关API ====================
+
+// 获取工作台统计数据
+export const getDashboardStats = (params: any) => {
+  return request.post('/api-crm/api/dashboard/overview', convertLongFields(params))
+    .then(handleResponse);
+};
+
+// 获取销售排行榜
+export const getTopPerformers = (params: any) => {
+  return request.post('/crm/dashboard/top-performers', convertLongFields(params));
+};
+
+// 获取最近活动
+export const getRecentActivities = (params: any) => {
+  return request.post('/crm/dashboard/recent-activities', convertLongFields(params));
+};
+
+// 获取待办任务
+export const getPendingTasks = (params: any) => {
+  return request.post('/crm/dashboard/pending-tasks', convertLongFields(params));
+};
+
+// 获取销售图表数据
+export const getSalesChart = (params: any) => {
+  return request.post('/crm/dashboard/sales-chart', convertLongFields(params));
+};
+
+// 获取即将跟进的客户
+export const getUpcomingFollowUps = (params: any) => {
+  return request.post('/crm/dashboard/upcoming-followups', convertLongFields(params));
+};
+
+// ==================== 员工管理相关API ====================
+
+// 获取员工列表
+export const getEmployeeList = (params: any) => {
+  return request.post('/crm/employee/list', convertLongFields(params));
+};
+
+// 获取员工详情
+export const getEmployeeDetail = (employeeId: string) => {
+  return request.get(`/crm/employee/${employeeId}`);
+};
+
+// ==================== 枚举和常量 ====================
+
+// CRM枚举类定义
 export const CRMEnums = {
   // 客户类型
   CustomerType: {
@@ -14,19 +265,17 @@ export const CRMEnums = {
     CONFIRMED: { value: 'confirmed', label: '正式' },
     LOST: { value: 'lost', label: '流失' },
   },
-  
+
   // 商机阶段
   OpportunityStage: {
-    POTENTIAL: { value: 'potential', label: '潜在客户' },
-    INITIAL_CONTACT: { value: 'initial_contact', label: '初步接触' },
-    REQUIREMENT_CONFIRMED: { value: 'requirement_confirmed', label: '需求确认' },
-    SOLUTION_DEMO: { value: 'solution_demo', label: '方案演示' },
-    BUSINESS_NEGOTIATION: { value: 'business_negotiation', label: '商务谈判' },
-    CONTRACT_SIGNED: { value: 'contract_signed', label: '合同签署' },
-    WON: { value: 'won', label: '已成交' },
-    LOST: { value: 'lost', label: '已失败' },
+    QUALIFICATION: { value: 'qualification', label: '资格审查' },
+    NEEDS_ANALYSIS: { value: 'needs_analysis', label: '需求分析' },
+    PROPOSAL: { value: 'proposal', label: '方案提议' },
+    NEGOTIATION: { value: 'negotiation', label: '谈判' },
+    CLOSED_WON: { value: 'closed_won', label: '成交' },
+    CLOSED_LOST: { value: 'closed_lost', label: '失败' },
   },
-  
+
   // 跟进方式
   FollowType: {
     PHONE: { value: 'phone', label: '电话' },
@@ -35,14 +284,14 @@ export const CRMEnums = {
     WECHAT: { value: 'wechat', label: '微信' },
     OTHER: { value: 'other', label: '其他' },
   },
-  
+
   // 审批状态
   ApprovalStatus: {
     PENDING: { value: 'pending', label: '待审批' },
     APPROVED: { value: 'approved', label: '已通过' },
     REJECTED: { value: 'rejected', label: '已拒绝' },
   },
-  
+
   // 性别
   Gender: {
     MALE: { value: 'male', label: '男' },
@@ -58,7 +307,7 @@ export const CRMEnums = {
     WIDOWED: { value: 'widowed', label: '丧偶' },
     UNKNOWN: { value: 'unknown', label: '未知' },
   },
-  
+
   // 教育程度
   Education: {
     PRIMARY: { value: 'primary', label: '小学' },
@@ -68,16 +317,6 @@ export const CRMEnums = {
     BACHELOR: { value: 'bachelor', label: '本科' },
     MASTER: { value: 'master', label: '硕士' },
     DOCTOR: { value: 'doctor', label: '博士' },
-    OTHER: { value: 'other', label: '其他' },
-  },
-  
-  // 企业性质
-  CompanyNature: {
-    STATE_OWNED: { value: 'state_owned', label: '国有企业' },
-    PRIVATE: { value: 'private', label: '民营企业' },
-    FOREIGN: { value: 'foreign', label: '外资企业' },
-    JOINT_VENTURE: { value: 'joint_venture', label: '合资企业' },
-    OTHER: { value: 'other', label: '其他' },
   },
 };
 
@@ -99,183 +338,4 @@ export const EnumUtils = {
     const item = Object.values(enumObj).find((item: any) => item.label === label);
     return (item as any)?.value || label;
   },
-};
-
-// 转换长整型字段以避免精度丢失
-const convertLongFields = (data: any): any => {
-  if (!data) return data;
-  
-  if (Array.isArray(data)) {
-    return data.map(item => convertLongFields(item));
-  }
-  
-  if (typeof data === 'object') {
-    const converted = { ...data };
-    // 转换可能的长整型字段
-    if (converted.customerId) converted.customerId = String(converted.customerId);
-    if (converted.ownerEmployeeId) converted.ownerEmployeeId = String(converted.ownerEmployeeId);
-    if (converted.createdBy) converted.createdBy = String(converted.createdBy);
-    if (converted.updatedBy) converted.updatedBy = String(converted.updatedBy);
-    return converted;
-  }
-  
-  return data;
-};
-
-// ==================== 客户管理相关API ====================
-
-// 分页查询客户列表
-export const getCustomerPage = (params: any) => {
-  return request('/api-crm/customer/page', {
-    method: 'POST',
-    data: params,
-  }).then(convertLongFields);
-};
-
-// 根据ID查询客户详情
-export const getCustomerDetail = (customerId: string) => {
-  return request(`/api-crm/customer/${customerId}`, {
-    method: 'GET',
-  }).then(convertLongFields);
-};
-
-// 创建客户
-export const createCustomer = (data: any) => {
-  return request('/api-crm/customer', {
-    method: 'POST',
-    data: convertLongFields(data),
-  });
-};
-
-// 更新客户
-export const updateCustomer = (data: any) => {
-  return request('/api-crm/customer', {
-    method: 'PUT',
-    data: convertLongFields(data),
-  });
-};
-
-// 删除客户
-export const deleteCustomer = (customerId: string) => {
-  return request(`/api-crm/customer/${customerId}`, {
-    method: 'DELETE',
-  });
-};
-
-// 批量删除客户
-export const batchDeleteCustomers = (customerIds: string[]) => {
-  return request('/api-crm/customer/batch', {
-    method: 'DELETE',
-    data: customerIds,
-  });
-};
-
-// 商机管理相关API
-export const getOpportunityList = (params: any) => {
-  return request('/api-crm/opportunity/list', {
-    method: 'GET',
-    params,
-  });
-};
-
-export const createOpportunity = (data: any) => {
-  return request('/api-crm/opportunity', {
-    method: 'POST',
-    data,
-  });
-};
-
-export const updateOpportunity = (opportunityId: number, data: any) => {
-  return request(`/api-crm/opportunity/${opportunityId}`, {
-    method: 'PUT',
-    data,
-  });
-};
-
-export const deleteOpportunity = (opportunityId: number) => {
-  return request(`/api-crm/opportunity/${opportunityId}`, {
-    method: 'DELETE',
-  });
-};
-
-// 跟进记录相关API
-export const getFollowRecordList = (params: any) => {
-  return request('/api-crm/follow/list', {
-    method: 'GET',
-    params,
-  });
-};
-
-export const createFollowRecord = (data: any) => {
-  return request('/api-crm/follow', {
-    method: 'POST',
-    data,
-  });
-};
-
-export const updateFollowRecord = (followId: number, data: any) => {
-  return request(`/api-crm/follow/${followId}`, {
-    method: 'PUT',
-    data,
-  });
-};
-
-export const deleteFollowRecord = (followId: number) => {
-  return request(`/api-crm/follow/${followId}`, {
-    method: 'DELETE',
-  });
-};
-
-// 客户移交相关API
-export const getTransferList = (params: any) => {
-  return request('/api-crm/transfer/list', {
-    method: 'GET',
-    params,
-  });
-};
-
-export const createTransfer = (data: any) => {
-  return request('/api-crm/transfer', {
-    method: 'POST',
-    data,
-  });
-};
-
-export const approveTransfer = (transferId: number, data: any) => {
-  return request(`/api-crm/transfer/${transferId}/approve`, {
-    method: 'PUT',
-    data,
-  });
-};
-
-export const rejectTransfer = (transferId: number, data: any) => {
-  return request(`/api-crm/transfer/${transferId}/reject`, {
-    method: 'PUT',
-    data,
-  });
-};
-
-// 工作台统计相关API
-export const getDashboardStats = () => {
-  return request('/api-crm/dashboard/stats', {
-    method: 'GET',
-  });
-};
-
-export const getCustomerStats = () => {
-  return request('/api-crm/dashboard/customer-stats', {
-    method: 'GET',
-  });
-};
-
-export const getOpportunityStats = () => {
-  return request('/api-crm/dashboard/opportunity-stats', {
-    method: 'GET',
-  });
-};
-
-export const getRecentActivities = () => {
-  return request('/api-crm/dashboard/recent-activities', {
-    method: 'GET',
-  });
 };

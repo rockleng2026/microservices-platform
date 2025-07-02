@@ -5,6 +5,8 @@ import com.central.common.model.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
@@ -52,4 +54,13 @@ public interface EmployeeFeignService {
      */
     @GetMapping("/api/organization/employee/{employeeId}")
     Result<Map<String, Object>> getEmployeeById(@PathVariable("employeeId") Long employeeId);
+    
+    /**
+     * 批量查询员工详情
+     *
+     * @param employeeIds 员工ID列表
+     * @return 员工详情列表
+     */
+    @PostMapping("/api/organization/employee/batch-detail")
+    Result<List<Map<String, Object>>> getEmployeeBatchDetail(@RequestBody List<String> employeeIds);
 } 

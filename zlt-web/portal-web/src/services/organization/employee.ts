@@ -97,6 +97,21 @@ export async function getEmployeePage(params: EmployeePageParams) {
   return request(`${API_PREFIX}/page`, {
     method: 'GET',
     params,
+  }).then(response => {
+    // 适配新的Result<PageResult<EmployeeVO>>格式
+    if (response && response.resp_code === 0 && response.datas) {
+      const pageResult = response.datas;
+      return {
+        success: true,
+        data: {
+          records: pageResult.data || [],
+          total: pageResult.count || 0,
+          current: params.page || 1,
+          size: params.size || 20
+        }
+      };
+    }
+    return response;
   });
 }
 
@@ -222,6 +237,15 @@ export async function getEmployeeStatistics(departmentId?: number) {
   return request(`${API_PREFIX}/statistics`, {
     method: 'GET',
     params: { departmentId },
+  }).then(response => {
+    // 适配新的Result<EmployeeStatisticsVO>格式
+    if (response && response.resp_code === 0 && response.datas) {
+      return {
+        success: true,
+        data: response.datas
+      };
+    }
+    return response;
   });
 }
 
@@ -339,5 +363,29 @@ export async function getEmployeeBatchDetail(ids: (string|number)[]) {
   return request(`${API_PREFIX}/batch-detail`, {
     method: 'POST',
     data: ids,
+  });
+}
+
+/**
+ * 获取员工列表（用于下拉选择等场景）
+ */
+export async function getEmployeeList(params: { size?: number; departmentId?: number } = {}) {
+  return request(`${API_PREFIX}/page`, {
+    method: 'GET',
+    params: {
+      page: 1,
+      size: params.size || 200,
+      departmentId: params.departmentId,
+    },
+  }).then(response => {
+    // 适配新的Result<PageResult<EmployeeVO>>格式
+    if (response && response.resp_code === 0 && response.datas) {
+      const pageResult = response.datas;
+      return {
+        success: true,
+        data: pageResult.data || []
+      };
+    }
+    return response;
   });
 } 

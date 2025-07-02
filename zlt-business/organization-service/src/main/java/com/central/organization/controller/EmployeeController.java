@@ -1,5 +1,7 @@
 package com.central.organization.controller;
 
+import com.central.common.model.Result;
+import com.central.common.model.PageResult;
 import com.central.organization.mapper.EmployeeMapper;
 import com.central.organization.model.dto.EmployeeQueryDTO;
 import com.central.organization.model.dto.EmployeeSaveDTO;
@@ -35,7 +37,7 @@ public class EmployeeController {
      * @return 员工分页列表
      */
     @GetMapping("/page")
-    public Result<IEmployeeService.PageResult<EmployeeVO>> getEmployeePage(EmployeeQueryDTO query) {
+    public Result<PageResult<EmployeeVO>> getEmployeePage(EmployeeQueryDTO query) {
         // ID转换处理
         if (query.getDepartmentId() != null) {
             query.setDepartmentId(IdUtils.stringToLong(query.getDepartmentId().toString()));
@@ -48,12 +50,20 @@ public class EmployeeController {
         }
 
         try{
-            IEmployeeService.PageResult<EmployeeVO> pageResult = employeeService.getPageList(query);
-            return Result.success(pageResult);
-        }catch (Exception ex){
-            ex.printStackTrace();
+            IEmployeeService.PageResult<EmployeeVO> servicePageResult = employeeService.getPageList(query);
+            
+            // 转换为统一的PageResult格式
+            PageResult<EmployeeVO> pageResult = PageResult.<EmployeeVO>builder()
+                .count(servicePageResult.getTotal())
+                .code(0)
+                .data(servicePageResult.getRecords())
+                .build();
+                
+            return Result.succeed(pageResult, "success");
+        } catch (Exception ex) {
+            log.error("分页查询员工列表失败", ex);
+            return Result.failed("查询失败");
         }
-        return null;
     }
 
     /**
@@ -67,9 +77,9 @@ public class EmployeeController {
         Long employeeId = IdUtils.stringToLong(id);
         EmployeeVO employee = employeeService.getById(employeeId);
         if (employee == null) {
-            return Result.error("员工不存在");
+            return Result.failed("员工不存在");
         }
-        return Result.success(employee);
+        return Result.succeed(employee);
     }
 
     /**
@@ -85,7 +95,7 @@ public class EmployeeController {
             @RequestParam(defaultValue = "false") Boolean includeSubDept) {
         Long deptId = IdUtils.stringToLong(departmentId);
         List<EmployeeVO> employees = employeeService.getByDepartmentId(deptId, includeSubDept);
-        return Result.success(employees);
+        return Result.succeed(employees);
     }
 
     /**
@@ -98,7 +108,7 @@ public class EmployeeController {
     public Result<List<EmployeeVO>> getEmployeesByPosition(@PathVariable String positionId) {
         Long posId = IdUtils.stringToLong(positionId);
         List<EmployeeVO> employees = employeeService.getByPositionId(posId);
-        return Result.success(employees);
+        return Result.succeed(employees);
     }
 
     /**
@@ -110,7 +120,7 @@ public class EmployeeController {
     @GetMapping("/probation-expiring")
     public Result<List<EmployeeVO>> getProbationExpiring(@RequestParam(defaultValue = "7") Integer days) {
         List<EmployeeVO> employees = employeeService.getProbationExpiring(days);
-        return Result.success(employees);
+        return Result.succeed(employees);
     }
 
     /**
@@ -122,7 +132,7 @@ public class EmployeeController {
     @GetMapping("/birthday")
     public Result<List<EmployeeVO>> getBirthdayList(@RequestParam(required = false) Integer month) {
         List<EmployeeVO> employees = employeeService.getBirthdayList(month);
-        return Result.success(employees);
+        return Result.succeed(employees);
     }
 
     /**
@@ -160,7 +170,7 @@ public class EmployeeController {
         }
 
         Long employeeId = employeeService.saveEmployee(saveDTO);
-        return Result.success(IdUtils.longToString(employeeId));
+        return Result.succeed(IdUtils.longToString(employeeId));
     }
 
     /**
@@ -186,7 +196,7 @@ public class EmployeeController {
         }
 
         Long employeeId = employeeService.employeeJoin(saveDTO);
-        return Result.success(IdUtils.longToString(employeeId));
+        return Result.succeed(IdUtils.longToString(employeeId));
     }
 
     /**
@@ -200,9 +210,9 @@ public class EmployeeController {
         Long employeeId = IdUtils.stringToLong(id);
         boolean success = employeeService.employeeRegular(employeeId);
         if (success) {
-            return Result.success();
+            return Result.succeed(null);
         } else {
-            return Result.error("员工转正失败");
+            return Result.failed("员工转正失败");
         }
     }
 
@@ -223,9 +233,9 @@ public class EmployeeController {
         boolean success = employeeService.employeeTransfer(employeeId, newDepartmentId, 
                                                           newPositionId, transferDTO.getReason());
         if (success) {
-            return Result.success();
+            return Result.succeed(null);
         } else {
-            return Result.error("员工调岗失败");
+            return Result.failed("员工调岗失败");
         }
     }
 
@@ -243,9 +253,9 @@ public class EmployeeController {
         boolean success = employeeService.employeeLeave(employeeId, leaveDTO.getLeaveDate(), 
                                                        leaveDTO.getLeaveReason());
         if (success) {
-            return Result.success();
+            return Result.succeed(null);
         } else {
-            return Result.error("员工离职失败");
+            return Result.failed("员工离职失败");
         }
     }
 
@@ -264,9 +274,9 @@ public class EmployeeController {
         
         boolean success = employeeService.batchUpdateDepartment(employeeIds, departmentId);
         if (success) {
-            return Result.success();
+            return Result.succeed(null);
         } else {
-            return Result.error("批量调整部门失败");
+            return Result.failed("批量调整部门失败");
         }
     }
 
@@ -285,9 +295,9 @@ public class EmployeeController {
         
         boolean success = employeeService.batchUpdatePosition(employeeIds, positionId);
         if (success) {
-            return Result.success();
+            return Result.succeed(null);
         } else {
-            return Result.error("批量调整岗位失败");
+            return Result.failed("批量调整岗位失败");
         }
     }
 
@@ -303,9 +313,9 @@ public class EmployeeController {
         Long employeeId = IdUtils.stringToLong(id);
         boolean success = employeeService.updateStatus(employeeId, status);
         if (success) {
-            return Result.success();
+            return Result.succeed(null);
         } else {
-            return Result.error("更新状态失败");
+            return Result.failed("更新状态失败");
         }
     }
 
@@ -320,9 +330,9 @@ public class EmployeeController {
         Long employeeId = IdUtils.stringToLong(id);
         boolean success = employeeService.deleteById(employeeId);
         if (success) {
-            return Result.success();
+            return Result.succeed(null);
         } else {
-            return Result.error("删除员工失败");
+            return Result.failed("删除员工失败");
         }
     }
 
@@ -339,9 +349,9 @@ public class EmployeeController {
                 .toList();
         boolean success = employeeService.batchDelete(employeeIds);
         if (success) {
-            return Result.success();
+            return Result.succeed(null);
         } else {
-            return Result.error("批量删除员工失败");
+            return Result.failed("批量删除员工失败");
         }
     }
 
@@ -365,7 +375,7 @@ public class EmployeeController {
         }
 
         List<EmployeeVO> employees = employeeService.exportEmployees(query);
-        return Result.success(employees);
+        return Result.succeed(employees);
     }
 
     /**
@@ -381,9 +391,9 @@ public class EmployeeController {
         Long excludeEmployeeId = excludeId != null ? IdUtils.stringToLong(excludeId) : null;
         boolean available = employeeService.checkEmpNoAvailable(empNo, excludeEmployeeId);
         if (available) {
-            return Result.success(true);
+            return Result.succeed(true);
         } else {
-            return Result.error("工号已存在");
+            return Result.failed("工号已存在");
         }
     }
 
@@ -400,9 +410,9 @@ public class EmployeeController {
         Long excludeEmployeeId = excludeId != null ? IdUtils.stringToLong(excludeId) : null;
         boolean available = employeeService.checkPhoneNumberAvailable(phoneNumber, excludeEmployeeId);
         if (available) {
-            return Result.success(true);
+            return Result.succeed(true);
         } else {
-            return Result.error("手机号已存在");
+            return Result.failed("手机号已存在");
         }
     }
 
@@ -419,9 +429,9 @@ public class EmployeeController {
         Long excludeEmployeeId = excludeId != null ? IdUtils.stringToLong(excludeId) : null;
         boolean available = employeeService.checkEmailAvailable(email, excludeEmployeeId);
         if (available) {
-            return Result.success(true);
+            return Result.succeed(true);
         } else {
-            return Result.error("邮箱已存在");
+            return Result.failed("邮箱已存在");
         }
     }
 
@@ -435,7 +445,7 @@ public class EmployeeController {
     public Result<String> generateEmpNo(@RequestParam String departmentId) {
         Long deptId = IdUtils.stringToLong(departmentId);
         String empNo = employeeService.generateEmpNo(deptId);
-        return Result.success(empNo);
+        return Result.succeed(empNo);
     }
 
     /**
@@ -446,7 +456,7 @@ public class EmployeeController {
     @GetMapping("/statistics")
     public Result<EmployeeStatisticsVO> getStatistics() {
         var statistics = employeeService.getStatistics();
-        return Result.success(new EmployeeStatisticsVO(statistics));
+        return Result.succeed(new EmployeeStatisticsVO(statistics));
     }
 
     /**
@@ -466,7 +476,7 @@ public class EmployeeController {
                     item.getProbationCount()
                 ))
                 .toList();
-        return Result.success(result);
+        return Result.succeed(result);
     }
 
     /**
@@ -477,11 +487,11 @@ public class EmployeeController {
     @PostMapping("/batch-detail")
     public Result<List<EmployeeVO>> getEmployeeBatchDetail(@RequestBody List<String> ids) {
         if (ids == null || ids.isEmpty()) {
-            return Result.success(List.of());
+            return Result.succeed(List.of());
         }
         List<Long> longIds = ids.stream().map(IdUtils::stringToLong).toList();
         List<EmployeeVO> employees = employeeService.getByIds(longIds);
-        return Result.success(employees);
+        return Result.succeed(employees);
     }
 
     // 内部DTO类定义
@@ -616,40 +626,5 @@ public class EmployeeController {
         public void setActiveCount(Integer activeCount) { this.activeCount = activeCount; }
         public Integer getProbationCount() { return probationCount; }
         public void setProbationCount(Integer probationCount) { this.probationCount = probationCount; }
-    }
-
-    /**
-     * 统一返回结果类
-     */
-    public static class Result<T> {
-        private boolean success;
-        private String message;
-        private T data;
-
-        private Result(boolean success, String message, T data) {
-            this.success = success;
-            this.message = message;
-            this.data = data;
-        }
-
-        public static <T> Result<T> success() {
-            return new Result<>(true, "成功", null);
-        }
-
-        public static <T> Result<T> success(T data) {
-            return new Result<>(true, "成功", data);
-        }
-
-        public static <T> Result<T> error(String message) {
-            return new Result<>(false, message, null);
-        }
-
-        // getters and setters
-        public boolean isSuccess() { return success; }
-        public void setSuccess(boolean success) { this.success = success; }
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
-        public T getData() { return data; }
-        public void setData(T data) { this.data = data; }
     }
 } 

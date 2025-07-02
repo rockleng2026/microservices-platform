@@ -2,7 +2,7 @@
 import { Card, Button, Modal, Form, Input, Select, message, Space, Table, Tag, Popconfirm, Row, Col, Statistic, Spin, DatePicker } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, PhoneOutlined, UserOutlined, BankOutlined, ReloadOutlined } from '@ant-design/icons';
 import { getCustomerPage, createCustomer, updateCustomer, deleteCustomer, getCustomerStatistics, CRMEnums, EnumUtils } from '@/services/crm';
-import { getEmployeeList } from '@/services/organization';
+import { getEmployeeList } from '@/services/organization/employee';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -30,7 +30,7 @@ const Customers: React.FC = () => {
   useEffect(() => {
     loadCustomers();
     loadStatistics();
-    loadEmployees();
+    loadEmployees(); // 仍需要加载员工列表用于表单选择
   }, [pagination.current, pagination.pageSize, searchText, statusFilter, typeFilter]);
 
   const loadCustomers = async () => {
@@ -303,11 +303,7 @@ const Customers: React.FC = () => {
       title: '负责人',
       dataIndex: 'ownerEmployeeName',
       render: (ownerName: string, record: any) => {
-        // 如果没有负责人姓名，尝试从员工列表中查找
-        if (!ownerName && record.ownerEmployeeId) {
-          const employee = employees.find(emp => emp.id === record.ownerEmployeeId || emp.employeeId === record.ownerEmployeeId);
-          return employee ? employee.name : `员工ID: ${record.ownerEmployeeId}`;
-        }
+        // 使用后端返回的员工信息
         return ownerName || '-';
       },
     },
@@ -637,3 +633,4 @@ const Customers: React.FC = () => {
 };
 
 export default Customers;
+

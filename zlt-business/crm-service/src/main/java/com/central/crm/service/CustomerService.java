@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.central.crm.model.Customer;
+import com.central.crm.model.vo.CustomerQueryVO;
+import com.central.crm.model.vo.CustomerVO;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -21,6 +23,11 @@ public interface CustomerService extends IService<Customer> {
      * 分页查询客户列表
      */
     IPage<Customer> selectCustomerPage(Page<Customer> page, Map<String, Object> params);
+    
+    /**
+     * 分页查询客户列表（包含员工信息）
+     */
+    IPage<CustomerVO> getCustomerPageWithEmployee(CustomerQueryVO queryVO);
 
     /**
      * 创建客户

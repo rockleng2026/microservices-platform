@@ -1,17 +1,25 @@
 package com.central.crm.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.central.common.model.Result;
+import com.central.crm.feign.EmployeeFeignService;
 import com.central.crm.mapper.CustomerMapper;
 import com.central.crm.model.Customer;
+import com.central.crm.model.vo.CustomerQueryVO;
+import com.central.crm.model.vo.CustomerVO;
 import com.central.crm.service.CustomerService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 客户管理Service实现类
@@ -23,9 +31,95 @@ import java.util.*;
 @Service
 public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> implements CustomerService {
 
+    @Autowired
+    private EmployeeFeignService employeeFeignService;
+
     @Override
     public IPage<Customer> selectCustomerPage(Page<Customer> page, Map<String, Object> params) {
         return baseMapper.selectCustomerPage(page, params);
+    }
+
+    @Override
+    public IPage<CustomerVO> getCustomerPageWithEmployee(CustomerQueryVO queryVO) {
+        try {
+            log.info("查询客户列表，参数: {}", queryVO);
+
+            // 使用MyBatis Plus的分页查询
+            Page<Customer> page = new Page<>(queryVO.getPage(), queryVO.getSize());
+            QueryWrapper<Customer> wrapper = new QueryWrapper<>();
+            wrapper.eq("is_deleted", 0);
+
+            // 添加查询条件
+            if (queryVO.getCustomerName() != null && !queryVO.getCustomerName().trim().isEmpty()) {
+                wrapper.like("customer_name", queryVO.getCustomerName().trim());
+            }
+            if (queryVO.getCustomerType() != null && !queryVO.getCustomerType().trim().isEmpty()) {
+                wrapper.eq("customer_type", queryVO.getCustomerType());
+            }
+            if (queryVO.getCustomerStatus() != null && !queryVO.getCustomerStatus().trim().isEmpty()) {
+                wrapper.eq("customer_status", queryVO.getCustomerStatus());
+            }
+            if (queryVO.getOwnerEmployeeId() != null) {
+                wrapper.eq("owner_employee_id", queryVO.getOwnerEmployeeId());
+            }
+
+            wrapper.orderByDesc("created_at");
+
+            IPage<Customer> pageResult = page(page, wrapper);
+
+            // 转换为CustomerVO并批量关联员工信息
+            Page<CustomerVO> voPageResult = new Page<>(pageResult.getCurrent(), pageResult.getSize(), pageResult.getTotal());
+            List<CustomerVO> voRecords = new ArrayList<>();
+
+            if (pageResult.getRecords() != null && !pageResult.getRecords().isEmpty()) {
+                // 收集所有员工ID并批量查询
+                List<String> employeeIds = pageResult.getRecords().stream()
+                    .filter(customer -> customer.getOwnerEmployeeId() != null)
+                    .map(customer -> String.valueOf(customer.getOwnerEmployeeId()))
+                    .distinct()
+                    .collect(Collectors.toList());
+
+                Map<String, Map<String, Object>> employeeMap = new HashMap<>();
+                if (!employeeIds.isEmpty()) {
+                    try {
+                        Result<List<Map<String, Object>>> batchResult = employeeFeignService.getEmployeeBatchDetail(employeeIds);
+                        if (batchResult != null && batchResult.getResp_code() == 0 && batchResult.getDatas() != null) {
+                            for (Map<String, Object> employeeData : batchResult.getDatas()) {
+                                String employeeId = String.valueOf(employeeData.get("id"));
+                                employeeMap.put(employeeId, employeeData);
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.warn("批量获取员工信息失败，error: {}", e.getMessage());
+                    }
+                }
+
+                // 转换数据并关联员工信息
+                for (Customer customer : pageResult.getRecords()) {
+                    CustomerVO customerVO = new CustomerVO();
+                    BeanUtils.copyProperties(customer, customerVO);
+
+                    // 关联员工信息
+                    if (customer.getOwnerEmployeeId() != null) {
+                        String employeeId = String.valueOf(customer.getOwnerEmployeeId());
+                        Map<String, Object> employeeData = employeeMap.get(employeeId);
+                        if (employeeData != null) {
+                            customerVO.setOwnerEmployeeName((String) employeeData.get("name"));
+                            customerVO.setOwnerDepartmentName((String) employeeData.get("departmentName"));
+                        }
+                    }
+
+                    voRecords.add(customerVO);
+                }
+            }
+
+            voPageResult.setRecords(voRecords);
+            return voPageResult;
+
+        } catch (Exception e) {
+            log.error("查询客户列表失败", e);
+            throw new RuntimeException("查询客户列表失败: " + e.getMessage());
+        }
     }
 
     @Override

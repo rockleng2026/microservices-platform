@@ -1,28 +1,36 @@
-﻿import { request } from '@/utils/request';
+﻿import { request } from "@/utils/request";
 
-/**
- * CRM客户关系管理系统 API
- */
+// 客户管理
+export const getCustomerList = (params: any) =>
+  request('/api-crm/api/customer/list', { method: 'GET', params });
 
-// 获取客户列表
-export async function getCustomerList(params?: any) {
-  return request('/api-crm/customers', {
-    method: 'GET',
-    params,
-  });
-}
+export const createCustomer = (data: any) =>
+  request('/api-crm/api/customer', { method: 'POST', data });
 
-// 创建客户
-export async function createCustomer(data: any) {
-  return request('/api-crm/customers', {
-    method: 'POST',
-    data,
-  });
-}
+export const updateCustomer = (customerId: number, data: any) =>
+  request(`/api-crm/api/customer/${customerId}`, { method: 'PUT', data });
 
-// 获取工作台数据
-export async function getDashboardOverview() {
-  return request('/api-crm/dashboard/overview', {
-    method: 'GET',
-  });
-}
+export const deleteCustomer = (customerId: number) =>
+  request(`/api-crm/api/customer/${customerId}`, { method: 'DELETE' });
+
+// 商机管理
+export const getOpportunityList = (params: any) =>
+  request('/api-crm/opportunity/list', { method: 'GET', params });
+
+// 跟进记录
+export const getFollowRecords = (params: any) =>
+  request('/api-crm/follow/list', { method: 'GET', params });
+
+// 客户移交
+export const getTransferRecords = (params: any) =>
+  request('/api-crm/transfer/list', { method: 'GET', params });
+
+export const createTransferRequest = (data: any) =>
+  request('/api-crm/transfer', { method: 'POST', data });
+
+export const approveTransfer = (transferId: number, data: any) =>
+  request(`/api-crm/transfer/${transferId}/approve`, { method: 'PUT', data });
+
+// 工作台
+export const getDashboardOverview = () =>
+  request('/api-crm/dashboard/overview', { method: 'GET' });

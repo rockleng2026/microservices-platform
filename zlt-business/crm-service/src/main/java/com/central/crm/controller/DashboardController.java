@@ -2,6 +2,7 @@ package com.central.crm.controller;
 
 import com.central.common.model.Result;
 import com.central.crm.service.DashboardService;
+import com.central.crm.model.vo.DashboardQueryVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -30,18 +31,14 @@ public class DashboardController {
     /**
      * 获取工作台概览数据
      */
-    @GetMapping("/overview")
+    @PostMapping("/overview")
     @Operation(summary = "获取工作台概览数据")
-    public Result<Map<String, Object>> getDashboardOverview(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) Long ownerEmployeeId) {
-        
+    public Result<Map<String, Object>> getDashboardOverview(@RequestBody DashboardQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
-            if (ownerEmployeeId != null) params.put("ownerEmployeeId", ownerEmployeeId);
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
+            if (vo.getOwnerEmployeeId() != null) params.put("ownerEmployeeId", vo.getOwnerEmployeeId());
             
             Map<String, Object> overview = dashboardService.getDashboardOverview(params);
             return Result.succeed(overview);
@@ -54,18 +51,14 @@ public class DashboardController {
     /**
      * 获取客户统计数据
      */
-    @GetMapping("/customer-stats")
+    @PostMapping("/customer-stats")
     @Operation(summary = "获取客户统计数据")
-    public Result<Map<String, Object>> getCustomerStats(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) Long ownerEmployeeId) {
-        
+    public Result<Map<String, Object>> getCustomerStats(@RequestBody DashboardQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
-            if (ownerEmployeeId != null) params.put("ownerEmployeeId", ownerEmployeeId);
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
+            if (vo.getOwnerEmployeeId() != null) params.put("ownerEmployeeId", vo.getOwnerEmployeeId());
             
             Map<String, Object> stats = dashboardService.getCustomerStats(params);
             return Result.succeed(stats);
@@ -78,18 +71,14 @@ public class DashboardController {
     /**
      * 获取商机统计数据
      */
-    @GetMapping("/opportunity-stats")
+    @PostMapping("/opportunity-stats")
     @Operation(summary = "获取商机统计数据")
-    public Result<Map<String, Object>> getOpportunityStats(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) Long ownerEmployeeId) {
-        
+    public Result<Map<String, Object>> getOpportunityStats(@RequestBody DashboardQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
-            if (ownerEmployeeId != null) params.put("ownerEmployeeId", ownerEmployeeId);
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
+            if (vo.getOwnerEmployeeId() != null) params.put("ownerEmployeeId", vo.getOwnerEmployeeId());
             
             Map<String, Object> stats = dashboardService.getOpportunityStats(params);
             return Result.succeed(stats);
@@ -102,18 +91,14 @@ public class DashboardController {
     /**
      * 获取销售统计数据
      */
-    @GetMapping("/sales-stats")
+    @PostMapping("/sales-stats")
     @Operation(summary = "获取销售统计数据")
-    public Result<Map<String, Object>> getSalesStats(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) Long ownerEmployeeId) {
-        
+    public Result<Map<String, Object>> getSalesStats(@RequestBody DashboardQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
-            if (ownerEmployeeId != null) params.put("ownerEmployeeId", ownerEmployeeId);
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
+            if (vo.getOwnerEmployeeId() != null) params.put("ownerEmployeeId", vo.getOwnerEmployeeId());
             
             Map<String, Object> stats = dashboardService.getSalesStats(params);
             return Result.succeed(stats);
@@ -126,18 +111,14 @@ public class DashboardController {
     /**
      * 获取业绩排行榜
      */
-    @GetMapping("/performance-ranking")
+    @PostMapping("/performance-ranking")
     @Operation(summary = "获取业绩排行榜")
-    public Result<List<Map<String, Object>>> getPerformanceRanking(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            @RequestParam(defaultValue = "10") Integer limit) {
-        
+    public Result<List<Map<String, Object>>> getPerformanceRanking(@RequestBody DashboardQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
-            params.put("limit", limit);
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
+            params.put("limit", vo.getLimit());
             
             List<Map<String, Object>> ranking = dashboardService.getPerformanceRanking(params);
             return Result.succeed(ranking);
@@ -150,18 +131,14 @@ public class DashboardController {
     /**
      * 获取销售趋势数据
      */
-    @GetMapping("/sales-trend")
+    @PostMapping("/sales-trend")
     @Operation(summary = "获取销售趋势数据")
-    public Result<List<Map<String, Object>>> getSalesTrend(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            @RequestParam(defaultValue = "month") String granularity) {
-        
+    public Result<List<Map<String, Object>>> getSalesTrend(@RequestBody DashboardQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
-            params.put("granularity", granularity);
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
+            params.put("granularity", vo.getGranularity());
             
             List<Map<String, Object>> trend = dashboardService.getSalesTrend(params);
             return Result.succeed(trend);
@@ -174,10 +151,9 @@ public class DashboardController {
     /**
      * 获取客户来源分析
      */
-    @GetMapping("/customer-source-analysis")
+    @PostMapping("/customer-source-analysis")
     @Operation(summary = "获取客户来源分析")
-    public Result<List<Map<String, Object>>> getCustomerSourceAnalysis() {
-        
+    public Result<List<Map<String, Object>>> getCustomerSourceAnalysis(@RequestBody DashboardQueryVO vo) {
         try {
             List<Map<String, Object>> analysis = dashboardService.getCustomerSourceAnalysis(new HashMap<>());
             return Result.succeed(analysis);
@@ -190,18 +166,14 @@ public class DashboardController {
     /**
      * 获取商机漏斗分析
      */
-    @GetMapping("/funnel-analysis")
+    @PostMapping("/funnel-analysis")
     @Operation(summary = "获取商机漏斗分析")
-    public Result<List<Map<String, Object>>> getFunnelAnalysis(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) Long ownerEmployeeId) {
-        
+    public Result<List<Map<String, Object>>> getFunnelAnalysis(@RequestBody DashboardQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
-            if (ownerEmployeeId != null) params.put("ownerEmployeeId", ownerEmployeeId);
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
+            if (vo.getOwnerEmployeeId() != null) params.put("ownerEmployeeId", vo.getOwnerEmployeeId());
             
             List<Map<String, Object>> funnel = dashboardService.getOpportunityFunnelAnalysis(params);
             return Result.succeed(funnel);
@@ -214,17 +186,15 @@ public class DashboardController {
     /**
      * 获取待办任务统计
      */
-    @GetMapping("/todo-stats")
+    @PostMapping("/todo-stats")
     @Operation(summary = "获取待办任务统计")
-    public Result<Map<String, Object>> getTodoStats(
-            @RequestParam(required = false) Long ownerEmployeeId) {
-        
+    public Result<Map<String, Object>> getTodoStats(@RequestBody DashboardQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (ownerEmployeeId != null) params.put("ownerEmployeeId", ownerEmployeeId);
+            if (vo.getOwnerEmployeeId() != null) params.put("ownerEmployeeId", vo.getOwnerEmployeeId());
             
-            Map<String, Object> todoStats = dashboardService.getTodoStats(params);
-            return Result.succeed(todoStats);
+            Map<String, Object> stats = dashboardService.getTodoStats(params);
+            return Result.succeed(stats);
         } catch (Exception e) {
             log.error("获取待办任务统计失败", e);
             return Result.failed("获取待办任务统计失败: " + e.getMessage());
@@ -234,13 +204,13 @@ public class DashboardController {
     /**
      * 获取最近跟进记录
      */
-    @GetMapping("/recent-follows")
+    @PostMapping("/recent-follows")
     @Operation(summary = "获取最近跟进记录")
-    public Result<List<Map<String, Object>>> getRecentFollows(
-            @RequestParam(defaultValue = "10") Integer limit) {
-        
+    public Result<List<Map<String, Object>>> getRecentFollows(@RequestBody DashboardQueryVO vo) {
         try {
-            Map<String, Object> params = Map.of("limit", limit);
+            Map<String, Object> params = new HashMap<>();
+            params.put("limit", vo.getLimit());
+            
             List<Map<String, Object>> follows = dashboardService.getRecentFollows(params);
             return Result.succeed(follows);
         } catch (Exception e) {

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.central.common.model.Result;
 import com.central.crm.model.CustomerFollow;
 import com.central.crm.service.CustomerFollowService;
+import com.central.crm.model.vo.CustomerFollowQueryVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -36,28 +37,18 @@ public class CustomerFollowController {
     /**
      * 分页查询跟进记录列表
      */
-    @GetMapping("/page")
+    @PostMapping("/page")
     @Operation(summary = "分页查询跟进记录列表")
-    public Result<IPage<CustomerFollow>> getFollowPage(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size,
-            @RequestParam(required = false) Long customerId,
-            @RequestParam(required = false) Long employeeId,
-            @RequestParam(required = false) String followType,
-            @RequestParam(required = false) String stage,
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate) {
-        
+    public Result<IPage<CustomerFollow>> getFollowPage(@RequestBody CustomerFollowQueryVO vo) {
         try {
-            Page<CustomerFollow> pageParam = new Page<>(page, size);
+            Page<CustomerFollow> pageParam = new Page<>(vo.getPage(), vo.getSize());
             Map<String, Object> params = new HashMap<>();
-            if (customerId != null) params.put("customerId", customerId);
-            if (employeeId != null) params.put("employeeId", employeeId);
-            if (followType != null) params.put("followType", followType);
-            if (stage != null) params.put("stage", stage);
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
-            
+            if (vo.getCustomerId() != null) params.put("customerId", vo.getCustomerId());
+            if (vo.getEmployeeId() != null) params.put("employeeId", vo.getEmployeeId());
+            if (vo.getFollowType() != null) params.put("followType", vo.getFollowType());
+            if (vo.getStage() != null) params.put("stage", vo.getStage());
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
             IPage<CustomerFollow> pageResult = customerFollowService.selectFollowPage(pageParam, params);
             return Result.succeed(pageResult);
         } catch (Exception e) {
@@ -144,17 +135,13 @@ public class CustomerFollowController {
     /**
      * 查询待跟进客户列表
      */
-    @GetMapping("/pending")
+    @PostMapping("/pending")
     @Operation(summary = "查询待跟进客户列表")
-    public Result<List<Map<String, Object>>> getPendingFollowList(
-            @RequestParam(required = false) Long employeeId,
-            @RequestParam(defaultValue = "30") Integer days) {
-        
+    public Result<List<Map<String, Object>>> getPendingFollowList(@RequestBody CustomerFollowQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (employeeId != null) params.put("employeeId", employeeId);
-            params.put("days", days);
-            
+            if (vo.getEmployeeId() != null) params.put("employeeId", vo.getEmployeeId());
+            params.put("days", vo.getDays() != null ? vo.getDays() : 30);
             List<Map<String, Object>> pendingList = customerFollowService.getPendingFollowList(params);
             return Result.succeed(pendingList);
         } catch (Exception e) {
@@ -166,19 +153,14 @@ public class CustomerFollowController {
     /**
      * 查询跟进统计信息
      */
-    @GetMapping("/statistics")
+    @PostMapping("/statistics")
     @Operation(summary = "查询跟进统计信息")
-    public Result<Map<String, Object>> getFollowStatistics(
-            @RequestParam(required = false) Long employeeId,
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate) {
-        
+    public Result<Map<String, Object>> getFollowStatistics(@RequestBody CustomerFollowQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (employeeId != null) params.put("employeeId", employeeId);
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
-            
+            if (vo.getEmployeeId() != null) params.put("employeeId", vo.getEmployeeId());
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
             Map<String, Object> statistics = customerFollowService.getFollowStatistics(params);
             return Result.succeed(statistics);
         } catch (Exception e) {
@@ -190,17 +172,13 @@ public class CustomerFollowController {
     /**
      * 查询最近跟进记录
      */
-    @GetMapping("/recent")
+    @PostMapping("/recent")
     @Operation(summary = "查询最近跟进记录")
-    public Result<List<CustomerFollow>> getRecentFollows(
-            @RequestParam(required = false) Long employeeId,
-            @RequestParam(defaultValue = "10") Integer limit) {
-        
+    public Result<List<CustomerFollow>> getRecentFollows(@RequestBody CustomerFollowQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (employeeId != null) params.put("employeeId", employeeId);
-            params.put("limit", limit);
-            
+            if (vo.getEmployeeId() != null) params.put("employeeId", vo.getEmployeeId());
+            params.put("limit", vo.getLimit() != null ? vo.getLimit() : 10);
             List<CustomerFollow> recentFollows = customerFollowService.getRecentFollows(params);
             return Result.succeed(recentFollows);
         } catch (Exception e) {

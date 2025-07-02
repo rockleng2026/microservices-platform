@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.central.common.model.Result;
 import com.central.crm.model.CustomerTransfer;
 import com.central.crm.service.CustomerTransferService;
+import com.central.crm.model.vo.CustomerTransferQueryVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -36,27 +37,18 @@ public class CustomerTransferController {
     /**
      * 分页查询移交记录列表
      */
-    @GetMapping("/page")
+    @PostMapping("/page")
     @Operation(summary = "分页查询移交记录列表")
-    public Result<IPage<CustomerTransfer>> getTransferPage(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size,
-            @RequestParam(required = false) Long customerId,
-            @RequestParam(required = false) Long fromEmployeeId,
-            @RequestParam(required = false) Long toEmployeeId,
-            @RequestParam(required = false) String approvalStatus,
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate) {
-        
+    public Result<IPage<CustomerTransfer>> getTransferPage(@RequestBody CustomerTransferQueryVO vo) {
         try {
-            Page<CustomerTransfer> pageParam = new Page<>(page, size);
+            Page<CustomerTransfer> pageParam = new Page<>(vo.getPage(), vo.getSize());
             Map<String, Object> params = new HashMap<>();
-            if (customerId != null) params.put("customerId", customerId);
-            if (fromEmployeeId != null) params.put("fromEmployeeId", fromEmployeeId);
-            if (toEmployeeId != null) params.put("toEmployeeId", toEmployeeId);
-            if (approvalStatus != null) params.put("approvalStatus", approvalStatus);
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
+            if (vo.getCustomerId() != null) params.put("customerId", vo.getCustomerId());
+            if (vo.getFromEmployeeId() != null) params.put("fromEmployeeId", vo.getFromEmployeeId());
+            if (vo.getToEmployeeId() != null) params.put("toEmployeeId", vo.getToEmployeeId());
+            if (vo.getApprovalStatus() != null) params.put("approvalStatus", vo.getApprovalStatus());
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
             
             IPage<CustomerTransfer> pageResult = customerTransferService.selectTransferPage(pageParam, params);
             return Result.succeed(pageResult);
@@ -101,14 +93,9 @@ public class CustomerTransferController {
      */
     @PutMapping("/{id}/approve")
     @Operation(summary = "审批移交申请")
-    public Result<String> approveTransfer(
-            @PathVariable Long id,
-            @RequestParam String approvalStatus,
-            @RequestParam(required = false) String approvalNotes,
-            @RequestParam Long approverId) {
-        
+    public Result<String> approveTransfer(@PathVariable Long id, @RequestBody CustomerTransferQueryVO vo) {
         try {
-            boolean success = customerTransferService.approveTransfer(id, approvalStatus, approvalNotes, approverId);
+            boolean success = customerTransferService.approveTransfer(id, vo.getApprovalStatus(), vo.getApprovalNotes(), vo.getApproverId());
             return success ? Result.succeed("审批成功") : Result.failed("审批失败");
         } catch (Exception e) {
             log.error("审批移交申请失败", e);
@@ -119,14 +106,12 @@ public class CustomerTransferController {
     /**
      * 查询待审批的移交申请
      */
-    @GetMapping("/pending-approvals")
+    @PostMapping("/pending-approvals")
     @Operation(summary = "查询待审批的移交申请")
-    public Result<List<CustomerTransfer>> getPendingApprovals(
-            @RequestParam(required = false) Long approverId) {
-        
+    public Result<List<CustomerTransfer>> getPendingApprovals(@RequestBody CustomerTransferQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (approverId != null) params.put("approverId", approverId);
+            if (vo.getApproverId() != null) params.put("approverId", vo.getApproverId());
             
             List<CustomerTransfer> pendingApprovals = customerTransferService.getPendingApprovals(params);
             return Result.succeed(pendingApprovals);
@@ -154,18 +139,14 @@ public class CustomerTransferController {
     /**
      * 查询移交统计信息
      */
-    @GetMapping("/statistics")
+    @PostMapping("/statistics")
     @Operation(summary = "查询移交统计信息")
-    public Result<Map<String, Object>> getTransferStatistics(
-            @RequestParam(required = false) Long employeeId,
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate) {
-        
+    public Result<Map<String, Object>> getTransferStatistics(@RequestBody CustomerTransferQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (employeeId != null) params.put("employeeId", employeeId);
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
+            if (vo.getEmployeeId() != null) params.put("employeeId", vo.getEmployeeId());
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
             
             Map<String, Object> statistics = customerTransferService.getTransferStatistics(params);
             return Result.succeed(statistics);
@@ -180,14 +161,9 @@ public class CustomerTransferController {
      */
     @PostMapping("/batch")
     @Operation(summary = "批量移交客户")
-    public Result<Map<String, Object>> batchTransferCustomers(
-            @RequestParam List<Long> customerIds,
-            @RequestParam Long toEmployeeId,
-            @RequestParam String transferReason,
-            @RequestParam Long operatorId) {
-        
+    public Result<Map<String, Object>> batchTransferCustomers(@RequestBody CustomerTransferQueryVO vo) {
         try {
-            Map<String, Object> result = customerTransferService.batchTransferCustomers(customerIds, toEmployeeId, transferReason, operatorId);
+            Map<String, Object> result = customerTransferService.batchTransferCustomers(vo.getCustomerIds(), vo.getToEmployeeId(), vo.getTransferReason(), vo.getOperatorId());
             return Result.succeed(result);
         } catch (Exception e) {
             log.error("批量移交客户失败", e);
@@ -200,13 +176,9 @@ public class CustomerTransferController {
      */
     @PutMapping("/{id}/cancel")
     @Operation(summary = "取消移交申请")
-    public Result<String> cancelTransfer(
-            @PathVariable Long id,
-            @RequestParam String cancelReason,
-            @RequestParam Long operatorId) {
-        
+    public Result<String> cancelTransfer(@PathVariable Long id, @RequestBody CustomerTransferQueryVO vo) {
         try {
-            boolean success = customerTransferService.cancelTransfer(id, cancelReason, operatorId);
+            boolean success = customerTransferService.cancelTransfer(id, vo.getCancelReason(), vo.getOperatorId());
             return success ? Result.succeed("取消成功") : Result.failed("取消失败");
         } catch (Exception e) {
             log.error("取消移交申请失败", e);
@@ -217,11 +189,11 @@ public class CustomerTransferController {
     /**
      * 查询我的移交申请
      */
-    @GetMapping("/my-applications")
+    @PostMapping("/my-applications")
     @Operation(summary = "查询我的移交申请")
-    public Result<List<CustomerTransfer>> getMyTransferApplications(@RequestParam Long employeeId) {
+    public Result<List<CustomerTransfer>> getMyTransferApplications(@RequestBody CustomerTransferQueryVO vo) {
         try {
-            List<CustomerTransfer> applications = customerTransferService.getMyTransferApplications(employeeId);
+            List<CustomerTransfer> applications = customerTransferService.getMyTransferApplications(vo.getEmployeeId());
             return Result.succeed(applications);
         } catch (Exception e) {
             log.error("查询我的移交申请失败", e);
@@ -232,15 +204,15 @@ public class CustomerTransferController {
     /**
      * 查询需要我审批的移交申请
      */
-    @GetMapping("/for-approval")
+    @PostMapping("/for-approval")
     @Operation(summary = "查询需要我审批的移交申请")
-    public Result<List<CustomerTransfer>> getTransfersForApproval(@RequestParam Long approverId) {
+    public Result<List<CustomerTransfer>> getTransfersForApproval(@RequestBody CustomerTransferQueryVO vo) {
         try {
-            List<CustomerTransfer> transfers = customerTransferService.getTransfersForApproval(approverId);
+            List<CustomerTransfer> transfers = customerTransferService.getTransfersForApproval(vo.getApproverId());
             return Result.succeed(transfers);
         } catch (Exception e) {
-            log.error("查询需要审批的移交申请失败", e);
-            return Result.failed("查询需要审批的移交申请失败: " + e.getMessage());
+            log.error("查询需要我审批的移交申请失败", e);
+            return Result.failed("查询需要我审批的移交申请失败: " + e.getMessage());
         }
     }
 

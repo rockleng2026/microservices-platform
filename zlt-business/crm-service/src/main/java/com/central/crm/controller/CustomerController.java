@@ -5,6 +5,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.central.common.model.Result;
 import com.central.crm.model.Customer;
 import com.central.crm.service.CustomerService;
+import com.central.crm.model.vo.CustomerQueryVO;
+import com.central.crm.model.vo.CustomerCheckVO;
+import com.central.crm.model.vo.CustomerBatchStatusVO;
+import com.central.crm.model.vo.CustomerStatisticsVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -33,37 +37,24 @@ public class CustomerController {
     @Autowired
     private CustomerService customerService;
 
-    /**
+     /**
      * 分页查询客户列表
      */
-    @GetMapping("/page")
+    @PostMapping("/page")
     @Operation(summary = "分页查询客户列表")
-    public Result<IPage<Customer>> getCustomerPage(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size,
-            @RequestParam(required = false) String customerName,
-            @RequestParam(required = false) String customerType,
-            @RequestParam(required = false) String customerStatus,
-            @RequestParam(required = false) String customerSource,
-            @RequestParam(required = false) Long ownerEmployeeId,
-            @RequestParam(required = false) String industry,
-            @RequestParam(required = false) String companyScale,
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate) {
-        
+    public Result<IPage<Customer>> getCustomerPage(@RequestBody CustomerQueryVO queryVO) {
         try {
-            Page<Customer> pageParam = new Page<>(page, size);
+            Page<Customer> pageParam = new Page<>(queryVO.getPage(), queryVO.getSize());
             Map<String, Object> params = new HashMap<>();
-            if (customerName != null) params.put("customerName", customerName);
-            if (customerType != null) params.put("customerType", customerType);
-            if (customerStatus != null) params.put("customerStatus", customerStatus);
-            if (customerSource != null) params.put("customerSource", customerSource);
-            if (ownerEmployeeId != null) params.put("ownerEmployeeId", ownerEmployeeId);
-            if (industry != null) params.put("industry", industry);
-            if (companyScale != null) params.put("companyScale", companyScale);
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
-            
+            if (queryVO.getCustomerName() != null) params.put("customerName", queryVO.getCustomerName());
+            if (queryVO.getCustomerType() != null) params.put("customerType", queryVO.getCustomerType());
+            if (queryVO.getCustomerStatus() != null) params.put("customerStatus", queryVO.getCustomerStatus());
+            if (queryVO.getCustomerSource() != null) params.put("customerSource", queryVO.getCustomerSource());
+            if (queryVO.getOwnerEmployeeId() != null) params.put("ownerEmployeeId", queryVO.getOwnerEmployeeId());
+            if (queryVO.getIndustry() != null) params.put("industry", queryVO.getIndustry());
+            if (queryVO.getCompanyScale() != null) params.put("companyScale", queryVO.getCompanyScale());
+            if (queryVO.getStartDate() != null) params.put("startDate", queryVO.getStartDate());
+            if (queryVO.getEndDate() != null) params.put("endDate", queryVO.getEndDate());
             IPage<Customer> pageResult = customerService.selectCustomerPage(pageParam, params);
             return Result.succeed(pageResult);
         } catch (Exception e) {
@@ -150,14 +141,11 @@ public class CustomerController {
     /**
      * 检查客户名称是否存在
      */
-    @GetMapping("/check-name")
+    @PostMapping("/check-name")
     @Operation(summary = "检查客户名称是否存在")
-    public Result<Boolean> checkCustomerNameExists(
-            @RequestParam String customerName,
-            @RequestParam(required = false) Long customerId) {
-        
+    public Result<Boolean> checkCustomerNameExists(@RequestBody CustomerCheckVO vo) {
         try {
-            boolean exists = customerService.checkCustomerNameExists(customerName, customerId);
+            boolean exists = customerService.checkCustomerNameExists(vo.getCustomerName(), vo.getCustomerId());
             return Result.succeed(exists);
         } catch (Exception e) {
             log.error("检查客户名称失败", e);
@@ -168,14 +156,11 @@ public class CustomerController {
     /**
      * 检查手机号是否存在
      */
-    @GetMapping("/check-phone")
+    @PostMapping("/check-phone")
     @Operation(summary = "检查手机号是否存在")
-    public Result<Boolean> checkPhoneExists(
-            @RequestParam String phone,
-            @RequestParam(required = false) Long customerId) {
-        
+    public Result<Boolean> checkPhoneExists(@RequestBody CustomerCheckVO vo) {
         try {
-            boolean exists = customerService.checkPhoneExists(phone, customerId);
+            boolean exists = customerService.checkPhoneExists(vo.getPhone(), vo.getCustomerId());
             return Result.succeed(exists);
         } catch (Exception e) {
             log.error("检查手机号失败", e);
@@ -186,14 +171,11 @@ public class CustomerController {
     /**
      * 检查邮箱是否存在
      */
-    @GetMapping("/check-email")
+    @PostMapping("/check-email")
     @Operation(summary = "检查邮箱是否存在")
-    public Result<Boolean> checkEmailExists(
-            @RequestParam String email,
-            @RequestParam(required = false) Long customerId) {
-        
+    public Result<Boolean> checkEmailExists(@RequestBody CustomerCheckVO vo) {
         try {
-            boolean exists = customerService.checkEmailExists(email, customerId);
+            boolean exists = customerService.checkEmailExists(vo.getEmail(), vo.getCustomerId());
             return Result.succeed(exists);
         } catch (Exception e) {
             log.error("检查邮箱失败", e);
@@ -222,15 +204,11 @@ public class CustomerController {
     /**
      * 批量更新客户状态
      */
-    @PutMapping("/batch-status")
+    @PostMapping("/batch-status")
     @Operation(summary = "批量更新客户状态")
-    public Result<String> batchUpdateCustomerStatus(
-            @RequestParam List<Long> customerIds,
-            @RequestParam String status,
-            @RequestParam Long updatedBy) {
-        
+    public Result<String> batchUpdateCustomerStatus(@RequestBody CustomerBatchStatusVO vo) {
         try {
-            boolean success = customerService.batchUpdateCustomerStatus(customerIds, status, updatedBy);
+            boolean success = customerService.batchUpdateCustomerStatus(vo.getCustomerIds(), vo.getStatus(), vo.getUpdatedBy());
             return success ? Result.succeed("批量更新成功") : Result.failed("批量更新失败");
         } catch (Exception e) {
             log.error("批量更新客户状态失败", e);
@@ -238,22 +216,17 @@ public class CustomerController {
         }
     }
 
-    /**
+     /**
      * 查询客户统计信息
      */
-    @GetMapping("/statistics")
+    @PostMapping("/statistics")
     @Operation(summary = "查询客户统计信息")
-    public Result<Map<String, Object>> getCustomerStatistics(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) Long ownerEmployeeId) {
-        
+    public Result<Map<String, Object>> getCustomerStatistics(@RequestBody CustomerStatisticsVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
-            if (ownerEmployeeId != null) params.put("ownerEmployeeId", ownerEmployeeId);
-            
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
+            if (vo.getOwnerEmployeeId() != null) params.put("ownerEmployeeId", vo.getOwnerEmployeeId());
             Map<String, Object> statistics = customerService.getCustomerStatistics(params);
             return Result.succeed(statistics);
         } catch (Exception e) {
@@ -265,15 +238,12 @@ public class CustomerController {
     /**
      * 查询客户分布统计
      */
-    @GetMapping("/distribution")
+    @PostMapping("/distribution")
     @Operation(summary = "查询客户分布统计")
-    public Result<List<Map<String, Object>>> getCustomerDistribution(
-            @RequestParam(required = false) String type) {
-        
+    public Result<List<Map<String, Object>>> getCustomerDistribution(@RequestBody CustomerStatisticsVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (type != null) params.put("type", type);
-            
+            if (vo.getType() != null) params.put("type", vo.getType());
             List<Map<String, Object>> distribution = customerService.getCustomerDistribution(params);
             return Result.succeed(distribution);
         } catch (Exception e) {
@@ -285,14 +255,11 @@ public class CustomerController {
     /**
      * 查询高价值客户
      */
-    @GetMapping("/high-value")
+    @PostMapping("/high-value")
     @Operation(summary = "查询高价值客户")
-    public Result<List<Customer>> getHighValueCustomers(
-            @RequestParam(required = false) String minRevenue,
-            @RequestParam(defaultValue = "10") Integer limit) {
-        
+    public Result<List<Customer>> getHighValueCustomers(@RequestBody CustomerStatisticsVO vo) {
         try {
-            List<Customer> customers = customerService.getHighValueCustomers(minRevenue, limit);
+            List<Customer> customers = customerService.getHighValueCustomers(vo.getMinRevenue(), vo.getLimit());
             return Result.succeed(customers);
         } catch (Exception e) {
             log.error("查询高价值客户失败", e);
@@ -303,19 +270,19 @@ public class CustomerController {
     /**
      * 查询流失风险客户
      */
-    @GetMapping("/churn-risk")
+    @PostMapping("/churn-risk")
     @Operation(summary = "查询流失风险客户")
-    public Result<List<Map<String, Object>>> getChurnRiskCustomers(
-            @RequestParam(defaultValue = "30") Integer daysSinceLastFollow) {
-        
+    public Result<List<Map<String, Object>>> getChurnRiskCustomers(@RequestBody CustomerStatisticsVO vo) {
         try {
-            List<Map<String, Object>> customers = customerService.getChurnRiskCustomers(daysSinceLastFollow);
+            List<Map<String, Object>> customers = customerService.getChurnRiskCustomers(vo.getDaysSinceLastFollow());
             return Result.succeed(customers);
         } catch (Exception e) {
             log.error("查询流失风险客户失败", e);
             return Result.failed("查询流失风险客户失败: " + e.getMessage());
         }
     }
+
+
 
     /**
      * 导入客户数据
@@ -337,8 +304,12 @@ public class CustomerController {
      */
     @PostMapping("/export")
     @Operation(summary = "导出客户数据")
-    public Result<List<Customer>> exportCustomers(@RequestBody Map<String, Object> params) {
+    public Result<List<Customer>> exportCustomers(@RequestBody CustomerStatisticsVO vo) {
         try {
+            Map<String, Object> params = new HashMap<>();
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
+            if (vo.getOwnerEmployeeId() != null) params.put("ownerEmployeeId", vo.getOwnerEmployeeId());
             List<Customer> customers = customerService.exportCustomers(params);
             return Result.succeed(customers);
         } catch (Exception e) {

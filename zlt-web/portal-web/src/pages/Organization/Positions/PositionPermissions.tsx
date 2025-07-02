@@ -157,6 +157,9 @@ const PositionPermissions: React.FC<PositionPermissionsProps> = ({
         console.log('权限配置 - 解析后的菜单ID:', selectedMenuIds);
         console.log('权限配置 - 解析后的功能ID:', selectedFuncIds);
         
+        // 确保加载的权限数据包含完整的父子关系
+        // 注意：这里不需要再次添加父级菜单，因为后端保存的数据应该已经是完整的
+        // 如果后端保存的数据不完整，那么显示时Tree组件会自动处理父子关系
         setSelectedMenus(selectedMenuIds);
         setSelectedFunctions(selectedFuncIds);
       } else {
@@ -217,16 +220,32 @@ const PositionPermissions: React.FC<PositionPermissionsProps> = ({
     return ids;
   };
 
-  // 菜单选择变化处理
+
+
+  // 菜单选择变化处理  
   const handleMenuCheck = (checkedKeys: any, info: any) => {
-    const newCheckedKeys = checkedKeys.checked || checkedKeys;
+    // 获取当前操作的实际选中状态
+    const currentCheckedKeys = Array.isArray(checkedKeys) ? checkedKeys : (checkedKeys.checked || []);
+    const currentHalfCheckedKeys = info.halfCheckedKeys || [];
+    
     console.log('权限配置 - 菜单选择变化:', {
-      新选中的菜单: newCheckedKeys,
-      半选中的菜单: info.halfCheckedKeys || [],
-      之前选中的菜单: selectedMenus
+      Tree组件返回的选中菜单: currentCheckedKeys,
+      Tree组件返回的半选中菜单: currentHalfCheckedKeys,
+      之前选中的菜单: selectedMenus,
+      操作信息: info
     });
-    setSelectedMenus(newCheckedKeys);
-    setHalfCheckedMenus(info.halfCheckedKeys || []);
+
+    // 直接使用 Tree 组件计算好的选中状态
+    // Tree 组件已经自动处理了父子关系的联动
+    // selectedMenus 只保存完全选中的菜单，halfCheckedMenus 保存半选中的
+    // 这样 Tree 组件能正确显示选中状态
+    setSelectedMenus(currentCheckedKeys);
+    setHalfCheckedMenus(currentHalfCheckedKeys);
+    
+    console.log('权限配置 - 设置菜单状态:', {
+      完全选中: currentCheckedKeys,
+      半选中: currentHalfCheckedKeys
+    });
   };
 
   // 全选/全不选菜单
@@ -255,17 +274,37 @@ const PositionPermissions: React.FC<PositionPermissionsProps> = ({
   const handleSave = async () => {
     setSaving(true);
     try {
+      // 合并完全选中和半选中的菜单，确保权限结构完整
+      const allSelectedMenus = [...selectedMenus];
+      halfCheckedMenus.forEach(menuId => {
+        if (!allSelectedMenus.includes(menuId)) {
+          allSelectedMenus.push(menuId);
+        }
+      });
+      
+      console.log('权限配置 - 准备保存权限:', {
+        岗位ID: positionId,
+        完全选中的菜单: selectedMenus,
+        半选中的菜单: halfCheckedMenus,
+        最终保存的菜单: allSelectedMenus,
+        选中的功能: selectedFunctions,
+        菜单权限字符串: allSelectedMenus.join(','),
+        功能权限字符串: selectedFunctions.join(',')
+      });
+      
       const result = await configWorkPositionPermissions(
         positionId,
-        selectedMenus.join(','),
+        allSelectedMenus.join(','),
         selectedFunctions.join(',')
       );
       
       if (result.resp_code === 0) {
         message.success('权限配置保存成功');
+        console.log('权限配置 - 保存成功:', result);
         onSuccess();
       } else {
         message.error(result.resp_msg || '保存失败');
+        console.error('权限配置 - 保存失败:', result);
       }
     } catch (error) {
       console.error('保存权限配置失败:', error);
@@ -362,7 +401,7 @@ const PositionPermissions: React.FC<PositionPermissionsProps> = ({
       <Spin spinning={loading}>
         <Alert
           message="权限配置说明"
-          description="为岗位配置菜单权限和功能权限，配置后该岗位下的所有用户将获得相应权限。"
+          description="为岗位配置菜单权限和功能权限，配置后该岗位下的所有用户将获得相应权限。选中子菜单时，系统会自动选中其父级菜单，确保权限结构完整。"
           type="info"
           showIcon
           style={{ marginBottom: 16 }}

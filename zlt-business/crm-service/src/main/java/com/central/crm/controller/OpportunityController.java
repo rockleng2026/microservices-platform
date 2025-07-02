@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.central.common.model.Result;
 import com.central.crm.model.Opportunity;
 import com.central.crm.service.OpportunityService;
+import com.central.crm.model.vo.OpportunityQueryVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -36,29 +37,19 @@ public class OpportunityController {
     /**
      * 分页查询商机列表
      */
-    @GetMapping("/page")
+    @PostMapping("/page")
     @Operation(summary = "分页查询商机列表")
-    public Result<IPage<Opportunity>> getOpportunityPage(
-            @RequestParam(defaultValue = "1") Integer page,
-            @RequestParam(defaultValue = "20") Integer size,
-            @RequestParam(required = false) String opportunityName,
-            @RequestParam(required = false) Long customerId,
-            @RequestParam(required = false) String stage,
-            @RequestParam(required = false) String opportunitySource,
-            @RequestParam(required = false) Long ownerEmployeeId,
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate) {
-        
+    public Result<IPage<Opportunity>> getOpportunityPage(@RequestBody OpportunityQueryVO vo) {
         try {
-            Page<Opportunity> pageParam = new Page<>(page, size);
+            Page<Opportunity> pageParam = new Page<>(vo.getPage(), vo.getSize());
             Map<String, Object> params = new HashMap<>();
-            if (opportunityName != null) params.put("opportunityName", opportunityName);
-            if (customerId != null) params.put("customerId", customerId);
-            if (stage != null) params.put("stage", stage);
-            if (opportunitySource != null) params.put("opportunitySource", opportunitySource);
-            if (ownerEmployeeId != null) params.put("ownerEmployeeId", ownerEmployeeId);
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
+            if (vo.getOpportunityName() != null) params.put("opportunityName", vo.getOpportunityName());
+            if (vo.getCustomerId() != null) params.put("customerId", vo.getCustomerId());
+            if (vo.getStage() != null) params.put("stage", vo.getStage());
+            if (vo.getOpportunitySource() != null) params.put("opportunitySource", vo.getOpportunitySource());
+            if (vo.getOwnerEmployeeId() != null) params.put("ownerEmployeeId", vo.getOwnerEmployeeId());
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
             
             IPage<Opportunity> pageResult = opportunityService.selectOpportunityPage(pageParam, params);
             return Result.succeed(pageResult);
@@ -161,18 +152,14 @@ public class OpportunityController {
     /**
      * 查询商机漏斗统计
      */
-    @GetMapping("/funnel-statistics")
+    @PostMapping("/funnel-statistics")
     @Operation(summary = "查询商机漏斗统计")
-    public Result<List<Map<String, Object>>> getFunnelStatistics(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) Long ownerEmployeeId) {
-        
+    public Result<List<Map<String, Object>>> getFunnelStatistics(@RequestBody OpportunityQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
-            if (ownerEmployeeId != null) params.put("ownerEmployeeId", ownerEmployeeId);
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
+            if (vo.getOwnerEmployeeId() != null) params.put("ownerEmployeeId", vo.getOwnerEmployeeId());
             
             List<Map<String, Object>> funnel = opportunityService.getFunnelStatistics(params);
             return Result.succeed(funnel);
@@ -185,21 +172,17 @@ public class OpportunityController {
     /**
      * 查询商机成交统计
      */
-    @GetMapping("/win-statistics")
+    @PostMapping("/win-statistics")
     @Operation(summary = "查询商机成交统计")
-    public Result<Map<String, Object>> getWinStatistics(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            @RequestParam(required = false) Long ownerEmployeeId) {
-        
+    public Result<Map<String, Object>> getWinStatistics(@RequestBody OpportunityQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
-            if (ownerEmployeeId != null) params.put("ownerEmployeeId", ownerEmployeeId);
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
+            if (vo.getOwnerEmployeeId() != null) params.put("ownerEmployeeId", vo.getOwnerEmployeeId());
             
-            Map<String, Object> winStats = opportunityService.getWinStatistics(params);
-            return Result.succeed(winStats);
+            Map<String, Object> stats = opportunityService.getWinStatistics(params);
+            return Result.succeed(stats);
         } catch (Exception e) {
             log.error("查询商机成交统计失败", e);
             return Result.failed("查询商机成交统计失败: " + e.getMessage());
@@ -209,18 +192,14 @@ public class OpportunityController {
     /**
      * 查询商机趋势统计
      */
-    @GetMapping("/trend-statistics")
+    @PostMapping("/trend-statistics")
     @Operation(summary = "查询商机趋势统计")
-    public Result<List<Map<String, Object>>> getTrendStatistics(
-            @RequestParam(required = false) String startDate,
-            @RequestParam(required = false) String endDate,
-            @RequestParam(defaultValue = "month") String granularity) {
-        
+    public Result<List<Map<String, Object>>> getTrendStatistics(@RequestBody OpportunityQueryVO vo) {
         try {
             Map<String, Object> params = new HashMap<>();
-            if (startDate != null) params.put("startDate", startDate);
-            if (endDate != null) params.put("endDate", endDate);
-            params.put("granularity", granularity);
+            if (vo.getStartDate() != null) params.put("startDate", vo.getStartDate());
+            if (vo.getEndDate() != null) params.put("endDate", vo.getEndDate());
+            params.put("granularity", vo.getGranularity() != null ? vo.getGranularity() : "month");
             
             List<Map<String, Object>> trend = opportunityService.getTrendStatistics(params);
             return Result.succeed(trend);
@@ -235,14 +214,9 @@ public class OpportunityController {
      */
     @PutMapping("/{id}/advance")
     @Operation(summary = "推进商机阶段")
-    public Result<String> advanceOpportunityStage(
-            @PathVariable Long id,
-            @RequestParam String newStage,
-            @RequestParam Integer newProbability,
-            @RequestParam(required = false) String notes) {
-        
+    public Result<String> advanceOpportunityStage(@PathVariable Long id, @RequestBody OpportunityQueryVO vo) {
         try {
-            boolean success = opportunityService.advanceOpportunityStage(id, newStage, newProbability, notes);
+            boolean success = opportunityService.advanceOpportunityStage(id, vo.getNewStage(), vo.getNewProbability(), vo.getNotes());
             return success ? Result.succeed("推进成功") : Result.failed("推进失败");
         } catch (Exception e) {
             log.error("推进商机阶段失败", e);
@@ -255,18 +229,13 @@ public class OpportunityController {
      */
     @PutMapping("/{id}/win")
     @Operation(summary = "成交商机")
-    public Result<String> winOpportunity(
-            @PathVariable Long id,
-            @RequestParam String actualAmount,
-            @RequestParam String winReason,
-            @RequestParam(required = false) String notes) {
-        
+    public Result<String> winOpportunity(@PathVariable Long id, @RequestBody OpportunityQueryVO vo) {
         try {
-            boolean success = opportunityService.winOpportunity(id, actualAmount, winReason, notes);
+            boolean success = opportunityService.winOpportunity(id, vo.getActualAmount(), vo.getWinReason(), vo.getNotes());
             return success ? Result.succeed("成交成功") : Result.failed("成交失败");
         } catch (Exception e) {
-            log.error("商机成交失败", e);
-            return Result.failed("商机成交失败: " + e.getMessage());
+            log.error("成交商机失败", e);
+            return Result.failed("成交商机失败: " + e.getMessage());
         }
     }
 
@@ -275,31 +244,24 @@ public class OpportunityController {
      */
     @PutMapping("/{id}/lose")
     @Operation(summary = "失败商机")
-    public Result<String> loseOpportunity(
-            @PathVariable Long id,
-            @RequestParam String loseReason,
-            @RequestParam(required = false) String notes) {
-        
+    public Result<String> loseOpportunity(@PathVariable Long id, @RequestBody OpportunityQueryVO vo) {
         try {
-            boolean success = opportunityService.loseOpportunity(id, loseReason, notes);
+            boolean success = opportunityService.loseOpportunity(id, vo.getLoseReason(), vo.getNotes());
             return success ? Result.succeed("操作成功") : Result.failed("操作失败");
         } catch (Exception e) {
-            log.error("商机失败处理失败", e);
-            return Result.failed("商机失败处理失败: " + e.getMessage());
+            log.error("失败商机操作失败", e);
+            return Result.failed("失败商机操作失败: " + e.getMessage());
         }
     }
 
     /**
      * 查询我的商机
      */
-    @GetMapping("/my-opportunities")
+    @PostMapping("/my-opportunities")
     @Operation(summary = "查询我的商机")
-    public Result<List<Opportunity>> getMyOpportunities(
-            @RequestParam Long employeeId,
-            @RequestParam(required = false) String stage) {
-        
+    public Result<List<Opportunity>> getMyOpportunities(@RequestBody OpportunityQueryVO vo) {
         try {
-            List<Opportunity> opportunities = opportunityService.getMyOpportunities(employeeId, stage);
+            List<Opportunity> opportunities = opportunityService.getMyOpportunities(vo.getOwnerEmployeeId(), vo.getStage());
             return Result.succeed(opportunities);
         } catch (Exception e) {
             log.error("查询我的商机失败", e);
@@ -310,14 +272,11 @@ public class OpportunityController {
     /**
      * 查询即将到期的商机
      */
-    @GetMapping("/expiring")
+    @PostMapping("/expiring")
     @Operation(summary = "查询即将到期的商机")
-    public Result<List<Opportunity>> getExpiringOpportunities(
-            @RequestParam(defaultValue = "30") Integer days,
-            @RequestParam(required = false) Long employeeId) {
-        
+    public Result<List<Opportunity>> getExpiringOpportunities(@RequestBody OpportunityQueryVO vo) {
         try {
-            List<Opportunity> opportunities = opportunityService.getExpiringOpportunities(days, employeeId);
+            List<Opportunity> opportunities = opportunityService.getExpiringOpportunities(vo.getDays() != null ? vo.getDays() : 30, vo.getOwnerEmployeeId());
             return Result.succeed(opportunities);
         } catch (Exception e) {
             log.error("查询即将到期商机失败", e);
@@ -330,12 +289,9 @@ public class OpportunityController {
      */
     @PostMapping("/{id}/clone")
     @Operation(summary = "克隆商机")
-    public Result<String> cloneOpportunity(
-            @PathVariable Long id,
-            @RequestParam String newOpportunityName) {
-        
+    public Result<String> cloneOpportunity(@PathVariable Long id, @RequestBody OpportunityQueryVO vo) {
         try {
-            boolean success = opportunityService.cloneOpportunity(id, newOpportunityName);
+            boolean success = opportunityService.cloneOpportunity(id, vo.getNewOpportunityName());
             return success ? Result.succeed("克隆成功") : Result.failed("克隆失败");
         } catch (Exception e) {
             log.error("克隆商机失败", e);

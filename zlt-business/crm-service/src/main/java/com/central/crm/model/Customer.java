@@ -147,4 +147,12 @@ public class Customer {
     // 扩展字段，不对应数据库字段
     @TableField(exist = false)
     private String ownerEmployeeName;
+
+    // 个人客户扩展信息
+    @TableField(exist = false)
+    private IndividualCustomer individualCustomer;
+
+    // 企业客户扩展信息
+    @TableField(exist = false)
+    private CorporateCustomer corporateCustomer;
 }

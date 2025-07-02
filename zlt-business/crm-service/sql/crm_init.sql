@@ -102,6 +102,7 @@ CREATE TABLE customer_follow (
 DROP TABLE IF EXISTS individual_customer;
 CREATE TABLE individual_customer (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    tenant_id VARCHAR(32) DEFAULT 'default' COMMENT '租户ID',
     customer_id BIGINT NOT NULL COMMENT '关联客户ID',
     real_name VARCHAR(50) NOT NULL COMMENT '真实姓名',
     id_card VARCHAR(20) NULL COMMENT '身份证号',
@@ -136,6 +137,7 @@ CREATE TABLE individual_customer (
 DROP TABLE IF EXISTS corporate_customer;
 CREATE TABLE corporate_customer (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    tenant_id VARCHAR(32) DEFAULT 'default' COMMENT '租户ID',
     customer_id BIGINT NOT NULL COMMENT '关联客户ID',
     company_full_name VARCHAR(200) NOT NULL COMMENT '企业全称',
     credit_code VARCHAR(50) NULL COMMENT '统一社会信用代码',

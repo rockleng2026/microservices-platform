@@ -28,6 +28,12 @@ public class CorporateCustomer {
     private Long id;
 
     /**
+     * 租户ID
+     */
+    @TableField("tenant_id")
+    private String tenantId;
+
+    /**
      * 客户ID
      */
     @LongToString

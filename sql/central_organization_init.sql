@@ -414,7 +414,7 @@ INSERT INTO `menu_page` VALUES (3, '部门管理', 2, '/organization/department'
 INSERT INTO `menu_page` VALUES (4, '员工管理', 2, '/organization/employee', '员工管理页面', NULL, 'user', 2, 1, 0, '2025-06-09 23:36:38', 'default');
 INSERT INTO `menu_page` VALUES (5, '岗位管理', 2, '/organization/position', '岗位管理页面', NULL, 'contacts', 3, 1, 0, '2025-06-09 23:36:38', 'default');
 INSERT INTO `menu_page` VALUES (6, 'CRM管理', 0, '/crm', 'CRM客户关系管理', NULL, 'user-group', 3, 1, 0, '2025-06-09 23:36:38', 'default');
-INSERT INTO `menu_page` VALUES (7, '客户管理', 6, '/crm/customer', '客户管理页面', NULL, 'contacts', 1, 1, 0, '2025-06-09 23:36:38', 'default');
+INSERT INTO `menu_page` VALUES (7, '客户管理', 6, '/crm/customers', '客户管理页面', NULL, 'contacts', 1, 1, 0, '2025-06-09 23:36:38', 'default');
 INSERT INTO `menu_page` VALUES (8, '产品管理', 0, '/product', '产品管理', NULL, 'box', 4, 1, 0, '2025-06-09 23:36:38', 'default');
 INSERT INTO `menu_page` VALUES (9, '订单管理', 0, '/order', '订单管理', NULL, 'file-text', 5, 1, 0, '2025-06-09 23:36:38', 'default');
 INSERT INTO `menu_page` VALUES (10, '系统管理', 0, '/system', '系统管理', NULL, 'settings', 6, 1, 0, '2025-06-09 23:36:38', 'default');

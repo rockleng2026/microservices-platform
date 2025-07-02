@@ -4,10 +4,19 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.central.common.context.LoginUserContextHolder;
+import com.central.common.context.TenantContextHolder;
+import com.central.common.model.LoginAppUser;
 import com.central.common.model.Result;
+import com.central.common.model.SysUser;
+import com.central.common.utils.LoginUserUtils;
 import com.central.crm.feign.EmployeeFeignService;
 import com.central.crm.mapper.CustomerMapper;
+import com.central.crm.mapper.IndividualCustomerMapper;
+import com.central.crm.mapper.CorporateCustomerMapper;
 import com.central.crm.model.Customer;
+import com.central.crm.model.IndividualCustomer;
+import com.central.crm.model.CorporateCustomer;
 import com.central.crm.model.vo.CustomerQueryVO;
 import com.central.crm.model.vo.CustomerVO;
 import com.central.crm.service.CustomerService;
@@ -18,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -34,9 +44,31 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> i
     @Autowired
     private EmployeeFeignService employeeFeignService;
 
+    @Autowired
+    private IndividualCustomerMapper individualCustomerMapper;
+
+    @Autowired
+    private CorporateCustomerMapper corporateCustomerMapper;
+
     @Override
     public IPage<Customer> selectCustomerPage(Page<Customer> page, Map<String, Object> params) {
         return baseMapper.selectCustomerPage(page, params);
+    }
+
+    @Override
+    public Customer getById(Serializable id) {
+        Customer customer = super.getById(id);
+        if (customer != null) {
+            // 根据客户类型加载扩展信息
+            if ("individual".equals(customer.getCustomerType())) {
+                IndividualCustomer individual = individualCustomerMapper.selectByCustomerId((Long) id);
+                customer.setIndividualCustomer(individual);
+            } else if ("enterprise".equals(customer.getCustomerType())) {
+                CorporateCustomer corporate = corporateCustomerMapper.selectByCustomerId((Long) id);
+                customer.setCorporateCustomer(corporate);
+            }
+        }
+        return customer;
     }
 
     @Override
@@ -126,8 +158,23 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> i
     @Transactional(rollbackFor = Exception.class)
     public boolean createCustomer(Customer customer) {
         try {
-            // 设置创建时间
+            
+            // 设置创建时间和创建者
             customer.setCreatedAt(new Date());
+            // 获取当前登录用户信息
+            LoginAppUser currentUser = LoginUserContextHolder.getUser();
+            if (currentUser != null) {
+                customer.setCreatedBy(currentUser.getId());
+            } else {
+                // 默认值，兼容非登录状态
+                customer.setCreatedBy(1L);
+            }
+            
+            // 设置租户ID
+            String tenantId = TenantContextHolder.getTenant();
+            if (tenantId != null) {
+                customer.setTenantId(tenantId);
+            }
             
             // 验证客户名称唯一性
             if (checkCustomerNameExists(customer.getCustomerName(), null)) {
@@ -143,7 +190,15 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> i
                 throw new RuntimeException("联系邮箱已存在");
             }
             
-            return save(customer);
+            // 保存客户基本信息
+            boolean result = save(customer);
+            
+            if (result) {
+                // 保存扩展信息
+                saveCustomerExtendedInfo(customer);
+            }
+            
+            return result;
         } catch (Exception e) {
             log.error("创建客户失败", e);
             throw new RuntimeException("创建客户失败: " + e.getMessage());
@@ -154,8 +209,16 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> i
     @Transactional(rollbackFor = Exception.class)
     public boolean updateCustomer(Customer customer) {
         try {
-            // 设置更新时间
+            // 设置更新时间和更新者
             customer.setUpdatedAt(new Date());
+            // 获取当前登录用户信息
+            LoginAppUser currentUser = LoginUserContextHolder.getUser();
+            if (currentUser != null) {
+                customer.setUpdatedBy(currentUser.getId());
+            } else {
+                // 默认值，兼容非登录状态
+                customer.setUpdatedBy(1L);
+            }
             
             // 验证客户名称唯一性（排除自己）
             if (checkCustomerNameExists(customer.getCustomerName(), customer.getCustomerId())) {
@@ -171,7 +234,15 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> i
                 throw new RuntimeException("联系邮箱已存在");
             }
             
-            return updateById(customer);
+            // 更新客户基本信息
+            boolean result = updateById(customer);
+            
+            if (result) {
+                // 更新扩展信息
+                updateCustomerExtendedInfo(customer);
+            }
+            
+            return result;
         } catch (Exception e) {
             log.error("更新客户失败", e);
             throw new RuntimeException("更新客户失败: " + e.getMessage());
@@ -399,5 +470,142 @@ public class CustomerServiceImpl extends ServiceImpl<CustomerMapper, Customer> i
             log.error("分配客户失败", e);
             throw new RuntimeException("分配客户失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 保存客户扩展信息
+     */
+    private void saveCustomerExtendedInfo(Customer customer) {
+        try {
+            Date now = new Date();
+            Long currentUserId = getCurrentUserId();
+            
+            if ("individual".equals(customer.getCustomerType())) {
+                // 保存个人客户扩展信息
+                IndividualCustomer individual = extractIndividualCustomerInfo(customer);
+                if (individual != null) {
+                    individual.setCustomerId(customer.getCustomerId());
+                    individual.setTenantId(customer.getTenantId());
+                    individual.setCreatedAt(now);
+                    individual.setCreatedBy(currentUserId);
+                    individual.setUpdatedAt(now);
+                    individual.setUpdatedBy(currentUserId);
+                    individualCustomerMapper.insert(individual);
+                }
+                
+            } else if ("enterprise".equals(customer.getCustomerType())) {
+                // 保存企业客户扩展信息
+                CorporateCustomer corporate = extractCorporateCustomerInfo(customer);
+                if (corporate != null) {
+                    corporate.setCustomerId(customer.getCustomerId());
+                    corporate.setTenantId(customer.getTenantId());
+                    corporate.setCreatedAt(now);
+                    corporate.setCreatedBy(currentUserId);
+                    corporate.setUpdatedAt(now);
+                    corporate.setUpdatedBy(currentUserId);
+                    corporateCustomerMapper.insert(corporate);
+                }
+            }
+        } catch (Exception e) {
+            log.error("保存客户扩展信息失败", e);
+            throw new RuntimeException("保存客户扩展信息失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新客户扩展信息
+     */
+    private void updateCustomerExtendedInfo(Customer customer) {
+        try {
+            Date now = new Date();
+            Long currentUserId = getCurrentUserId();
+            
+            if ("individual".equals(customer.getCustomerType()) && customer.getIndividualCustomer() != null) {
+                // 更新个人客户扩展信息
+                IndividualCustomer individual = customer.getIndividualCustomer();
+                individual.setCustomerId(customer.getCustomerId());
+                individual.setTenantId(customer.getTenantId());
+                individual.setUpdatedAt(now);
+                individual.setUpdatedBy(currentUserId);
+                
+                // 先查询是否存在
+                IndividualCustomer existing = individualCustomerMapper.selectByCustomerId(customer.getCustomerId());
+                if (existing != null) {
+                    individual.setId(existing.getId());
+                    individual.setCreatedAt(existing.getCreatedAt());
+                    individual.setCreatedBy(existing.getCreatedBy());
+                    individualCustomerMapper.updateById(individual);
+                } else {
+                    individual.setCreatedAt(now);
+                    individual.setCreatedBy(currentUserId);
+                    individual.setTenantId(customer.getTenantId());
+                    individualCustomerMapper.insert(individual);
+                }
+                
+            } else if ("enterprise".equals(customer.getCustomerType()) && customer.getCorporateCustomer() != null) {
+                // 更新企业客户扩展信息
+                CorporateCustomer corporate = customer.getCorporateCustomer();
+                corporate.setCustomerId(customer.getCustomerId());
+                corporate.setTenantId(customer.getTenantId());
+                corporate.setUpdatedAt(now);
+                corporate.setUpdatedBy(currentUserId);
+                
+                // 先查询是否存在
+                CorporateCustomer existing = corporateCustomerMapper.selectByCustomerId(customer.getCustomerId());
+                if (existing != null) {
+                    corporate.setId(existing.getId());
+                    corporate.setCreatedAt(existing.getCreatedAt());
+                    corporate.setCreatedBy(existing.getCreatedBy());
+                    corporateCustomerMapper.updateById(corporate);
+                } else {
+                    corporate.setCreatedAt(now);
+                    corporate.setCreatedBy(currentUserId);
+                    corporate.setTenantId(customer.getTenantId());
+                    corporateCustomerMapper.insert(corporate);
+                }
+            }
+        } catch (Exception e) {
+            log.error("更新客户扩展信息失败", e);
+            throw new RuntimeException("更新客户扩展信息失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取当前用户ID
+     */
+    private Long getCurrentUserId() {
+        LoginAppUser currentUser = LoginUserContextHolder.getUser();
+        if (currentUser != null) {
+            return currentUser.getId();
+        }
+        return 1L; // 默认值
+    }
+
+    /**
+     * 从Customer对象中提取个人客户扩展信息
+     */
+    private IndividualCustomer extractIndividualCustomerInfo(Customer customer) {
+        // 由于前端传递的是扁平结构，我们需要从Customer对象中提取个人客户字段
+        if (customer.getIndividualCustomer() != null) {
+            return customer.getIndividualCustomer();
+        }
+        
+        // 如果有扩展字段传递过来，这里需要根据实际的扩展字段进行提取
+        // 目前Customer实体中还没有这些扩展字段的getter方法，需要前端传递嵌套对象
+        return null;
+    }
+
+    /**
+     * 从Customer对象中提取企业客户扩展信息
+     */
+    private CorporateCustomer extractCorporateCustomerInfo(Customer customer) {
+        // 由于前端传递的是扁平结构，我们需要从Customer对象中提取企业客户字段
+        if (customer.getCorporateCustomer() != null) {
+            return customer.getCorporateCustomer();
+        }
+        
+        // 如果有扩展字段传递过来，这里需要根据实际的扩展字段进行提取
+        // 目前Customer实体中还没有这些扩展字段的getter方法，需要前端传递嵌套对象
+        return null;
     }
 }

@@ -465,7 +465,7 @@ INSERT INTO `menu_page` (`id`, `name`, `parent_id`, `link_url`, `description`, `
 (4, '员工管理', 2, '/organization/employee', '员工管理页面', 'user', 2, 'default'),
 (5, '岗位管理', 2, '/organization/position', '岗位管理页面', 'contacts', 3, 'default'),
 (6, 'CRM管理', 0, '/crm', 'CRM客户关系管理', 'user-group', 3, 'default'),
-(7, '客户管理', 6, '/crm/customer', '客户管理页面', 'contacts', 1, 'default'),
+(7, '客户管理', 6, '/crm/customers', '客户管理页面', 'contacts', 1, 'default'),
 (8, '产品管理', 0, '/product', '产品管理', 'box', 4, 'default'),
 (9, '订单管理', 0, '/order', '订单管理', 'file-text', 5, 'default'),
 (10, '系统管理', 0, '/system', '系统管理', 'settings', 6, 'default');

@@ -98,6 +98,23 @@ public class CustomerController {
     }
 
     /**
+     * 根据ID更新客户
+     */
+    @PutMapping("/{id}")
+    @Operation(summary = "根据ID更新客户")
+    public Result<String> updateCustomerById(@PathVariable Long id, @Valid @RequestBody Customer customer) {
+        try {
+            // 确保客户ID与路径参数一致
+            customer.setCustomerId(id);
+            boolean success = customerService.updateCustomer(customer);
+            return success ? Result.succeed("更新成功") : Result.failed("更新失败");
+        } catch (Exception e) {
+            log.error("更新客户失败", e);
+            return Result.failed("更新客户失败: " + e.getMessage());
+        }
+    }
+
+    /**
      * 删除客户
      */
     @DeleteMapping("/{id}")

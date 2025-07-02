@@ -63,7 +63,14 @@ management:
 tenant:
   enable: true
   default-tenant-id: default
-  
+  ignoreTables:
+    - individual_customer
+    - corporate_customer
+    - customer_follow
+    - customer_tag
+    - customer_tag_relation
+    - customer_transfer
+
 # 文件上传配置  
 file:
   upload:

@@ -75,7 +75,7 @@ const convertLongFields = (data: any): any => {
   if (typeof data === 'object') {
     const converted = { ...data };
     
-    // 需要转换的长整型字段
+    // 需要转换的长整型字段 - 发送到后端时转换为字符串，避免精度丢失
     const longFields = [
       'customerId', 'customer_id',
       'opportunityId', 'opportunity_id', 
@@ -86,15 +86,15 @@ const convertLongFields = (data: any): any => {
       'fromEmployeeId', 'from_employee_id',
       'toEmployeeId', 'to_employee_id',
       'createdBy', 'created_by',
-      'updatedBy', 'updated_by'
+      'updatedBy', 'updated_by',
+      'id' // 添加id字段
     ];
     
     longFields.forEach(field => {
-      if (converted[field] && typeof converted[field] === 'string') {
-        // 如果是字符串形式的数字，转换为数字
-        const num = parseInt(converted[field], 10);
-        if (!isNaN(num)) {
-          converted[field] = num;
+      if (converted[field] !== undefined && converted[field] !== null) {
+        // 确保ID以字符串形式发送到后端，避免精度丢失
+        if (typeof converted[field] === 'number') {
+          converted[field] = converted[field].toString();
         }
       }
     });
@@ -147,6 +147,9 @@ export const getCustomerPage = (params: any) =>
 export const getCustomerById = (customerId: number | string) =>
   request(`/api-crm/api/customer/${customerId}`, { method: 'GET' })
     .then(convertLongFields);
+
+// 别名，用于编辑时获取完整客户信息
+export const getCustomerDetail = getCustomerById;
 
 export const createCustomer = (data: any) =>
   request('/api-crm/api/customer', { method: 'POST', data: convertLongFields(data) });

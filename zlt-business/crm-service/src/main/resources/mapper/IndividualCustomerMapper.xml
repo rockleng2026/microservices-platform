@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.crm.mapper.IndividualCustomerMapper">
+
+    <!-- 根据客户ID查询个人客户扩展信息 -->
+    <select id="selectByCustomerId" resultType="com.central.crm.model.IndividualCustomer">
+        SELECT * FROM individual_customer 
+        WHERE customer_id = #{customerId}
+    </select>
+
+    <!-- 根据身份证号查询个人客户扩展信息 -->
+    <select id="selectByIdCard" resultType="com.central.crm.model.IndividualCustomer">
+        SELECT * FROM individual_customer 
+        WHERE id_card = #{idCard}
+    </select>
+
+</mapper> 

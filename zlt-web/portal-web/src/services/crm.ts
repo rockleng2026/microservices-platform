@@ -1,5 +1,69 @@
 ﻿import { request } from "@/utils/request";
 
+// CRM枚举类定义 - 前端显示中文，传入后端使用英文
+export const CRMEnums = {
+  // 客户类型
+  CustomerType: {
+    INDIVIDUAL: { value: 'individual', label: '个人' },
+    ENTERPRISE: { value: 'enterprise', label: '企业' },
+  },
+  
+  // 客户状态
+  CustomerStatus: {
+    POTENTIAL: { value: 'potential', label: '意向' },
+    CONFIRMED: { value: 'confirmed', label: '正式' },
+    LOST: { value: 'lost', label: '流失' },
+  },
+  
+  // 商机阶段
+  OpportunityStage: {
+    POTENTIAL: { value: 'potential', label: '潜在客户' },
+    INITIAL_CONTACT: { value: 'initial_contact', label: '初步接触' },
+    REQUIREMENT_CONFIRMED: { value: 'requirement_confirmed', label: '需求确认' },
+    SOLUTION_DEMO: { value: 'solution_demo', label: '方案演示' },
+    BUSINESS_NEGOTIATION: { value: 'business_negotiation', label: '商务谈判' },
+    CONTRACT_SIGNED: { value: 'contract_signed', label: '合同签署' },
+    WON: { value: 'won', label: '已成交' },
+    LOST: { value: 'lost', label: '已失败' },
+  },
+  
+  // 跟进方式
+  FollowType: {
+    PHONE: { value: 'phone', label: '电话' },
+    VISIT: { value: 'visit', label: '拜访' },
+    EMAIL: { value: 'email', label: '邮件' },
+    WECHAT: { value: 'wechat', label: '微信' },
+    OTHER: { value: 'other', label: '其他' },
+  },
+  
+  // 审批状态
+  ApprovalStatus: {
+    PENDING: { value: 'pending', label: '待审批' },
+    APPROVED: { value: 'approved', label: '已通过' },
+    REJECTED: { value: 'rejected', label: '已拒绝' },
+  },
+};
+
+// 枚举工具函数
+export const EnumUtils = {
+  // 根据value获取label
+  getLabel: (enumObj: any, value: string): string => {
+    const item = Object.values(enumObj).find((item: any) => item.value === value);
+    return (item as any)?.label || value;
+  },
+  
+  // 获取枚举选项数组
+  getOptions: (enumObj: any): Array<{ value: string; label: string }> => {
+    return Object.values(enumObj) as Array<{ value: string; label: string }>;
+  },
+  
+  // 根据label获取value
+  getValue: (enumObj: any, label: string): string => {
+    const item = Object.values(enumObj).find((item: any) => item.label === label);
+    return (item as any)?.value || label;
+  },
+};
+
 // 工具函数：处理长整型字段，防止精度丢失
 const convertLongFields = (data: any): any => {
   if (!data) return data;
@@ -58,6 +122,22 @@ export const getCustomerList = (params: any) =>
       customerName: params.search,
       customerStatus: params.status,
       customerType: params.type,
+      ownerEmployeeId: params.ownerEmployeeId,
+      startDate: params.startDate,
+      endDate: params.endDate
+    } 
+  }).then(convertLongFields);
+
+// 分页查询客户列表（新接口，使用英文枚举值）
+export const getCustomerPage = (params: any) =>
+  request('/api-crm/api/customer/page', { 
+    method: 'POST', 
+    data: { 
+      page: params.page || 1,
+      size: params.size || 20,
+      customerName: params.search || params.customerName,
+      customerStatus: params.status || params.customerStatus,
+      customerType: params.type || params.customerType,
       ownerEmployeeId: params.ownerEmployeeId,
       startDate: params.startDate,
       endDate: params.endDate

@@ -1,12 +1,14 @@
 package com.central.crm.controller;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.central.common.model.Result;
 import com.central.crm.model.Customer;
 import com.central.crm.service.CustomerService;
 import com.central.crm.model.vo.CustomerQueryVO;
 import com.central.crm.model.vo.CustomerCheckVO;
+import com.central.crm.feign.EmployeeFeignService;
 import com.central.crm.model.vo.CustomerBatchStatusVO;
 import com.central.crm.model.vo.CustomerStatisticsVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,22 +46,37 @@ public class CustomerController {
     @Operation(summary = "分页查询客户列表")
     public Result<IPage<Customer>> getCustomerPage(@RequestBody CustomerQueryVO queryVO) {
         try {
-            Page<Customer> pageParam = new Page<>(queryVO.getPage(), queryVO.getSize());
-            Map<String, Object> params = new HashMap<>();
-            if (queryVO.getCustomerName() != null) params.put("customerName", queryVO.getCustomerName());
-            if (queryVO.getCustomerType() != null) params.put("customerType", queryVO.getCustomerType());
-            if (queryVO.getCustomerStatus() != null) params.put("customerStatus", queryVO.getCustomerStatus());
-            if (queryVO.getCustomerSource() != null) params.put("customerSource", queryVO.getCustomerSource());
-            if (queryVO.getOwnerEmployeeId() != null) params.put("ownerEmployeeId", queryVO.getOwnerEmployeeId());
-            if (queryVO.getIndustry() != null) params.put("industry", queryVO.getIndustry());
-            if (queryVO.getCompanyScale() != null) params.put("companyScale", queryVO.getCompanyScale());
-            if (queryVO.getStartDate() != null) params.put("startDate", queryVO.getStartDate());
-            if (queryVO.getEndDate() != null) params.put("endDate", queryVO.getEndDate());
-            IPage<Customer> pageResult = customerService.selectCustomerPage(pageParam, params);
+            log.info("查询客户列表，参数: {}", queryVO);
+            
+            // 使用MyBatis Plus的分页查询，租户过滤由拦截器自动处理
+            Page<Customer> page = new Page<>(queryVO.getPage(), queryVO.getSize());
+            QueryWrapper<Customer> wrapper = new QueryWrapper<>();
+            wrapper.eq("is_deleted", 0);
+            
+            // 添加查询条件
+            if (queryVO.getCustomerName() != null && !queryVO.getCustomerName().trim().isEmpty()) {
+                wrapper.like("customer_name", queryVO.getCustomerName().trim());
+            }
+            if (queryVO.getCustomerType() != null && !queryVO.getCustomerType().trim().isEmpty()) {
+                // 后端统一使用英文枚举值
+                wrapper.eq("customer_type", queryVO.getCustomerType());
+            }
+            if (queryVO.getCustomerStatus() != null && !queryVO.getCustomerStatus().trim().isEmpty()) {
+                // 后端统一使用英文枚举值
+                wrapper.eq("customer_status", queryVO.getCustomerStatus());
+            }
+            if (queryVO.getOwnerEmployeeId() != null) {
+                wrapper.eq("owner_employee_id", queryVO.getOwnerEmployeeId());
+            }
+            
+            wrapper.orderByDesc("created_at");
+            
+            IPage<Customer> pageResult = customerService.page(page, wrapper);
             return Result.succeed(pageResult);
+            
         } catch (Exception e) {
             log.error("分页查询客户列表失败", e);
-            return Result.failed("分页查询客户列表失败: " + e.getMessage());
+            return Result.failed("查询失败: " + e.getMessage());
         }
     }
 
@@ -259,7 +276,8 @@ public class CustomerController {
     @Operation(summary = "查询高价值客户")
     public Result<List<Customer>> getHighValueCustomers(@RequestBody CustomerStatisticsVO vo) {
         try {
-            List<Customer> customers = customerService.getHighValueCustomers(vo.getMinRevenue(), vo.getLimit());
+            String minRevenueStr = vo.getMinRevenue() != null ? vo.getMinRevenue().toString() : null;
+            List<Customer> customers = customerService.getHighValueCustomers(minRevenueStr, vo.getLimit());
             return Result.succeed(customers);
         } catch (Exception e) {
             log.error("查询高价值客户失败", e);

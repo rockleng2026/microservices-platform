@@ -1,7 +1,8 @@
 ﻿import React, { useEffect, useState, useRef } from 'react';
 import { Card, Button, Modal, Form, Input, Select, message, Space, Table, Tag, Popconfirm, Row, Col, Statistic, Spin, DatePicker } from 'antd';
 import { PlusOutlined, EditOutlined, DeleteOutlined, SearchOutlined, PhoneOutlined, UserOutlined, BankOutlined, ReloadOutlined } from '@ant-design/icons';
-import { getCustomerList, createCustomer, updateCustomer, deleteCustomer, getCustomerStatistics, getEmployeeList } from '@/services/crm';
+import { getCustomerPage, createCustomer, updateCustomer, deleteCustomer, getCustomerStatistics, CRMEnums, EnumUtils } from '@/services/crm';
+import { getEmployeeList } from '@/services/organization';
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -47,12 +48,26 @@ const Customers: React.FC = () => {
         return;
       }
       
-      const response = await getCustomerList({
+      // 转换中文枚举值为英文（如果需要）
+      let convertedStatus = statusFilter === 'all' ? undefined : statusFilter;
+      let convertedType = typeFilter === 'all' ? undefined : typeFilter;
+      
+      // 如果状态是中文，转换为英文
+      if (convertedStatus) {
+        convertedStatus = EnumUtils.getValue(CRMEnums.CustomerStatus, convertedStatus) || convertedStatus;
+      }
+      
+      // 如果类型是中文，转换为英文  
+      if (convertedType) {
+        convertedType = EnumUtils.getValue(CRMEnums.CustomerType, convertedType) || convertedType;
+      }
+
+      const response = await getCustomerPage({
         page: pagination.current,
         size: pagination.pageSize,
         search: searchText || undefined,
-        status: statusFilter === 'all' ? undefined : statusFilter,
-        type: typeFilter === 'all' ? undefined : typeFilter,
+        status: convertedStatus,
+        type: convertedType,
       });
       
       console.log('客户管理 - API响应:', response);
@@ -101,7 +116,18 @@ const Customers: React.FC = () => {
       const response = await getEmployeeList({ size: 200 }); // 获取足够多的员工供选择
       if (response.success || response.resp_code === 0) {
         const data = response.data || response.datas;
-        const employeeList = data?.content || data?.records || data || [];
+        // 处理员工数据结构
+        let employeeList: any[] = [];
+        if (Array.isArray(data)) {
+          employeeList = data;
+        } else if (data?.content) {
+          employeeList = data.content;
+        } else if (data?.records) {
+          employeeList = data.records;
+        } else if (data) {
+          employeeList = [data];
+        }
+        
         setEmployees(employeeList);
         
         // 缓存员工列表
@@ -250,23 +276,27 @@ const Customers: React.FC = () => {
     {
       title: '客户类型',
       dataIndex: 'customerType',
-      render: (type: string) => (
-        <Tag color={type === '个人' ? 'blue' : 'green'}>
-          {type}
-        </Tag>
-      ),
+      render: (type: string) => {
+        const label = EnumUtils.getLabel(CRMEnums.CustomerType, type);
+        return (
+          <Tag color={type === 'individual' ? 'blue' : 'green'}>
+            {label}
+          </Tag>
+        );
+      },
     },
     {
       title: '状态',
       dataIndex: 'customerStatus',
       render: (status: string) => {
-        const statusMap: any = {
-          '意向': { color: 'orange', text: '意向客户' },
-          '正式': { color: 'green', text: '正式客户' },
-          '流失': { color: 'red', text: '流失客户' },
+        const label = EnumUtils.getLabel(CRMEnums.CustomerStatus, status);
+        const statusColorMap: any = {
+          'potential': 'orange',
+          'confirmed': 'green', 
+          'lost': 'red',
         };
-        const statusInfo = statusMap[status] || { color: 'default', text: status };
-        return <Tag color={statusInfo.color}>{statusInfo.text}</Tag>;
+        const color = statusColorMap[status] || 'default';
+        return <Tag color={color}>{label}</Tag>;
       },
     },
     {
@@ -323,17 +353,18 @@ const Customers: React.FC = () => {
           <Col span={8}>
             <Form.Item name="customerType" label="客户类型" rules={[{ required: true }]}>
               <Select>
-                <Option value="个人">个人客户</Option>
-                <Option value="企业">企业客户</Option>
+                {EnumUtils.getOptions(CRMEnums.CustomerType).map(option => (
+                  <Option key={option.value} value={option.value}>{option.label}</Option>
+                ))}
               </Select>
             </Form.Item>
           </Col>
           <Col span={8}>
             <Form.Item name="customerStatus" label="客户状态" rules={[{ required: true }]}>
               <Select>
-                <Option value="意向">意向客户</Option>
-                <Option value="正式">正式客户</Option>
-                <Option value="流失">流失客户</Option>
+                {EnumUtils.getOptions(CRMEnums.CustomerStatus).map(option => (
+                  <Option key={option.value} value={option.value}>{option.label}</Option>
+                ))}
               </Select>
             </Form.Item>
           </Col>

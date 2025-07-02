@@ -33,12 +33,10 @@
     </sql>
 
     <!-- 分页查询客户列表 -->
-    <select id="selectCustomerPage" resultType="com.central.crm.model.Customer">
+    <select id="selectCustomerPage" resultMap="BaseResultMap">
         SELECT 
-            c.*,
-            e.name as ownerEmployeeName
+            <include refid="Base_Column_List" />
         FROM customer c
-        LEFT JOIN employee e ON c.owner_employee_id = e.id
         WHERE c.is_deleted = 0
         <if test="params.customerName != null and params.customerName != ''">
             AND c.customer_name LIKE CONCAT('%', #{params.customerName}, '%')

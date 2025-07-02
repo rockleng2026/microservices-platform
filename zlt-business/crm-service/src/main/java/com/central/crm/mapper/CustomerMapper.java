@@ -23,7 +23,7 @@ public interface CustomerMapper extends BaseMapper<Customer> {
     /**
      * 分页查询客户列表
      */
-    IPage<Customer> selectCustomerPage(Page<Customer> page, @Param("params") Map<String, Object> params);
+    IPage<Customer> selectCustomerPage(@Param("page") Page<Customer> page, @Param("params") Map<String, Object> params);
 
     /**
      * 查询客户统计信息

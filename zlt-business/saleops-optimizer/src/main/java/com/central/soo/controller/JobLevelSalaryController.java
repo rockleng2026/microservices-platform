@@ -33,7 +33,7 @@ public class JobLevelSalaryController {
         boolean unique = jobLevelSalaryService.checkUnique(config.getDepartmentId(), config.getJobLevelId(), config.getEffectiveDate(), null);
         if (!unique) return Result.failed("同一部门、职级、生效日已存在配置");
         boolean saved = jobLevelSalaryService.save(config);
-        return saved ? Result.succeed() : Result.failed();
+        return saved ? Result.succeed(null) : Result.failed(null);
     }
 
     @PutMapping("/{id}")
@@ -43,14 +43,14 @@ public class JobLevelSalaryController {
         if (!unique) return Result.failed("同一部门、职级、生效日已存在配置");
         config.setId(id);
         boolean updated = jobLevelSalaryService.updateById(config);
-        return updated ? Result.succeed() : Result.failed();
+        return updated ? Result.succeed(null) : Result.failed(null);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除职级薪资标准")
     public Result<?> delete(@PathVariable Long id) {
         boolean removed = jobLevelSalaryService.removeById(id);
-        return removed ? Result.succeed() : Result.failed();
+        return removed ? Result.succeed(null) : Result.failed(null);
     }
 
     @GetMapping("/page")
@@ -89,6 +89,6 @@ public class JobLevelSalaryController {
     @Operation(summary = "恢复已删除的职级薪资标准")
     public Result<?> restore(@PathVariable Long id) {
         boolean ok = jobLevelSalaryService.restore(id);
-        return ok ? Result.succeed() : Result.failed();
+        return ok ? Result.succeed(null) : Result.failed(null);
     }
 } 

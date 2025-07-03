@@ -11,7 +11,7 @@ public interface IEmployeeSalaryConfigService extends IService<EmployeeSalaryCon
     /**
      * 分页条件查询
      */
-    IPage<EmployeeSalaryConfig> pageQuery(Page<?> page, Long employeeId, String employeeName, Long departmentId, String jobLevelId, Integer status, LocalDate startDate, LocalDate endDate);
+    IPage<EmployeeSalaryConfig> pageQuery(com.baomidou.mybatisplus.extension.plugins.pagination.Page<EmployeeSalaryConfig> page, Long employeeId, String employeeName, Long departmentId, String jobLevelId, Integer status, java.time.LocalDate startDate, java.time.LocalDate endDate);
 
     /**
      * 校验唯一性（同一员工、生效日不能重复）

@@ -11,7 +11,7 @@ public interface IJobLevelSalaryService extends IService<JobLevelSalary> {
     /**
      * 分页条件查询
      */
-    IPage<JobLevelSalary> pageQuery(Page<?> page, Long departmentId, String jobLevelId, String jobLevelName, Integer status, LocalDate startDate, LocalDate endDate);
+    IPage<JobLevelSalary> pageQuery(Page<JobLevelSalary> page, Long departmentId, String jobLevelId, String jobLevelName, Integer status, LocalDate startDate, LocalDate endDate);
 
     /**
      * 校验唯一性（同一部门、职级、生效日不能重复）

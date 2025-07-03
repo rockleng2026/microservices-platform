@@ -132,6 +132,18 @@ export default defineConfig({
             },
           ],
         },
+        {
+          path: '/saleops-optimizer',
+          name: '盈策通决策',
+          routes: [
+            {
+              path: '/saleops-optimizer/config-center',
+              name: '配置中心',
+              component: '@/pages/SaleopsOptimizer/ConfigCenter',
+            },
+            // 其他子页面可在此补充
+          ],
+        },
       ],
     },
     {

@@ -10,7 +10,7 @@ public interface IMonthlyPerformanceService extends IService<MonthlyPerformance>
     /**
      * 分页条件查询
      */
-    IPage<MonthlyPerformance> pageQuery(Page<?> page, Long employeeId, String employeeName, Long departmentId, String month, Integer status);
+    IPage<MonthlyPerformance> pageQuery(com.baomidou.mybatisplus.extension.plugins.pagination.Page<MonthlyPerformance> page, Long employeeId, String employeeName, Long departmentId, String month, Integer status);
 
     /**
      * 校验唯一性（同一员工、同一月份不能重复）

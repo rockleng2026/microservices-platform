@@ -33,7 +33,7 @@ public class EmployeeSalaryConfigController {
         boolean unique = employeeSalaryConfigService.checkUnique(config.getEmployeeId(), config.getEffectiveDate(), null);
         if (!unique) return Result.failed("同一员工、生效日已存在配置");
         boolean saved = employeeSalaryConfigService.save(config);
-        return saved ? Result.succeed() : Result.failed();
+        return saved ? Result.succeed(null) : Result.failed(null);
     }
 
     @PutMapping("/{id}")
@@ -43,14 +43,14 @@ public class EmployeeSalaryConfigController {
         if (!unique) return Result.failed("同一员工、生效日已存在配置");
         config.setId(id);
         boolean updated = employeeSalaryConfigService.updateById(config);
-        return updated ? Result.succeed() : Result.failed();
+        return updated ? Result.succeed(null) : Result.failed(null);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除员工薪酬配置")
     public Result<?> delete(@PathVariable Long id) {
         boolean removed = employeeSalaryConfigService.removeById(id);
-        return removed ? Result.succeed() : Result.failed();
+        return removed ? Result.succeed(null) : Result.failed(null);
     }
 
     @GetMapping("/page")
@@ -89,6 +89,6 @@ public class EmployeeSalaryConfigController {
     @Operation(summary = "恢复已删除的员工薪酬配置")
     public Result<?> restore(@PathVariable Long id) {
         boolean ok = employeeSalaryConfigService.restore(id);
-        return ok ? Result.succeed() : Result.failed();
+        return ok ? Result.succeed(null) : Result.failed(null);
     }
 } 

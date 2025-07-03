@@ -14,7 +14,7 @@ public interface IDepartmentBonusConfigService extends IService<DepartmentBonusC
     /**
      * 分页条件查询
      */
-    IPage<DepartmentBonusConfig> pageQuery(Page<?> page, Long departmentId, String departmentName, Integer status, LocalDate startDate, LocalDate endDate);
+    IPage<DepartmentBonusConfig> pageQuery(com.baomidou.mybatisplus.extension.plugins.pagination.Page<DepartmentBonusConfig> page, Long departmentId, String departmentName, Integer status, java.time.LocalDate startDate, java.time.LocalDate endDate);
 
     /**
      * 校验同一生效日下分红权重总和

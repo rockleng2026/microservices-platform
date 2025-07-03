@@ -13,7 +13,7 @@ import java.util.List;
 @Service
 public class EmployeeSalaryConfigServiceImpl extends com.baomidou.mybatisplus.extension.service.impl.ServiceImpl<EmployeeSalaryConfigMapper, EmployeeSalaryConfig> implements IEmployeeSalaryConfigService {
     @Override
-    public IPage<EmployeeSalaryConfig> pageQuery(Page<?> page, Long employeeId, String employeeName, Long departmentId, String jobLevelId, Integer status, LocalDate startDate, LocalDate endDate) {
+    public IPage<EmployeeSalaryConfig> pageQuery(Page<EmployeeSalaryConfig> page, Long employeeId, String employeeName, Long departmentId, String jobLevelId, Integer status, LocalDate startDate, LocalDate endDate) {
         QueryWrapper<EmployeeSalaryConfig> qw = new QueryWrapper<>();
         if (employeeId != null) qw.eq("employee_id", employeeId);
         if (employeeName != null && !employeeName.isEmpty()) qw.like("employee_name", employeeName);

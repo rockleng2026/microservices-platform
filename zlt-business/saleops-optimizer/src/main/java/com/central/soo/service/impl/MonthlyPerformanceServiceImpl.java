@@ -12,7 +12,7 @@ import java.util.List;
 @Service
 public class MonthlyPerformanceServiceImpl extends com.baomidou.mybatisplus.extension.service.impl.ServiceImpl<MonthlyPerformanceMapper, MonthlyPerformance> implements IMonthlyPerformanceService {
     @Override
-    public IPage<MonthlyPerformance> pageQuery(Page<?> page, Long employeeId, String employeeName, Long departmentId, String month, Integer status) {
+    public IPage<MonthlyPerformance> pageQuery(Page<MonthlyPerformance> page, Long employeeId, String employeeName, Long departmentId, String month, Integer status) {
         QueryWrapper<MonthlyPerformance> qw = new QueryWrapper<>();
         if (employeeId != null) qw.eq("employee_id", employeeId);
         if (employeeName != null && !employeeName.isEmpty()) qw.like("employee_name", employeeName);

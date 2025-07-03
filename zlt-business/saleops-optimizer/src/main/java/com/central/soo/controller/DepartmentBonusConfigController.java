@@ -33,7 +33,7 @@ public class DepartmentBonusConfigController {
     @Operation(summary = "新增部门分红配置")
     public Result<?> add(@RequestBody DepartmentBonusConfig config) {
         boolean saved = departmentBonusConfigService.save(config);
-        return saved ? Result.succeed() : Result.failed();
+        return saved ? Result.succeed(null) : Result.failed(null);
     }
 
     @PutMapping("/{id}")
@@ -41,14 +41,14 @@ public class DepartmentBonusConfigController {
     public Result<?> update(@PathVariable Long id, @RequestBody DepartmentBonusConfig config) {
         config.setId(id);
         boolean updated = departmentBonusConfigService.updateById(config);
-        return updated ? Result.succeed() : Result.failed();
+        return updated ? Result.succeed(null) : Result.failed(null);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除部门分红配置")
     public Result<?> delete(@PathVariable Long id) {
         boolean removed = departmentBonusConfigService.removeById(id);
-        return removed ? Result.succeed() : Result.failed();
+        return removed ? Result.succeed(null) : Result.failed(null);
     }
 
     @GetMapping("/page")
@@ -86,6 +86,6 @@ public class DepartmentBonusConfigController {
     @Operation(summary = "恢复已删除的分红配置")
     public Result<?> restore(@PathVariable Long id) {
         boolean ok = departmentBonusConfigService.restore(id);
-        return ok ? Result.succeed() : Result.failed();
+        return ok ? Result.succeed(null) : Result.failed(null);
     }
 } 

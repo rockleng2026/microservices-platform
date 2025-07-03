@@ -13,7 +13,7 @@ import java.util.List;
 @Service
 public class JobLevelSalaryServiceImpl extends com.baomidou.mybatisplus.extension.service.impl.ServiceImpl<JobLevelSalaryMapper, JobLevelSalary> implements IJobLevelSalaryService {
     @Override
-    public IPage<JobLevelSalary> pageQuery(Page<?> page, Long departmentId, String jobLevelId, String jobLevelName, Integer status, LocalDate startDate, LocalDate endDate) {
+    public IPage<JobLevelSalary> pageQuery(Page<JobLevelSalary> page, Long departmentId, String jobLevelId, String jobLevelName, Integer status, LocalDate startDate, LocalDate endDate) {
         QueryWrapper<JobLevelSalary> qw = new QueryWrapper<>();
         if (departmentId != null) qw.eq("department_id", departmentId);
         if (jobLevelId != null && !jobLevelId.isEmpty()) qw.eq("job_level_id", jobLevelId);

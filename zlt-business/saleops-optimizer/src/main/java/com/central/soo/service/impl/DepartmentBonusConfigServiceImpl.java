@@ -17,7 +17,7 @@ public class DepartmentBonusConfigServiceImpl extends ServiceImpl<DepartmentBonu
     // 可扩展自定义业务逻辑
 
     @Override
-    public IPage<DepartmentBonusConfig> pageQuery(Page<?> page, Long departmentId, String departmentName, Integer status, LocalDate startDate, LocalDate endDate) {
+    public IPage<DepartmentBonusConfig> pageQuery(Page<DepartmentBonusConfig> page, Long departmentId, String departmentName, Integer status, LocalDate startDate, LocalDate endDate) {
         QueryWrapper<DepartmentBonusConfig> qw = new QueryWrapper<>();
         if (departmentId != null) qw.eq("department_id", departmentId);
         if (departmentName != null && !departmentName.isEmpty()) qw.like("department_name", departmentName);

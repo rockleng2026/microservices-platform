@@ -1,0 +1,64 @@
+package com.central.soo.service.impl;
+
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.central.soo.mapper.DepartmentBonusConfigMapper;
+import com.central.soo.model.DepartmentBonusConfig;
+import com.central.soo.service.IDepartmentBonusConfigService;
+import org.springframework.stereotype.Service;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import java.time.LocalDate;
+import java.math.BigDecimal;
+import java.util.List;
+
+@Service
+public class DepartmentBonusConfigServiceImpl extends ServiceImpl<DepartmentBonusConfigMapper, DepartmentBonusConfig> implements IDepartmentBonusConfigService {
+    // 可扩展自定义业务逻辑
+
+    @Override
+    public IPage<DepartmentBonusConfig> pageQuery(Page<?> page, Long departmentId, String departmentName, Integer status, LocalDate startDate, LocalDate endDate) {
+        QueryWrapper<DepartmentBonusConfig> qw = new QueryWrapper<>();
+        if (departmentId != null) qw.eq("department_id", departmentId);
+        if (departmentName != null && !departmentName.isEmpty()) qw.like("department_name", departmentName);
+        if (status != null) qw.eq("status", status);
+        if (startDate != null) qw.ge("effective_date", startDate);
+        if (endDate != null) qw.le("effective_date", endDate);
+        qw.eq("delflag", 0);
+        qw.orderByDesc("effective_date");
+        return this.page(page, qw);
+    }
+
+    @Override
+    public boolean checkBonusWeightValid(Long departmentId, LocalDate effectiveDate, BigDecimal bonusWeight, Long excludeId) {
+        QueryWrapper<DepartmentBonusConfig> qw = new QueryWrapper<>();
+        qw.eq("effective_date", effectiveDate);
+        qw.eq("delflag", 0);
+        if (excludeId != null) qw.ne("id", excludeId);
+        // 只校验同一生效日下所有分红权重之和
+        BigDecimal sum = baseMapper.selectList(qw).stream()
+                .map(DepartmentBonusConfig::getBonusWeight)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        if (bonusWeight != null) sum = sum.add(bonusWeight);
+        return sum.compareTo(BigDecimal.ONE) <= 0;
+    }
+
+    @Override
+    public List<DepartmentBonusConfig> getHistoryByDepartment(Long departmentId) {
+        QueryWrapper<DepartmentBonusConfig> qw = new QueryWrapper<>();
+        qw.eq("department_id", departmentId);
+        qw.eq("delflag", 0);
+        qw.orderByDesc("effective_date");
+        return this.list(qw);
+    }
+
+    @Override
+    public boolean restore(Long id) {
+        DepartmentBonusConfig config = this.getById(id);
+        if (config != null && config.getDelflag() != null && config.getDelflag() == 1) {
+            config.setDelflag(0);
+            return this.updateById(config);
+        }
+        return false;
+    }
+} 

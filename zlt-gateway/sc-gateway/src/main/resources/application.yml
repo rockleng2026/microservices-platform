@@ -73,6 +73,12 @@ spring:
             - Path=/api-crm/**
           filters:
             - StripPrefix=1
+        - id: soo-service
+          uri: lb://soo-service
+          predicates:
+            - Path=/api-soo/**
+          filters:
+            - StripPrefix=1
         - id: file
           uri: lb://file-center
           predicates:

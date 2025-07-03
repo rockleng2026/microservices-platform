@@ -26,5 +26,7 @@
         <module>project-manager-service</module>
         <!-- CRM客户关系管理服务 -->
         <module>crm-service</module>
+        <!-- 盈策通决策服务 -->
+        <module>saleops-optimizer</module>
     </modules>
 </project>

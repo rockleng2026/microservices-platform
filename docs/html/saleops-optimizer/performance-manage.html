@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>盈策通决策平台 - 绩效管理</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="app-layout">
+        <nav class="app-sidebar" id="app-sidebar"></nav>
+        
+        <header class="app-header">
+            <div>盈策通决策平台 / 绩效管理</div>
+            <div>管理员</div>
+        </header>
+        
+        <main class="app-main">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-chart-bar"></i>
+                    绩效管理
+                </h1>
+                <p class="page-subtitle">月度绩效录入与统计分析</p>
+            </div>
+            
+            <!-- 筛选条件 -->
+            <div class="filter-section">
+                <div class="filter-row">
+                    <div class="filter-item">
+                        <label>📅 月份选择:</label>
+                        <select class="filter-select">
+                            <option value="2024-12">2024年12月</option>
+                            <option value="2024-11">2024年11月</option>
+                            <option value="2024-10">2024年10月</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>👥 部门筛选:</label>
+                        <select class="filter-select">
+                            <option value="">全部部门</option>
+                            <option value="sales">销售部</option>
+                            <option value="rd">产品研发部</option>
+                            <option value="marketing">市场运营部</option>
+                        </select>
+                    </div>
+                    <div class="filter-item">
+                        <label>🔍 员工搜索:</label>
+                        <input type="text" class="filter-input" placeholder="输入员工姓名">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 绩效录入表格 -->
+            <div class="performance-section">
+                <div class="section-header">
+                    <h3>员工绩效录入</h3>
+                    <div class="action-buttons">
+                        <button class="btn">全选</button>
+                        <button class="btn">反选</button>
+                        <button class="btn btn-primary">💾 批量保存</button>
+                        <button class="btn">📊 数据分析</button>
+                        <button class="btn">📤 导出</button>
+                    </div>
+                </div>
+                
+                <table class="performance-table">
+                    <thead>
+                        <tr>
+                            <th><input type="checkbox" id="selectAll"></th>
+                            <th>员工姓名</th>
+                            <th>部门</th>
+                            <th>绩效得分</th>
+                            <th>个人项目营业额</th>
+                            <th>团队项目营业额</th>
+                            <th>毛利率</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><input type="checkbox" name="employee"></td>
+                            <td>张三</td>
+                            <td>销售部</td>
+                            <td><input type="number" class="score-input" value="95" min="0" max="100"></td>
+                            <td><input type="text" class="amount-input" value="500,000"></td>
+                            <td><input type="text" class="amount-input" value="1,000,000"></td>
+                            <td><input type="text" class="rate-input" value="35%"></td>
+                            <td><span class="status-saved">已保存</span></td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" name="employee"></td>
+                            <td>李四</td>
+                            <td>销售部</td>
+                            <td><input type="number" class="score-input" value="80" min="0" max="100"></td>
+                            <td><input type="text" class="amount-input" value="200,000"></td>
+                            <td><input type="text" class="amount-input" value="1,000,000"></td>
+                            <td><input type="text" class="rate-input" value="35%"></td>
+                            <td><span class="status-pending">待保存</span></td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" name="employee"></td>
+                            <td>王五</td>
+                            <td>产品研发部</td>
+                            <td><input type="number" class="score-input" value="90" min="0" max="100"></td>
+                            <td><input type="text" class="amount-input" value="0"></td>
+                            <td><input type="text" class="amount-input" value="500,000"></td>
+                            <td><input type="text" class="rate-input" value="65%"></td>
+                            <td><span class="status-saved">已保存</span></td>
+                        </tr>
+                        <tr>
+                            <td><input type="checkbox" name="employee"></td>
+                            <td>赵六</td>
+                            <td>市场运营部</td>
+                            <td><input type="number" class="score-input" value="85" min="0" max="100"></td>
+                            <td><input type="text" class="amount-input" value="300,000"></td>
+                            <td><input type="text" class="amount-input" value="800,000"></td>
+                            <td><input type="text" class="rate-input" value="45%"></td>
+                            <td><span class="status-pending">待保存</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 统计分析 -->
+            <div class="stats-section">
+                <h3>绩效数据统计</h3>
+                <div class="stats-cards">
+                    <div class="stats-card">
+                        <div class="stats-label">平均绩效得分</div>
+                        <div class="stats-value">87.3</div>
+                        <div class="stats-trend">📈 较上月提升2.1分</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-label">总营业额</div>
+                        <div class="stats-value">¥15,680,000</div>
+                        <div class="stats-trend">📈 较上月增长12.5%</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-label">平均毛利率</div>
+                        <div class="stats-value">45.5%</div>
+                        <div class="stats-trend">📈 较上月提升3.2%</div>
+                    </div>
+                    <div class="stats-card">
+                        <div class="stats-label">完成录入率</div>
+                        <div class="stats-value">95.2%</div>
+                        <div class="stats-trend">🎯 目标: 100%</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/navigation.js"></script>
+    <script>
+        // 初始化导航
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof NavigationManager !== 'undefined') {
+                const nav = new NavigationManager();
+                nav.render();
+            }
+        });
+
+        // 全选功能
+        document.getElementById('selectAll').addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('input[name="employee"]');
+            checkboxes.forEach(cb => cb.checked = this.checked);
+        });
+
+        // 监听输入变化，更新保存状态
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('score-input') || 
+                e.target.classList.contains('amount-input') || 
+                e.target.classList.contains('rate-input')) {
+                const row = e.target.closest('tr');
+                const statusSpan = row.querySelector('.status-saved, .status-pending');
+                if (statusSpan) {
+                    statusSpan.className = 'status-pending';
+                    statusSpan.textContent = '待保存';
+                }
+            }
+        });
+    </script>
+
+    <style>
+        body { margin: 0; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f5f5f5; }
+        .app-layout { display: grid; grid-template-areas: "sidebar header" "sidebar main"; grid-template-columns: 240px 1fr; grid-template-rows: 60px 1fr; min-height: 100vh; }
+        .app-header { grid-area: header; background: white; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
+        .app-main { grid-area: main; padding: 24px; overflow-y: auto; }
+        .page-header { margin-bottom: 32px; }
+        .page-title { font-size: 24px; font-weight: 600; color: #262626; margin: 0 0 8px 0; display: flex; align-items: center; }
+        .page-title i { color: #1890ff; margin-right: 12px; }
+        .page-subtitle { color: #8c8c8c; font-size: 14px; margin: 0; }
+        .filter-section { background: white; border-radius: 12px; padding: 20px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); }
+        .filter-row { display: flex; gap: 24px; align-items: end; }
+        .filter-item { display: flex; flex-direction: column; gap: 8px; }
+        .filter-item label { font-size: 14px; font-weight: 500; color: #262626; }
+        .filter-select, .filter-input { padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; }
+        .performance-section { background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .section-header h3 { font-size: 18px; font-weight: 600; color: #262626; margin: 0; }
+        .action-buttons { display: flex; gap: 12px; }
+        .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #d9d9d9; background: white; color: #666; font-size: 14px; cursor: pointer; transition: all 0.3s ease; }
+        .btn-primary { background: #1890ff; color: white; border-color: #1890ff; }
+        .btn:hover { opacity: 0.8; }
+        .performance-table { width: 100%; border-collapse: collapse; }
+        .performance-table th, .performance-table td { text-align: left; padding: 12px; border-bottom: 1px solid #f0f0f0; }
+        .performance-table th { background: #fafafa; font-weight: 600; color: #262626; }
+        .performance-table td { color: #595959; }
+        .performance-table tr:hover { background: #fafafa; }
+        .score-input, .amount-input, .rate-input { padding: 4px 8px; border: 1px solid #d9d9d9; border-radius: 4px; width: 100px; }
+        .amount-input { width: 120px; }
+        .status-saved { color: #52c41a; font-size: 12px; }
+        .status-pending { color: #fa8c16; font-size: 12px; }
+        .stats-section { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); }
+        .stats-section h3 { font-size: 18px; font-weight: 600; color: #262626; margin: 0 0 20px 0; }
+        .stats-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .stats-card { padding: 20px; border: 1px solid #f0f0f0; border-radius: 8px; text-align: center; }
+        .stats-label { font-size: 14px; color: #8c8c8c; margin-bottom: 8px; }
+        .stats-value { font-size: 24px; font-weight: 700; color: #262626; margin-bottom: 8px; }
+        .stats-trend { font-size: 12px; color: #52c41a; }
+    </style>
+</body>
+</html> 

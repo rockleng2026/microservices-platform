@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>盈策通决策平台 - 基础配置</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { margin: 0; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f5f5f5; }
+        .app-layout { display: grid; grid-template-areas: "sidebar header" "sidebar main"; grid-template-columns: 240px 1fr; grid-template-rows: 60px 1fr; min-height: 100vh; }
+        .app-header { grid-area: header; background: white; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
+        .app-main { grid-area: main; padding: 24px; overflow-y: auto; }
+        .page-header { margin-bottom: 32px; }
+        .page-title { font-size: 24px; font-weight: 600; color: #262626; margin: 0 0 8px 0; display: flex; align-items: center; }
+        .page-title i { color: #1890ff; margin-right: 12px; }
+        .config-tabs { display: flex; gap: 2px; margin-bottom: 24px; background: white; border-radius: 8px; padding: 4px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); }
+        .tab-item { flex: 1; padding: 12px 16px; text-align: center; border-radius: 6px; cursor: pointer; transition: all 0.3s ease; background: transparent; border: none; font-size: 14px; font-weight: 500; }
+        .tab-item.active { background: #1890ff; color: white; }
+        .tab-item:not(.active) { color: #666; }
+        .tab-item:hover:not(.active) { background: #f5f5f5; }
+        .config-content { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); }
+        .config-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
+        .config-title { font-size: 18px; font-weight: 600; color: #262626; }
+        .action-buttons { display: flex; gap: 12px; }
+        .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #d9d9d9; background: white; color: #666; font-size: 14px; cursor: pointer; transition: all 0.3s ease; }
+        .btn-primary { background: #1890ff; color: white; border-color: #1890ff; }
+        .btn:hover { opacity: 0.8; }
+        .config-table { width: 100%; border-collapse: collapse; }
+        .config-table th, .config-table td { text-align: left; padding: 12px; border-bottom: 1px solid #f0f0f0; }
+        .config-table th { background: #fafafa; font-weight: 600; color: #262626; }
+        .config-table td { color: #595959; }
+        .config-table tr:hover { background: #fafafa; }
+        .status-enabled { color: #52c41a; }
+        .status-disabled { color: #ff4d4f; }
+        .input-group { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+        .input-label { font-size: 14px; font-weight: 500; color: #262626; }
+        .input-field { padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; }
+        .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <nav class="app-sidebar" id="app-sidebar"></nav>
+        
+        <header class="app-header">
+            <div>盈策通决策平台 / 基础配置</div>
+            <div>管理员</div>
+        </header>
+        
+        <main class="app-main">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-cog"></i>
+                    基础配置
+                </h1>
+            </div>
+            
+            <!-- 配置选项卡 -->
+            <div class="config-tabs">
+                <button class="tab-item active" data-tab="department">部门分红配置</button>
+                <button class="tab-item" data-tab="job-level">职级薪资标准</button>
+                <button class="tab-item" data-tab="employee">员工薪酬配置</button>
+                <button class="tab-item" data-tab="social">社保公积金基数</button>
+                <button class="tab-item" data-tab="region">地区工资系数</button>
+            </div>
+            
+            <!-- 配置内容区域 -->
+            <div class="config-content">
+                <!-- 部门分红配置 -->
+                <div id="department-config" class="tab-content">
+                    <div class="config-header">
+                        <h3 class="config-title">部门分红配置</h3>
+                        <div class="action-buttons">
+                            <button class="btn">导入</button>
+                            <button class="btn">导出</button>
+                            <button class="btn btn-primary">新增配置</button>
+                        </div>
+                    </div>
+                    
+                    <table class="config-table">
+                        <thead>
+                            <tr>
+                                <th>部门名称</th>
+                                <th>分红权重(%)</th>
+                                <th>生效日期</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>销售部</td>
+                                <td>30.0%</td>
+                                <td>2024-01-01</td>
+                                <td><span class="status-enabled">🟢 启用</span></td>
+                                <td>
+                                    <button class="btn">编辑</button>
+                                    <button class="btn">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>产品研发部</td>
+                                <td>25.0%</td>
+                                <td>2024-01-01</td>
+                                <td><span class="status-enabled">🟢 启用</span></td>
+                                <td>
+                                    <button class="btn">编辑</button>
+                                    <button class="btn">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>市场运营部</td>
+                                <td>20.0%</td>
+                                <td>2024-01-01</td>
+                                <td><span class="status-enabled">🟢 启用</span></td>
+                                <td>
+                                    <button class="btn">编辑</button>
+                                    <button class="btn">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>采购部</td>
+                                <td>10.0%</td>
+                                <td>2024-01-01</td>
+                                <td><span class="status-enabled">🟢 启用</span></td>
+                                <td>
+                                    <button class="btn">编辑</button>
+                                    <button class="btn">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>行政部</td>
+                                <td>10.0%</td>
+                                <td>2024-01-01</td>
+                                <td><span class="status-enabled">🟢 启用</span></td>
+                                <td>
+                                    <button class="btn">编辑</button>
+                                    <button class="btn">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>人事部</td>
+                                <td>5.0%</td>
+                                <td>2024-01-01</td>
+                                <td><span class="status-enabled">🟢 启用</span></td>
+                                <td>
+                                    <button class="btn">编辑</button>
+                                    <button class="btn">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 职级薪资标准 -->
+                <div id="job-level-config" class="tab-content" style="display: none;">
+                    <div class="config-header">
+                        <h3 class="config-title">职级薪资标准</h3>
+                        <div class="action-buttons">
+                            <button class="btn">导入</button>
+                            <button class="btn">导出</button>
+                            <button class="btn btn-primary">新增标准</button>
+                        </div>
+                    </div>
+                    
+                    <table class="config-table">
+                        <thead>
+                            <tr>
+                                <th>职级名称</th>
+                                <th>所属部门</th>
+                                <th>基础工资范围</th>
+                                <th>绩效比例范围</th>
+                                <th>创建时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>销售总监</td>
+                                <td>销售部</td>
+                                <td>¥20,000 - ¥30,000</td>
+                                <td>30% - 120%</td>
+                                <td>2024-01-01</td>
+                                <td>
+                                    <button class="btn">编辑</button>
+                                    <button class="btn">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>销售经理</td>
+                                <td>销售部</td>
+                                <td>¥12,000 - ¥18,000</td>
+                                <td>30% - 100%</td>
+                                <td>2024-01-01</td>
+                                <td>
+                                    <button class="btn">编辑</button>
+                                    <button class="btn">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>销售专员</td>
+                                <td>销售部</td>
+                                <td>¥8,000 - ¥12,000</td>
+                                <td>30% - 80%</td>
+                                <td>2024-01-01</td>
+                                <td>
+                                    <button class="btn">编辑</button>
+                                    <button class="btn">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>产品总监</td>
+                                <td>产品研发部</td>
+                                <td>¥25,000 - ¥35,000</td>
+                                <td>30% - 100%</td>
+                                <td>2024-01-01</td>
+                                <td>
+                                    <button class="btn">编辑</button>
+                                    <button class="btn">删除</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>高级工程师</td>
+                                <td>产品研发部</td>
+                                <td>¥15,000 - ¥25,000</td>
+                                <td>30% - 90%</td>
+                                <td>2024-01-01</td>
+                                <td>
+                                    <button class="btn">编辑</button>
+                                    <button class="btn">删除</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 其他配置内容... -->
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/navigation.js"></script>
+    <script>
+        // 初始化导航
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof NavigationManager !== 'undefined') {
+                const nav = new NavigationManager();
+                nav.render();
+            }
+        });
+
+        // Tab切换功能
+        document.addEventListener('click', function(e) {
+            if (e.target.classList.contains('tab-item')) {
+                // 移除所有active状态
+                document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.style.display = 'none');
+                
+                // 激活当前tab
+                e.target.classList.add('active');
+                const tabName = e.target.dataset.tab;
+                const contentId = tabName + '-config';
+                const content = document.getElementById(contentId);
+                if (content) {
+                    content.style.display = 'block';
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

@@ -189,6 +189,12 @@ export default defineConfig({
       secure: false,
       logLevel: 'debug',
     },
+    '/api-soo': {
+      target: 'http://127.0.0.1:9900',
+      changeOrigin: true,
+      secure: false,
+      logLevel: 'debug',
+    },
   },
 
   // 构建输出配置

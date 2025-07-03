@@ -405,94 +405,56 @@ CREATE TABLE `soo_breakeven_analysis` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='盈亏平衡分析表';
 
 -- ===================================================================
--- 10. 团队项目信息表
+-- 10. 项目相关数据复用说明
 -- ===================================================================
-CREATE TABLE `soo_team_project` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `project_id` varchar(50) NOT NULL COMMENT '项目ID',
-  `project_name` varchar(200) NOT NULL COMMENT '项目名称',
-  `project_type` varchar(50) COMMENT '项目类型',
-  `department_id` bigint(20) NOT NULL COMMENT '所属部门ID',
-  `leader_employee_id` bigint(20) COMMENT '项目负责人ID',
-  `start_date` date COMMENT '项目开始日期',
-  `end_date` date COMMENT '项目结束日期',
-  `total_revenue` decimal(15,2) DEFAULT 0 COMMENT '项目总营业额',
-  `total_margin` decimal(5,4) DEFAULT 0 COMMENT '项目毛利率',
-  `total_profit` decimal(15,2) DEFAULT 0 COMMENT '项目毛利润',
-  `commission_ratio` decimal(5,4) DEFAULT 0 COMMENT '提成比例',
-  `status` varchar(20) DEFAULT 'active' COMMENT '项目状态(active/completed/cancelled)',
-  `remark` varchar(1000) COMMENT '备注',
-  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `created_by` bigint(20) COMMENT '创建人',
-  `updated_by` bigint(20) COMMENT '更新人',
-  `tenant_id` varchar(32) DEFAULT 'default' COMMENT '租户ID',
-  `delflag` tinyint(1) DEFAULT 0 COMMENT '删除标识',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_project_id` (`project_id`, `tenant_id`),
-  KEY `idx_department_id` (`department_id`),
-  KEY `idx_leader_employee_id` (`leader_employee_id`),
-  KEY `idx_start_date` (`start_date`),
-  KEY `idx_status` (`status`),
-  KEY `idx_tenant_id` (`tenant_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='团队项目信息表';
+
+-- 注意：项目相关数据复用现有项目管理模块的表结构
+-- 
+-- 1. 项目基本信息：复用表 `project` 
+--    - 项目ID、项目名称、项目类别、负责人等基础信息
+--    - 参与人员通过 participants 字段（JSON格式）存储
+--    - 项目状态、创建时间等通用字段
+--
+-- 2. 项目毛利分配：复用表 `project_profit_distribution`
+--    - 项目人员角色分配和提成比例
+--    - 支持按比例和固定金额两种分配方式
+--    - 包含审批流程字段
+--
+-- 3. 项目结项数据：复用表 `project_closure`
+--    - 项目结项时间、合同金额、实际金额
+--    - 毛利润和毛利率计算
+--    - 结项审批状态
+--
+-- 4. 产品分配指导：复用表 `product_profit_distribution_guide`
+--    - 不同产品类型的标准分配比例
+--    - 不同角色的提成范围指导
+--
+-- 薪酬计算模块通过以下方式关联项目数据：
+-- - monthly_performance.team_project_id 关联 project.id
+-- - 通过 project.participants 获取项目成员信息
+-- - 通过 project_profit_distribution 获取分配比例
+-- - 通过 project_closure 获取项目财务数据
 
 -- ===================================================================
--- 11. 项目成员表
+-- 11. 操作日志说明
 -- ===================================================================
-CREATE TABLE `soo_team_project_member` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `project_id` varchar(50) NOT NULL COMMENT '项目ID',
-  `employee_id` bigint(20) NOT NULL COMMENT '员工ID',
-  `employee_name` varchar(50) NOT NULL COMMENT '员工姓名',
-  `role` varchar(50) COMMENT '项目角色',
-  `contribution_ratio` decimal(5,4) DEFAULT 0 COMMENT '贡献比例',
-  `join_date` date NOT NULL COMMENT '加入日期',
-  `leave_date` date COMMENT '离开日期',
-  `is_active` tinyint(1) DEFAULT 1 COMMENT '是否活跃(1是,0否)',
-  `created_at` timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `updated_at` timestamp DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `created_by` bigint(20) COMMENT '创建人',
-  `updated_by` bigint(20) COMMENT '更新人',
-  `tenant_id` varchar(32) DEFAULT 'default' COMMENT '租户ID',
-  `delflag` tinyint(1) DEFAULT 0 COMMENT '删除标识',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_project_employee` (`project_id`, `employee_id`, `tenant_id`),
-  KEY `idx_employee_id` (`employee_id`),
-  KEY `idx_join_date` (`join_date`),
-  KEY `idx_is_active` (`is_active`),
-  KEY `idx_tenant_id` (`tenant_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目成员表';
+
+-- 注意：操作日志功能使用平台公共模块提供的统一日志服务
+-- 
+-- 销售运营优化器模块不单独维护操作日志表，而是通过以下方式记录日志：
+-- 1. 使用统一的日志切面(AOP)自动记录关键操作
+-- 2. 通过日志服务API主动记录重要业务操作
+-- 3. 日志数据存储在公共日志库中，支持跨模块查询
+-- 
+-- 关键业务操作日志记录范围：
+-- - 薪酬配置的增删改操作
+-- - 绩效数据的录入和修改
+-- - 工资计算和审批操作
+-- - 盈亏平衡分析的生成和修改
+-- - 重要配置参数的变更
 
 -- ===================================================================
--- 12. 操作日志表
--- ===================================================================
-CREATE TABLE `soo_operation_log` (
-  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '日志ID',
-  `user_id` bigint(20) COMMENT '操作用户ID',
-  `user_name` varchar(50) COMMENT '操作用户名',
-  `module` varchar(50) COMMENT '操作模块',
-  `operation` varchar(100) COMMENT '操作类型',
-  `target_type` varchar(50) COMMENT '目标类型',
-  `target_id` varchar(100) COMMENT '目标ID',
-  `target_name` varchar(200) COMMENT '目标名称',
-  `operation_desc` varchar(500) COMMENT '操作描述',
-  `old_value` text COMMENT '变更前值',
-  `new_value` text COMMENT '变更后值',
-  `ip_address` varchar(50) COMMENT 'IP地址',
-  `user_agent` varchar(500) COMMENT '用户代理',
-  `operation_time` timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '操作时间',
-  `tenant_id` varchar(32) DEFAULT 'default' COMMENT '租户ID',
-  PRIMARY KEY (`id`),
-  KEY `idx_user_id` (`user_id`),
-  KEY `idx_operation_time` (`operation_time`),
-  KEY `idx_module` (`module`),
-  KEY `idx_target_type` (`target_type`),
-  KEY `idx_tenant_id` (`tenant_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表';
-
--- ===================================================================
--- 13. 预置数据插入
+-- 12. 预置数据插入
 -- ===================================================================
 
 -- 插入地区工资系数预置数据

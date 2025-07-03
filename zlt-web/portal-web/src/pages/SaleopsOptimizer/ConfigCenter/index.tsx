@@ -1,8 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { PageContainer } from '@ant-design/pro-components';
-import { Card, Typography, Tabs, Button, Table, Tag, Space, Modal, Form, Input, DatePicker, Select, Switch, message } from 'antd';
+import { Card, Typography, Tabs, Button, Table, Tag, Space, Modal, Form, Input, DatePicker, Select, Switch, message, Layout } from 'antd';
+import {
+  SettingOutlined,
+  ApartmentOutlined,
+  UserOutlined,
+  ContactsOutlined,
+  SafetyOutlined,
+  GlobalOutlined,
+  PlusOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  ImportOutlined,
+  ExportOutlined,
+} from '@ant-design/icons';
 import dayjs from 'dayjs';
+import './index.less';
 
+const { Header, Sider, Content, Footer } = Layout;
 const { Title } = Typography;
 const { Option } = Select;
 
@@ -124,8 +139,56 @@ const regionColumns = (onEdit: (record: any) => void, onDelete: (record: any) =>
   },
 ];
 
-const ConfigCenter: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('department');
+// 1. 增加权限点变量
+const canAdd = true; // 后续可由权限系统动态控制
+const canEdit = true;
+const canDelete = true;
+const canBatch = true;
+
+// 2. 统一数据请求与表单提交结构（模拟）
+interface TableFetchParams {
+  keyword?: string;
+  current?: number;
+  pageSize?: number;
+}
+
+type TabKey = 'department' | 'jobLevel' | 'employee' | 'social' | 'region';
+
+const fetchTableData = (tab: TabKey, params: TableFetchParams) => {
+  let data: any[] = [];
+  let total = 0;
+  switch(tab) {
+    case 'department':
+      data = initialDepartmentData.filter(item => !params.keyword || item.departmentName.includes(params.keyword));
+      total = data.length;
+      break;
+    case 'jobLevel':
+      data = initialJobLevelData.filter(item => !params.keyword || item.jobLevelName.includes(params.keyword));
+      total = data.length;
+      break;
+    case 'employee':
+      data = initialEmployeeData.filter(item => !params.keyword || item.employeeName.includes(params.keyword));
+      total = data.length;
+      break;
+    case 'social':
+      data = initialSocialData.filter(item => !params.keyword || item.region.includes(params.keyword));
+      total = data.length;
+      break;
+    case 'region':
+      data = initialRegionData.filter(item => !params.keyword || item.region.includes(params.keyword));
+      total = data.length;
+      break;
+    default:
+      break;
+  }
+  const { current = 1, pageSize = 10 } = params;
+  const start = (current - 1) * pageSize;
+  const end = start + pageSize;
+  return { data: data.slice(start, end), total };
+};
+
+const BaseConfig: React.FC = () => {
+  const [activeTab, setActiveTab] = useState<TabKey>('department');
   // 各Tab数据
   const [departmentData, setDepartmentData] = useState(initialDepartmentData);
   const [jobLevelData, setJobLevelData] = useState(initialJobLevelData);
@@ -141,6 +204,62 @@ const ConfigCenter: React.FC = () => {
   const [deleteRecord, setDeleteRecord] = useState<any>(null);
   const [deleteTab, setDeleteTab] = useState('department');
 
+  // 3. 主组件内状态扩展
+  const [searchKeyword, setSearchKeyword] = useState('');
+  const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
+  const [pagination, setPagination] = useState({ current: 1, pageSize: 10 });
+  const [tableData, setTableData] = useState<any[]>([]);
+  const [tableTotal, setTableTotal] = useState(0);
+
+  // 4. 数据加载函数
+  const loadTable = (tab = activeTab, keyword = searchKeyword, page = pagination.current, size = pagination.pageSize) => {
+    const { data, total } = fetchTableData(tab, { keyword, current: page, pageSize: size });
+    setTableData(data);
+    setTableTotal(total);
+    setSelectedRowKeys([]);
+  };
+
+  useEffect(() => {
+    loadTable();
+    // eslint-disable-next-line
+  }, [activeTab, searchKeyword, pagination.current, pagination.pageSize]);
+
+  // 5. 搜索栏与分页事件
+  const handleSearch = (value: string) => {
+    setSearchKeyword(value);
+    setPagination({ ...pagination, current: 1 });
+  };
+  const handleTableChange = (pag: any) => {
+    setPagination({ ...pagination, current: pag.current, pageSize: pag.pageSize });
+  };
+
+  // 6. 批量操作
+  const handleBatchDelete = () => {
+    if (!selectedRowKeys.length) return message.warning('请先选择要删除的数据');
+    Modal.confirm({
+      title: '批量删除确认',
+      content: `确定要删除选中的${selectedRowKeys.length}条数据吗？`,
+      okText: '删除',
+      okButtonProps: { danger: true },
+      onOk: () => {
+        message.success('批量删除成功（模拟）');
+        loadTable();
+      },
+    });
+  };
+  const handleBatchImport = () => {
+    message.info('批量导入功能开发中...');
+  };
+  const handleBatchExport = () => {
+    message.info('批量导出功能开发中...');
+  };
+
+  // 7. rowSelection
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: setSelectedRowKeys,
+  };
+
   // 新增/编辑弹窗
   const handleAdd = (tab: string) => {
     setEditingRecord(null);
@@ -148,7 +267,7 @@ const ConfigCenter: React.FC = () => {
     form.resetFields();
     setModalOpen(true);
   };
-  const handleEdit = (tab: string, record: any) => {
+  const handleEdit = (tab: TabKey, record: any) => {
     setEditingRecord(record);
     setModalTab(tab);
     let fields = { ...record };
@@ -191,7 +310,7 @@ const ConfigCenter: React.FC = () => {
   };
 
   // 删除操作
-  const handleDelete = (tab: string, record: any) => {
+  const handleDelete = (tab: TabKey, record: any) => {
     setDeleteRecord(record);
     setDeleteTab(tab);
   };
@@ -328,117 +447,110 @@ const ConfigCenter: React.FC = () => {
 
   // 各Tab内容
   const renderTabContent = () => {
-    switch (activeTab) {
-      case 'department':
-        return (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-              <span style={{ fontSize: 18, fontWeight: 600 }}>部门分红配置</span>
-              <Space>
-                <Button>导入</Button>
-                <Button>导出</Button>
-                <Button type="primary" onClick={() => handleAdd('department')}>新增配置</Button>
-              </Space>
-            </div>
-            <Table columns={departmentColumns((r) => handleEdit('department', r), (r) => handleDelete('department', r))} dataSource={departmentData} rowKey="departmentName" pagination={false} />
-          </>
-        );
-      case 'jobLevel':
-        return (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-              <span style={{ fontSize: 18, fontWeight: 600 }}>职级薪资标准</span>
-              <Space>
-                <Button>导入</Button>
-                <Button>导出</Button>
-                <Button type="primary" onClick={() => handleAdd('jobLevel')}>新增标准</Button>
-              </Space>
-            </div>
-            <Table columns={jobLevelColumns((r) => handleEdit('jobLevel', r), (r) => handleDelete('jobLevel', r))} dataSource={jobLevelData} rowKey="jobLevelName" pagination={false} />
-          </>
-        );
-      case 'employee':
-        return (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-              <span style={{ fontSize: 18, fontWeight: 600 }}>员工薪酬配置</span>
-              <Space>
-                <Button>导入</Button>
-                <Button>导出</Button>
-                <Button type="primary" onClick={() => handleAdd('employee')}>新增配置</Button>
-              </Space>
-            </div>
-            <Table columns={employeeColumns((r) => handleEdit('employee', r), (r) => handleDelete('employee', r))} dataSource={employeeData} rowKey="employeeName" pagination={false} />
-          </>
-        );
-      case 'social':
-        return (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-              <span style={{ fontSize: 18, fontWeight: 600 }}>社保公积金基数</span>
-              <Space>
-                <Button>导入</Button>
-                <Button>导出</Button>
-                <Button type="primary" onClick={() => handleAdd('social')}>新增配置</Button>
-              </Space>
-            </div>
-            <Table columns={socialColumns((r) => handleEdit('social', r), (r) => handleDelete('social', r))} dataSource={socialData} rowKey="region" pagination={false} />
-          </>
-        );
-      case 'region':
-        return (
-          <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-              <span style={{ fontSize: 18, fontWeight: 600 }}>地区工资系数</span>
-              <Space>
-                <Button>导入</Button>
-                <Button>导出</Button>
-                <Button type="primary" onClick={() => handleAdd('region')}>新增配置</Button>
-              </Space>
-            </div>
-            <Table columns={regionColumns((r) => handleEdit('region', r), (r) => handleDelete('region', r))} dataSource={regionData} rowKey="region" pagination={false} />
-          </>
-        );
-      default:
-        return null;
-    }
+    const columnsMap: Record<TabKey, (onEdit: (r: any) => void, onDelete: (r: any) => void) => any[]> = {
+      department: departmentColumns,
+      jobLevel: jobLevelColumns,
+      employee: employeeColumns,
+      social: socialColumns,
+      region: regionColumns,
+    };
+    const columns = columnsMap[activeTab]((r: any) => handleEdit(activeTab, r), (r: any) => handleDelete(activeTab, r));
+    return (
+      <>
+        {/* 搜索栏与批量操作区 */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', marginBottom: 16, gap: 8 }}>
+          <Space style={{ flex: 1, minWidth: 220 }}>
+            <Input.Search
+              allowClear
+              placeholder="请输入关键字搜索"
+              style={{ width: 220 }}
+              onSearch={handleSearch}
+              enterButton
+            />
+          </Space>
+          <Space wrap>
+            {canBatch && <Button disabled={!selectedRowKeys.length} danger onClick={handleBatchDelete}>批量删除</Button>}
+            {canBatch && <Button onClick={handleBatchImport}>批量导入</Button>}
+            {canBatch && <Button onClick={handleBatchExport}>批量导出</Button>}
+            {canAdd && <Button type="primary" onClick={() => handleAdd(activeTab)}>新增</Button>}
+          </Space>
+        </div>
+        <Table
+          columns={columns}
+          dataSource={tableData}
+          rowKey={activeTab === 'employee' ? 'employeeName' : activeTab === 'jobLevel' ? 'jobLevelName' : activeTab === 'region' ? 'region' : 'departmentName'}
+          rowSelection={rowSelection}
+          pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: tableTotal,
+            showSizeChanger: true,
+            showTotal: (t) => `共${t}条`,
+          }}
+          onChange={handleTableChange}
+          scroll={{ x: 'max-content' }}
+          style={{ minHeight: 320 }}
+        />
+      </>
+    );
   };
 
   return (
-    <PageContainer>
-      <Card bordered={false} style={{ minHeight: 600 }}>
-        <Title level={3} style={{ marginBottom: 24 }}>配置中心</Title>
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={tabItems.map(tab => ({ key: tab.key, label: tab.label }))}
-          style={{ marginBottom: 24 }}
-        />
-        <div>{renderTabContent()}</div>
-        <Modal
-          open={modalOpen}
-          title={editingRecord ? '编辑' : '新增'}
-          onOk={handleModalOk}
-          onCancel={handleModalCancel}
-          destroyOnClose
-        >
-          <Form form={form} layout="vertical" preserve={false}>
-            {renderModalForm()}
-          </Form>
-        </Modal>
-        <Modal
-          open={!!deleteRecord}
-          title="确认删除"
-          onOk={handleDeleteOk}
-          onCancel={handleDeleteCancel}
-          okText="删除"
-          okButtonProps={{ danger: true }}
-        >
-          <div>确定要删除该条数据吗？</div>
-        </Modal>
-      </Card>
-    </PageContainer>
+    <Layout className="base-config-layout">
+      {/* 侧边栏可集成Portal统一导航 */}
+      {/* <Sider width={240} className="base-config-sider">侧边栏</Sider> */}
+      <Layout>
+        <Header className="base-config-header">
+          <div className="breadcrumb">
+            <span>盈策通决策平台</span>
+            <span style={{ margin: '0 8px', color: '#d9d9d9' }}>/</span>
+            <span>基础配置</span>
+          </div>
+          <div className="header-actions">
+            <span>管理员</span>
+          </div>
+        </Header>
+        <Content className="base-config-content">
+          <div className="page-header">
+            <Title level={3} style={{ margin: 0 }}>
+              <SettingOutlined style={{ color: '#1890ff', marginRight: 12 }} />
+              基础配置
+            </Title>
+          </div>
+          <Tabs
+            className="config-tabs"
+            activeKey={activeTab}
+            onChange={(key) => setActiveTab(key as TabKey)}
+            items={tabItems.map(tab => ({
+              key: tab.key,
+              label: (
+                <>
+                  {tab.key === 'department' && <ApartmentOutlined />}
+                  {tab.key === 'jobLevel' && <UserOutlined />}
+                  {tab.key === 'employee' && <ContactsOutlined />}
+                  {tab.key === 'social' && <SafetyOutlined />}
+                  {tab.key === 'region' && <GlobalOutlined />}
+                  {tab.label}
+                </>
+              ),
+            }))}
+            tabBarGutter={2}
+            tabBarStyle={{
+              background: '#fff',
+              borderRadius: 8,
+              padding: 4,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+              marginBottom: 24,
+            }}
+          />
+          <div className="config-content">{renderTabContent()}</div>
+        </Content>
+        <Footer className="base-config-footer">
+          © 2024 Portal 3.0 - 企业管理平台. All rights reserved.
+        </Footer>
+      </Layout>
+    </Layout>
   );
 };
 
-export default ConfigCenter; 
+export default BaseConfig; 

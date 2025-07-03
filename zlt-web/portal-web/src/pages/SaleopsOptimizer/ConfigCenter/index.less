@@ -1,0 +1,125 @@
+.base-config-layout {
+  min-height: 100vh;
+  background: #f5f5f5;
+}
+.base-config-header {
+  background: #fff;
+  border-bottom: 1px solid #e8e8e8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 60px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.base-config-content {
+  padding: 24px;
+  background: #f5f5f5;
+  min-height: calc(100vh - 120px);
+}
+.page-header {
+  margin-bottom: 32px;
+}
+.config-tabs {
+  margin-bottom: 24px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 8px 8px 0 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.ant-tabs-nav {
+  width: 100%;
+}
+.ant-tabs-tab {
+  font-size: 16px !important;
+  font-weight: 500;
+  border-radius: 8px 8px 0 0 !important;
+  padding: 16px 32px !important;
+  margin: 0 6px !important;
+  transition: background 0.2s, color 0.2s;
+  background: transparent !important;
+}
+.ant-tabs-tab-active {
+  background: #1890ff !important;
+  color: #fff !important;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(24,144,255,0.10);
+}
+.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #fff !important;
+  font-weight: 600;
+  position: relative;
+  z-index: 2;
+}
+.ant-tabs-tab:not(.ant-tabs-tab-active):hover .ant-tabs-tab-btn {
+  color: #1890ff !important;
+}
+.config-card {
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  padding: 24px 0 0 0;
+}
+.config-table {
+  background: #fff;
+  border-radius: 12px;
+  font-size: 16px;
+}
+.config-table .ant-table-thead > tr > th {
+  font-size: 16px;
+  font-weight: 600;
+  background: #fafafa;
+  color: #262626;
+  padding: 16px 12px;
+}
+.config-table .ant-table-tbody > tr > td {
+  font-size: 15px;
+  color: #595959;
+  padding: 16px 12px;
+  height: 56px;
+}
+.config-table .ant-table-tbody > tr:hover > td {
+  background: #f5f5f5;
+}
+.config-table .ant-btn {
+  font-size: 15px;
+  padding: 4px 16px;
+  border-radius: 6px;
+}
+.config-table .ant-btn-primary {
+  background: #1890ff;
+  border-color: #1890ff;
+}
+.config-table .ant-btn-dangerous {
+  background: #ff4d4f;
+  border-color: #ff4d4f;
+  color: #fff;
+}
+.base-config-footer {
+  background: #fff;
+  border-top: 1px solid #e8e8e8;
+  padding: 16px 24px;
+  color: #666;
+  font-size: 15px;
+  text-align: center;
+}
+@media (max-width: 768px) {
+  .base-config-content {
+    padding: 8px;
+  }
+  .config-card {
+    padding: 0;
+  }
+  .config-tabs {
+    padding: 4px 4px 0 4px;
+  }
+  .ant-tabs-tab {
+    font-size: 15px !important;
+    padding: 12px 16px !important;
+  }
+  .config-table .ant-table-thead > tr > th,
+  .config-table .ant-table-tbody > tr > td {
+    font-size: 14px;
+    padding: 10px 6px;
+    height: 40px;
+  }
+} 

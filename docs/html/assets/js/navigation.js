@@ -144,19 +144,6 @@ const menuData = [
             { id: 'user-manage', name: '用户管理', url: 'system/user-manage.html' },
             { id: 'operation-log', name: '操作日志', url: 'system/operation-log.html' }
         ]
-    },
-    {
-        id: 'saleops-optimizer',
-        name: '盈策通决策平台',
-        icon: 'fas fa-chart-pie',
-        children: [
-            { id: 'soo-dashboard', name: '运营工作台', url: 'saleops-optimizer/dashboard.html' },
-            { id: 'soo-config', name: '基础配置', url: 'saleops-optimizer/config-center.html' },
-            { id: 'soo-performance', name: '绩效管理', url: 'saleops-optimizer/performance-manage.html' },
-            { id: 'soo-payroll', name: '薪酬计算', url: 'saleops-optimizer/payroll-calculate.html' },
-            { id: 'soo-analysis', name: '财务分析', url: 'saleops-optimizer/financial-analysis.html' },
-            { id: 'soo-reports', name: '报表中心', url: 'saleops-optimizer/report-center.html' }
-        ]
     }
 ];
 

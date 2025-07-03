@@ -7,211 +7,644 @@
     <link rel="stylesheet" href="../assets/css/common.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        /* Portal框架标准布局 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: "sidebar header" "sidebar main" "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .app-sidebar {
+            grid-area: sidebar;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .app-footer {
+            grid-area: footer;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+            padding: 16px 24px;
+            color: #666;
+            font-size: 14px;
+            text-align: center;
+        }
+
+        /* 导航菜单样式 */
+        .sidebar-header {
+            height: 60px;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            border-bottom: 1px solid #e8e8e8;
+            background: white;
+        }
+
+        .logo {
+            width: 32px;
+            height: 32px;
+            background: #1890ff;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+
+        .brand-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .nav-menu {
+            padding: 20px 0;
+            list-style: none;
+            margin: 0;
+        }
+
+        .nav-item {
+            margin-bottom: 4px;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666 !important;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .nav-link:hover {
+            background: #f5f5f5 !important;
+            color: #333 !important;
+        }
+
+        .nav-link.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 16px;
+            display: inline-block;
+            min-width: 20px;
+        }
+
+        .nav-group {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            color: #666;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            position: relative;
+            font-size: 14px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-group:hover {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .nav-group.expanded {
+            background: rgba(24, 144, 255, 0.05);
+            color: #1890ff;
+        }
+
+        .nav-arrow {
+            margin-left: auto;
+            transition: transform 0.3s ease;
+            font-size: 12px;
+        }
+
+        .nav-arrow.rotated {
+            transform: rotate(90deg);
+        }
+
+        .nav-submenu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            background: #fafafa;
+        }
+
+        .nav-submenu.expanded {
+            max-height: 300px;
+        }
+
+        .nav-subitem {
+            display: block;
+            padding: 10px 20px 10px 52px;
+            color: #666;
+            text-decoration: none;
+            font-size: 13px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-subitem:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .nav-subitem.active {
+            background: rgba(24, 144, 255, 0.1);
+            color: #1890ff;
+        }
+
+        .nav-subitem.active::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: #1890ff;
+        }
+
+        /* 页面内容样式 */
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .page-title i {
+            color: #1890ff;
+            margin-right: 12px;
+        }
+
+        .page-subtitle {
+            color: #8c8c8c;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .analysis-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 20px;
+        }
+
+        .params-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .param-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .param-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #262626;
+        }
+
+        .param-input {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .chart-container {
+            height: 400px;
+            margin-bottom: 24px;
+        }
+
+        .scenario-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+        }
+
+        .scenario-table th,
+        .scenario-table td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .scenario-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .scenario-table td {
+            color: #595959;
+        }
+
+        .risk-high {
+            color: #ff4d4f;
+            font-weight: 500;
+        }
+
+        .risk-medium {
+            color: #faad14;
+            font-weight: 500;
+        }
+
+        .risk-low {
+            color: #52c41a;
+            font-weight: 500;
+        }
+
+        .advice-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .advice-card {
+            background: #fafafa;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .advice-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+        }
+
+        .advice-title i {
+            margin-right: 8px;
+        }
+
+        .advice-content {
+            font-size: 14px;
+            color: #595959;
+            line-height: 1.6;
+        }
+
+        .cost-breakdown {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 24px;
+        }
+
+        .cost-chart {
+            height: 300px;
+        }
+
+        .cost-details {
+            padding: 20px;
+            background: #fafafa;
+            border-radius: 8px;
+        }
+
+        .cost-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .cost-item:last-child {
+            border-bottom: none;
+        }
+
+        .cost-label {
+            color: #666;
+        }
+
+        .cost-value {
+            color: #262626;
+            font-weight: 500;
+        }
+
+        /* 响应式适配 */
+        @media (max-width: 768px) {
+            .app-layout {
+                grid-template-columns: 1fr;
+                grid-template-areas: "header" "main" "footer";
+            }
+
+            .app-sidebar {
+                display: none;
+            }
+
+            .params-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .advice-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .cost-breakdown {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="app-layout">
-        <nav class="app-sidebar" id="app-sidebar"></nav>
-        
+        <!-- 左侧导航菜单 -->
+        <nav class="app-sidebar" id="app-sidebar">
+            <!-- 导航内容将通过 JavaScript 动态生成 -->
+        </nav>
+
+        <!-- 头部区域 -->
         <header class="app-header">
-            <div>盈策通决策平台 / 财务分析</div>
-            <div>管理员</div>
+            <div class="breadcrumb">
+                <span>盈策通决策平台</span>
+                <span style="margin: 0 8px; color: #d9d9d9;">/</span>
+                <span>财务分析</span>
+            </div>
+            <div class="header-actions">
+                <span>管理员</span>
+            </div>
         </header>
-        
+
+        <!-- 主内容区域 -->
         <main class="app-main">
             <div class="page-header">
                 <h1 class="page-title">
                     <i class="fas fa-chart-line"></i>
                     财务分析
                 </h1>
-                <p class="page-subtitle">盈亏平衡分析与业绩预测，为企业决策提供数据支撑</p>
+                <p class="page-subtitle">盈亏平衡分析与成本结构优化建议</p>
             </div>
-            
+
             <!-- 分析参数设置 -->
-            <div class="params-section">
-                <h3>分析参数设置</h3>
+            <div class="analysis-section">
+                <h3 class="section-title">分析参数设置</h3>
+                
                 <div class="params-grid">
-                    <div class="param-item">
-                        <label>📅 分析周期:</label>
-                        <select class="param-select">
-                            <option value="2024-12">2024年12月</option>
-                            <option value="2024-Q4">2024年第四季度</option>
-                            <option value="2024">2024年全年</option>
+                    <div class="param-group">
+                        <label class="param-label">📅 分析周期</label>
+                        <select class="param-input">
+                            <option value="quarter">本季度</option>
+                            <option value="half-year">半年度</option>
+                            <option value="year">年度</option>
                         </select>
                     </div>
-                    <div class="param-item">
-                        <label>🎯 毛利率场景:</label>
-                        <div class="scenario-buttons">
-                            <button class="scenario-btn active" data-margin="10">10%</button>
-                            <button class="scenario-btn active" data-margin="30">30%</button>
-                            <button class="scenario-btn active" data-margin="65">65%</button>
-                        </div>
+                    
+                    <div class="param-group">
+                        <label class="param-label">💰 目标毛利率</label>
+                        <input type="number" class="param-input" value="45" placeholder="输入百分比">
                     </div>
-                    <div class="param-item">
-                        <label>💰 固定成本:</label>
-                        <input type="text" class="param-input" value="3,200,000" placeholder="输入固定成本">
+                    
+                    <div class="param-group">
+                        <label class="param-label">🏢 固定成本</label>
+                        <input type="number" class="param-input" value="1200000" placeholder="输入金额">
                     </div>
-                    <div class="param-item">
-                        <label>🔄 变动成本率:</label>
-                        <input type="text" class="param-input" value="15%" placeholder="输入变动成本率">
+                    
+                    <div class="param-group">
+                        <label class="param-label">📈 变动成本率</label>
+                        <input type="number" class="param-input" value="35" placeholder="输入百分比">
+                    </div>
+                    
+                    <div class="param-group">
+                        <label class="param-label">🎯 目标营业额</label>
+                        <input type="number" class="param-input" value="5000000" placeholder="输入金额">
                     </div>
                 </div>
                 
-                <div class="action-row">
-                    <button class="btn btn-primary" id="analyzeBtn">
-                        <i class="fas fa-calculator"></i>
-                        开始分析
+                <div style="display: flex; gap: 12px; margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="runAnalysis()">
+                        <i class="fas fa-play"></i> 开始分析
                     </button>
-                    <button class="btn">
-                        <i class="fas fa-history"></i>
-                        历史分析
+                    <button class="btn" onclick="resetParams()">
+                        <i class="fas fa-undo"></i> 重置参数
                     </button>
-                    <button class="btn">
-                        <i class="fas fa-download"></i>
-                        导出报告
+                    <button class="btn" onclick="saveTemplate()">
+                        <i class="fas fa-save"></i> 保存模板
                     </button>
                 </div>
             </div>
-            
+
             <!-- 盈亏平衡分析图表 -->
-            <div class="chart-section">
-                <h3>盈亏平衡点分析</h3>
-                <div class="chart-container" id="breakevenChart"></div>
-                
-                <!-- 图表说明 -->
-                <div class="chart-legend">
-                    <div class="legend-item">
-                        <span class="legend-color profit"></span>
-                        <span>✨ 盈利区域</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color loss"></span>
-                        <span>💔 亏损区域</span>
-                    </div>
-                    <div class="legend-item">
-                        <span class="legend-color breakeven"></span>
-                        <span>📍 盈亏平衡点</span>
-                    </div>
-                </div>
+            <div class="analysis-section">
+                <h3 class="section-title">盈亏平衡分析</h3>
+                <div class="chart-container" id="breakEvenChart"></div>
             </div>
-            
+
             <!-- 场景分析结果 -->
-            <div class="scenario-section">
-                <h3>场景分析结果</h3>
+            <div class="analysis-section">
+                <h3 class="section-title">场景分析结果</h3>
+                
                 <table class="scenario-table">
                     <thead>
                         <tr>
-                            <th>毛利率场景</th>
+                            <th>毛利率情况</th>
                             <th>盈亏平衡点</th>
-                            <th>目标营业额</th>
                             <th>达成概率</th>
                             <th>风险评估</th>
+                            <th>推荐策略</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr class="scenario-row risk-high">
-                            <td>
-                                <span class="margin-badge margin-10">10%</span>
-                            </td>
-                            <td>¥10,666,667</td>
-                            <td>¥12,000,000</td>
-                            <td>
-                                <div class="probability-bar">
-                                    <div class="probability-fill" style="width: 30%; background: #ff4d4f;"></div>
-                                    <span>30%</span>
-                                </div>
-                            </td>
-                            <td><span class="risk-badge risk-high">🔴 高风险</span></td>
+                        <tr>
+                            <td>乐观情况 (50%)</td>
+                            <td>¥4,200,000</td>
+                            <td>85%</td>
+                            <td><span class="risk-low">低风险</span></td>
+                            <td>积极扩张</td>
                         </tr>
-                        <tr class="scenario-row risk-medium">
-                            <td>
-                                <span class="margin-badge margin-30">30%</span>
-                            </td>
-                            <td>¥4,571,429</td>
-                            <td>¥6,000,000</td>
-                            <td>
-                                <div class="probability-bar">
-                                    <div class="probability-fill" style="width: 65%; background: #faad14;"></div>
-                                    <span>65%</span>
-                                </div>
-                            </td>
-                            <td><span class="risk-badge risk-medium">🟡 中等风险</span></td>
+                        <tr>
+                            <td>中性情况 (45%)</td>
+                            <td>¥4,680,000</td>
+                            <td>70%</td>
+                            <td><span class="risk-medium">中等风险</span></td>
+                            <td>稳健发展</td>
                         </tr>
-                        <tr class="scenario-row risk-low">
-                            <td>
-                                <span class="margin-badge margin-65">65%</span>
-                            </td>
-                            <td>¥2,461,538</td>
-                            <td>¥4,000,000</td>
-                            <td>
-                                <div class="probability-bar">
-                                    <div class="probability-fill" style="width: 90%; background: #52c41a;"></div>
-                                    <span>90%</span>
-                                </div>
-                            </td>
-                            <td><span class="risk-badge risk-low">🟢 低风险</span></td>
+                        <tr>
+                            <td>悲观情况 (40%)</td>
+                            <td>¥5,400,000</td>
+                            <td>45%</td>
+                            <td><span class="risk-high">高风险</span></td>
+                            <td>成本控制</td>
+                        </tr>
+                        <tr>
+                            <td>极端情况 (35%)</td>
+                            <td>¥6,480,000</td>
+                            <td>25%</td>
+                            <td><span class="risk-high">极高风险</span></td>
+                            <td>战略调整</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            
+
             <!-- 智能建议 -->
-            <div class="advice-section">
-                <h3>💡 智能建议</h3>
+            <div class="analysis-section">
+                <h3 class="section-title">智能建议</h3>
+                
                 <div class="advice-cards">
-                    <div class="advice-card advice-primary">
-                        <div class="advice-icon">🎯</div>
-                        <div class="advice-title">核心建议</div>
+                    <div class="advice-card">
+                        <div class="advice-title">
+                            <i class="fas fa-lightbulb" style="color: #faad14;"></i>
+                            核心建议
+                        </div>
                         <div class="advice-content">
-                            当前应重点提升毛利率至30%以上，确保稳定盈利。建议优化产品结构，提升高毛利产品比例。
+                            根据当前分析，建议将毛利率目标设定在45-50%之间，这样可以在保证盈利的同时维持市场竞争力。重点关注提升产品附加值和优化供应链成本。
                         </div>
                     </div>
-                    <div class="advice-card advice-warning">
-                        <div class="advice-icon">⚠️</div>
-                        <div class="advice-title">风险提示</div>
+                    
+                    <div class="advice-card">
+                        <div class="advice-title">
+                            <i class="fas fa-exclamation-triangle" style="color: #ff4d4f;"></i>
+                            风险提示
+                        </div>
                         <div class="advice-content">
-                            在10%毛利率场景下，需要1066万营业额才能盈亏平衡，达成难度较高，需要制定风险应对措施。
+                            当前固定成本占比较高，如果营业额下降超过20%，将面临较大亏损风险。建议建立成本弹性机制，部分固定成本可考虑转为变动成本。
                         </div>
                     </div>
-                    <div class="advice-card advice-success">
-                        <div class="advice-icon">📈</div>
-                        <div class="advice-title">增长机会</div>
+                    
+                    <div class="advice-card">
+                        <div class="advice-title">
+                            <i class="fas fa-rocket" style="color: #52c41a;"></i>
+                            增长机会
+                        </div>
                         <div class="advice-content">
-                            在65%毛利率下，仅需246万营业额即可盈亏平衡，建议重点发展高毛利业务线。
+                            分析显示销售部门效率最高，建议加大销售团队投入和激励力度。同时，产品研发部门的投入产出比有提升空间，可优化项目管理流程。
                         </div>
                     </div>
                 </div>
             </div>
-            
+
             <!-- 成本结构分析 -->
-            <div class="cost-section">
-                <div class="cost-grid">
-                    <div class="cost-chart">
-                        <h3>成本结构分布</h3>
-                        <div class="chart-container-small" id="costChart"></div>
-                    </div>
+            <div class="analysis-section">
+                <h3 class="section-title">成本结构分析</h3>
+                
+                <div class="cost-breakdown">
+                    <div class="cost-chart" id="costChart"></div>
+                    
                     <div class="cost-details">
-                        <h3>成本明细</h3>
-                        <div class="cost-items">
-                            <div class="cost-item">
-                                <div class="cost-label">人工成本</div>
-                                <div class="cost-value">¥2,385,600</div>
-                                <div class="cost-percent">74.6%</div>
-                            </div>
-                            <div class="cost-item">
-                                <div class="cost-label">租金成本</div>
-                                <div class="cost-value">¥480,000</div>
-                                <div class="cost-percent">15.0%</div>
-                            </div>
-                            <div class="cost-item">
-                                <div class="cost-label">运营成本</div>
-                                <div class="cost-value">¥334,400</div>
-                                <div class="cost-percent">10.4%</div>
-                            </div>
+                        <h4 style="margin-top: 0; margin-bottom: 16px; color: #262626;">成本明细</h4>
+                        
+                        <div class="cost-item">
+                            <span class="cost-label">人力成本</span>
+                            <span class="cost-value">¥2,385,600 (48%)</span>
+                        </div>
+                        
+                        <div class="cost-item">
+                            <span class="cost-label">办公场地</span>
+                            <span class="cost-value">¥600,000 (12%)</span>
+                        </div>
+                        
+                        <div class="cost-item">
+                            <span class="cost-label">设备折旧</span>
+                            <span class="cost-value">¥400,000 (8%)</span>
+                        </div>
+                        
+                        <div class="cost-item">
+                            <span class="cost-label">研发投入</span>
+                            <span class="cost-value">¥800,000 (16%)</span>
+                        </div>
+                        
+                        <div class="cost-item">
+                            <span class="cost-label">营销推广</span>
+                            <span class="cost-value">¥500,000 (10%)</span>
+                        </div>
+                        
+                        <div class="cost-item">
+                            <span class="cost-label">其他费用</span>
+                            <span class="cost-value">¥314,400 (6%)</span>
+                        </div>
+                        
+                        <div class="cost-item" style="border-top: 2px solid #1890ff; margin-top: 16px; padding-top: 16px;">
+                            <span class="cost-label" style="font-weight: 600;">总成本</span>
+                            <span class="cost-value" style="font-size: 18px; color: #1890ff;">¥5,000,000</span>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
+
+        <!-- 底部页脚 -->
+        <footer class="app-footer">
+            © 2024 Portal 3.0 - 企业管理平台. All rights reserved.
+        </footer>
     </div>
 
     <script src="../assets/js/navigation.js"></script>
@@ -222,216 +655,141 @@
                 const nav = new NavigationManager();
                 nav.render();
             }
-            
-            // 初始化图表
-            initBreakevenChart();
+        });
+
+        // 页面加载完成后初始化图表
+        window.addEventListener('load', function() {
+            initBreakEvenChart();
             initCostChart();
         });
 
-        // 场景按钮切换
-        document.addEventListener('click', function(e) {
-            if (e.target.classList.contains('scenario-btn')) {
-                e.target.classList.toggle('active');
-                updateAnalysis();
-            }
-        });
-
         // 盈亏平衡分析图表
-        function initBreakevenChart() {
-            const chart = echarts.init(document.getElementById('breakevenChart'));
+        function initBreakEvenChart() {
+            const chart = echarts.init(document.getElementById('breakEvenChart'));
             
-            const option = {
+            chart.setOption({
                 title: {
-                    text: '盈亏平衡分析',
-                    left: 'center',
-                    textStyle: { fontSize: 16, fontWeight: 600 }
+                    text: '盈亏平衡分析图',
+                    left: 'center'
                 },
                 tooltip: {
                     trigger: 'axis',
                     formatter: function(params) {
-                        return `毛利率: ${params[0].name}<br/>营业额: ¥${params[0].value}万`;
+                        let result = params[0].name + '<br/>';
+                        params.forEach(item => {
+                            result += item.seriesName + ': ¥' + item.value.toLocaleString() + '<br/>';
+                        });
+                        return result;
                     }
                 },
-                grid: {
-                    left: '3%',
-                    right: '4%',
-                    bottom: '10%',
-                    top: '20%',
-                    containLabel: true
+                legend: {
+                    data: ['营业收入', '总成本', '固定成本', '变动成本'],
+                    bottom: 10
                 },
                 xAxis: {
                     type: 'category',
-                    data: ['5%', '10%', '15%', '20%', '25%', '30%', '35%', '40%', '45%', '50%', '55%', '60%', '65%', '70%'],
-                    name: '毛利率',
-                    nameLocation: 'middle',
-                    nameGap: 30
+                    data: ['1000万', '2000万', '3000万', '4000万', '5000万', '6000万', '7000万'],
+                    name: '营业额'
                 },
                 yAxis: {
                     type: 'value',
-                    name: '营业额 (万元)',
-                    nameLocation: 'middle',
-                    nameGap: 50,
+                    name: '金额(万元)',
                     axisLabel: {
-                        formatter: '{value}万'
+                        formatter: '{value}'
                     }
                 },
                 series: [
                     {
-                        name: '盈亏平衡点',
+                        name: '营业收入',
                         type: 'line',
-                        data: [6400, 3200, 2133, 1600, 1280, 1067, 914, 800, 711, 640, 582, 533, 492, 457],
-                        lineStyle: { color: '#ff4d4f', width: 3 },
+                        data: [1000, 2000, 3000, 4000, 5000, 6000, 7000],
+                        itemStyle: { color: '#1890ff' },
+                        lineStyle: { width: 3 }
+                    },
+                    {
+                        name: '总成本',
+                        type: 'line',
+                        data: [1550, 2100, 2650, 3200, 3750, 4300, 4850],
                         itemStyle: { color: '#ff4d4f' },
-                        markPoint: {
-                            data: [
-                                { name: '10%毛利率', coord: ['10%', 3200], value: '1067万' },
-                                { name: '30%毛利率', coord: ['30%', 1067], value: '457万' },
-                                { name: '65%毛利率', coord: ['65%', 492], value: '246万' }
-                            ],
-                            itemStyle: { color: '#1890ff' },
-                            label: { formatter: '{b}' }
-                        }
+                        lineStyle: { width: 3 }
+                    },
+                    {
+                        name: '固定成本',
+                        type: 'line',
+                        data: [1200, 1200, 1200, 1200, 1200, 1200, 1200],
+                        itemStyle: { color: '#faad14' },
+                        lineStyle: { type: 'dashed' }
+                    },
+                    {
+                        name: '变动成本',
+                        type: 'line',
+                        data: [350, 900, 1450, 2000, 2550, 3100, 3650],
+                        itemStyle: { color: '#52c41a' },
+                        lineStyle: { type: 'dashed' }
                     }
-                ],
-                visualMap: {
-                    type: 'piecewise',
-                    show: false,
-                    dimension: 1,
-                    pieces: [
-                        { gt: 1000, color: '#ff4d4f' },
-                        { gte: 500, lte: 1000, color: '#faad14' },
-                        { lt: 500, color: '#52c41a' }
-                    ]
-                }
-            };
-            
-            chart.setOption(option);
+                ]
+            });
         }
 
         // 成本结构饼图
         function initCostChart() {
             const chart = echarts.init(document.getElementById('costChart'));
             
-            const option = {
+            chart.setOption({
+                title: {
+                    text: '成本结构分布',
+                    left: 'center'
+                },
                 tooltip: {
                     trigger: 'item',
-                    formatter: '{a} <br/>{b}: ¥{c}万 ({d}%)'
+                    formatter: '{a} <br/>{b}: ¥{c} ({d}%)'
                 },
                 legend: {
                     orient: 'vertical',
                     left: 'left'
                 },
-                series: [
-                    {
-                        name: '成本构成',
-                        type: 'pie',
-                        radius: ['40%', '70%'],
-                        center: ['65%', '50%'],
-                        data: [
-                            { value: 239, name: '人工成本', itemStyle: { color: '#1890ff' } },
-                            { value: 48, name: '租金成本', itemStyle: { color: '#52c41a' } },
-                            { value: 33, name: '运营成本', itemStyle: { color: '#faad14' } }
-                        ],
-                        emphasis: {
-                            itemStyle: {
-                                shadowBlur: 10,
-                                shadowOffsetX: 0,
-                                shadowColor: 'rgba(0, 0, 0, 0.5)'
-                            }
+                series: [{
+                    name: '成本结构',
+                    type: 'pie',
+                    radius: ['40%', '70%'],
+                    center: ['60%', '50%'],
+                    data: [
+                        { value: 2385600, name: '人力成本' },
+                        { value: 600000, name: '办公场地' },
+                        { value: 400000, name: '设备折旧' },
+                        { value: 800000, name: '研发投入' },
+                        { value: 500000, name: '营销推广' },
+                        { value: 314400, name: '其他费用' }
+                    ],
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowOffsetX: 0,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
                         }
                     }
-                ]
-            };
-            
-            chart.setOption(option);
+                }]
+            });
         }
 
-        // 更新分析
-        function updateAnalysis() {
-            // 这里可以根据选中的场景更新分析结果
-            console.log('更新分析结果');
+        // 分析功能
+        function runAnalysis() {
+            alert('正在运行财务分析，请稍候...');
+        }
+
+        function resetParams() {
+            document.querySelectorAll('.param-input').forEach(input => {
+                if (input.type === 'number') {
+                    input.value = input.defaultValue || '';
+                } else {
+                    input.selectedIndex = 0;
+                }
+            });
+        }
+
+        function saveTemplate() {
+            alert('分析模板已保存');
         }
     </script>
-
-    <style>
-        body { margin: 0; font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif; background: #f5f5f5; }
-        .app-layout { display: grid; grid-template-areas: "sidebar header" "sidebar main"; grid-template-columns: 240px 1fr; grid-template-rows: 60px 1fr; min-height: 100vh; }
-        .app-header { grid-area: header; background: white; border-bottom: 1px solid #e8e8e8; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
-        .app-main { grid-area: main; padding: 24px; overflow-y: auto; }
-        .page-header { margin-bottom: 32px; }
-        .page-title { font-size: 24px; font-weight: 600; color: #262626; margin: 0 0 8px 0; display: flex; align-items: center; }
-        .page-title i { color: #1890ff; margin-right: 12px; }
-        .page-subtitle { color: #8c8c8c; font-size: 14px; margin: 0; }
-        
-        .params-section, .chart-section, .scenario-section, .advice-section, .cost-section { 
-            background: white; border-radius: 12px; padding: 24px; margin-bottom: 24px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); 
-        }
-        .params-section h3, .chart-section h3, .scenario-section h3, .advice-section h3, .cost-section h3 { 
-            font-size: 18px; font-weight: 600; color: #262626; margin: 0 0 20px 0; 
-        }
-        
-        .params-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 24px; }
-        .param-item { display: flex; flex-direction: column; gap: 8px; }
-        .param-item label { font-size: 14px; font-weight: 500; color: #262626; }
-        .param-select, .param-input { padding: 8px 12px; border: 1px solid #d9d9d9; border-radius: 6px; font-size: 14px; }
-        .scenario-buttons { display: flex; gap: 8px; }
-        .scenario-btn { padding: 8px 16px; border: 1px solid #d9d9d9; border-radius: 6px; background: white; color: #666; font-size: 14px; cursor: pointer; transition: all 0.3s ease; }
-        .scenario-btn.active { background: #1890ff; color: white; border-color: #1890ff; }
-        
-        .action-row { display: flex; gap: 16px; }
-        .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #d9d9d9; background: white; color: #666; font-size: 14px; cursor: pointer; transition: all 0.3s ease; }
-        .btn-primary { background: #1890ff; color: white; border-color: #1890ff; }
-        .btn:hover { opacity: 0.8; }
-        
-        .chart-container { height: 400px; margin-bottom: 20px; }
-        .chart-container-small { height: 300px; }
-        .chart-legend { display: flex; gap: 24px; justify-content: center; }
-        .legend-item { display: flex; align-items: center; gap: 8px; }
-        .legend-color { width: 16px; height: 16px; border-radius: 50%; }
-        .legend-color.profit { background: #52c41a; }
-        .legend-color.loss { background: #ff4d4f; }
-        .legend-color.breakeven { background: #1890ff; }
-        
-        .scenario-table { width: 100%; border-collapse: collapse; }
-        .scenario-table th, .scenario-table td { text-align: left; padding: 12px; border-bottom: 1px solid #f0f0f0; }
-        .scenario-table th { background: #fafafa; font-weight: 600; color: #262626; }
-        .scenario-table td { color: #595959; }
-        .scenario-table tr:hover { background: #fafafa; }
-        .margin-badge { padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; color: white; }
-        .margin-10 { background: #ff4d4f; }
-        .margin-30 { background: #faad14; }
-        .margin-65 { background: #52c41a; }
-        .probability-bar { position: relative; width: 100px; height: 20px; background: #f0f0f0; border-radius: 10px; overflow: hidden; }
-        .probability-fill { height: 100%; border-radius: 10px; }
-        .probability-bar span { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 12px; color: white; font-weight: 500; }
-        .risk-badge { padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; }
-        .risk-high { background: #fff2f0; color: #ff4d4f; }
-        .risk-medium { background: #fffbe6; color: #faad14; }
-        .risk-low { background: #f6ffed; color: #52c41a; }
-        
-        .advice-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-        .advice-card { padding: 20px; border-radius: 8px; border-left: 4px solid; }
-        .advice-primary { background: #e6f7ff; border-left-color: #1890ff; }
-        .advice-warning { background: #fffbe6; border-left-color: #faad14; }
-        .advice-success { background: #f6ffed; border-left-color: #52c41a; }
-        .advice-icon { font-size: 24px; margin-bottom: 8px; }
-        .advice-title { font-size: 16px; font-weight: 600; color: #262626; margin-bottom: 8px; }
-        .advice-content { font-size: 14px; color: #595959; line-height: 1.5; }
-        
-        .cost-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-        .cost-details h3 { margin-bottom: 16px; }
-        .cost-items { display: flex; flex-direction: column; gap: 12px; }
-        .cost-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: #fafafa; border-radius: 6px; }
-        .cost-label { color: #8c8c8c; }
-        .cost-value { font-weight: 600; color: #262626; }
-        .cost-percent { color: #1890ff; font-size: 12px; }
-        
-        @media (max-width: 768px) {
-            .app-layout { grid-template-columns: 1fr; grid-template-areas: "header" "main"; }
-            .params-grid { grid-template-columns: 1fr; }
-            .advice-cards { grid-template-columns: 1fr; }
-            .cost-grid { grid-template-columns: 1fr; }
-        }
-    </style>
 </body>
 </html> 

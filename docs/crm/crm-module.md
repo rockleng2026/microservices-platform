@@ -214,9 +214,10 @@ graph TD
 ├── zlt-business -- 业务模块
 │   ├── system-service 系统管理[7001] 包含租户管理
 │   ├── organization-service 组织模块[7002] 包含部门管理 用户管理 岗位管理 员工管理
-│   ├── organization-service 多维表格[7003] 包含部门管理 用户管理 岗位管理 员工管理
+│   ├── multi-table-service 多维表格[7003] 
 │   ├── project-manager-service 项目管理[7004] 
 │   ├── crm-sevic 项目管理[7005] 
+│   ├── saleops-optimizer 发盈策通决策管理[7006] 
 │   ├── file-center -- 文件中心[5000]
 │   ├── code-generator -- 代码生成器[7300]
 │   └── search-center -- 搜索中心[7100]

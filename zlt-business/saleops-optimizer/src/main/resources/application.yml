@@ -1,0 +1,62 @@
+spring:
+  #数据库配置
+  datasource:
+    url: jdbc:mysql://${zlt.datasource.ip}:3306/central_soo?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai
+    username: ${zlt.datasource.username}
+    password: ${zlt.datasource.password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+#mybatis-plus配置
+mybatis-plus:
+  mapper-locations: classpath:/mapper/*Mapper.xml
+  typeAliasesPackage: com.central.soo.model
+  global-config:
+    db-config:
+      logic-delete-field: delflag
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+zlt:
+  #多租户配置
+  tenant:
+    enable: true
+    ignoreTables:
+      - soo_social_security_base
+      - soo_regional_salary_coefficient
+      - soo_kpi_definition
+
+#swagger配置
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: 'default'
+      paths-to-match: '/**'
+      packages-to-scan: com.central.soo.controller
+  default-flat-param-object: true
+
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    swagger-model-name: 销售运营优化器API文档
+
+# 日志配置
+logging:
+  level:
+    com.central.soo: debug
+    org.springframework.transaction: debug
+
+# 管理端点配置
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always 

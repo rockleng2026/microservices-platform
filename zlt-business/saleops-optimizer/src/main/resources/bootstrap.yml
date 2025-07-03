@@ -1,0 +1,28 @@
+server:
+  port: 7006
+
+spring:
+  application:
+    name: soo-service
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      username: ${zlt.nacos.username}
+      password: ${zlt.nacos.password}
+      discovery:
+        server-addr: ${zlt.nacos.server-addr}
+        group: ${zlt.nacos.discovery.group}
+        namespace: ${zlt.nacos.discovery.namespace}
+      config:
+        server-addr: ${zlt.nacos.server-addr}
+        file-extension: yml
+        group: ${zlt.nacos.config.group}
+        namespace: ${zlt.nacos.config.namespace}
+        extension-configs:
+          - dataId: db.yml
+            group: ${zlt.nacos.config.group}
+            refresh: true
+          - dataId: redis.yml
+            group: ${zlt.nacos.config.group}
+            refresh: true 

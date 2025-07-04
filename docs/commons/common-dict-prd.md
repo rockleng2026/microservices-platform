@@ -31,8 +31,44 @@ CREATE TABLE sys_dict_category (
   updated_by bigint(20) NULL DEFAULT NULL COMMENT '更新人'  
 ) COMMENT='字典类目表';
 ```
+### 2. 字典扩展字段定义表（sys_dict_extend_field）
+```sql
+CREATE TABLE sys_dict_extend_field (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
+  category_id BIGINT NOT NULL COMMENT '关联的字典类目ID',
+  field_code VARCHAR(50) NOT NULL COMMENT '扩展字段编码（英文标识，同一类目下唯一）',
+  field_name VARCHAR(50) NOT NULL COMMENT '扩展字段显示名称',
+  field_type VARCHAR(20) NOT NULL COMMENT '字段类型(string/number/date/boolean)',
+  default_value VARCHAR(100) COMMENT '默认值',
+  sort_order INT DEFAULT 0 COMMENT '排序序号',
+  extend_schema json DEFAULT NULL COMMENT '扩展字段JSON结构（冗余字段，优化查询）',
+  required TINYINT(1) DEFAULT 0 COMMENT '是否必填(0=否,1=是)',
+  created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  created_by bigint(20) NULL DEFAULT NULL COMMENT '创建人',
+  updated_by bigint(20) NULL DEFAULT NULL COMMENT '更新人',
+  
+  -- 外键约束（确保关联有效的字典类目）
+  FOREIGN KEY (category_id) 
+    REFERENCES sys_dict_category(id) 
+    ON DELETE CASCADE 
+    ON UPDATE CASCADE,
+    
+  -- 同一类目下字段编码唯一约束
+  UNIQUE KEY uk_category_field (category_id, field_code),
+  
+  -- 字段类型校验约束
+  CONSTRAINT chk_field_type CHECK (
+    field_type IN ('string', 'number', 'date', 'boolean')
+  )
+) COMMENT '字典扩展字段定义表';
 
-### 2. 字典明细表（sys_dict_item）
+-- 添加索引优化查询性能
+CREATE INDEX idx_category_id ON sys_dict_extend_field(category_id);
+CREATE INDEX idx_field_code ON sys_dict_extend_field(field_code);
+
+```
+### 3. 字典明细表（sys_dict_item）
 ```sql
 CREATE TABLE sys_dict_item (
   id BIGINT AUTO_INCREMENT PRIMARY KEY COMMENT '主键ID',
@@ -40,7 +76,7 @@ CREATE TABLE sys_dict_item (
   item_code VARCHAR(50) NOT NULL COMMENT '子项编码（如：MALE/FEMALE）',
   item_name VARCHAR(100) NOT NULL COMMENT '子项名称（如：男/女）',
   sort_order INT DEFAULT 0 COMMENT '排序序号',
-  extend_data JSON COMMENT '扩展数据（如颜色、图标等）',
+  extend_data JSON COMMENT '扩展字段值，格式：{"字段编码":"值"}',
   is_default TINYINT(1) DEFAULT 0 COMMENT '是否默认项（0=否, 1=是）',
   status TINYINT DEFAULT 1 COMMENT '状态（0=禁用, 1=启用）',
   created_at timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
@@ -108,3 +144,13 @@ ORDER BY sort_order;
 - 维护便捷，避免硬编码
 - 支持多语言、缓存、高性能
 - 适配多租户、审计、权限等企业级需求
+
+
+扩展字段的核心需求
+类目级扩展：扩展字段应该在类目级别定义，同一类目的所有子项共享相同的扩展字段
+
+批量维护：添加扩展字段后，所有子项应能在一个界面统一维护该字段的值
+
+动态扩展：无需修改表结构即可增加新属性
+
+类型支持：支持不同数据类型的扩展字段

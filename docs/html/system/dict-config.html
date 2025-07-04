@@ -213,6 +213,51 @@
         .empty-text {
             font-size: 14px;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            left: 0; top: 0; right: 0; bottom: 0;
+            z-index: 9999;
+            background: rgba(0,0,0,0.18);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal.show { display: flex; }
+        .modal-content {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            min-width: 400px;
+            max-width: 90vw;
+            margin: auto;
+            padding: 0;
+            animation: modalIn .2s;
+        }
+        @keyframes modalIn { from{transform:scale(0.9);opacity:0;} to{transform:scale(1);opacity:1;} }
+        .modal-header { padding: 18px 24px 0 24px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 18px; font-weight: 600; }
+        .modal-close { font-size: 22px; color: #aaa; cursor: pointer; }
+        .modal-close:hover { color: #f5222d; }
+        .modal-body { padding: 20px 24px; }
+        .modal-footer { padding: 16px 24px; border-top: 1px solid #f0f0f0; text-align: right; }
+        .tabs { border-bottom: 1px solid #f0f0f0; background: #fafbfc; border-radius: 8px 8px 0 0; }
+        .tab { padding: 10px 24px; border-radius: 8px 8px 0 0; background: #fafbfc; color: #888; font-weight: 500; }
+        .tab.active { background: #fff; color: #1890ff; border-bottom: 2px solid #1890ff; }
+        .tab-content { padding: 18px 0 0 0; }
+        .table th, .table td { padding: 8px 10px; border-bottom: 1px solid #f0f0f0; }
+        .table th { background: #f7f8fa; color: #666; font-weight: 600; }
+        .table tr:hover { background: #f5faff; }
+        .category-item { transition: box-shadow .2s; }
+        .category-item.active, .category-item:hover { box-shadow: 0 2px 8px #e6f7ff; background: #f0faff; }
+        .btn-xs { font-size: 12px; padding: 2px 8px; }
+        .form-input, .form-select { border-radius: 6px; border: 1px solid #d9d9d9; padding: 6px 10px; }
+        .form-input:focus, .form-select:focus { border-color: #1890ff; box-shadow: 0 0 0 2px #e6f7ff; }
+        .form-group { margin-bottom: 14px; }
+        .form-label { font-weight: 500; color: #333; margin-bottom: 4px; display: block; }
+        .form-label.required:after { content: '*'; color: #f5222d; margin-left: 4px; }
+        /* 扩展字段表格内编辑样式 */
+        .extend-row-editing td { background: #fffbe6 !important; }
+        .extend-row-editing input, .extend-row-editing select { background: #fffbe6; }
     </style>
 </head>
 <body>
@@ -252,9 +297,10 @@
             <!-- 字典类目面板 -->
             <div class="category-panel">
                 <div class="category-panel-header">
-                    <h3 class="category-panel-title">字典类目</h3>
+                    <h3 class="category-panel-title"><span style="font-size:18px;color:#1890ff;vertical-align:middle;">📚</span> 字典类目</h3>
                     <button class="btn btn-primary" id="add-category-btn">新建类目</button>
                 </div>
+                <div style="padding:0 20px 8px 20px;color:#888;font-size:13px;">维护所有业务枚举/字典类型，支持多场景复用</div>
                 <div class="category-search">
                     <input type="text" id="categorySearchInput" placeholder="搜索类目名称或编码...">
                 </div>
@@ -272,6 +318,11 @@
                         <button class="btn btn-default" id="import-btn">导入</button>
                     </div>
                 </div>
+                <div style="padding:0 20px 8px 20px;color:#888;font-size:13px;display:flex;align-items:center;gap:16px;">
+                    <span id="dict-count-info">共 <b>0</b> 项</span>
+                    <span id="dict-desc-info"></span>
+                </div>
+                <hr style="margin:0 20px 12px 20px;border:none;border-top:1px solid #f0f0f0;">
                 <div class="dict-content">
                     <table class="dict-item-table">
                         <thead>
@@ -289,6 +340,11 @@
                         <!-- 明细项由JS渲染 -->
                         </tbody>
                     </table>
+                    <div style="margin-top:8px;display:flex;gap:12px;">
+                        <button class="btn btn-success btn-xs" id="batch-add-item-btn"><i class="iconfont">&#xe61f;</i> 新增明细</button>
+                        <button class="btn btn-primary btn-xs" id="batch-save-item-btn"><i class="iconfont">&#xe605;</i> 批量保存</button>
+                        <button class="btn btn-danger btn-xs" id="batch-delete-item-btn"><i class="iconfont">&#xe640;</i> 批量删除</button>
+                    </div>
                     <div class="empty-state" id="empty-state" style="display:none;">
                         <div class="empty-icon">📂</div>
                         <div class="empty-text">暂无明细项</div>
@@ -302,8 +358,63 @@
         © 2024 Portal 3.0 企业管理平台. All rights reserved.
     </footer>
 </div>
+<!-- 新建/编辑类目弹窗（增加扩展字段Tab） -->
+<div class="modal" id="category-modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 id="category-modal-title">新建类目</h3>
+      <span class="modal-close" onclick="$('#category-modal').hide()">×</span>
+    </div>
+    <div class="modal-body">
+      <div class="tabs" style="display:flex;gap:16px;margin-bottom:16px;">
+        <div class="tab tab-base active" data-tab="base" style="cursor:pointer;">基础信息</div>
+        <div class="tab tab-extend" data-tab="extend" style="cursor:pointer;">扩展字段</div>
+      </div>
+      <div class="tab-content" id="tab-base">
+        <div class="form-group">
+          <label class="form-label required">类目名称</label>
+          <input type="text" class="form-input" id="category-name-input" maxlength="50">
+        </div>
+        <div class="form-group">
+          <label class="form-label required">类目编码</label>
+          <input type="text" class="form-input" id="category-code-input" maxlength="50">
+        </div>
+        <div class="form-group">
+          <label class="form-label">描述</label>
+          <textarea class="form-input" id="category-desc-input" maxlength="255"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">状态</label>
+          <select class="form-input" id="category-status-input">
+            <option value="1">启用</option>
+            <option value="0">禁用</option>
+          </select>
+        </div>
+      </div>
+      <div class="tab-content" id="tab-extend" style="display:none;">
+        <div style="margin-bottom:12px;">
+          <button class="btn btn-primary" id="add-extend-field-btn">新增扩展字段</button>
+        </div>
+        <table class="table" style="width:100%;">
+          <thead>
+            <tr>
+              <th>字段编码</th><th>字段名称</th><th>类型</th><th>默认值</th><th>必填</th><th>排序</th><th>操作</th>
+            </tr>
+          </thead>
+          <tbody id="extend-field-table">
+            <!-- 动态渲染扩展字段行 -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" id="category-modal-save">保存</button>
+      <button class="btn btn-default" onclick="$('#category-modal').hide()">取消</button>
+    </div>
+  </div>
+</div>
 <script src="../assets/js/navigation.js"></script>
-<script src="../assets/js/jquery.min.js"></script>
+<script src="../assets/js/jquery-3.6.0.min.js"></script>
 <script src="../assets/js/common.js"></script>
 <script src="../assets/js/dict-config.js"></script>
 </body>

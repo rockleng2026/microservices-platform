@@ -145,6 +145,20 @@ spring:
 - `PUT /api/organization/positions/{id}` - 更新岗位
 - `DELETE /api/organization/positions/{id}` - 删除岗位
 
+### 通用字典表API接口
+
+- 类目相关：
+  - GET    /api/dict/category/list         获取所有字典类目
+  - POST   /api/dict/category             新增字典类目
+  - PUT    /api/dict/category             编辑字典类目
+  - DELETE /api/dict/category/{id}        删除字典类目
+- 明细相关：
+  - GET    /api/dict/item/list            获取所有字典明细
+  - GET    /api/dict/item/by-category/{categoryId}  获取某类目下所有明细
+  - POST   /api/dict/item                 新增字典明细
+  - PUT    /api/dict/item                 编辑字典明细
+  - DELETE /api/dict/item/{id}            删除字典明细
+
 ## 权限控制
 
 服务使用基于注解的权限控制：
@@ -225,4 +239,12 @@ mvn spring-boot:run
 
 ## 技术支持
 
-如有问题或需要技术支持，请联系开发团队。 
+如有问题或需要技术支持，请联系开发团队。
+
+## 通用字典表服务
+
+本模块已支持通用字典表（sys_dict_category/sys_dict_item），用于统一管理组织相关的枚举和字典数据。
+- 支持字典类目、字典明细的增删改查
+- 支持多语言扩展、扩展字段、排序、状态、默认项等
+- 详见 `model/DictCategory.java`、`model/DictItem.java` 及相关service/mapper/controller
+- 建表SQL见 common-dict-prd.md 或后续sql脚本 

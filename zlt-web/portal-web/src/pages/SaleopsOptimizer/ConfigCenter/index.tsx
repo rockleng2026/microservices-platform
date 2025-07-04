@@ -20,17 +20,24 @@ import './index.less';
 import { request } from '@/utils/request';
 import { getDepartmentBonusList, addDepartmentBonus, updateDepartmentBonus, deleteDepartmentBonus } from '@/services/soo';
 import { getDepartmentTree } from '@/services/organization';
+import { getApiUrl } from '@/config/api';
+import JobLevelSalary from './JobLevelSalary';
+import DepartmentBonus from './DepartmentBonus';
+import EmployeeSalary from './EmployeeSalary';
+import SocialSecurityBase from './SocialSecurityBase';
+import RegionSalaryFactor from './RegionSalaryFactor';
 
 const { Header, Sider, Content, Footer } = Layout;
 const { Title } = Typography;
 const { Option } = Select;
+const { TabPane } = Tabs;
 
 const tabItems = [
-  { key: 'department', label: '部门分红配置' },
-  { key: 'jobLevel', label: '职级薪资标准' },
-  { key: 'employee', label: '员工薪酬配置' },
-  { key: 'social', label: '社保公积金基数' },
-  { key: 'region', label: '地区工资系数' },
+  { key: 'departmentBonus', label: '部门分红配置' },
+  { key: 'jobLevelSalary', label: '职级薪资标准' },
+  { key: 'employeeSalary', label: '员工薪酬配置' },
+  { key: 'socialSecurityBase', label: '社保公积金基数' },
+  { key: 'regionSalaryFactor', label: '地区工资系数' },
 ];
 
 // 部门分红配置表格列
@@ -85,6 +92,7 @@ const BaseConfig: React.FC = () => {
   // 岗位薪资配置
   const [jobLevelData, setJobLevelData] = useState<any[]>([]);
   const [jobLevelLoading, setJobLevelLoading] = useState(false);
+  const [jobLevelPagination, setJobLevelPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [jobLevelModalOpen, setJobLevelModalOpen] = useState(false);
   const [jobLevelEditing, setJobLevelEditing] = useState<any | null>(null);
   const [jobLevelForm] = Form.useForm();
@@ -100,7 +108,7 @@ const BaseConfig: React.FC = () => {
   const [employeeSalaryDepartmentTree, setEmployeeSalaryDepartmentTree] = useState<any[]>([]);
   const [employeeList, setEmployeeList] = useState<any[]>([]);
 
-  const [activeTab, setActiveTab] = useState('department');
+  const [activeTab, setActiveTab] = useState('departmentBonus');
 
   // 备注弹窗相关
   const [remarkModalOpen, setRemarkModalOpen] = useState(false);
@@ -304,88 +312,135 @@ const BaseConfig: React.FC = () => {
     </>
   );
 
-  // Tab内容渲染
-  const renderTabContent = () => {
-    if (activeTab === 'department') {
-      return (
-        <Card
-          className="config-card"
-          title="部门分红配置"
-          extra={
-            <Space>
-              <Input.Search
-                allowClear
-                placeholder="搜索部门"
-                style={{ width: 200 }}
-                onSearch={handleDepartmentSearch}
-              />
-              {canAdd && (
-                <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>
-                  新增配置
-                </Button>
-              )}
-            </Space>
-          }
-          bordered={false}
-        >
-          <Table
-            columns={departmentColumns(handleEdit, handleDelete, handleRemark)}
-            dataSource={departmentData}
-            loading={departmentLoading}
-            rowKey="id"
-            pagination={departmentPagination}
-            onChange={handleDepartmentTableChange}
-            className="config-table"
-          />
-          <Modal
-            open={modalOpen}
-            title={editingRecord ? '编辑' : '新增'}
-            onOk={handleModalOk}
-            onCancel={handleModalCancel}
-            destroyOnClose
-            confirmLoading={departmentLoading}
-          >
-            <Form form={form} layout="vertical">
-              {renderModalForm()}
-            </Form>
-          </Modal>
-          <Modal
-            open={!!deleteRecord}
-            title="确认删除"
-            onOk={handleDeleteOk}
-            onCancel={handleDeleteCancel}
-            okText="删除"
-            okButtonProps={{ danger: true, loading: deleteLoading }}
-          >
-            <div>确定要删除该条数据吗？</div>
-          </Modal>
-          <Modal
-            title="备注"
-            open={remarkModalOpen}
-            onOk={handleRemarkOk}
-            onCancel={handleRemarkCancel}
-            okText="保存"
-            cancelText="取消"
-            confirmLoading={departmentLoading}
-          >
-            <Form form={remarkForm} layout="vertical">
-              <Form.Item name="remark" label="备注">
-                <Input.TextArea rows={4} maxLength={200} showCount />
-              </Form.Item>
-            </Form>
-          </Modal>
-        </Card>
-      );
+  // 加载职级薪资标准数据
+  const loadJobLevelData = async (page = 1, pageSize = 10) => {
+    setJobLevelLoading(true);
+    try {
+      const res = await request(getApiUrl('/api/soo/job-level-salary/page', 'SOO'), { params: { pageNum: page, pageSize } });
+      if (res && res.resp_code === 0) {
+        setJobLevelData(res.datas.records || []);
+        setJobLevelPagination({ current: page, pageSize, total: res.datas.total || 0 });
+      } else {
+        message.error(res?.resp_msg || '获取数据失败');
+      }
+    } catch (e: any) {
+      message.error(e.message || '获取数据失败');
+    } finally {
+      setJobLevelLoading(false);
     }
-    // 其他Tab保留原结构
-    return (
-      <Card className="config-card" bordered={false}>
-        <div style={{ textAlign: 'center', color: '#999', padding: 48 }}>
-          暂无数据
-        </div>
-      </Card>
-    );
   };
+
+  useEffect(() => {
+    if (activeTab === 'jobLevel') {
+      loadJobLevelData();
+    }
+  }, [activeTab]);
+
+  const handleJobLevelAdd = () => {
+    setJobLevelEditing(null);
+    setJobLevelModalOpen(true);
+    jobLevelForm.resetFields();
+  };
+  const handleJobLevelEdit = (record: any) => {
+    setJobLevelEditing(record);
+    setJobLevelModalOpen(true);
+    setTimeout(() => {
+      jobLevelForm.setFieldsValue({
+        ...record,
+        effectiveDate: record.effectiveDate ? dayjs(record.effectiveDate) : undefined,
+      });
+    }, 0);
+  };
+  const handleJobLevelModalOk = async () => {
+    try {
+      const values = await jobLevelForm.validateFields();
+      const submitData = {
+        ...values,
+        effectiveDate: values.effectiveDate ? values.effectiveDate.format('YYYY-MM-DD') : undefined,
+        status: values.status ? 1 : 0,
+      };
+      let res;
+      if (jobLevelEditing) {
+        res = await request(getApiUrl(`/api/soo/job-level-salary/${jobLevelEditing.id}`, 'SOO'), { method: 'PUT', data: submitData });
+      } else {
+        res = await request(getApiUrl('/api/soo/job-level-salary', 'SOO'), { method: 'POST', data: submitData });
+      }
+      if (res && res.resp_code === 0) {
+        message.success('保存成功');
+        setJobLevelModalOpen(false);
+        setJobLevelEditing(null);
+        loadJobLevelData(jobLevelPagination.current, jobLevelPagination.pageSize);
+      } else {
+        message.error(res?.resp_msg || '保存失败');
+      }
+    } catch (e: any) {
+      if (e.errorFields) return;
+      message.error(e.message || '保存失败');
+    }
+  };
+  const handleJobLevelModalCancel = () => {
+    setJobLevelModalOpen(false);
+    setJobLevelEditing(null);
+  };
+  const handleJobLevelDelete = async (record: any) => {
+    Modal.confirm({
+      title: '删除确认',
+      content: '确定要删除该条数据吗？',
+      okText: '删除',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          const res = await request(getApiUrl(`/api/soo/job-level-salary/${record.id}`, 'SOO'), { method: 'DELETE' });
+          if (res && res.resp_code === 0) {
+            message.success('删除成功');
+            loadJobLevelData(jobLevelPagination.current, jobLevelPagination.pageSize);
+          } else {
+            message.error(res?.resp_msg || '删除失败');
+          }
+        } catch (e: any) {
+          message.error(e.message || '删除失败');
+        }
+      },
+    });
+  };
+  // 职级薪资标准表格列
+  const jobLevelColumns = [
+    { title: '部门', dataIndex: 'departmentName', key: 'departmentName' },
+    { title: '岗位等级', dataIndex: 'jobLevelName', key: 'jobLevelName' },
+    { title: '基础工资下限', dataIndex: 'baseSalaryMin', key: 'baseSalaryMin' },
+    { title: '基础工资上限', dataIndex: 'baseSalaryMax', key: 'baseSalaryMax' },
+    { title: '绩效比例下限', dataIndex: 'performanceRatioMin', key: 'performanceRatioMin' },
+    { title: '绩效比例上限', dataIndex: 'performanceRatioMax', key: 'performanceRatioMax' },
+    { title: '生效日期', dataIndex: 'effectiveDate', key: 'effectiveDate' },
+    { title: '状态', dataIndex: 'status', key: 'status', render: (val: number) => val === 1 ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag> },
+    { title: '备注', dataIndex: 'remark', key: 'remark', render: (val: string) => val ? (<Tooltip title={val}><span style={{ cursor: 'pointer', color: '#1890ff' }}>备注</span></Tooltip>) : <span>-</span> },
+    {
+      title: '操作', key: 'action', render: (_: any, record: any) => (
+        <Space size={8}>
+          <Button size="small" icon={<EditOutlined />} style={{ minWidth: 64, height: 32 }} onClick={() => handleJobLevelEdit(record)}>
+            编辑
+          </Button>
+          <Button size="small" icon={<DeleteOutlined />} danger style={{ minWidth: 64, height: 32 }} onClick={() => handleJobLevelDelete(record)}>
+            删除
+          </Button>
+        </Space>
+      ),
+    },
+  ];
+  // 职级薪资标准弹窗表单
+  const renderJobLevelModalForm = () => (
+    <Form form={jobLevelForm} layout="vertical">
+      <Form.Item name="departmentName" label="部门" rules={[{ required: true, message: '请输入部门' }]}> <Input /> </Form.Item>
+      <Form.Item name="jobLevelName" label="岗位等级" rules={[{ required: true, message: '请输入岗位等级' }]}> <Input /> </Form.Item>
+      <Form.Item name="baseSalaryMin" label="基础工资下限" rules={[{ required: true, message: '请输入下限' }]}> <Input type="number" min={0} /> </Form.Item>
+      <Form.Item name="baseSalaryMax" label="基础工资上限" rules={[{ required: true, message: '请输入上限' }]}> <Input type="number" min={0} /> </Form.Item>
+      <Form.Item name="performanceRatioMin" label="绩效比例下限" rules={[{ required: true, message: '请输入下限' }]}> <Input type="number" min={0} max={2} step={0.01} /> </Form.Item>
+      <Form.Item name="performanceRatioMax" label="绩效比例上限" rules={[{ required: true, message: '请输入上限' }]}> <Input type="number" min={0} max={2} step={0.01} /> </Form.Item>
+      <Form.Item name="effectiveDate" label="生效日期" rules={[{ required: true, message: '请选择生效日期' }]}> <DatePicker style={{ width: '100%' }} /> </Form.Item>
+      <Form.Item name="status" label="状态" valuePropName="checked"> <Switch checkedChildren="启用" unCheckedChildren="禁用" /> </Form.Item>
+      <Form.Item name="remark" label="备注"> <Input.TextArea rows={2} maxLength={200} showCount /> </Form.Item>
+    </Form>
+  );
 
   return (
     <Layout className="base-config-layout">
@@ -411,19 +466,6 @@ const BaseConfig: React.FC = () => {
             className="config-tabs"
             activeKey={activeTab}
             onChange={setActiveTab}
-            items={tabItems.map(tab => ({
-              key: tab.key,
-              label: (
-                <>
-                  {tab.key === 'department' && <ApartmentOutlined />}
-                  {tab.key === 'jobLevel' && <UserOutlined />}
-                  {tab.key === 'employee' && <ContactsOutlined />}
-                  {tab.key === 'social' && <SafetyOutlined />}
-                  {tab.key === 'region' && <GlobalOutlined />}
-                  {tab.label}
-                </>
-              ),
-            }))}
             tabBarGutter={2}
             tabBarStyle={{
               background: '#fff',
@@ -432,8 +474,23 @@ const BaseConfig: React.FC = () => {
               boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
               marginBottom: 24,
             }}
-          />
-          <div className="config-content">{renderTabContent()}</div>
+          >
+            <TabPane tab={<><ApartmentOutlined /> 部门分红配置</>} key="departmentBonus">
+              <DepartmentBonus active={activeTab === 'departmentBonus'} />
+            </TabPane>
+            <TabPane tab={<><UserOutlined /> 职级薪资标准</>} key="jobLevelSalary">
+              <JobLevelSalary active={activeTab === 'jobLevelSalary'} />
+            </TabPane>
+            <TabPane tab={<><ContactsOutlined /> 员工薪酬配置</>} key="employeeSalary">
+              <EmployeeSalary active={activeTab === 'employeeSalary'} />
+            </TabPane>
+            <TabPane tab={<><SafetyOutlined /> 社保公积金基数</>} key="socialSecurityBase">
+              <SocialSecurityBase active={activeTab === 'socialSecurityBase'} />
+            </TabPane>
+            <TabPane tab={<><GlobalOutlined /> 地区工资系数</>} key="regionSalaryFactor">
+              <RegionSalaryFactor active={activeTab === 'regionSalaryFactor'} />
+            </TabPane>
+          </Tabs>
         </Content>
         <Footer className="base-config-footer">
           © 2024 Portal 3.0 - 企业管理平台. All rights reserved.

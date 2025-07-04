@@ -35,6 +35,7 @@ export const API_ENDPOINTS = {
   PORTAL: `${GATEWAY_URL}/api-portal`,
   PROJECT: `${GATEWAY_URL}/api-project`,
   USER: `${GATEWAY_URL}/api-user`,
+  SOO: `${GATEWAY_URL}/api-soo`,
 };
 
 // 常用API路径

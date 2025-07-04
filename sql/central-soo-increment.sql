@@ -21,7 +21,7 @@ CREATE TABLE `soo_department_bonus_config` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `department_id` bigint(20) NOT NULL COMMENT '部门ID',
   `department_name` varchar(128) NOT NULL COMMENT '部门名称',
-  `bonus_weight` decimal(5,4) NOT NULL COMMENT '分红权重(0-1)',
+  `bonus_weight` decimal(7,4) NOT NULL COMMENT '分红权重(0-100)',
   `effective_date` date NOT NULL COMMENT '生效日期',
   `expire_date` date COMMENT '失效日期',
   `status` tinyint(1) DEFAULT 1 COMMENT '状态(1启用,0禁用)',

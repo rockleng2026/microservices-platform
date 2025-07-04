@@ -142,7 +142,13 @@ const menuData = [
             { id: 'menu-manage', name: '菜单管理', url: 'system/menu-manage.html' },
             { id: 'menu-function', name: '功能点管理', url: 'system/menu-function.html' },
             { id: 'user-manage', name: '用户管理', url: 'system/user-manage.html' },
-            { id: 'operation-log', name: '操作日志', url: 'system/operation-log.html' }
+            { id: 'operation-log', name: '操作日志', url: 'system/operation-log.html' },
+            {
+                id: 'dict-config',
+                name: '通用字典配置',
+                icon: 'fa-database',
+                url: 'system/dict-config.html'
+            }
         ]
     }
 ];

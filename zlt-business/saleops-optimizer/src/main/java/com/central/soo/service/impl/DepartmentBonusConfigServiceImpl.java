@@ -11,9 +11,15 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.time.LocalDate;
 import java.math.BigDecimal;
 import java.util.List;
+import com.central.soo.service.IDepartmentClient;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.central.common.exception.BusinessException;
 
 @Service
 public class DepartmentBonusConfigServiceImpl extends ServiceImpl<DepartmentBonusConfigMapper, DepartmentBonusConfig> implements IDepartmentBonusConfigService {
+    @Autowired(required = false)
+    private IDepartmentClient departmentClient;
+
     // 可扩展自定义业务逻辑
 
     @Override
@@ -34,8 +40,9 @@ public class DepartmentBonusConfigServiceImpl extends ServiceImpl<DepartmentBonu
         QueryWrapper<DepartmentBonusConfig> qw = new QueryWrapper<>();
         qw.eq("effective_date", effectiveDate);
         qw.eq("delflag", 0);
+        qw.eq("status", 1); // 只统计启用
         if (excludeId != null) qw.ne("id", excludeId);
-        // 只校验同一生效日下所有分红权重之和
+        // 只校验同一生效日下所有"启用"分红权重之和
         BigDecimal sum = baseMapper.selectList(qw).stream()
                 .map(DepartmentBonusConfig::getBonusWeight)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -60,5 +67,29 @@ public class DepartmentBonusConfigServiceImpl extends ServiceImpl<DepartmentBonu
             return this.updateById(config);
         }
         return false;
+    }
+
+    @Override
+    public boolean save(DepartmentBonusConfig entity) {
+        // 保存前自动补全部门名称
+        if (entity.getDepartmentId() != null && (entity.getDepartmentName() == null || entity.getDepartmentName().isEmpty())) {
+            try {
+                com.central.common.model.Result<IDepartmentClient.DepartmentDTO> result = departmentClient.getDepartmentById(entity.getDepartmentId());
+                if (result != null && result.getDatas() != null && result.getDatas().name != null) {
+                    entity.setDepartmentName(result.getDatas().name);
+                }
+            } catch (Exception e) {
+                // 可记录日志，允许继续
+                log.error("get department failed", e);
+            }
+        }
+        // 校验分红权重
+        if (entity.getStatus() == null || entity.getStatus() == 1) { // 只校验启用
+            boolean valid = checkBonusWeightValid(entity.getDepartmentId(), entity.getEffectiveDate(), entity.getBonusWeight(), entity.getId());
+            if (!valid) {
+                throw new BusinessException("BONUS_WEIGHT_EXCEED:分红权重之和不能超过100%");
+            }
+        }
+        return super.save(entity);
     }
 } 

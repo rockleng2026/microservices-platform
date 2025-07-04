@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PageContainer } from '@ant-design/pro-components';
-import { Card, Typography, Tabs, Button, Table, Tag, Space, Modal, Form, Input, DatePicker, Select, Switch, message, Layout } from 'antd';
+import { Card, Typography, Tabs, Button, Table, Tag, Space, Modal, Form, Input, DatePicker, Select, Switch, message, Layout, TreeSelect } from 'antd';
 import {
   SettingOutlined,
   ApartmentOutlined,
@@ -18,6 +18,7 @@ import dayjs from 'dayjs';
 import './index.less';
 import { request } from '@/utils/request';
 import { getDepartmentBonusList, addDepartmentBonus, updateDepartmentBonus, deleteDepartmentBonus } from '@/services/soo';
+import { getDepartmentTree } from '@/services/organization';
 
 const { Header, Sider, Content, Footer } = Layout;
 const { Title } = Typography;
@@ -47,24 +48,43 @@ const departmentColumns = (onEdit: (record: any) => void, onDelete: (record: any
   },
 ];
 
-// 权限点变量
-const canAdd = true;
-const canEdit = true;
-const canDelete = true;
-
 const BaseConfig: React.FC = () => {
-  const [activeTab, setActiveTab] = useState('department');
-  // 部门分红配置数据
+  // 权限点变量
+  const canAdd = true;
+  const canEdit = true;
+  const canDelete = true;
+
+  // 部门分红配置
   const [departmentData, setDepartmentData] = useState<any[]>([]);
   const [departmentLoading, setDepartmentLoading] = useState(false);
   const [departmentPagination, setDepartmentPagination] = useState({ current: 1, pageSize: 10, total: 0 });
   const [departmentSearch, setDepartmentSearch] = useState('');
-  // 弹窗与表单
   const [modalOpen, setModalOpen] = useState(false);
   const [editingRecord, setEditingRecord] = useState<any | null>(null);
   const [form] = Form.useForm();
   const [deleteRecord, setDeleteRecord] = useState<any | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [departmentTree, setDepartmentTree] = useState<any[]>([]);
+
+  // 岗位薪资配置
+  const [jobLevelData, setJobLevelData] = useState<any[]>([]);
+  const [jobLevelLoading, setJobLevelLoading] = useState(false);
+  const [jobLevelModalOpen, setJobLevelModalOpen] = useState(false);
+  const [jobLevelEditing, setJobLevelEditing] = useState<any | null>(null);
+  const [jobLevelForm] = Form.useForm();
+  const [jobLevelDepartmentTree, setJobLevelDepartmentTree] = useState<any[]>([]);
+  const [jobLevelPositionList, setJobLevelPositionList] = useState<any[]>([]);
+
+  // 员工薪资配置
+  const [employeeSalaryData, setEmployeeSalaryData] = useState<any[]>([]);
+  const [employeeSalaryLoading, setEmployeeSalaryLoading] = useState(false);
+  const [employeeSalaryModalOpen, setEmployeeSalaryModalOpen] = useState(false);
+  const [employeeSalaryEditing, setEmployeeSalaryEditing] = useState<any | null>(null);
+  const [employeeSalaryForm] = Form.useForm();
+  const [employeeSalaryDepartmentTree, setEmployeeSalaryDepartmentTree] = useState<any[]>([]);
+  const [employeeList, setEmployeeList] = useState<any[]>([]);
+
+  const [activeTab, setActiveTab] = useState('department');
 
   // 加载部门分红配置数据
   const loadDepartmentData = async (page = 1, pageSize = 10, keyword = '') => {
@@ -88,10 +108,33 @@ const BaseConfig: React.FC = () => {
     }
   };
 
+  // 加载部门树
+  const loadDepartmentTree = async () => {
+    try {
+      const res = await getDepartmentTree();
+      console.log('部门树接口完整返回', res);
+      console.log('res.datas:', res.datas, Array.isArray(res.datas));
+      if (res && (res.data || res.datas)) {
+        if (Array.isArray(res.data)) {
+          setDepartmentTree(res.data);
+        } else if (Array.isArray(res.datas)) {
+          setDepartmentTree(res.datas);
+        } else {
+          setDepartmentTree([]);
+        }
+      } else {
+        setDepartmentTree([]);
+      }
+    } catch (e) {
+      setDepartmentTree([]);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'department') {
       loadDepartmentData();
     }
+    loadDepartmentTree();
   }, [activeTab]);
 
   // 搜索
@@ -107,16 +150,23 @@ const BaseConfig: React.FC = () => {
   const handleAdd = () => {
     setEditingRecord(null);
     setModalOpen(true);
-    form.resetFields();
+    loadDepartmentTree();
+    setTimeout(() => {
+      form.resetFields();
+    }, 0);
   };
   // 编辑
   const handleEdit = (record: any) => {
     setEditingRecord(record);
     setModalOpen(true);
-    form.setFieldsValue({
-      ...record,
-      effectiveDate: record.effectiveDate ? dayjs(record.effectiveDate) : undefined,
-    });
+    loadDepartmentTree();
+    setTimeout(() => {
+      form.setFieldsValue({
+        ...record,
+        departmentId: record.departmentId ? String(record.departmentId) : undefined,
+        effectiveDate: record.effectiveDate ? dayjs(record.effectiveDate) : undefined,
+      });
+    }, 0);
   };
   // 保存
   const handleModalOk = async () => {
@@ -179,10 +229,28 @@ const BaseConfig: React.FC = () => {
   // 弹窗表单
   const renderModalForm = () => (
     <>
-      <Form.Item name="departmentName" label="部门名称" rules={[{ required: true, message: '请输入部门名称' }]}> <Input /> </Form.Item>
-      <Form.Item name="bonusWeight" label="分红权重(%)" rules={[{ required: true, message: '请输入分红权重' }]}> <Input type="number" min={0} max={100} /> </Form.Item>
-      <Form.Item name="effectiveDate" label="生效日期" rules={[{ required: true, message: '请选择生效日期' }]}> <DatePicker style={{ width: '100%' }} /> </Form.Item>
-      <Form.Item name="status" label="状态" valuePropName="checked"> <Switch checkedChildren="启用" unCheckedChildren="禁用" /> </Form.Item>
+      <Form.Item name="departmentId" label="部门名称" rules={[{ required: true, message: '请选择部门' }]}> 
+        <TreeSelect
+          key={departmentTree.length}
+          treeData={departmentTree}
+          fieldNames={{ label: 'name', value: 'id', children: 'children' }}
+          placeholder="请选择部门"
+          allowClear
+          showSearch
+          treeDefaultExpandAll
+          style={{ width: '100%' }}
+          disabled={!!editingRecord}
+        />
+      </Form.Item>
+      <Form.Item name="bonusWeight" label="分红权重(%)" rules={[{ required: true, message: '请输入分红权重' }]}> 
+        <Input type="number" min={0} max={100} />
+      </Form.Item>
+      <Form.Item name="effectiveDate" label="生效日期" rules={[{ required: true, message: '请选择生效日期' }]}> 
+        <DatePicker style={{ width: '100%' }} />
+      </Form.Item>
+      <Form.Item name="status" label="状态" valuePropName="checked"> 
+        <Switch checkedChildren="启用" unCheckedChildren="禁用" />
+      </Form.Item>
     </>
   );
 
@@ -227,7 +295,7 @@ const BaseConfig: React.FC = () => {
             destroyOnClose
             confirmLoading={departmentLoading}
           >
-            <Form form={form} layout="vertical" preserve={false}>
+            <Form form={form} layout="vertical">
               {renderModalForm()}
             </Form>
           </Modal>

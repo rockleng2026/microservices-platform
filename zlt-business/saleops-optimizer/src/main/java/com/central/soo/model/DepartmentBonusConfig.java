@@ -42,8 +42,8 @@ public class DepartmentBonusConfig extends BaseEntity {
 
     @NotNull(message = "分红权重不能为空")
     @DecimalMin(value = "0.0000", message = "分红权重不能小于0")
-    @DecimalMax(value = "1.0000", message = "分红权重不能大于1")
-    @Schema(description = "分红权重(0-1)", required = true)
+    @DecimalMax(value = "100.0000", message = "分红权重不能大于100")
+    @Schema(description = "分红权重(0-100)", required = true)
     private BigDecimal bonusWeight;
 
     @NotNull(message = "生效日期不能为空")

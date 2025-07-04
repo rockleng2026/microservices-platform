@@ -23,7 +23,7 @@ public class BaseEntity<T extends Model<?>> extends Model<T> {
     @TableId
     private Long id;
     @TableField(fill = FieldFill.INSERT)
-    private Date createAt;
+    private Date createdAt;
     @TableField(fill = FieldFill.INSERT_UPDATE)
-    private Date updateAt;
+    private Date updatedAt;
 }

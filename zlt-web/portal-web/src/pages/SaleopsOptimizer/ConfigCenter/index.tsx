@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { PageContainer } from '@ant-design/pro-components';
-import { Card, Typography, Tabs, Button, Table, Tag, Space, Modal, Form, Input, DatePicker, Select, Switch, message, Layout, TreeSelect } from 'antd';
+import { Card, Typography, Tabs, Button, Table, Tag, Space, Modal, Form, Input, DatePicker, Select, Switch, message, Layout, TreeSelect, Tooltip } from 'antd';
 import {
   SettingOutlined,
   ApartmentOutlined,
@@ -13,6 +13,7 @@ import {
   DeleteOutlined,
   ImportOutlined,
   ExportOutlined,
+  MessageOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import './index.less';
@@ -33,16 +34,31 @@ const tabItems = [
 ];
 
 // 部门分红配置表格列
-const departmentColumns = (onEdit: (record: any) => void, onDelete: (record: any) => void) => [
+const departmentColumns = (onEdit: (record: any) => void, onDelete: (record: any) => void, onRemark: (record: any) => void) => [
   { title: '部门名称', dataIndex: 'departmentName', key: 'departmentName' },
   { title: '分红权重(%)', dataIndex: 'bonusWeight', key: 'bonusWeight' },
   { title: '生效日期', dataIndex: 'effectiveDate', key: 'effectiveDate' },
   { title: '状态', dataIndex: 'status', key: 'status', render: (val: number) => val === 1 ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag> },
   {
+    title: '备注',
+    dataIndex: 'remark',
+    key: 'remark',
+    render: (val: string) => val ? (
+      <Tooltip title={val}><span style={{ cursor: 'pointer', color: '#1890ff' }}>备注</span></Tooltip>
+    ) : <span>-</span>
+  },
+  {
     title: '操作', key: 'action', render: (_: any, record: any) => (
-      <Space>
-        <Button size="small" icon={<EditOutlined />} onClick={() => onEdit(record)}>编辑</Button>
-        <Button size="small" icon={<DeleteOutlined />} danger onClick={() => onDelete(record)}>删除</Button>
+      <Space size={8}>
+        <Button size="small" icon={<EditOutlined />} style={{ minWidth: 64, height: 32 }} onClick={() => onEdit(record)}>
+          编辑
+        </Button>
+        <Button size="small" icon={<DeleteOutlined />} danger style={{ minWidth: 64, height: 32 }} onClick={() => onDelete(record)}>
+          删除
+        </Button>
+        <Button size="small" icon={<MessageOutlined />} style={{ minWidth: 64, height: 32 }} onClick={() => onRemark(record)}>
+          备注
+        </Button>
       </Space>
     ),
   },
@@ -85,6 +101,11 @@ const BaseConfig: React.FC = () => {
   const [employeeList, setEmployeeList] = useState<any[]>([]);
 
   const [activeTab, setActiveTab] = useState('department');
+
+  // 备注弹窗相关
+  const [remarkModalOpen, setRemarkModalOpen] = useState(false);
+  const [remarkEditingRecord, setRemarkEditingRecord] = useState<any | null>(null);
+  const [remarkForm] = Form.useForm();
 
   // 加载部门分红配置数据
   const loadDepartmentData = async (page = 1, pageSize = 10, keyword = '') => {
@@ -226,6 +247,35 @@ const BaseConfig: React.FC = () => {
     setDeleteRecord(null);
   };
 
+  // 备注弹窗相关
+  const handleRemark = (record: any) => {
+    setRemarkEditingRecord(record);
+    setRemarkModalOpen(true);
+    remarkForm.setFieldsValue({ remark: record.remark || '' });
+  };
+  const handleRemarkOk = async () => {
+    try {
+      const values = await remarkForm.validateFields();
+      // 假设有updateDepartmentBonus接口
+      const res = await updateDepartmentBonus(remarkEditingRecord.id, { remark: values.remark });
+      if (res && res.success) {
+        message.success('备注保存成功');
+        setRemarkModalOpen(false);
+        setRemarkEditingRecord(null);
+        loadDepartmentData(departmentPagination.current, departmentPagination.pageSize, departmentSearch);
+      } else {
+        message.error(res?.message || '备注保存失败');
+      }
+    } catch (e: any) {
+      if (e.errorFields) return;
+      message.error(e.message || '备注保存失败');
+    }
+  };
+  const handleRemarkCancel = () => {
+    setRemarkModalOpen(false);
+    setRemarkEditingRecord(null);
+  };
+
   // 弹窗表单
   const renderModalForm = () => (
     <>
@@ -279,7 +329,7 @@ const BaseConfig: React.FC = () => {
           bordered={false}
         >
           <Table
-            columns={departmentColumns(handleEdit, handleDelete)}
+            columns={departmentColumns(handleEdit, handleDelete, handleRemark)}
             dataSource={departmentData}
             loading={departmentLoading}
             rowKey="id"
@@ -308,6 +358,21 @@ const BaseConfig: React.FC = () => {
             okButtonProps={{ danger: true, loading: deleteLoading }}
           >
             <div>确定要删除该条数据吗？</div>
+          </Modal>
+          <Modal
+            title="备注"
+            open={remarkModalOpen}
+            onOk={handleRemarkOk}
+            onCancel={handleRemarkCancel}
+            okText="保存"
+            cancelText="取消"
+            confirmLoading={departmentLoading}
+          >
+            <Form form={remarkForm} layout="vertical">
+              <Form.Item name="remark" label="备注">
+                <Input.TextArea rows={4} maxLength={200} showCount />
+              </Form.Item>
+            </Form>
           </Modal>
         </Card>
       );

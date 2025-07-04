@@ -47,7 +47,7 @@ public class DepartmentBonusConfigServiceImpl extends ServiceImpl<DepartmentBonu
                 .map(DepartmentBonusConfig::getBonusWeight)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         if (bonusWeight != null) sum = sum.add(bonusWeight);
-        return sum.compareTo(BigDecimal.ONE) <= 0;
+        return sum.compareTo(BigDecimal.valueOf(100)) <= 0;
     }
 
     @Override
@@ -79,15 +79,14 @@ public class DepartmentBonusConfigServiceImpl extends ServiceImpl<DepartmentBonu
                     entity.setDepartmentName(result.getDatas().name);
                 }
             } catch (Exception e) {
-                // 可记录日志，允许继续
                 log.error("get department failed", e);
             }
         }
         // 校验分红权重
-        if (entity.getStatus() == null || entity.getStatus() == 1) { // 只校验启用
+        if (entity.getStatus() == null || entity.getStatus() == 1) {
             boolean valid = checkBonusWeightValid(entity.getDepartmentId(), entity.getEffectiveDate(), entity.getBonusWeight(), entity.getId());
             if (!valid) {
-                throw new BusinessException("BONUS_WEIGHT_EXCEED:分红权重之和不能超过100%");
+                throw new BusinessException("分红权重之和不能超过100%", 10001);
             }
         }
         return super.save(entity);

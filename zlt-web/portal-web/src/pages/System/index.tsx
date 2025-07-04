@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Row, Col, Typography, Button } from 'antd';
-import { UserOutlined, TeamOutlined, SettingOutlined, HistoryOutlined } from '@ant-design/icons';
+import { UserOutlined, TeamOutlined, SettingOutlined, HistoryOutlined, BookOutlined } from '@ant-design/icons';
 import { history } from 'umi';
 import './index.less';
 
@@ -31,6 +31,13 @@ const SystemIndex: React.FC = () => {
       description: '管理系统角色，分配角色权限，配置角色访问范围',
       path: '/system/role',
       color: '#faad14'
+    },
+    {
+      title: '字典配置',
+      icon: <BookOutlined />,
+      description: '管理系统字典数据，配置类目和明细项，支持扩展字段定义',
+      path: '/system/dict',
+      color: '#722ed1'
     },
     {
       title: '操作日志',

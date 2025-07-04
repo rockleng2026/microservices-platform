@@ -4,6 +4,8 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
+import com.central.common.context.TenantContextHolder;
+import com.central.common.model.PageResult;
 import com.central.organization.mapper.SysDictCategoryMapper;
 import com.central.organization.mapper.SysDictItemMapper;
 import com.central.organization.model.SysDictCategory;
@@ -11,7 +13,6 @@ import com.central.organization.model.SysDictItem;
 import com.central.organization.model.dto.*;
 import com.central.organization.model.vo.*;
 import com.central.organization.service.ISysDictService;
-import com.central.organization.service.impl.EmployeeServiceImpl;
 import com.central.organization.utils.IdUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +42,7 @@ public class SysDictServiceImpl implements ISysDictService {
     // ============ 类目管理实现 ============
 
     @Override
-    public EmployeeServiceImpl.PageResult<SysDictCategoryVO> getCategoryPageList(SysDictCategoryQueryDTO query) {
+    public PageResult<SysDictCategoryVO> getCategoryPageList(SysDictCategoryQueryDTO query) {
         if (query == null) {
             query = new SysDictCategoryQueryDTO();
         }
@@ -54,7 +55,7 @@ public class SysDictServiceImpl implements ISysDictService {
             query.setSize(20);
         }
         if (StrUtil.isBlank(query.getTenantId())) {
-            query.setTenantId("default"); // 从当前上下文获取
+            query.setTenantId(TenantContextHolder.getTenant()); // 从当前上下文获取
         }
 
         // 查询数据
@@ -65,12 +66,14 @@ public class SysDictServiceImpl implements ISysDictService {
         records.forEach(this::enrichCategoryVO);
 
         // 构建分页结果
-        EmployeeServiceImpl.PageResult<SysDictCategoryVO> pageResult = new EmployeeServiceImpl.PageResult<>();
-        pageResult.setRecords(records);
-        pageResult.setTotal(total);
+        PageResult<SysDictCategoryVO> pageResult = new PageResult<>();
+        pageResult.setCount(total);
+        pageResult.setCode(0); // deprecated
+        pageResult.setResp_code(0);
         pageResult.setPage(query.getPage());
         pageResult.setSize(query.getSize());
         pageResult.setPages((int) Math.ceil((double) total / query.getSize()));
+        pageResult.setData(records);
 
         return pageResult;
     }
@@ -193,7 +196,7 @@ public class SysDictServiceImpl implements ISysDictService {
     // ============ 明细项管理实现 ============
 
     @Override
-    public EmployeeServiceImpl.PageResult<SysDictItemVO> getItemPageList(SysDictItemQueryDTO query) {
+    public PageResult<SysDictItemVO> getItemPageList(SysDictItemQueryDTO query) {
         if (query == null) {
             query = new SysDictItemQueryDTO();
         }
@@ -217,12 +220,14 @@ public class SysDictServiceImpl implements ISysDictService {
         records.forEach(this::enrichItemVO);
 
         // 构建分页结果
-        EmployeeServiceImpl.PageResult<SysDictItemVO> pageResult = new EmployeeServiceImpl.PageResult<>();
-        pageResult.setRecords(records);
-        pageResult.setTotal(total);
+        PageResult<SysDictItemVO> pageResult = new PageResult<>();
+        pageResult.setCount(total);
+        pageResult.setCode(0); // deprecated
+        pageResult.setResp_code(0);
         pageResult.setPage(query.getPage());
         pageResult.setSize(query.getSize());
         pageResult.setPages((int) Math.ceil((double) total / query.getSize()));
+        pageResult.setData(records);
 
         return pageResult;
     }
@@ -416,10 +421,10 @@ public class SysDictServiceImpl implements ISysDictService {
         categoryVO.setStatusText(categoryVO.getStatus() == 1 ? "启用" : "禁用");
 
         // 解析扩展字段Schema
-        if (StrUtil.isNotBlank(categoryVO.getExtendFields().toString())) {
+        if (StrUtil.isNotBlank(categoryVO.getExtendFieldsJson())) {
             try {
                 List<SysDictCategoryVO.ExtendFieldVO> extendFields = JSONUtil.toList(
-                    categoryVO.getExtendFields().toString(), 
+                    categoryVO.getExtendFieldsJson(), 
                     SysDictCategoryVO.ExtendFieldVO.class
                 );
                 // 处理字段类型和必填描述
@@ -460,9 +465,9 @@ public class SysDictServiceImpl implements ISysDictService {
         itemVO.setIsDefaultText(itemVO.getIsDefault() == 1 ? "是" : "否");
 
         // 解析扩展数据
-        if (StrUtil.isNotBlank(itemVO.getExtendData().toString())) {
+        if (StrUtil.isNotBlank(itemVO.getExtendDataJson())) {
             try {
-                Map<String, Object> extendData = JSONUtil.toBean(itemVO.getExtendData().toString(), Map.class);
+                Map<String, Object> extendData = JSONUtil.toBean(itemVO.getExtendDataJson(), Map.class);
                 itemVO.setExtendData(extendData);
             } catch (Exception e) {
                 log.warn("解析扩展数据失败: itemId={}, error={}", itemVO.getId(), e.getMessage());

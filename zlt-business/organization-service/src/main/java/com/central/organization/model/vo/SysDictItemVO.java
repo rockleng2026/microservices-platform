@@ -1,16 +1,15 @@
 package com.central.organization.model.vo;
 
-import lombok.Data;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.util.Map;
 
 /**
- * 通用字典明细项VO
+ * 字典明细项VO
  *
- * @author Central Team
- * @since 2024-12-19
+ * @author Portal
  */
 @Data
 public class SysDictItemVO {
@@ -46,6 +45,16 @@ public class SysDictItemVO {
     private String itemName;
 
     /**
+     * 项目值
+     */
+    private String itemValue;
+
+    /**
+     * 描述
+     */
+    private String description;
+
+    /**
      * 排序值
      */
     private Integer sortOrder;
@@ -71,15 +80,25 @@ public class SysDictItemVO {
     private String statusText;
 
     /**
+     * 启用状态
+     */
+    private Boolean enabled;
+
+    /**
      * 扩展数据(key-value形式)
      */
     private Map<String, Object> extendData;
 
     /**
+     * 扩展数据JSON字符串
+     */
+    private String extendDataJson;
+
+    /**
      * 创建时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createdAt;
+    private LocalDateTime createTime;
 
     /**
      * 创建人姓名
@@ -90,10 +109,56 @@ public class SysDictItemVO {
      * 更新时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime updatedAt;
+    private LocalDateTime updateTime;
 
     /**
      * 更新人姓名
      */
     private String updatedByName;
+
+        /**
+     * 获取扩展数据JSON字符串
+     * 如果extendData为空，返回"{}"
+     */
+    public String getExtendDataJson() {
+        if (this.extendDataJson != null) {
+            return this.extendDataJson;
+        }
+        
+        if (this.extendData == null || this.extendData.isEmpty()) {
+            return "{}";
+        }
+        
+        try {
+            // 简单的JSON字符串构建，实际项目中可以使用Jackson等JSON库
+            StringBuilder json = new StringBuilder("{");
+            boolean first = true;
+            for (Map.Entry<String, Object> entry : this.extendData.entrySet()) {
+                if (!first) {
+                    json.append(",");
+                }
+                json.append("\"").append(entry.getKey()).append("\":");
+                Object value = entry.getValue();
+                if (value instanceof String) {
+                    json.append("\"").append(value).append("\"");
+                } else if (value == null) {
+                    json.append("null");
+                } else {
+                    json.append(value.toString());
+                }
+                first = false;
+            }
+            json.append("}");
+            return json.toString();
+        } catch (Exception e) {
+            return "{}";
+        }
+    }
+
+    /**
+     * 设置扩展数据JSON字符串
+     */
+    public void setExtendDataJson(String extendDataJson) {
+        this.extendDataJson = extendDataJson;
+    }
 } 

@@ -144,6 +144,22 @@ export default defineConfig({
             // 其他子页面可在此补充
           ],
         },
+        {
+          path: '/system',
+          name: '系统管理',
+          routes: [
+            {
+              path: '/system',
+              name: '系统概览',
+              component: '@/pages/System',
+            },
+            {
+              path: '/system/dict',
+              name: '字典配置',
+              component: '@/pages/System/DictConfig',
+            },
+          ],
+        },
       ],
     },
     {

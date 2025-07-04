@@ -56,6 +56,11 @@ public class SysDictCategoryVO {
     private List<ExtendFieldVO> extendFields;
 
     /**
+     * 扩展字段Schema(原始JSON字符串，用于数据库映射)
+     */
+    private String extendFieldsJson;
+
+    /**
      * 明细项数量
      */
     private Integer itemCount;

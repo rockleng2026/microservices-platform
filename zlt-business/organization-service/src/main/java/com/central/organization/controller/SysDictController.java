@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -37,21 +38,18 @@ public class SysDictController {
      * @return 类目分页列表
      */
     @GetMapping("/category/page")
-    public Result<PageResult<SysDictCategoryVO>> getCategoryPage(SysDictCategoryQueryDTO query) {
+    public PageResult<SysDictCategoryVO> getCategoryPage(SysDictCategoryQueryDTO query) {
         try {
-            EmployeeServiceImpl.PageResult<SysDictCategoryVO> servicePageResult = dictService.getCategoryPageList(query);
-            
-            // 转换为统一的PageResult格式
-            PageResult<SysDictCategoryVO> pageResult = PageResult.<SysDictCategoryVO>builder()
-                .count(servicePageResult.getTotal())
-                .code(0)
-                .data(servicePageResult.getRecords())
-                .build();
-                
-            return Result.succeed(pageResult, "success");
+            return dictService.getCategoryPageList(query);
         } catch (Exception ex) {
             log.error("分页查询字典类目列表失败", ex);
-            return Result.failed("查询失败");
+            // 返回错误的PageResult
+            PageResult<SysDictCategoryVO> errorResult = new PageResult<>();
+            errorResult.setCount(0L);
+            errorResult.setCode(1); // 失败
+            errorResult.setResp_code(500);
+            errorResult.setData(Collections.emptyList());
+            return errorResult;
         }
     }
 
@@ -191,26 +189,23 @@ public class SysDictController {
      * @return 明细项分页列表
      */
     @GetMapping("/item/page")
-    public Result<PageResult<SysDictItemVO>> getItemPage(SysDictItemQueryDTO query) {
+    public PageResult<SysDictItemVO> getItemPage(SysDictItemQueryDTO query) {
         try {
             // ID转换处理
             if (query.getCategoryId() != null) {
                 query.setCategoryId(IdUtils.stringToLong(query.getCategoryId().toString()));
             }
 
-            EmployeeServiceImpl.PageResult<SysDictItemVO> servicePageResult = dictService.getItemPageList(query);
-            
-            // 转换为统一的PageResult格式
-            PageResult<SysDictItemVO> pageResult = PageResult.<SysDictItemVO>builder()
-                .count(servicePageResult.getTotal())
-                .code(0)
-                .data(servicePageResult.getRecords())
-                .build();
-                
-            return Result.succeed(pageResult, "success");
+            return dictService.getItemPageList(query);
         } catch (Exception ex) {
             log.error("分页查询字典明细项列表失败", ex);
-            return Result.failed("查询失败");
+            // 返回错误的PageResult
+            PageResult<SysDictItemVO> errorResult = new PageResult<>();
+            errorResult.setCount(0L);
+            errorResult.setCode(1); // 失败
+            errorResult.setResp_code(500);
+            errorResult.setData(Collections.emptyList());
+            return errorResult;
         }
     }
 

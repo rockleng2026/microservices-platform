@@ -1,8 +1,8 @@
 package com.central.organization.service;
 
+import com.central.common.model.PageResult;
 import com.central.organization.model.dto.*;
 import com.central.organization.model.vo.*;
-import com.central.organization.service.impl.EmployeeServiceImpl;
 
 import java.util.List;
 
@@ -22,7 +22,7 @@ public interface ISysDictService {
      * @param query 查询条件
      * @return 分页结果
      */
-    EmployeeServiceImpl.PageResult<SysDictCategoryVO> getCategoryPageList(SysDictCategoryQueryDTO query);
+    PageResult<SysDictCategoryVO> getCategoryPageList(SysDictCategoryQueryDTO query);
 
     /**
      * 根据ID查询类目详情
@@ -83,7 +83,7 @@ public interface ISysDictService {
      * @param query 查询条件
      * @return 分页结果
      */
-    EmployeeServiceImpl.PageResult<SysDictItemVO> getItemPageList(SysDictItemQueryDTO query);
+    PageResult<SysDictItemVO> getItemPageList(SysDictItemQueryDTO query);
 
     /**
      * 根据ID查询明细项详情

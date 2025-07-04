@@ -13,7 +13,7 @@
         <result column="sort_order" property="sortOrder"/>
         <result column="is_default" property="isDefault"/>
         <result column="status" property="status"/>
-        <result column="extend_data" property="extendData"/>
+        <result column="extend_data" property="extendDataJson"/>
         <result column="created_at" property="createdAt"/>
         <result column="created_by_name" property="createdByName"/>
         <result column="updated_at" property="updatedAt"/>
@@ -34,13 +34,13 @@
             sdi.status,
             sdi.extend_data,
             sdi.created_at,
-            creator.name as created_by_name,
+            creator.nickname as created_by_name,
             sdi.updated_at,
-            updater.name as updated_by_name
+            updater.nickname as updated_by_name
         FROM sys_dict_item sdi
         INNER JOIN sys_dict_category sdc ON sdi.category_id = sdc.id AND sdc.delflag = 0
-        LEFT JOIN sys_user creator ON sdi.created_by = creator.id
-        LEFT JOIN sys_user updater ON sdi.updated_by = updater.id
+        LEFT JOIN users creator ON sdi.created_by = creator.id
+        LEFT JOIN users updater ON sdi.updated_by = updater.id
         WHERE sdi.delflag = 0
         <if test="query.categoryId != null">
             AND sdi.category_id = #{query.categoryId}
@@ -60,7 +60,7 @@
         </if>
         ORDER BY sdi.sort_order ASC, sdi.created_at DESC
         <if test="query.page != null and query.size != null">
-            LIMIT #{query.size} OFFSET #{query.page - 1} * #{query.size}
+            LIMIT #{query.size} OFFSET #{query.offset}
         </if>
     </select>
 
@@ -102,13 +102,13 @@
             sdi.status,
             sdi.extend_data,
             sdi.created_at,
-            creator.name as created_by_name,
+            creator.nickname as created_by_name,
             sdi.updated_at,
-            updater.name as updated_by_name
+            updater.nickname as updated_by_name
         FROM sys_dict_item sdi
         INNER JOIN sys_dict_category sdc ON sdi.category_id = sdc.id AND sdc.delflag = 0
-        LEFT JOIN sys_user creator ON sdi.created_by = creator.id
-        LEFT JOIN sys_user updater ON sdi.updated_by = updater.id
+        LEFT JOIN users creator ON sdi.created_by = creator.id
+        LEFT JOIN users updater ON sdi.updated_by = updater.id
         WHERE sdi.id = #{id} AND sdi.delflag = 0
     </select>
 
@@ -126,13 +126,13 @@
             sdi.status,
             sdi.extend_data,
             sdi.created_at,
-            creator.name as created_by_name,
+            creator.nickname as created_by_name,
             sdi.updated_at,
-            updater.name as updated_by_name
+            updater.nickname as updated_by_name
         FROM sys_dict_item sdi
         INNER JOIN sys_dict_category sdc ON sdi.category_id = sdc.id AND sdc.delflag = 0
-        LEFT JOIN sys_user creator ON sdi.created_by = creator.id
-        LEFT JOIN sys_user updater ON sdi.updated_by = updater.id
+        LEFT JOIN users creator ON sdi.created_by = creator.id
+        LEFT JOIN users updater ON sdi.updated_by = updater.id
         WHERE sdi.category_id = #{categoryId} 
         AND sdi.delflag = 0
         <if test="tenantId != null and tenantId != ''">
@@ -158,13 +158,13 @@
             sdi.status,
             sdi.extend_data,
             sdi.created_at,
-            creator.name as created_by_name,
+            creator.nickname as created_by_name,
             sdi.updated_at,
-            updater.name as updated_by_name
+            updater.nickname as updated_by_name
         FROM sys_dict_item sdi
         INNER JOIN sys_dict_category sdc ON sdi.category_id = sdc.id AND sdc.delflag = 0
-        LEFT JOIN sys_user creator ON sdi.created_by = creator.id
-        LEFT JOIN sys_user updater ON sdi.updated_by = updater.id
+        LEFT JOIN users creator ON sdi.created_by = creator.id
+        LEFT JOIN users updater ON sdi.updated_by = updater.id
         WHERE sdc.code = #{categoryCode}
         AND sdi.delflag = 0
         <if test="tenantId != null and tenantId != ''">

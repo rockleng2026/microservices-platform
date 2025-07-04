@@ -35,4 +35,15 @@ public class SysDictCategoryQueryDTO {
      * 租户ID
      */
     private String tenantId;
+
+    /**
+     * 获取分页偏移量
+     * @return 偏移量
+     */
+    public Integer getOffset() {
+        if (page == null || size == null) {
+            return 0;
+        }
+        return (page - 1) * size;
+    }
 } 

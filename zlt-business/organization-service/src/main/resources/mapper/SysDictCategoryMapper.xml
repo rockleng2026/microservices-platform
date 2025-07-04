@@ -9,7 +9,7 @@
         <result column="code" property="code"/>
         <result column="description" property="description"/>
         <result column="status" property="status"/>
-        <result column="extend_schema" property="extendFields"/>
+        <result column="extend_schema" property="extendFieldsJson"/>
         <result column="sort_order" property="sortOrder"/>
         <result column="created_at" property="createdAt"/>
         <result column="created_by_name" property="createdByName"/>
@@ -28,12 +28,12 @@
             sdc.extend_schema,
             sdc.sort_order,
             sdc.created_at,
-            creator.name as created_by_name,
+            creator.nickname as created_by_name,
             sdc.updated_at,
-            updater.name as updated_by_name
+            updater.nickname as updated_by_name
         FROM sys_dict_category sdc
-        LEFT JOIN sys_user creator ON sdc.created_by = creator.id
-        LEFT JOIN sys_user updater ON sdc.updated_by = updater.id
+        LEFT JOIN users creator ON sdc.created_by = creator.id
+        LEFT JOIN users updater ON sdc.updated_by = updater.id
         WHERE sdc.delflag = 0
         <if test="query.tenantId != null and query.tenantId != ''">
             AND sdc.tenant_id = #{query.tenantId}
@@ -47,7 +47,7 @@
         </if>
         ORDER BY sdc.sort_order ASC, sdc.created_at DESC
         <if test="query.page != null and query.size != null">
-            LIMIT #{query.size} OFFSET #{query.page - 1} * #{query.size}
+            LIMIT #{query.size} OFFSET #{query.offset}
         </if>
     </select>
 
@@ -79,12 +79,12 @@
             sdc.extend_schema,
             sdc.sort_order,
             sdc.created_at,
-            creator.name as created_by_name,
+            creator.nickname as created_by_name,
             sdc.updated_at,
-            updater.name as updated_by_name
+            updater.nickname as updated_by_name
         FROM sys_dict_category sdc
-        LEFT JOIN sys_user creator ON sdc.created_by = creator.id
-        LEFT JOIN sys_user updater ON sdc.updated_by = updater.id
+        LEFT JOIN users creator ON sdc.created_by = creator.id
+        LEFT JOIN users updater ON sdc.updated_by = updater.id
         WHERE sdc.id = #{id} AND sdc.delflag = 0
     </select>
 
@@ -111,12 +111,12 @@
             sdc.extend_schema,
             sdc.sort_order,
             sdc.created_at,
-            creator.name as created_by_name,
+            creator.nickname as created_by_name,
             sdc.updated_at,
-            updater.name as updated_by_name
+            updater.nickname as updated_by_name
         FROM sys_dict_category sdc
-        LEFT JOIN sys_user creator ON sdc.created_by = creator.id
-        LEFT JOIN sys_user updater ON sdc.updated_by = updater.id
+        LEFT JOIN users creator ON sdc.created_by = creator.id
+        LEFT JOIN users updater ON sdc.updated_by = updater.id
         WHERE sdc.status = 1 
         AND sdc.delflag = 0
         <if test="tenantId != null and tenantId != ''">

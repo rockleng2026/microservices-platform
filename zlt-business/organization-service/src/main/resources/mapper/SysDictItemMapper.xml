@@ -58,7 +58,7 @@
         <if test="query.isDefault != null">
             AND sdi.is_default = #{query.isDefault}
         </if>
-        ORDER BY sdi.sort_order ASC, sdi.created_at DESC
+        ORDER BY sdi.sort_order ASC, sdi.id ASC
         <if test="query.page != null and query.size != null">
             LIMIT #{query.size} OFFSET #{query.offset}
         </if>
@@ -141,7 +141,7 @@
         <if test="status != null">
             AND sdi.status = #{status}
         </if>
-        ORDER BY sdi.sort_order ASC, sdi.item_name ASC
+        ORDER BY sdi.sort_order ASC, sdi.id ASC
     </select>
 
     <!-- 根据类目编码查询明细项列表 -->

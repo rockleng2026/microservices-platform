@@ -17,7 +17,7 @@ export async function getDictCategories(params?: DictCategoryQueryParams) {
 }
 
 // 获取字典类目详情
-export async function getDictCategoryById(id: number) {
+export async function getDictCategoryById(id: string) {
   return request<ApiResponse<DictCategory>>(
     getApiUrl(`/api/organization/dict/category/${id}`, 'PORTAL'),
     {
@@ -38,7 +38,7 @@ export async function createDictCategory(data: DictCategorySaveParams) {
 }
 
 // 更新字典类目
-export async function updateDictCategory(id: number, data: DictCategorySaveParams) {
+export async function updateDictCategory(id: string, data: DictCategorySaveParams) {
   return request<ApiResponse<DictCategory>>(
     getApiUrl('/api/organization/dict/category/save', 'PORTAL'),
     {
@@ -49,7 +49,7 @@ export async function updateDictCategory(id: number, data: DictCategorySaveParam
 }
 
 // 删除字典类目
-export async function deleteDictCategory(id: number) {
+export async function deleteDictCategory(id: string) {
   return request<ApiResponse<void>>(
     getApiUrl(`/api/organization/dict/category/${id}`, 'PORTAL'),
     {
@@ -59,7 +59,7 @@ export async function deleteDictCategory(id: number) {
 }
 
 // 更新字典类目状态
-export async function updateDictCategoryStatus(id: number, enabled: boolean) {
+export async function updateDictCategoryStatus(id: string, enabled: boolean) {
   return request<ApiResponse<void>>(
     getApiUrl(`/api/organization/dict/category/${id}/status`, 'PORTAL'),
     {
@@ -95,7 +95,7 @@ export async function batchSaveDictItems(data: DictItemSaveParams[]) {
 }
 
 // 批量删除字典明细项
-export async function batchDeleteDictItems(ids: number[]) {
+export async function batchDeleteDictItems(ids: string[]) {
   return request<ApiResponse<void>>(
     getApiUrl('/api/organization/dict/item/batch', 'PORTAL'),
     {
@@ -106,15 +106,15 @@ export async function batchDeleteDictItems(ids: number[]) {
 }
 
 // 检查字典项编码唯一性
-export async function checkDictItemCode(categoryId: number, code: string, excludeId?: number) {
+export async function checkDictItemCode(categoryId: string, code: string, excludeId?: string) {
   return request<ApiResponse<boolean>>(
     getApiUrl('/api/organization/dict/item/check-code', 'PORTAL'),
     {
       method: 'GET',
       params: { 
-        categoryId: categoryId.toString(), 
-        itemCode: code, 
-        excludeId: excludeId?.toString() 
+        categoryId,
+        itemCode: code,
+        excludeId,
       },
     }
   );
@@ -151,7 +151,7 @@ export interface PageResult<T> {
 }
 
 export interface DictCategory {
-  id: number;
+  id: string;
   categoryCode: string;
   categoryName: string;
   description?: string;
@@ -165,13 +165,12 @@ export interface DictCategory {
 }
 
 export interface DictItem {
-  id: number;
-  categoryId: number;
+  id: string;
+  categoryId: string;
   itemCode: string;
   itemName: string;
-  itemValue?: string;
   description?: string;
-  sort: number;
+  sortOrder: number;
   enabled: boolean;
   extendData?: Record<string, any>;
   createTime?: string;
@@ -213,20 +212,19 @@ export interface DictCategorySaveParams {
 export interface DictItemQueryParams {
   page?: number;
   size?: number;
-  categoryId?: number;
+  categoryId?: string;
   itemCode?: string;
   itemName?: string;
   enabled?: boolean;
 }
 
 export interface DictItemSaveParams {
-  id?: number;
-  categoryId: number;
+  id?: string;
+  categoryId: string;
   itemCode: string;
   itemName: string;
-  itemValue?: string;
   description?: string;
-  sort: number;
-  enabled: boolean;
+  sortOrder: number;
+  status: number; // 1 启用 0 禁用
   extendData?: Record<string, any>;
 } 

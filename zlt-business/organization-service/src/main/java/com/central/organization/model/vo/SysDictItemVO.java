@@ -45,11 +45,6 @@ public class SysDictItemVO {
     private String itemName;
 
     /**
-     * 项目值
-     */
-    private String itemValue;
-
-    /**
      * 描述
      */
     private String description;
@@ -98,7 +93,7 @@ public class SysDictItemVO {
      * 创建时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime createTime;
+    private LocalDateTime createdAt;
 
     /**
      * 创建人姓名
@@ -109,14 +104,14 @@ public class SysDictItemVO {
      * 更新时间
      */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime updateTime;
+    private LocalDateTime updatedAt;
 
     /**
      * 更新人姓名
      */
     private String updatedByName;
 
-        /**
+    /**
      * 获取扩展数据JSON字符串
      * 如果extendData为空，返回"{}"
      */

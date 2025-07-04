@@ -117,9 +117,13 @@ const CategoryModal: React.FC<CategoryModalProps> = ({
       setLoading(true);
       
       const data = {
-        ...values,
-        extendSchema: validExtendFields,
-      };
+        code: values.categoryCode,
+        name: values.categoryName,
+        description: values.description,
+        sortOrder: values.sort,
+        status: values.enabled ? 1 : 0,
+        extendFields: validExtendFields,
+      } as any;
 
       if (category) {
         await updateDictCategory(category.id, data);

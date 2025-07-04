@@ -65,7 +65,7 @@ const DictConfig: React.FC = () => {
       
       // 转换字段名称以匹配前端接口
       const mappedCategoryList = categoryList.map((item: any) => ({
-        id: item.id,
+        id: item.id.toString(),
         categoryCode: item.code || item.categoryCode,
         categoryName: item.name || item.categoryName,
         description: item.description,

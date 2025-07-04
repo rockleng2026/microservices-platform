@@ -57,14 +57,14 @@ const ItemManager: React.FC<ItemManagerProps> = ({ category, onCategoryUpdate })
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   
   // 缓存引用
-  const itemsCache = useRef<Map<number, DictItem>>(new Map());
+  const itemsCache = useRef<Map<string, DictItem>>(new Map());
 
   // 加载明细项列表
   const loadItems = async () => {
     setLoading(true);
     try {
       const response = await getDictItems({
-        categoryId: Number(category.id),
+        categoryId: category.id,
         page: 1,
         size: 1000,
       });
@@ -94,13 +94,12 @@ const ItemManager: React.FC<ItemManagerProps> = ({ category, onCategoryUpdate })
   // 添加新行
   const handleAddRow = () => {
     const newItem: EditableItem = {
-      id: Date.now(), // 临时ID
+      id: Date.now().toString(), // 临时ID
       categoryId: category.id,
       itemCode: '',
       itemName: '',
-      itemValue: '',
       description: '',
-      sort: items.length,
+      sortOrder: items.length,
       enabled: true,
       extendData: {},
       isEditing: true,
@@ -156,10 +155,9 @@ const ItemManager: React.FC<ItemManagerProps> = ({ category, onCategoryUpdate })
         categoryId: record.categoryId,
         itemCode: record.itemCode,
         itemName: record.itemName,
-        itemValue: record.itemValue,
         description: record.description,
-        sort: record.sort,
-        enabled: record.enabled,
+        sortOrder: record.sortOrder,
+        status: record.enabled ? 1 : 0,
         extendData: record.extendData,
       }]);
 
@@ -241,10 +239,9 @@ const ItemManager: React.FC<ItemManagerProps> = ({ category, onCategoryUpdate })
         categoryId: item.categoryId,
         itemCode: item.itemCode,
         itemName: item.itemName,
-        itemValue: item.itemValue,
         description: item.description,
-        sort: item.sort,
-        enabled: item.enabled,
+        sortOrder: item.sortOrder,
+        status: item.enabled ? 1 : 0,
         extendData: item.extendData,
       }));
 
@@ -260,7 +257,7 @@ const ItemManager: React.FC<ItemManagerProps> = ({ category, onCategoryUpdate })
   };
 
   // 更新项数据
-  const updateItemData = (id: number, field: string, value: any) => {
+  const updateItemData = (id: string, field: string, value: any) => {
     setItems(items.map(item => 
       item.id === id
         ? { ...item, [field]: value }
@@ -269,7 +266,7 @@ const ItemManager: React.FC<ItemManagerProps> = ({ category, onCategoryUpdate })
   };
 
   // 更新扩展数据
-  const updateExtendData = (id: number, fieldCode: string, value: any) => {
+  const updateExtendData = (id: string, fieldCode: string, value: any) => {
     setItems(items.map(item => 
       item.id === id
         ? {
@@ -284,7 +281,7 @@ const ItemManager: React.FC<ItemManagerProps> = ({ category, onCategoryUpdate })
   };
 
   // 渲染扩展字段编辑器
-  const renderExtendFieldEditor = (field: ExtendField, value: any, itemId: number, disabled: boolean) => {
+  const renderExtendFieldEditor = (field: ExtendField, value: any, itemId: string, disabled: boolean) => {
     const commonProps = {
       value,
       disabled,
@@ -358,22 +355,6 @@ const ItemManager: React.FC<ItemManagerProps> = ({ category, onCategoryUpdate })
         ),
       },
       {
-        title: '值',
-        dataIndex: 'itemValue',
-        width: 120,
-        render: (value, record) => (
-          record.isEditing ? (
-            <Input
-              value={value}
-              onChange={(e) => updateItemData(record.id, 'itemValue', e.target.value)}
-              placeholder="字典项值"
-            />
-          ) : (
-            value && <Tag>{value}</Tag>
-          )
-        ),
-      },
-      {
         title: '描述',
         dataIndex: 'description',
         width: 200,
@@ -391,14 +372,14 @@ const ItemManager: React.FC<ItemManagerProps> = ({ category, onCategoryUpdate })
       },
       {
         title: '排序',
-        dataIndex: 'sort',
+        dataIndex: 'sortOrder',
         width: 80,
         render: (value, record) => (
           record.isEditing ? (
             <InputNumber
               value={value}
               min={0}
-              onChange={(val) => updateItemData(record.id, 'sort', val || 0)}
+              onChange={(val) => updateItemData(record.id, 'sortOrder', val || 0)}
             />
           ) : (
             value

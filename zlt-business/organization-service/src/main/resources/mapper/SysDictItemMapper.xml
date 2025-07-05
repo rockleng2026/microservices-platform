@@ -10,6 +10,7 @@
         <result column="category_code" property="categoryCode"/>
         <result column="item_code" property="itemCode"/>
         <result column="item_name" property="itemName"/>
+        <result column="description" property="description"/>
         <result column="sort_order" property="sortOrder"/>
         <result column="is_default" property="isDefault"/>
         <result column="status" property="status"/>
@@ -29,6 +30,7 @@
             sdc.code as category_code,
             sdi.item_code,
             sdi.item_name,
+            sdi.description,
             sdi.sort_order,
             sdi.is_default,
             sdi.status,
@@ -97,6 +99,7 @@
             sdc.code as category_code,
             sdi.item_code,
             sdi.item_name,
+            sdi.description,
             sdi.sort_order,
             sdi.is_default,
             sdi.status,
@@ -121,6 +124,7 @@
             sdc.code as category_code,
             sdi.item_code,
             sdi.item_name,
+            sdi.description,
             sdi.sort_order,
             sdi.is_default,
             sdi.status,
@@ -153,6 +157,7 @@
             sdc.code as category_code,
             sdi.item_code,
             sdi.item_name,
+            sdi.description,
             sdi.sort_order,
             sdi.is_default,
             sdi.status,
@@ -209,5 +214,16 @@
         SET delflag = 1, updated_at = NOW()
         WHERE category_id = #{categoryId}
     </delete>
+
+    <!-- 批量标记删除明细项(软删除) -->
+    <update id="batchMarkDelete">
+        UPDATE sys_dict_item 
+        SET delflag = 1, updated_at = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        AND delflag = 0
+    </update>
 
 </mapper> 

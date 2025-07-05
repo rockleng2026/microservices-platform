@@ -28,6 +28,7 @@ CREATE TABLE IF NOT EXISTS `sys_dict_item` (
   `category_id` BIGINT(20) NOT NULL COMMENT '类目ID',
   `item_code` VARCHAR(50) NOT NULL COMMENT '项目编码',
   `item_name` VARCHAR(100) NOT NULL COMMENT '项目名称',
+  `description` VARCHAR(500) DEFAULT NULL COMMENT '类目描述',
   `sort_order` INT(11) DEFAULT 0 COMMENT '排序值',
   `is_default` TINYINT(1) DEFAULT 0 COMMENT '是否默认项(0=否, 1=是)',
   `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '状态(0=禁用, 1=启用)',

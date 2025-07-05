@@ -122,8 +122,10 @@ const DictConfig: React.FC = () => {
           <div className="category-tree-node">
             <div className="node-content">
               <BookOutlined className="node-icon" />
-              <span className="node-name">{category.categoryName}</span>
-              <span className="node-code">({category.categoryCode})</span>
+              <div className="node-text">
+                <div className="node-name">{category.categoryName}</div>
+                <div className="node-code">{category.categoryCode}</div>
+              </div>
             </div>
             <div className="node-actions">
               <Space size="small">

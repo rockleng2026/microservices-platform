@@ -148,12 +148,20 @@ public interface ISysDictService {
     Boolean deleteItem(Long id);
 
     /**
-     * 批量删除明细项
+     * 批量删除明细项(硬删除)
      *
      * @param ids 明细项ID列表
      * @return 是否成功
      */
     Boolean batchDeleteItems(List<Long> ids);
+
+    /**
+     * 批量标记删除明细项(软删除)
+     *
+     * @param ids 明细项ID列表
+     * @return 是否成功
+     */
+    Boolean batchMarkDeleteItems(List<Long> ids);
 
     /**
      * 检查明细项编码是否可用

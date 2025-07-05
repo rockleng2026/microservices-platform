@@ -41,6 +41,11 @@ public class SysDictItem {
     private String itemName;
 
     /**
+     * 描述
+     */
+    private String description;
+
+    /**
      * 排序值
      */
     private Integer sortOrder;

@@ -132,4 +132,11 @@
         WHERE id = #{id} AND delflag = 0
     </update>
 
+    <!-- 软删除类目 -->
+    <update id="markDelete">
+        UPDATE sys_dict_category 
+        SET delflag = 1, updated_at = NOW()
+        WHERE id = #{id} AND delflag = 0
+    </update>
+
 </mapper>

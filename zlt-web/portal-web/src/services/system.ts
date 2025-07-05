@@ -94,12 +94,23 @@ export async function batchSaveDictItems(data: DictItemSaveParams[]) {
   );
 }
 
-// 批量删除字典明细项
+// 批量删除字典明细项(硬删除)
 export async function batchDeleteDictItems(ids: string[]) {
   return request<ApiResponse<void>>(
     getApiUrl('/api/organization/dict/item/batch', 'PORTAL'),
     {
       method: 'DELETE',
+      data: ids.map(id => id.toString()),
+    }
+  );
+}
+
+// 批量标记删除字典明细项(软删除)
+export async function batchMarkDeleteDictItems(ids: string[]) {
+  return request<ApiResponse<void>>(
+    getApiUrl('/api/organization/dict/item/batch-mark-delete', 'PORTAL'),
+    {
+      method: 'POST',
       data: ids.map(id => id.toString()),
     }
   );

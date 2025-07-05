@@ -70,4 +70,12 @@ public interface SysDictCategoryMapper extends BaseMapper<SysDictCategory> {
      * @return 影响行数
      */
     int updateStatus(@Param("id") Long id, @Param("status") Integer status);
+
+    /**
+     * 软删除类目
+     *
+     * @param id 类目ID
+     * @return 影响行数
+     */
+    int markDelete(@Param("id") Long id);
 } 

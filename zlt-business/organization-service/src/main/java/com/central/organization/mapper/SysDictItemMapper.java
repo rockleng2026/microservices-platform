@@ -104,4 +104,12 @@ public interface SysDictItemMapper extends BaseMapper<SysDictItem> {
      * @return 影响行数
      */
     int deleteByCategoryId(@Param("categoryId") Long categoryId);
+
+    /**
+     * 批量标记删除明细项(软删除)
+     *
+     * @param ids 明细项ID列表
+     * @return 影响行数
+     */
+    int batchMarkDelete(@Param("ids") List<Long> ids);
 } 

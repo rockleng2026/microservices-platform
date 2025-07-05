@@ -369,7 +369,7 @@ public class SysDictController {
     }
 
     /**
-     * 批量删除明细项
+     * 批量删除明细项(硬删除)
      * 
      * @param ids 明细项ID列表
      * @return 操作结果
@@ -388,7 +388,32 @@ public class SysDictController {
                 return Result.failed("批量删除失败");
             }
         } catch (Exception ex) {
-            log.error("批量删除明细项失败", ex);
+            log.error("批量硬删除明细项失败", ex);
+            return Result.failed(ex.getMessage());
+        }
+    }
+
+    /**
+     * 批量标记删除明细项(软删除)
+     * 
+     * @param ids 明细项ID列表
+     * @return 操作结果
+     */
+    @PostMapping("/item/batch-mark-delete")
+    public Result<Void> batchMarkDeleteItems(@RequestBody List<String> ids) {
+        try {
+            List<Long> itemIds = ids.stream()
+                .map(IdUtils::stringToLong)
+                .toList();
+            
+            Boolean success = dictService.batchMarkDeleteItems(itemIds);
+            if (success) {
+                return Result.succeed(null, "批量标记删除成功");
+            } else {
+                return Result.failed("批量标记删除失败");
+            }
+        } catch (Exception ex) {
+            log.error("批量标记删除明细项失败", ex);
             return Result.failed(ex.getMessage());
         }
     }

@@ -162,20 +162,21 @@ public class SysDictServiceImpl implements ISysDictService {
             return false;
         }
 
-        // 检查是否有关联的明细项
+        // 检查是否有关联的明细项（只检查未删除的明细项）
         Integer itemCount = itemMapper.selectCountByCategoryId(id);
         if (itemCount != null && itemCount > 0) {
             throw new IllegalArgumentException("该类目下存在明细项，无法删除");
         }
 
         SysDictCategory category = categoryMapper.selectById(id);
-        if (category == null) {
+        if (category == null || category.getDelflag() == 1) {
             return false;
         }
 
-        boolean success = categoryMapper.deleteById(id) > 0;
+        // 使用软删除
+        boolean success = categoryMapper.markDelete(id) > 0;
         if (success) {
-            log.info("删除字典类目成功: code={}, name={}", category.getCode(), category.getName());
+            log.info("标记删除字典类目成功: code={}, name={}", category.getCode(), category.getName());
         }
         
         return success;
@@ -386,13 +387,25 @@ public class SysDictServiceImpl implements ISysDictService {
                     deletedCount++;
                 }
             } catch (Exception e) {
-                log.error("批量删除明细项失败: id={}, error={}", id, e.getMessage(), e);
+                log.error("批量硬删除明细项失败: id={}, error={}", id, e.getMessage(), e);
                 throw new RuntimeException("删除明细项失败: " + id + " - " + e.getMessage());
             }
         }
 
-        log.info("批量删除字典明细项完成: 删除数量={}", deletedCount);
+        log.info("批量硬删除字典明细项完成: 删除数量={}", deletedCount);
         return deletedCount > 0;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean batchMarkDeleteItems(List<Long> ids) {
+        if (CollUtil.isEmpty(ids)) {
+            return false;
+        }
+
+        int markedCount = itemMapper.batchMarkDelete(ids);
+        log.info("批量标记删除字典明细项完成: 标记删除数量={}", markedCount);
+        return markedCount > 0;
     }
 
     @Override
@@ -463,6 +476,9 @@ public class SysDictServiceImpl implements ISysDictService {
         // 处理状态描述
         itemVO.setStatusText(itemVO.getStatus() == 1 ? "启用" : "禁用");
         itemVO.setIsDefaultText(itemVO.getIsDefault() == 1 ? "是" : "否");
+        
+        // 设置enabled字段供前端使用 (status: 0=禁用, 1=启用)
+        itemVO.setEnabled(itemVO.getStatus() == 1);
 
         // 解析扩展数据
         if (StrUtil.isNotBlank(itemVO.getExtendDataJson())) {

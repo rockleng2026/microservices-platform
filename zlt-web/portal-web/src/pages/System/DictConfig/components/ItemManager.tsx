@@ -31,6 +31,7 @@ import {
   getDictItems,
   batchSaveDictItems,
   batchDeleteDictItems,
+  batchMarkDeleteDictItems,
   checkDictItemCode,
 } from '@/services/system';
 
@@ -184,8 +185,8 @@ const ItemManager: React.FC<ItemManagerProps> = ({ category, onCategoryUpdate })
     }
   };
 
-  // 删除选中行
-  const handleDeleteSelected = async () => {
+  // 硬删除选中行
+  const handleHardDeleteSelected = async () => {
     try {
       const idsToDelete = selectedRowKeys
         .map(key => items.find(item => item.id.toString() === key))
@@ -213,6 +214,38 @@ const ItemManager: React.FC<ItemManagerProps> = ({ category, onCategoryUpdate })
     } catch (error) {
       console.error('删除失败:', error);
       message.error('删除失败');
+    }
+  };
+
+  // 软删除选中行
+  const handleSoftDeleteSelected = async () => {
+    try {
+      const idsToDelete = selectedRowKeys
+        .map(key => items.find(item => item.id.toString() === key))
+        .filter(item => item && !item.isNew)
+        .map(item => item!.id);
+
+      if (idsToDelete.length > 0) {
+        await batchMarkDeleteDictItems(idsToDelete);
+      }
+
+      // 删除新增的行（未保存的）
+      const newItemsToDelete = selectedRowKeys
+        .map(key => items.find(item => item.id.toString() === key))
+        .filter(item => item && item.isNew);
+
+      if (newItemsToDelete.length > 0) {
+        setItems(items.filter(item => 
+          !newItemsToDelete.some(newItem => newItem!.id === item.id)
+        ));
+      }
+
+      message.success('标记删除成功');
+      setSelectedRowKeys([]);
+      loadItems();
+    } catch (error) {
+      console.error('标记删除失败:', error);
+      message.error('标记删除失败');
     }
   };
 
@@ -503,8 +536,20 @@ const ItemManager: React.FC<ItemManagerProps> = ({ category, onCategoryUpdate })
             批量保存
           </Button>
           <Popconfirm
-            title="确认删除选中的明细项吗？"
-            onConfirm={handleDeleteSelected}
+            title="确认标记删除选中的明细项吗？此操作可恢复。"
+            onConfirm={handleSoftDeleteSelected}
+            disabled={selectedRowKeys.length === 0}
+          >
+            <Button
+              icon={<DeleteOutlined />}
+              disabled={selectedRowKeys.length === 0}
+            >
+              标记删除
+            </Button>
+          </Popconfirm>
+          <Popconfirm
+            title="确认彻底删除选中的明细项吗？此操作不可恢复！"
+            onConfirm={handleHardDeleteSelected}
             disabled={selectedRowKeys.length === 0}
           >
             <Button
@@ -512,7 +557,7 @@ const ItemManager: React.FC<ItemManagerProps> = ({ category, onCategoryUpdate })
               danger
               disabled={selectedRowKeys.length === 0}
             >
-              删除选中
+              彻底删除
             </Button>
           </Popconfirm>
         </Space>

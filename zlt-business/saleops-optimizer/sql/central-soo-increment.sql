@@ -229,18 +229,18 @@ CREATE TABLE `soo_social_security_base` (
   `housing_fund_base_lower` decimal(10,2) NOT NULL COMMENT '公积金基数下限',
   
   -- 个人缴费比例
-  `pension_personal_ratio` decimal(5,4) NOT NULL COMMENT '养老保险个人比例',
-  `medical_personal_ratio` decimal(5,4) NOT NULL COMMENT '医疗保险个人比例',
-  `unemployment_personal_ratio` decimal(5,4) NOT NULL COMMENT '失业保险个人比例',
-  `housing_fund_personal_ratio` decimal(5,4) NOT NULL COMMENT '公积金个人比例',
+  `pension_personal_ratio` decimal(4.2) NOT NULL COMMENT '养老保险个人比例',
+  `medical_personal_ratio` decimal(4.2) NOT NULL COMMENT '医疗保险个人比例',
+  `unemployment_personal_ratio` decimal(4.2) NOT NULL COMMENT '失业保险个人比例',
+  `housing_fund_personal_ratio` decimal(4.2) NOT NULL COMMENT '公积金个人比例',
   
   -- 公司缴费比例
-  `pension_company_ratio` decimal(5,4) NOT NULL COMMENT '养老保险公司比例',
-  `medical_company_ratio` decimal(5,4) NOT NULL COMMENT '医疗保险公司比例',
-  `unemployment_company_ratio` decimal(5,4) NOT NULL COMMENT '失业保险公司比例',
-  `maternity_company_ratio` decimal(5,4) NOT NULL COMMENT '生育保险公司比例',
-  `injury_company_ratio` decimal(5,4) NOT NULL COMMENT '工伤保险公司比例',
-  `housing_fund_company_ratio` decimal(5,4) NOT NULL COMMENT '公积金公司比例',
+  `pension_company_ratio` decimal(4.2) NOT NULL COMMENT '养老保险公司比例',
+  `medical_company_ratio` decimal(4.2) NOT NULL COMMENT '医疗保险公司比例',
+  `unemployment_company_ratio` decimal(4.2) NOT NULL COMMENT '失业保险公司比例',
+  `maternity_company_ratio` decimal(4.2) NOT NULL COMMENT '生育保险公司比例',
+  `injury_company_ratio` decimal(4.2) NOT NULL COMMENT '工伤保险公司比例',
+  `housing_fund_company_ratio` decimal(4.2) NOT NULL COMMENT '公积金公司比例',
   
   `effective_date` date NOT NULL COMMENT '生效日期',
   `expire_date` date COMMENT '失效日期',
@@ -472,12 +472,12 @@ INSERT INTO `soo_social_security_base`
  `maternity_company_ratio`, `injury_company_ratio`, `housing_fund_company_ratio`,
  `effective_date`) VALUES
 ('北京', 2024, 31884.00, 5869.00, 31884.00, 2540.00,
- 0.0800, 0.0200, 0.0050, 0.1200,
- 0.1600, 0.1000, 0.0050, 0.0080, 0.0020, 0.1200,
+ 8, 2, 0.50, 12,
+ 16, 10, 0.5, 0.8, 0.2, 12,
  '2024-01-01'),
 ('上海', 2024, 36549.00, 7310.00, 36549.00, 2690.00,
- 0.0800, 0.0200, 0.0050, 0.0700,
- 0.1600, 0.0950, 0.0050, 0.0080, 0.0020, 0.0700,
+ 8, 2, 0.5, 7,
+ 16, 9.5, 0.5, 0.8, 0.2, 7,
  '2024-01-01');
 
 -- 插入职级薪资标准预置数据

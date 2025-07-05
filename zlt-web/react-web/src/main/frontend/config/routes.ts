@@ -78,6 +78,15 @@
     ],
   },
   {
+    path: '/soo',
+    routes: [
+      {
+        path: '/soo/regional-salary-coefficient.html',
+        component: './soo/RegionalSalaryCoefficient',
+      },
+    ],
+  },
+  {
     path: '/attestation/app.html',
     component: './system/App',
   },

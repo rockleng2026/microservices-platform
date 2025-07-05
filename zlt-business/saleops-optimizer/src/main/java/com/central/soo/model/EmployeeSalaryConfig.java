@@ -34,23 +34,6 @@ public class EmployeeSalaryConfig extends BaseEntity {
     @Schema(description = "员工ID", required = true)
     private Long employeeId;
 
-    @Schema(description = "员工姓名")
-    private String employeeName;
-
-    @Schema(description = "员工编号")
-    private String employeeNo;
-
-    @NotNull(message = "部门ID不能为空")
-    @Schema(description = "部门ID", required = true)
-    private Long departmentId;
-
-    @Schema(description = "岗位ID")
-    private Long positionId;
-
-    @NotNull(message = "职级ID不能为空")
-    @Schema(description = "职级ID", required = true)
-    private String jobLevelId;
-
     @NotNull(message = "基础工资不能为空")
     @Schema(description = "基础工资", required = true)
     private BigDecimal baseSalary;
@@ -69,10 +52,10 @@ public class EmployeeSalaryConfig extends BaseEntity {
     private Integer isDepartmentBonus = 0;
 
     @Schema(description = "销售提成比例")
-    private BigDecimal salesIncentiveRatio;
+    private BigDecimal salesIncentiveRatio = BigDecimal.ZERO;
 
     @Schema(description = "团队提成比例")
-    private BigDecimal teamIncentiveRatio;
+    private BigDecimal teamIncentiveRatio = BigDecimal.ZERO;
 
     @NotNull(message = "生效日期不能为空")
     @Schema(description = "生效日期", required = true)

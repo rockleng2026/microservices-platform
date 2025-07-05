@@ -72,10 +72,10 @@ const departmentColumns = (onEdit: (record: any) => void, onDelete: (record: any
 ];
 
 const BaseConfig: React.FC = () => {
-  // 权限点变量
-  const canAdd = true;
-  const canEdit = true;
-  const canDelete = true;
+// 权限点变量
+const canAdd = true;
+const canEdit = true;
+const canDelete = true;
 
   // 部门分红配置
   const [departmentData, setDepartmentData] = useState<any[]>([]);
@@ -181,7 +181,7 @@ const BaseConfig: React.FC = () => {
     setModalOpen(true);
     loadDepartmentTree();
     setTimeout(() => {
-      form.resetFields();
+    form.resetFields();
     }, 0);
   };
   // 编辑
@@ -190,11 +190,11 @@ const BaseConfig: React.FC = () => {
     setModalOpen(true);
     loadDepartmentTree();
     setTimeout(() => {
-      form.setFieldsValue({
-        ...record,
+    form.setFieldsValue({
+      ...record,
         departmentId: record.departmentId ? String(record.departmentId) : undefined,
-        effectiveDate: record.effectiveDate ? dayjs(record.effectiveDate) : undefined,
-      });
+      effectiveDate: record.effectiveDate ? dayjs(record.effectiveDate) : undefined,
+    });
     }, 0);
   };
   // 保存
@@ -440,7 +440,7 @@ const BaseConfig: React.FC = () => {
       <Form.Item name="status" label="状态" valuePropName="checked"> <Switch checkedChildren="启用" unCheckedChildren="禁用" /> </Form.Item>
       <Form.Item name="remark" label="备注"> <Input.TextArea rows={2} maxLength={200} showCount /> </Form.Item>
     </Form>
-  );
+    );
 
   return (
     <Layout className="base-config-layout">

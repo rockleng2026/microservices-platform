@@ -18,8 +18,8 @@ const RegionSalaryFactor: React.FC<{ active: boolean }> = ({ active }) => {
     try {
       const res = await request(getApiUrl('/api/soo/region-salary-factor/page', 'SOO'), { params: { pageNum: page, pageSize } });
       if (res && res.resp_code === 0) {
-        setData(res.datas.records || []);
-        setPagination({ current: page, pageSize, total: res.datas.total || 0 });
+        setData(res.data || []);
+        setPagination({ current: page, pageSize, total: res.count || 0 });
       } else {
         message.error(res?.resp_msg || '获取数据失败');
       }
@@ -104,7 +104,7 @@ const RegionSalaryFactor: React.FC<{ active: boolean }> = ({ active }) => {
   };
   const columns = [
     { title: '地区', dataIndex: 'region', key: 'region' },
-    { title: '工资系数', dataIndex: 'salaryFactor', key: 'salaryFactor' },
+    { title: '工资系数', dataIndex: 'salaryCoefficient', key: 'salaryCoefficient' },
     { title: '生效日期', dataIndex: 'effectiveDate', key: 'effectiveDate' },
     { title: '状态', dataIndex: 'status', key: 'status', render: (val: number) => val === 1 ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag> },
     {
@@ -125,7 +125,7 @@ const RegionSalaryFactor: React.FC<{ active: boolean }> = ({ active }) => {
       <Form.Item name="region" label="地区" rules={[{ required: true, message: '请输入地区' }]}> 
         <Input />
       </Form.Item>
-      <Form.Item name="salaryFactor" label="工资系数" rules={[{ required: true, message: '请输入工资系数' }]}> 
+      <Form.Item name="salaryCoefficient" label="工资系数" rules={[{ required: true, message: '请输入工资系数' }]}> 
         <Input type="number" min={0} step={0.01} />
       </Form.Item>
       <Form.Item name="effectiveDate" label="生效日期" rules={[{ required: true, message: '请选择生效日期' }]}> 

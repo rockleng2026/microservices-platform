@@ -12,6 +12,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.time.LocalDate;
 import java.util.List;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.central.common.model.PageResult;
+import com.central.common.utils.PageResultUtil;
 
 @RestController
 @RequestMapping("/api/soo/job-level-salary")
@@ -77,7 +79,7 @@ public class JobLevelSalaryController {
 
     @GetMapping("/page")
     @Operation(summary = "分页条件查询职级薪资标准")
-    public Result<IPage<JobLevelSalary>> page(
+    public PageResult<JobLevelSalary> page(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(required = false) Long departmentId,
@@ -87,7 +89,7 @@ public class JobLevelSalaryController {
             @RequestParam(required = false) LocalDate endDate) {
         Page<JobLevelSalary> page = new Page<>(pageNum, pageSize);
         IPage<JobLevelSalary> result = jobLevelSalaryService.pageQuery(page, departmentId, jobLevelCode, status, startDate, endDate);
-        return Result.succeed(result);
+        return PageResultUtil.buildPageResult(result);
     }
 
     @GetMapping("/history")

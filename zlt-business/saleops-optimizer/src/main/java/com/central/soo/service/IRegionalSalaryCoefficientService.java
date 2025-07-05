@@ -24,7 +24,7 @@ public interface IRegionalSalaryCoefficientService extends IService<RegionalSala
      * @param queryDTO 查询参数
      * @return 分页结果
      */
-    Result<Page<RegionalSalaryCoefficient>> pageQuery(RegionalSalaryCoefficientQueryDTO queryDTO);
+    PageResult<RegionalSalaryCoefficient> pageQuery(RegionalSalaryCoefficientQueryDTO queryDTO);
 
     /**
      * 检查地区在指定日期范围内是否存在重叠的配置

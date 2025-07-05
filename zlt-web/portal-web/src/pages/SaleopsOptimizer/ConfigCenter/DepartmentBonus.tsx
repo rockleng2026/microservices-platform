@@ -22,8 +22,8 @@ const DepartmentBonus: React.FC<{ active: boolean }> = ({ active }) => {
     try {
       const res = await request(getApiUrl('/api/soo/department-bonus-config/page', 'SOO'), { params: { pageNum: page, pageSize } });
       if (res && res.resp_code === 0) {
-        setData(res.datas.records || []);
-        setPagination({ current: page, pageSize, total: res.datas.total || 0 });
+        setData(res.data || []);
+        setPagination({ current: page, pageSize, total: res.count || 0 });
       } else {
         message.error(res?.resp_msg || '获取数据失败');
       }

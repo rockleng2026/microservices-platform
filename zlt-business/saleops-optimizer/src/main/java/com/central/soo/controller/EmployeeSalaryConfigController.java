@@ -2,6 +2,7 @@ package com.central.soo.controller;
 
 import com.central.common.model.Result;
 import com.central.common.model.PageResult;
+import com.central.common.utils.PageResultUtil;
 import com.central.soo.model.EmployeeSalaryConfig;
 import com.central.soo.model.dto.EmployeeSalaryQueryDTO;
 import com.central.soo.model.vo.EmployeeSalaryVO;
@@ -30,19 +31,14 @@ public class EmployeeSalaryConfigController {
 
     @GetMapping("/page")
     @Operation(summary = "分页查询员工薪酬配置列表")
-    public Result<PageResult<EmployeeSalaryVO>> pageEmployeeSalary(EmployeeSalaryQueryDTO query) {
+    public PageResult<EmployeeSalaryVO> pageEmployeeSalary(EmployeeSalaryQueryDTO query) {
         try {
             IPage<EmployeeSalaryVO> page = employeeSalaryConfigService.pageEmployeeSalary(query);
-            PageResult<EmployeeSalaryVO> pageResult = PageResult.<EmployeeSalaryVO>builder()
-                    .data(page.getRecords())
-                    .count(page.getTotal())
-                    .page((int) page.getCurrent())
-                    .size((int) page.getSize())
-                    .pages((int) page.getPages())
-                    .build();
-            return Result.succeed(pageResult);
+            return PageResultUtil.buildPageResult(page);
         } catch (Exception e) {
-            return Result.failed("获取员工薪酬配置列表失败: " + e.getMessage());
+            PageResult<EmployeeSalaryVO> errorResult = new PageResult<>();
+            errorResult.setResp_code(1);
+            return errorResult;
         }
     }
 

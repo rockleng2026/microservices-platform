@@ -6,6 +6,7 @@ import com.central.common.model.Result;
 import com.central.soo.model.SocialSecurityBase;
 import com.central.soo.model.dto.SocialSecurityBaseQueryDTO;
 import com.central.soo.service.ISocialSecurityBaseService;
+import com.central.common.utils.PageResultUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,19 +32,14 @@ public class SocialSecurityBaseController {
 
     @GetMapping("/page")
     @Operation(summary = "分页查询社保公积金基数配置")
-    public Result<PageResult<SocialSecurityBase>> pageSocialSecurityBase(SocialSecurityBaseQueryDTO query) {
+    public PageResult<SocialSecurityBase> pageSocialSecurityBase(SocialSecurityBaseQueryDTO query) {
         try {
             IPage<SocialSecurityBase> page = socialSecurityBaseService.pageSocialSecurityBase(query);
-            PageResult<SocialSecurityBase> pageResult = PageResult.<SocialSecurityBase>builder()
-                    .data(page.getRecords())
-                    .count(page.getTotal())
-                    .page((int) page.getCurrent())
-                    .size((int) page.getSize())
-                    .pages((int) page.getPages())
-                    .build();
-            return Result.succeed(pageResult);
+            return PageResultUtil.buildPageResult(page);
         } catch (Exception e) {
-            return Result.failed("获取社保公积金基数配置列表失败: " + e.getMessage());
+            PageResult<SocialSecurityBase> errorResult = new PageResult<>();
+            errorResult.setResp_code(1);
+            return errorResult;
         }
     }
 

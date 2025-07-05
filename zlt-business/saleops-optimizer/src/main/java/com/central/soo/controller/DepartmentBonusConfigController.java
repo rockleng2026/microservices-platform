@@ -13,6 +13,8 @@ import java.time.LocalDate;
 import java.math.BigDecimal;
 
 import java.util.List;
+import com.central.common.model.PageResult;
+import com.central.common.utils.PageResultUtil;
 
 @RestController
 @RequestMapping("/api/soo/department-bonus-config")
@@ -53,7 +55,7 @@ public class DepartmentBonusConfigController {
 
     @GetMapping("/page")
     @Operation(summary = "分页条件查询部门分红配置")
-    public Result<IPage<DepartmentBonusConfig>> page(
+    public PageResult<DepartmentBonusConfig> page(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(required = false) Long departmentId,
@@ -63,7 +65,7 @@ public class DepartmentBonusConfigController {
             @RequestParam(required = false) LocalDate endDate) {
         Page<DepartmentBonusConfig> page = new Page<>(pageNum, pageSize);
         IPage<DepartmentBonusConfig> result = departmentBonusConfigService.pageQuery(page, departmentId, departmentName, status, startDate, endDate);
-        return Result.succeed(result);
+        return PageResultUtil.buildPageResult(result);
     }
 
     @GetMapping("/history/{departmentId}")

@@ -10,6 +10,8 @@ import org.springframework.web.bind.annotation.*;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
+import com.central.common.model.PageResult;
+import com.central.common.utils.PageResultUtil;
 
 @RestController
 @RequestMapping("/api/soo/monthly-performance")
@@ -54,7 +56,7 @@ public class MonthlyPerformanceController {
 
     @GetMapping("/page")
     @Operation(summary = "分页条件查询月度绩效")
-    public Result<IPage<MonthlyPerformance>> page(
+    public PageResult<MonthlyPerformance> page(
             @RequestParam(defaultValue = "1") int pageNum,
             @RequestParam(defaultValue = "10") int pageSize,
             @RequestParam(required = false) Long employeeId,
@@ -64,7 +66,7 @@ public class MonthlyPerformanceController {
             @RequestParam(required = false) Integer status) {
         Page<MonthlyPerformance> page = new Page<>(pageNum, pageSize);
         IPage<MonthlyPerformance> result = monthlyPerformanceService.pageQuery(page, employeeId, employeeName, departmentId, month, status);
-        return Result.succeed(result);
+        return PageResultUtil.buildPageResult(result);
     }
 
     @GetMapping("/history/{employeeId}")

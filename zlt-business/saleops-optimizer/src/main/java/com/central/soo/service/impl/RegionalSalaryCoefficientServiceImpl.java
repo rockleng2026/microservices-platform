@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.central.common.model.Result;
+import com.central.common.model.PageResult;
+import com.central.common.utils.PageResultUtil;
 import com.central.soo.mapper.RegionalSalaryCoefficientMapper;
 import com.central.soo.model.dto.RegionalSalaryCoefficientQueryDTO;
 import com.central.soo.model.entity.RegionalSalaryCoefficient;
@@ -31,7 +33,7 @@ public class RegionalSalaryCoefficientServiceImpl extends ServiceImpl<RegionalSa
         implements IRegionalSalaryCoefficientService {
 
     @Override
-    public Result<Page<RegionalSalaryCoefficient>> pageQuery(RegionalSalaryCoefficientQueryDTO queryDTO) {
+    public PageResult<RegionalSalaryCoefficient> pageQuery(RegionalSalaryCoefficientQueryDTO queryDTO) {
         try {
             LambdaQueryWrapper<RegionalSalaryCoefficient> wrapper = new LambdaQueryWrapper<>();
             
@@ -71,11 +73,11 @@ public class RegionalSalaryCoefficientServiceImpl extends ServiceImpl<RegionalSa
             
             Page<RegionalSalaryCoefficient> page = new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize());
             Page<RegionalSalaryCoefficient> result = this.page(page, wrapper);
-            
-            return Result.succeed(result);
+            return PageResultUtil.buildPageResult(result);
         } catch (Exception e) {
-            log.error("分页查询地区工资系数失败", e);
-            return Result.failed("查询失败：" + e.getMessage());
+            PageResult<RegionalSalaryCoefficient> errorResult = new PageResult<>();
+            errorResult.setResp_code(1);
+            return errorResult;
         }
     }
 

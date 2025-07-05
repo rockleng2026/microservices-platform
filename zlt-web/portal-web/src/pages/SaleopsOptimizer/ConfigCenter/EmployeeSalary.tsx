@@ -38,11 +38,11 @@ const EmployeeSalary: React.FC<{ active: boolean }> = ({ active }) => {
       };
       const res = await request(getApiUrl('/api/soo/employee-salary/page', 'SOO'), { params });
       if (res && res.resp_code === 0) {
-        setData(res.datas?.data || []);
+        setData(res.data || []);
         setPagination({ 
           current: page, 
           pageSize, 
-          total: res.datas?.count || 0 
+          total: res.count || 0 
         });
       } else {
         message.error(res?.resp_msg || '获取数据失败');

@@ -73,11 +73,11 @@ const SocialSecurityBase: React.FC<{ active: boolean }> = ({ active }) => {
       };
       const res = await request(getApiUrl('/api/soo/social-security-base/page', 'SOO'), { params });
       if (res && res.resp_code === 0) {
-        setData(res.datas?.data || []);
+        setData(res.data || []);
         setPagination({
           current: page,
           pageSize,
-          total: res.datas?.count || 0,
+          total: res.count || 0,
         });
       }
     } catch (e: any) {

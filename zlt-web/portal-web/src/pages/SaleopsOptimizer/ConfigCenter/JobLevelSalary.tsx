@@ -99,8 +99,8 @@ const JobLevelSalary: React.FC<{ active: boolean }> = ({ active }) => {
         params: { pageNum: page, pageSize, departmentId: selectedDeptId },
       });
       if (res && res.resp_code === 0) {
-        setSalaryData(res.datas.records || []);
-        setPagination({ current: page, pageSize, total: res.datas.total || 0 });
+        setSalaryData(res.data || []);
+        setPagination({ current: page, pageSize, total: res.count || 0 });
       } else {
         message.error(res?.resp_msg || '获取数据失败');
       }

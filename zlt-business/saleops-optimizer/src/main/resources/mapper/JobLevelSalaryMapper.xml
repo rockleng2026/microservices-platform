@@ -5,10 +5,7 @@
     <!-- 基础resultMap -->
     <resultMap id="BaseResultMap" type="com.central.soo.model.JobLevelSalary">
         <id property="id" column="id" />
-        <result property="jobLevelId" column="job_level_id" />
-        <result property="jobLevelName" column="job_level_name" />
         <result property="departmentId" column="department_id" />
-        <result property="departmentName" column="department_name" />
         <result property="baseSalaryMin" column="base_salary_min" />
         <result property="baseSalaryMax" column="base_salary_max" />
         <result property="performanceRatioMin" column="performance_ratio_min" />
@@ -24,6 +21,8 @@
         <result property="createdBy" column="created_by" />
         <result property="updatedBy" column="updated_by" />
         <result property="tenantId" column="tenant_id" />
+        <result property="positionId" column="position_id" />
+        <result property="jobLevelCode" column="job_level_code" />
     </resultMap>
 
     <!-- 目前所有查询均可用MyBatis-Plus Wrapper实现，无需自定义SQL。若后续有复杂统计、批量操作等需求可在此扩展。 -->

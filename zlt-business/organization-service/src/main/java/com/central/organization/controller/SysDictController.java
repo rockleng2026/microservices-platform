@@ -1,5 +1,6 @@
 package com.central.organization.controller;
 
+import com.central.common.context.TenantContextHolder;
 import com.central.common.model.Result;
 import com.central.common.model.PageResult;
 import com.central.organization.model.dto.*;
@@ -221,7 +222,7 @@ public class SysDictController {
                                                            @RequestParam(required = false) Integer status) {
         try {
             Long catId = IdUtils.stringToLong(categoryId);
-            String tenantId = "default"; // 这里需要从当前上下文获取
+            String tenantId = TenantContextHolder.getTenant(); // 这里需要从当前上下文获取
             List<SysDictItemVO> items = dictService.getItemsByCategoryId(catId, tenantId, status);
             return Result.succeed(items);
         } catch (Exception ex) {

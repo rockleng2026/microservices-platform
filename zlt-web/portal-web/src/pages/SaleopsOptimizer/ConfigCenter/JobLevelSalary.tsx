@@ -12,14 +12,18 @@ const { Option } = Select;
 
 // Mock 职级下拉接口（建议后端提供真实接口）
 const fetchJobLevels = async () => {
-  // 建议替换为真实接口：/api/organization/dict/item/category-code/job_level
-  // 返回格式：[{code: 'JL1', name: '正厅级'}, ...]
-  return [
-    { code: 'JL1', name: '正厅级' },
-    { code: 'JL2', name: '副厅级' },
-    { code: 'JL3', name: '处级' },
-    { code: 'JL4', name: '科级' },
-  ];
+  try {
+    const res = await request('/api-portal/api/organization/dict/item/category-code/JOB_LEVEL', {
+      method: 'GET',
+    });
+    if (res && (res.data || res.datas)) {
+      const items = res.data || res.datas || [];
+      return items.map((item: any) => ({ code: item.itemCode, name: item.itemName }));
+    }
+    return [];
+  } catch {
+    return [];
+  }
 };
 
 const JobLevelSalary: React.FC<{ active: boolean }> = ({ active }) => {
@@ -31,6 +35,7 @@ const JobLevelSalary: React.FC<{ active: boolean }> = ({ active }) => {
   // 岗位列表
   const [positions, setPositions] = useState<any[]>([]);
   const [positionsLoading, setPositionsLoading] = useState(false);
+  const [positionsLoaded, setPositionsLoaded] = useState(false);
 
   // 薪资标准数据
   const [salaryData, setSalaryData] = useState<any[]>([]);
@@ -44,6 +49,10 @@ const JobLevelSalary: React.FC<{ active: boolean }> = ({ active }) => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
   const [form] = Form.useForm();
+
+  // 新增
+  const [adding, setAdding] = useState(false);
+  const [addForm] = Form.useForm();
 
   // 加载部门树
   const loadDepartmentTree = async () => {
@@ -111,10 +120,24 @@ const JobLevelSalary: React.FC<{ active: boolean }> = ({ active }) => {
   }, [active]);
   useEffect(() => {
     if (selectedDeptId) {
-      loadPositions(selectedDeptId);
+      setPositionsLoading(true);
+      setPositionsLoaded(false);
+      getWorkPositionsByDepartment(selectedDeptId).then(res => {
+        setPositions(res.data || res.datas || []);
+        setPositionsLoaded(true);
+      }).finally(() => {
+        setPositionsLoading(false);
+      });
+    }
+    // eslint-disable-next-line
+  }, [selectedDeptId]);
+
+  useEffect(() => {
+    if (positionsLoaded) {
       loadSalaryData(1, pagination.pageSize);
     }
-  }, [selectedDeptId]);
+    // eslint-disable-next-line
+  }, [positionsLoaded]);
 
   // 部门树选择
   const handleDeptSelect = (selectedKeys: any) => {
@@ -123,9 +146,9 @@ const JobLevelSalary: React.FC<{ active: boolean }> = ({ active }) => {
 
   // 新增
   const handleAdd = () => {
-    setEditing(null);
-    setModalOpen(true);
-    form.resetFields();
+    loadJobLevels();
+    setAdding(true);
+    addForm.resetFields();
   };
   // 编辑
   const handleEdit = (record: any) => {
@@ -195,28 +218,194 @@ const JobLevelSalary: React.FC<{ active: boolean }> = ({ active }) => {
     });
   };
 
+  // 新增保存
+  const handleAddSave = async () => {
+    try {
+      const values = await addForm.validateFields();
+      const submitData = {
+        ...values,
+        departmentId: selectedDeptId,
+        effectiveDate: values.effectiveDate ? values.effectiveDate.format('YYYY-MM-DD') : undefined,
+        status: values.status ? 1 : 0,
+      };
+      const res = await request(getApiUrl('/api/soo/job-level-salary', 'SOO'), { method: 'POST', data: submitData });
+      if (res && res.resp_code === 0) {
+        message.success('保存成功');
+        setAdding(false);
+        loadSalaryData(1, pagination.pageSize);
+      } else {
+        message.error(res?.resp_msg || '保存失败');
+      }
+    } catch (e: any) {
+      if (e.errorFields) return;
+      message.error(e.message || '保存失败');
+    }
+  };
+  const handleAddCancel = () => {
+    setAdding(false);
+  };
+
   // 表格列
   const columns = [
-    { title: '岗位', dataIndex: 'positionName', key: 'positionName' },
-    { title: '职级', dataIndex: 'jobLevelName', key: 'jobLevelName' },
-    { title: '基础工资下限', dataIndex: 'baseSalaryMin', key: 'baseSalaryMin' },
-    { title: '基础工资上限', dataIndex: 'baseSalaryMax', key: 'baseSalaryMax' },
-    { title: '绩效比例下限', dataIndex: 'performanceRatioMin', key: 'performanceRatioMin' },
-    { title: '绩效比例上限', dataIndex: 'performanceRatioMax', key: 'performanceRatioMax' },
-    { title: '生效日期', dataIndex: 'effectiveDate', key: 'effectiveDate' },
-    { title: '状态', dataIndex: 'status', key: 'status', render: (val: number) => val === 1 ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag> },
-    { title: '备注', dataIndex: 'remark', key: 'remark', render: (val: string) => val ? (<Tooltip title={val}><span style={{ cursor: 'pointer', color: '#1890ff' }}>备注</span></Tooltip>) : <span>-</span> },
     {
-      title: '操作', key: 'action', render: (_: any, record: any) => (
-        <Space size={8}>
-          <Button size="small" icon={<EditOutlined />} style={{ minWidth: 64, height: 32 }} onClick={() => handleEdit(record)}>
-            编辑
-          </Button>
-          <Button size="small" icon={<DeleteOutlined />} danger style={{ minWidth: 64, height: 32 }} onClick={() => handleDelete(record)}>
-            删除
-          </Button>
-        </Space>
-      ),
+      title: '部门', dataIndex: 'departmentId', key: 'departmentId',
+      render: (_val: any, record: any) => {
+        if (record.isAdd) {
+          // 新增行编辑框
+          return null;
+        }
+        const pos = positions.find((p: any) => String(p.id) === String(record.positionId));
+        return pos ? pos.departmentName || '-' : '-';
+      }
+    },
+    {
+      title: '岗位', dataIndex: 'positionId', key: 'positionId',
+      render: (val: any, record: any) => {
+        if (record.isAdd) {
+          return (
+            <Form.Item name="positionId" rules={[{ required: true, message: '请选择岗位' }]} style={{ margin: 0 }}>
+              <Select placeholder="岗位" style={{ minWidth: 120 }}>
+                {positions.map((p: any) => (
+                  <Option key={p.id} value={p.id}>{p.name}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+          );
+        }
+        const pos = positions.find((p: any) => String(p.id) === String(val));
+        return pos ? pos.name : '-';
+      }
+    },
+    {
+      title: '职级', dataIndex: 'jobLevelCode', key: 'jobLevelCode',
+      render: (val: any, record: any) => {
+        if (record.isAdd) {
+          return (
+            <Form.Item name="jobLevelCode" rules={[{ required: true, message: '请选择职级' }]} style={{ margin: 0 }}>
+              <Select placeholder="职级" style={{ minWidth: 100 }}>
+                {jobLevels.map((j: any) => (
+                  <Option key={j.code} value={j.code}>{j.name}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+          );
+        }
+        return jobLevels.find((j: any) => j.code === val)?.name || '-';
+      }
+    },
+    {
+      title: '基础工资下限', dataIndex: 'baseSalaryMin', key: 'baseSalaryMin',
+      render: (val: any, record: any) => {
+        if (record.isAdd) {
+          return (
+            <Form.Item name="baseSalaryMin" rules={[{ required: true, message: '请输入下限' }]} style={{ margin: 0 }}>
+              <Input type="number" min={0} style={{ minWidth: 80 }} />
+            </Form.Item>
+          );
+        }
+        return val;
+      }
+    },
+    {
+      title: '基础工资上限', dataIndex: 'baseSalaryMax', key: 'baseSalaryMax',
+      render: (val: any, record: any) => {
+        if (record.isAdd) {
+          return (
+            <Form.Item name="baseSalaryMax" rules={[{ required: true, message: '请输入上限' }]} style={{ margin: 0 }}>
+              <Input type="number" min={0} style={{ minWidth: 80 }} />
+            </Form.Item>
+          );
+        }
+        return val;
+      }
+    },
+    {
+      title: '绩效比例下限', dataIndex: 'performanceRatioMin', key: 'performanceRatioMin',
+      render: (val: any, record: any) => {
+        if (record.isAdd) {
+          return (
+            <Form.Item name="performanceRatioMin" rules={[{ required: true, message: '请输入下限' }]} style={{ margin: 0 }}>
+              <Input type="number" min={0} max={2} step={0.01} style={{ minWidth: 80 }} />
+            </Form.Item>
+          );
+        }
+        return val;
+      }
+    },
+    {
+      title: '绩效比例上限', dataIndex: 'performanceRatioMax', key: 'performanceRatioMax',
+      render: (val: any, record: any) => {
+        if (record.isAdd) {
+          return (
+            <Form.Item name="performanceRatioMax" rules={[{ required: true, message: '请输入上限' }]} style={{ margin: 0 }}>
+              <Input type="number" min={0} max={2} step={0.01} style={{ minWidth: 80 }} />
+            </Form.Item>
+          );
+        }
+        return val;
+      }
+    },
+    {
+      title: '生效日期', dataIndex: 'effectiveDate', key: 'effectiveDate',
+      render: (val: any, record: any) => {
+        if (record.isAdd) {
+          return (
+            <Form.Item name="effectiveDate" rules={[{ required: true, message: '请选择生效日期' }]} style={{ margin: 0 }}>
+              <DatePicker style={{ minWidth: 120 }} />
+            </Form.Item>
+          );
+        }
+        return val;
+      }
+    },
+    {
+      title: '状态', dataIndex: 'status', key: 'status',
+      render: (val: any, record: any) => {
+        if (record.isAdd) {
+          return (
+            <Form.Item name="status" valuePropName="checked" style={{ margin: 0 }}>
+              <Switch checkedChildren="启用" unCheckedChildren="禁用" />
+            </Form.Item>
+          );
+        }
+        return val === 1 ? <Tag color="green">启用</Tag> : <Tag color="red">禁用</Tag>;
+      }
+    },
+    {
+      title: '备注', dataIndex: 'remark', key: 'remark',
+      render: (val: string, record: any) => {
+        if (record.isAdd) {
+          return (
+            <Form.Item name="remark" style={{ margin: 0 }}>
+              <Input.TextArea rows={1} maxLength={200} showCount style={{ minWidth: 100 }} />
+            </Form.Item>
+          );
+        }
+        return val ? (<Tooltip title={val}><span style={{ cursor: 'pointer', color: '#1890ff' }}>备注</span></Tooltip>) : <span>-</span>;
+      }
+    },
+    {
+      title: '操作', key: 'action',
+      render: (_: any, record: any) => {
+        if (record.isAdd) {
+          return (
+            <Space size={8}>
+              <Button size="small" type="primary" onClick={handleAddSave}>保存</Button>
+              <Button size="small" onClick={handleAddCancel}>取消</Button>
+            </Space>
+          );
+        }
+        return (
+          <Space size={8}>
+            <Button size="small" icon={<EditOutlined />} style={{ minWidth: 64, height: 32 }} onClick={() => handleEdit(record)}>
+              编辑
+            </Button>
+            <Button size="small" icon={<DeleteOutlined />} danger style={{ minWidth: 64, height: 32 }} onClick={() => handleDelete(record)}>
+              删除
+            </Button>
+          </Space>
+        );
+      },
     },
   ];
 
@@ -265,20 +454,24 @@ const JobLevelSalary: React.FC<{ active: boolean }> = ({ active }) => {
         <Card
           className="config-card"
           title="职级薪资标准"
-          extra={<Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>新增</Button>}
+          extra={!adding && <Button type="primary" icon={<PlusOutlined />} onClick={handleAdd}>新增</Button>}
         >
-          <Table
-            columns={columns}
-            dataSource={salaryData}
-            loading={salaryLoading}
-            rowKey="id"
-            pagination={{
-              current: pagination.current,
-              pageSize: pagination.pageSize,
-              total: pagination.total,
-              onChange: (page, pageSize) => loadSalaryData(page, pageSize),
-            }}
-          />
+          {positionsLoaded && (
+            <Form form={addForm} component={false}>
+              <Table
+                columns={columns}
+                dataSource={adding ? [{ isAdd: true, key: 'add' }, ...salaryData] : salaryData}
+                loading={salaryLoading}
+                rowKey={record => record.id || record.key}
+                pagination={{
+                  current: pagination.current,
+                  pageSize: pagination.pageSize,
+                  total: pagination.total,
+                  onChange: (page, pageSize) => loadSalaryData(page, pageSize),
+                }}
+              />
+            </Form>
+          )}
           <Modal
             title={editing ? '编辑职级薪资标准' : '新增职级薪资标准'}
             open={modalOpen}

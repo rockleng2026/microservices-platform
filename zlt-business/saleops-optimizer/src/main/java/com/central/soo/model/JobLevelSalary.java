@@ -32,19 +32,9 @@ public class JobLevelSalary extends BaseEntity {
     @Schema(description = "主键ID")
     private Long id;
 
-    @NotNull(message = "职级ID不能为空")
-    @Schema(description = "职级ID", required = true)
-    private String jobLevelId;
-
-    @Schema(description = "职级名称")
-    private String jobLevelName;
-
     @NotNull(message = "部门ID不能为空")
     @Schema(description = "部门ID", required = true)
     private Long departmentId;
-
-    @Schema(description = "部门名称")
-    private String departmentName;
 
     @NotNull(message = "基础工资下限不能为空")
     @Schema(description = "基础工资下限", required = true)
@@ -85,4 +75,13 @@ public class JobLevelSalary extends BaseEntity {
     @TableLogic
     @Schema(description = "删除标识")
     private Integer delflag = 0;
+
+    @Schema(description = "岗位ID-关联岗位表")
+    private Long positionId;
+
+    @Schema(description = "职级编码-编码定义在通用字典表")
+    private String jobLevelCode;
+
+    @Schema(description = "租户ID")
+    private String tenantId;
 } 

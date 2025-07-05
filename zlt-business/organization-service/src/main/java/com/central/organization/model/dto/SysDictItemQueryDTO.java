@@ -29,6 +29,11 @@ public class SysDictItemQueryDTO {
     private Long categoryId;
 
     /**
+     * 类目编码
+     */
+    private Long categoryCode;
+
+    /**
      * 搜索关键字(项目编码或名称)
      */
     private String keyword;

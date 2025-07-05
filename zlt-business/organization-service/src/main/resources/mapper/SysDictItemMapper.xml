@@ -47,6 +47,9 @@
         <if test="query.categoryId != null">
             AND sdi.category_id = #{query.categoryId}
         </if>
+        <if test="query.categoryCode != null">
+            AND sdc.code = #{query.categoryCode}
+        </if>
         <if test="query.tenantId != null and query.tenantId != ''">
             AND sdi.tenant_id = #{query.tenantId}
         </if>

@@ -11,17 +11,17 @@ public interface IJobLevelSalaryService extends IService<JobLevelSalary> {
     /**
      * 分页条件查询
      */
-    IPage<JobLevelSalary> pageQuery(Page<JobLevelSalary> page, Long departmentId, String jobLevelId, String jobLevelName, Integer status, LocalDate startDate, LocalDate endDate);
+    IPage<JobLevelSalary> pageQuery(Page<JobLevelSalary> page, Long departmentId, String jobLevelCode, Integer status, LocalDate startDate, LocalDate endDate);
 
     /**
      * 校验唯一性（同一部门、职级、生效日不能重复）
      */
-    boolean checkUnique(Long departmentId, String jobLevelId, LocalDate effectiveDate, Long excludeId);
+    boolean checkUnique(Long departmentId, String jobLevelCode, LocalDate effectiveDate, Long excludeId);
 
     /**
      * 查询职级历史薪资标准
      */
-    List<JobLevelSalary> getHistoryByJobLevel(String jobLevelId, Long departmentId);
+    List<JobLevelSalary> getHistoryByJobLevel(String jobLevelCode, Long departmentId);
 
     /**
      * 恢复已删除的职级薪资标准

@@ -16,7 +16,7 @@ export async function getDepartmentTree(params?: any) {
 
 // 获取部门列表
 export async function getDepartments(params?: any) {
-  return request<ApiResponse<any>>('/api/organization/departments', {
+  return request<ApiResponse<any>>(getApiUrl('/api/organization/departments', 'PORTAL'), {
     method: 'GET',
     params,
   });
@@ -24,7 +24,7 @@ export async function getDepartments(params?: any) {
 
 // 获取部门详情
 export async function getDepartmentById(id: number) {
-  return request<ApiResponse<Department>>(`/api/organization/departments/${id}`, {
+  return request<ApiResponse<Department>>(getApiUrl(`/api/organization/departments/${id}`, 'PORTAL'), {
     method: 'GET',
   });
 }
@@ -39,7 +39,7 @@ export async function createDepartment(data: Partial<Department>) {
 
 // 更新部门
 export async function updateDepartment(id: number, data: Partial<Department>) {
-  return request<ApiResponse<Department>>(`/api/organization/departments/${id}`, {
+  return request<ApiResponse<Department>>(getApiUrl(`/api/organization/departments/${id}`, 'PORTAL'), {
     method: 'PUT',
     data,
   });
@@ -47,7 +47,7 @@ export async function updateDepartment(id: number, data: Partial<Department>) {
 
 // 删除部门
 export async function deleteDepartment(id: number) {
-  return request<ApiResponse<string>>(`/api/organization/departments/${id}`, {
+  return request<ApiResponse<string>>(getApiUrl(`/api/organization/departments/${id}`, 'PORTAL'), {
     method: 'DELETE',
   });
 }
@@ -99,7 +99,7 @@ export async function importEmployees(file: File) {
   const formData = new FormData();
   formData.append('file', file);
   
-  return request<ApiResponse<{ successCount: number; errorCount: number }>>('/api/organization/employees/import', {
+  return request<ApiResponse<{ successCount: number; errorCount: number }>>(getApiUrl('/api/organization/employees/import', 'PORTAL'), {
     method: 'POST',
     data: formData,
   });
@@ -107,7 +107,7 @@ export async function importEmployees(file: File) {
 
 // 导出员工
 export async function exportEmployees(params?: any) {
-  return request('/api/organization/employees/export', {
+  return request(getApiUrl('/api/organization/employees/export', 'PORTAL'), {
     method: 'GET',
     params,
     responseType: 'blob',

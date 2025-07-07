@@ -1,4 +1,4 @@
-import { request } from '../utils/request';
+import { request } from '@/utils/request';
 
 // 统一处理响应数据格式兼容性
 const handleResponse = (response: any) => {
@@ -187,192 +187,490 @@ export const getEmployeeById = (employeeId: string) => {
 
 // ==================== 薪酬计算模块 ====================
 
-// 创建工资计算任务
-export const createSalaryCalculationTask = (data: any) => {
-  return request('/api-soo/api/soo/salary/calculate/monthly', {
+// ===========================
+// 薪酬计算任务管理 API
+// ===========================
+
+/**
+ * 创建薪酬计算任务
+ */
+export async function createSalaryCalculationTask(params: {
+  taskName: string;
+  calculationMonth: string;
+  calculationType: 'FULL' | 'DEPARTMENT' | 'EMPLOYEE';
+  targetDepartmentIds?: number[];
+  targetEmployeeIds?: number[];
+  excludeEmployeeIds?: number[];
+  remark?: string;
+  calculationRules?: {
+    baseCalculation?: boolean;
+    performanceCalculation?: boolean;
+    commissionCalculation?: boolean;
+    socialSecurityCalculation?: boolean;
+    taxCalculation?: boolean;
+  };
+}) {
+  return request('/api-soo/api/soo/salary/tasks', {
     method: 'POST',
-    data,
-  }).then(handleResponse);
-};
+    data: params,
+  });
+}
 
-// 执行工资计算任务
-export const executeCalculationTask = (taskId: number) => {
-  return request(`/api-soo/api/soo/salary/task/${taskId}/execute`, {
+/**
+ * 执行薪酬计算任务
+ */
+export async function executeSalaryCalculationTask(taskId: string) {
+  return request(`/api-soo/api/soo/salary/tasks/${taskId}/execute`, {
     method: 'POST',
-  }).then(handleResponse);
-};
+  });
+}
 
-// 获取计算任务状态
-export const getTaskStatus = (taskId: number) => {
-  return request(`/api-soo/api/soo/salary/task/${taskId}/status`, {
-    method: 'GET',
-  }).then(handleResponse);
-};
-
-// 获取计算任务列表
-export const getSalaryCalculationTasks = (params: any) => {
+/**
+ * 查询薪酬计算任务列表
+ */
+export async function getSalaryCalculationTasks(params: {
+  page?: number;
+  size?: number;
+  month?: string;
+  status?: string;
+  taskName?: string;
+}) {
   return request('/api-soo/api/soo/salary/tasks', {
     method: 'GET',
     params,
-  }).then(handleResponse);
-};
+  });
+}
 
-// 获取工资计算结果
-export const getPayrollResults = (params: any) => {
+/**
+ * 获取任务详情
+ */
+export async function getSalaryTaskDetail(taskId: string) {
+  return request(`/api-soo/api/soo/salary/tasks/${taskId}`, {
+    method: 'GET',
+  });
+}
+
+/**
+ * 获取任务执行进度
+ */
+export async function getSalaryTaskProgress(taskId: string) {
+  return request(`/api-soo/api/soo/salary/tasks/${taskId}/progress`, {
+    method: 'GET',
+  });
+}
+
+/**
+ * 获取薪酬计算任务统计
+ */
+export async function getSalaryTaskStatistics() {
+  return request('/api-soo/api/soo/salary/tasks/statistics', {
+    method: 'GET',
+  });
+}
+
+/**
+ * 确认任务结果
+ */
+export async function confirmSalaryTask(taskId: string) {
+  return request(`/api-soo/api/soo/salary/tasks/${taskId}/confirm`, {
+    method: 'POST',
+  });
+}
+
+/**
+ * 取消任务执行
+ */
+export async function cancelSalaryTask(taskId: string) {
+  return request(`/api-soo/api/soo/salary/tasks/${taskId}/cancel`, {
+    method: 'POST',
+  });
+}
+
+// ===========================
+// 工资计算结果管理 API
+// ===========================
+
+/**
+ * 查询工资计算结果
+ */
+export async function getPayrollResults(params: {
+  page?: number;
+  size?: number;
+  taskId?: string;
+  month?: string;
+  startMonth?: string;
+  endMonth?: string;
+  departmentIds?: number[];
+  employeeIds?: number[];
+  employeeName?: string;
+  calculationStatus?: string;
+  approvalStatus?: string;
+  isFinal?: boolean;
+  isCurrentVersion?: boolean;
+}) {
   return request('/api-soo/api/soo/salary/results', {
     method: 'GET',
     params,
-  }).then(handleResponse);
-};
-
-// 计算单个员工工资
-export const calculateEmployeeSalary = (employeeId: number, month: string) => {
-  return request(`/api-soo/api/soo/salary/calculate/employee/${employeeId}`, {
-    method: 'POST',
-    params: { month },
-  }).then(handleResponse);
-};
-
-// 审核工资计算结果
-export const approveSalary = (data: any) => {
-  return request('/api-soo/api/soo/salary/approve', {
-    method: 'POST',
-    data,
-  }).then(handleResponse);
-};
-
-// 调整工资计算结果
-export const adjustSalary = (data: any) => {
-  return request('/api-soo/api/soo/salary/adjust', {
-    method: 'POST',
-    data,
-  }).then(handleResponse);
-};
-
-// 重新计算工资
-export const recalculateSalary = (resultIds: number[]) => {
-  return request('/api-soo/api/soo/salary/recalculate', {
-    method: 'POST',
-    data: { resultIds },
-  }).then(handleResponse);
-};
-
-// 获取工资计算详情
-export const getPayrollDetail = (resultId: number) => {
-  return request(`/api-soo/api/soo/salary/result/${resultId}`, {
-    method: 'GET',
-  }).then(handleResponse);
-};
-
-// 导出工资数据
-export const exportPayrollData = (params: any) => {
-  return request('/api-soo/api/soo/salary/export', {
-    method: 'GET',
-    params,
-    responseType: 'blob',
   });
-};
+}
 
-// 获取工资统计数据
-export const getSalaryStatistics = (params: any) => {
-  return request('/api-soo/api/soo/salary/statistics', {
+/**
+ * 获取员工工资详情
+ */
+export async function getPayrollDetail(resultId: number) {
+  return request(`/api-soo/api/soo/salary/results/${resultId}`, {
     method: 'GET',
-    params,
-  }).then(handleResponse);
-};
+  });
+}
 
-// 获取薪资趋势数据
-export const getSalaryTrend = (params: any) => {
+/**
+ * 重新计算单个员工工资
+ */
+export async function recalculateEmployeeSalary(params: {
+  taskId: string;
+  employeeId: number;
+}) {
+  return request('/api-soo/api/soo/salary/results/recalculate', {
+    method: 'POST',
+    data: params,
+  });
+}
+
+/**
+ * 批量审批工资结果
+ */
+export async function batchApprovePayroll(params: {
+  resultIds: number[];
+  approvalStatus: 'APPROVED' | 'REJECTED';
+  approvalRemark?: string;
+}) {
+  return request('/api-soo/api/soo/salary/results/approve', {
+    method: 'POST',
+    data: params,
+  });
+}
+
+/**
+ * 调整工资结果
+ */
+export async function adjustPayrollResult(params: {
+  resultId: number;
+  adjustmentType: string;
+  adjustmentAmount: number;
+  adjustmentReason: string;
+}) {
+  return request('/api-soo/api/soo/salary/results/adjust', {
+    method: 'POST',
+    data: params,
+  });
+}
+
+/**
+ * 获取工资计算日志
+ */
+export async function getCalculationLog(resultId: number) {
+  return request(`/api-soo/api/soo/salary/results/${resultId}/log`, {
+    method: 'GET',
+  });
+}
+
+// ===========================
+// 薪酬统计分析 API
+// ===========================
+
+/**
+ * 获取薪酬统计汇总
+ */
+export async function getSalarySummary(taskId: string) {
+  return request(`/api-soo/api/soo/salary/summary/${taskId}`, {
+    method: 'GET',
+  });
+}
+
+/**
+ * 获取部门薪酬统计
+ */
+export async function getDepartmentSalarySummary(taskId: string, departmentId: number) {
+  return request(`/api-soo/api/soo/salary/summary/${taskId}/department/${departmentId}`, {
+    method: 'GET',
+  });
+}
+
+/**
+ * 获取薪酬趋势分析
+ */
+export async function getSalaryTrend(params: {
+  startMonth?: string;
+  endMonth?: string;
+  departmentIds?: number[];
+  employeeIds?: number[];
+}) {
   return request('/api-soo/api/soo/salary/trend', {
     method: 'GET',
     params,
-  }).then(handleResponse);
-};
+  });
+}
 
-// 获取计算统计数据
-export const getSalaryCalculationStats = () => {
-  return request('/api-soo/api/soo/salary/task/stats', {
+/**
+ * 获取薪酬分布分析
+ */
+export async function getSalaryDistribution(taskId: string) {
+  return request(`/api-soo/api/soo/salary/distribution/${taskId}`, {
     method: 'GET',
-  }).then(handleResponse);
-};
+  });
+}
 
-// ==================== 工资条生成模块 ====================
-
-// 获取工资条模板列表
-export const getPayslipTemplates = () => {
-  return request('/api-soo/api/soo/payslip/templates', {
-    method: 'GET',
-  }).then(handleResponse);
-};
-
-// 创建工资条批量生成任务
-export const createPayslipBatchTask = (data: any) => {
-  return request('/api-soo/api/soo/payslip/generate/batch', {
+/**
+ * 导出工资计算结果
+ */
+export async function exportPayrollResults(params: {
+  taskId?: string;
+  month?: string;
+  departmentIds?: number[];
+  employeeIds?: number[];
+  exportType: 'EXCEL' | 'PDF';
+  includeDetails?: boolean;
+}) {
+  return request('/api-soo/api/soo/salary/export', {
     method: 'POST',
-    data,
-  }).then(handleResponse);
-};
+    data: params,
+    responseType: 'blob',
+  });
+}
 
-// 执行工资条生成任务
-export const executePayslipGenerationTask = (taskId: number) => {
-  return request(`/api-soo/api/soo/payslip/task/${taskId}/execute`, {
+// ===========================
+// 盈亏平衡分析 API
+// ===========================
+
+/**
+ * 基于薪酬数据生成盈亏平衡分析
+ */
+export async function generateBreakevenAnalysis(params: {
+  taskId: string;
+  analysisName: string;
+  analysisType: 'monthly' | 'quarterly' | 'yearly';
+  period: string;
+  currentTotalRevenue: number;
+  currentGrossMargin: number;
+  fixedOperatingCost: number;
+  variableOperatingCost: number;
+}) {
+  return request('/api-soo/api/soo/salary/breakeven/generate', {
     method: 'POST',
-  }).then(handleResponse);
-};
+    data: params,
+  });
+}
 
-// 获取工资条生成任务状态
-export const getPayslipTaskStatus = (taskId: number) => {
-  return request(`/api-soo/api/soo/payslip/task/${taskId}/status`, {
-    method: 'GET',
-  }).then(handleResponse);
-};
-
-// 获取工资条列表
-export const getPayslips = (params: any) => {
-  return request('/api-soo/api/soo/payslip/list', {
+/**
+ * 获取盈亏平衡分析列表
+ */
+export async function getBreakevenAnalysisList(params: {
+  page?: number;
+  size?: number;
+  taskId?: string;
+  analysisType?: string;
+  period?: string;
+}) {
+  return request('/api-soo/api/soo/salary/breakeven/list', {
     method: 'GET',
     params,
-  }).then(handleResponse);
-};
+  });
+}
 
-// 获取工资条批量任务列表
-export const getPayslipBatchTasks = () => {
-  return request('/api-soo/api/soo/payslip/tasks', {
+/**
+ * 获取成本结构分析
+ */
+export async function getCostStructureAnalysis(taskId: string) {
+  return request(`/api-soo/api/soo/salary/cost-structure/${taskId}`, {
     method: 'GET',
-  }).then(handleResponse);
-};
+  });
+}
 
-// 下载工资条
-export const downloadPayslip = (payslipId: number) => {
-  return request(`/api-soo/api/soo/payslip/${payslipId}/download`, {
+// ===========================
+// 工资条生成管理API
+// ===========================
+
+/**
+ * 创建工资条生成任务
+ */
+export async function createPayslipTask(params: {
+  taskName: string;
+  salaryTaskId: string;
+  templateId: string;
+  targetType: 'ALL' | 'DEPARTMENT' | 'EMPLOYEE';
+  targetDepartmentIds?: number[];
+  targetEmployeeIds?: number[];
+  deliveryMethod: 'EMAIL' | 'SMS' | 'MANUAL';
+}) {
+  return request('/api-soo/api/soo/salary/payslip/tasks', {
+    method: 'POST',
+    data: params,
+  });
+}
+
+/**
+ * 获取工资条生成任务列表
+ */
+export async function getPayslipTasks(params: {
+  page?: number;
+  size?: number;
+  salaryTaskId?: string;
+  status?: string;
+}) {
+  return request('/api-soo/api/soo/salary/payslip/tasks', {
+    method: 'GET',
+    params,
+  });
+}
+
+/**
+ * 执行工资条生成任务
+ */
+export async function executePayslipTask(taskId: string) {
+  return request(`/api-soo/api/soo/salary/payslip/tasks/${taskId}/execute`, {
+    method: 'POST',
+  });
+}
+
+/**
+ * 获取工资条记录列表
+ */
+export async function getPayslipRecords(params: {
+  page?: number;
+  size?: number;
+  taskId?: string;
+  employeeId?: number;
+  month?: string;
+  deliveryStatus?: string;
+  viewStatus?: string;
+}) {
+  return request('/api-soo/api/soo/salary/payslip/records', {
+    method: 'GET',
+    params,
+  });
+}
+
+/**
+ * 批量发送工资条
+ */
+export async function batchSendPayslips(params: {
+  recordIds: number[];
+  deliveryMethod: 'EMAIL' | 'SMS';
+}) {
+  return request('/api-soo/api/soo/salary/payslip/send', {
+    method: 'POST',
+    data: params,
+  });
+}
+
+/**
+ * 预览工资条
+ */
+export async function previewPayslip(recordId: number) {
+  return request(`/api-soo/api/soo/salary/payslip/records/${recordId}/preview`, {
+    method: 'GET',
+  });
+}
+
+/**
+ * 下载工资条
+ */
+export async function downloadPayslip(recordId: number) {
+  return request(`/api-soo/api/soo/salary/payslip/records/${recordId}/download`, {
     method: 'GET',
     responseType: 'blob',
   });
-};
+}
 
-// 发送工资条
-export const sendPayslip = (payslipId: number, data: any) => {
-  return request(`/api-soo/api/soo/payslip/${payslipId}/send`, {
-    method: 'POST',
-    data,
-  }).then(handleResponse);
-};
+// ===========================
+// 数据验证 API
+// ===========================
 
-// 批量发送工资条
-export const batchSendPayslips = (data: any) => {
-  return request('/api-soo/api/soo/payslip/send/batch', {
+/**
+ * 验证薪酬计算数据
+ */
+export async function validateCalculationData(taskId: string) {
+  return request(`/api-soo/api/soo/salary/validate/${taskId}`, {
     method: 'POST',
-    data,
-  }).then(handleResponse);
-};
+  });
+}
 
-// 生成单个工资条
-export const generateSinglePayslip = (data: any) => {
-  return request('/api-soo/api/soo/payslip/generate/single', {
+/**
+ * 检查基础数据完整性
+ */
+export async function checkDataIntegrity(params: {
+  month: string;
+  employeeIds?: number[];
+}) {
+  return request('/api-soo/api/soo/salary/data-integrity', {
     method: 'POST',
-    data,
-  }).then(handleResponse);
-};
+    data: params,
+  });
+}
+
+// ===========================
+// 辅助接口
+// ===========================
+
+/**
+ * 获取员工列表（用于选择）
+ */
+export async function getEmployeeOptions(params: {
+  departmentId?: number;
+  keyword?: string;
+  page?: number;
+  size?: number;
+}) {
+  return request('/api-organization/api/organization/employees', {
+    method: 'GET',
+    params,
+  });
+}
+
+/**
+ * 获取部门列表（用于选择）
+ */
+export async function getDepartmentOptions() {
+  return request('/api-organization/api/organization/departments', {
+    method: 'GET',
+  });
+}
+
+/**
+ * 获取工资条模板列表
+ */
+export async function getPayslipTemplates() {
+  return request('/api-soo/api/soo/salary/payslip/templates', {
+    method: 'GET',
+  });
+}
+
+/**
+ * 获取薪酬配置信息
+ */
+export async function getSalaryConfig(employeeId: number) {
+  return request(`/api-soo/api/soo/config/employee-salary/${employeeId}`, {
+    method: 'GET',
+  });
+}
+
+/**
+ * 获取地区工资系数
+ */
+export async function getRegionalCoefficients() {
+  return request('/api-soo/api/soo/config/regional-coefficients', {
+    method: 'GET',
+  });
+}
+
+/**
+ * 获取社保公积金配置
+ */
+export async function getSocialSecurityConfig(region: string, year: number) {
+  return request(`/api-soo/api/soo/config/social-security/${region}/${year}`, {
+    method: 'GET',
+  });
+}
 
 // ==================== 薪酬配置模块 ====================
 
@@ -460,14 +758,6 @@ export const exportSalaryReport = (params: any) => {
 
 // ==================== 辅助接口 ====================
 
-// 验证薪酬计算数据
-export const validateSalaryCalculationData = (data: any) => {
-  return request('/api-soo/api/soo/salary/validate', {
-    method: 'POST',
-    data,
-  }).then(handleResponse);
-};
-
 // 获取薪酬计算日志
 export const getSalaryCalculationLogs = (params: any) => {
   return request('/api-soo/api/soo/salary/logs', {
@@ -480,31 +770,36 @@ export const getSalaryCalculationLogs = (params: any) => {
 export const sooApi = {
   // 薪酬计算
   createSalaryCalculationTask,
-  executeCalculationTask,
-  getTaskStatus,
+  executeSalaryCalculationTask,
   getSalaryCalculationTasks,
+  getSalaryTaskDetail,
+  getSalaryTaskProgress,
+  getSalaryTaskStatistics,
+  confirmSalaryTask,
+  cancelSalaryTask,
   getPayrollResults,
-  calculateEmployeeSalary,
-  approveSalary,
-  adjustSalary,
-  recalculateSalary,
   getPayrollDetail,
-  exportPayrollData,
-  getSalaryStatistics,
+  recalculateEmployeeSalary,
+  batchApprovePayroll,
+  adjustPayrollResult,
+  getCalculationLog,
+  getSalarySummary,
+  getDepartmentSalarySummary,
   getSalaryTrend,
-  getSalaryCalculationStats,
+  getSalaryDistribution,
+  exportPayrollResults,
+  generateBreakevenAnalysis,
+  getBreakevenAnalysisList,
+  getCostStructureAnalysis,
   
   // 工资条生成
-  getPayslipTemplates,
-  createPayslipBatchTask,
-  executePayslipGenerationTask,
-  getPayslipTaskStatus,
-  getPayslips,
-  getPayslipBatchTasks,
-  downloadPayslip,
-  sendPayslip,
+  createPayslipTask,
+  getPayslipTasks,
+  executePayslipTask,
+  getPayslipRecords,
   batchSendPayslips,
-  generateSinglePayslip,
+  previewPayslip,
+  downloadPayslip,
   
   // 薪酬配置
   getSalaryCalculationRules,
@@ -521,8 +816,14 @@ export const sooApi = {
   exportSalaryReport,
   
   // 辅助接口
-  validateSalaryCalculationData,
-  getSalaryCalculationLogs,
+  validateCalculationData,
+  checkDataIntegrity,
+  getEmployeeOptions,
+  getDepartmentOptions,
+  getPayslipTemplates,
+  getSalaryConfig,
+  getRegionalCoefficients,
+  getSocialSecurityConfig,
   
   // 现有接口（保持兼容性）
   getDepartments: getDepartmentTree,

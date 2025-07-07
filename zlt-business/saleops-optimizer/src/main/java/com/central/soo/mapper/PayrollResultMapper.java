@@ -1,7 +1,7 @@
 package com.central.soo.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.central.soo.model.PayrollResult;
+import com.central.soo.model.entity.PayrollResult;
 import org.apache.ibatis.annotations.Mapper;
 
 @Mapper

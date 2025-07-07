@@ -137,6 +137,10 @@ export default defineConfig({
           name: '盈策通决策',
           routes: [
             {
+              path: '/saleops-optimizer',
+              redirect: '/saleops-optimizer/config-center',
+            },
+            {
               path: '/saleops-optimizer/config-center',
               name: '配置中心',
               component: '@/pages/SaleopsOptimizer/ConfigCenter',
@@ -145,6 +149,21 @@ export default defineConfig({
               path: '/saleops-optimizer/monthly-performance',
               name: '月度绩效管理',
               component: '@/pages/SaleopsOptimizer/MonthlyPerformance',
+            },
+            {
+              path: '/saleops-optimizer/salary-calculation',
+              name: '薪酬计算',
+              component: '@/pages/SaleopsOptimizer/SalaryCalculation/SalaryCalculation',
+            },
+            {
+              path: '/saleops-optimizer/salary-query',
+              name: '工资查询',
+              component: '@/pages/SaleopsOptimizer/SalaryCalculation/SalaryQuery',
+            },
+            {
+              path: '/saleops-optimizer/payslip-generation',
+              name: '工资条生成',
+              component: '@/pages/SaleopsOptimizer/SalaryCalculation/PayslipGeneration',
             },
             // 其他子页面可在此补充
           ],
@@ -253,5 +272,11 @@ export default defineConfig({
   
   // 修复：使用legacy模式确保兼容性
   legacy: {},
+
+  // webpack 配置优化
+  chainWebpack(config) {
+    // 确保正确处理 dayjs 和 moment
+    // 不强制替换 moment，让 Ant Design 自行处理
+  },
 
 }); 

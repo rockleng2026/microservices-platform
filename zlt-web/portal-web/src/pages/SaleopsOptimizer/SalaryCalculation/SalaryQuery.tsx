@@ -29,7 +29,7 @@ import {
   GiftOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
+// 移除 recharts 依赖，使用简化的图表展示
 import { sooApi } from '../../../services/soo';
 import dayjs from 'dayjs';
 
@@ -101,7 +101,7 @@ const SalaryQuery: React.FC = () => {
   useEffect(() => {
     loadDepartments();
     loadEmployees();
-    handleSearch();
+    handleSearch(1);
   }, []);
 
   const loadDepartments = async () => {
@@ -118,11 +118,14 @@ const SalaryQuery: React.FC = () => {
   const loadEmployees = async () => {
     try {
       const response = await sooApi.getEmployees();
-      if (response.success) {
-        setEmployees(response.data || []);
+      if (response.success && Array.isArray(response.data)) {
+        setEmployees(response.data);
+      } else {
+        setEmployees([]);
       }
     } catch (error) {
       console.error('加载员工列表失败:', error);
+      setEmployees([]); // 确保在出错时也设置为空数组
     }
   };
 
@@ -488,7 +491,7 @@ const SalaryQuery: React.FC = () => {
                 (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
               }
             >
-              {employees.map(emp => (
+              {(employees || []).map(emp => (
                 <Option key={emp.id} value={emp.id}>
                   {emp.name}
                 </Option>
@@ -545,7 +548,7 @@ const SalaryQuery: React.FC = () => {
             showQuickJumper: true,
             showTotal: (total, range) => 
               `第 ${range[0]}-${range[1]} 条，共 ${total} 条记录`,
-            onChange: handleSearch,
+            onChange: (page) => handleSearch(page),
           }}
         />
       </Card>
@@ -673,44 +676,49 @@ const SalaryQuery: React.FC = () => {
       >
         {trendData.length > 0 && (
           <div>
-            <h4>薪资趋势图</h4>
-            <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <RechartsTooltip />
-                <Line 
-                  type="monotone" 
-                  dataKey="grossPay" 
-                  stroke="#1890ff" 
-                  name="应发工资"
-                  strokeWidth={2}
-                />
-                <Line 
-                  type="monotone" 
-                  dataKey="netPay" 
-                  stroke="#52c41a" 
-                  name="实发工资"
-                  strokeWidth={2}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-
-            <h4 style={{ marginTop: '24px' }}>薪酬构成</h4>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={trendData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" />
-                <YAxis />
-                <RechartsTooltip />
-                <Bar dataKey="adjustedBaseSalary" stackId="a" fill="#1890ff" name="基础工资" />
-                <Bar dataKey="performancePay" stackId="a" fill="#52c41a" name="绩效工资" />
-                <Bar dataKey="personalCommission" stackId="a" fill="#fa8c16" name="个人提成" />
-                <Bar dataKey="teamCommission" stackId="a" fill="#722ed1" name="团队提成" />
-                <Bar dataKey="departmentBonus" stackId="a" fill="#eb2f96" name="部门分红" />
-              </BarChart>
-            </ResponsiveContainer>
+            <h4>薪资趋势数据</h4>
+            <div style={{ marginTop: '16px' }}>
+              {trendData.map((item, index) => (
+                <Card key={index} size="small" style={{ marginBottom: '8px' }}>
+                  <Row gutter={16}>
+                    <Col span={6}>
+                      <Statistic
+                        title="月份"
+                        value={item.month}
+                        valueStyle={{ fontSize: '14px' }}
+                      />
+                    </Col>
+                    <Col span={6}>
+                      <Statistic
+                        title="应发工资"
+                        value={item.grossPay}
+                        precision={0}
+                        prefix="¥"
+                        valueStyle={{ fontSize: '14px', color: '#1890ff' }}
+                      />
+                    </Col>
+                    <Col span={6}>
+                      <Statistic
+                        title="实发工资"
+                        value={item.netPay}
+                        precision={0}
+                        prefix="¥"
+                        valueStyle={{ fontSize: '14px', color: '#52c41a' }}
+                      />
+                    </Col>
+                    <Col span={6}>
+                      <Statistic
+                        title="公司成本"
+                        value={item.totalCost}
+                        precision={0}
+                        prefix="¥"
+                        valueStyle={{ fontSize: '14px', color: '#722ed1' }}
+                      />
+                    </Col>
+                  </Row>
+                </Card>
+              ))}
+            </div>
           </div>
         )}
       </Drawer>

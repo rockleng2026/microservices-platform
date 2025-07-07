@@ -3,6 +3,21 @@ import { message } from 'antd';
 import 'antd/dist/antd.css'; // Ant Design 4.x 样式
 import './global.less'; // 全局样式
 
+// dayjs 配置
+import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
+import relativeTime from 'dayjs/plugin/relativeTime';
+import weekday from 'dayjs/plugin/weekday';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+
+// 配置 dayjs
+dayjs.extend(relativeTime);
+dayjs.extend(weekday);
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.locale('zh-cn');
+
 // 配置全局消息提示
 message.config({
   top: 60,

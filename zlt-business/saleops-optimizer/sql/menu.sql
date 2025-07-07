@@ -38,26 +38,34 @@ CREATE TABLE `menu_page`  (
 INSERT INTO `menu_page` VALUES (400, '盈策通决策平台', 0, '/saleops-optimizer', '盈策通决策平台主入口', NULL, 'bar-chart', 20, 1, 0, NOW(), 'default', NULL, NULL, NULL);
 
 -- 二级菜单：配置中心
-INSERT INTO `menu_page` VALUES (401, '配置中心', 400, '/saleops-optimizer/config-center', '配置中心', NULL, 'setting', 1, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+INSERT INTO `menu_page` VALUES (401, '基础配置', 400, '/saleops-optimizer/config-center', '配置中心', NULL, 'setting', 1, 1, 0, NOW(), 'default', NULL, NULL, NULL);
 
--- 三级菜单：各功能页
-INSERT INTO `menu_page` VALUES (402, '部门分红配置', 401, '/saleops-optimizer/config-center/department-bonus', '部门分红配置', NULL, 'apartment', 1, 1, 0, NOW(), 'default', NULL, NULL, NULL);
-INSERT INTO `menu_page` VALUES (403, '职级薪资标准', 401, '/saleops-optimizer/config-center/position-salary', '职级薪资标准', NULL, 'user', 2, 1, 0, NOW(), 'default', NULL, NULL, NULL);
-INSERT INTO `menu_page` VALUES (404, '员工薪酬配置', 401, '/saleops-optimizer/config-center/employee-salary', '员工薪酬配置', NULL, 'contacts', 3, 1, 0, NOW(), 'default', NULL, NULL, NULL);
-INSERT INTO `menu_page` VALUES (405, '社保公积金基数', 401, '/saleops-optimizer/config-center/social-security', '社保公积金基数', NULL, 'safety', 4, 1, 0, NOW(), 'default', NULL, NULL, NULL);
-INSERT INTO `menu_page` VALUES (406, '地区工资系数', 401, '/saleops-optimizer/config-center/region-coefficient', '地区工资系数', NULL, 'global', 5, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+-- 三级菜单：各功能页-tab页形式表示
+-- INSERT INTO `menu_page` VALUES (402, '部门分红配置', 401, '/saleops-optimizer/config-center/department-bonus', '部门分红配置', NULL, 'apartment', 1, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+-- INSERT INTO `menu_page` VALUES (403, '职级薪资标准', 401, '/saleops-optimizer/config-center/position-salary', '职级薪资标准', NULL, 'user', 2, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+-- INSERT INTO `menu_page` VALUES (404, '员工薪酬配置', 401, '/saleops-optimizer/config-center/employee-salary', '员工薪酬配置', NULL, 'contacts', 3, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+-- INSERT INTO `menu_page` VALUES (405, '社保公积金基数', 401, '/saleops-optimizer/config-center/social-security', '社保公积金基数', NULL, 'safety', 4, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+-- INSERT INTO `menu_page` VALUES (406, '地区工资系数', 401, '/saleops-optimizer/config-center/region-coefficient', '地区工资系数', NULL, 'global', 5, 1, 0, NOW(), 'default', NULL, NULL, NULL);
 
--- 三级菜单：数据看板
-INSERT INTO `menu_page` VALUES (407, '决策数据看板', 400, '/saleops-optimizer/dashboard', '盈策通决策数据看板', NULL, 'dashboard', 2, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+-- 二级菜单：薪酬管理
+INSERT INTO `menu_page` VALUES (407, '薪酬管理', 400, '/saleops-optimizer/salary', '薪酬管理模块', NULL, 'dollar', 2, 1, 0, NOW(), 'default', NULL, NULL, NULL);
 
--- 三级菜单：历史记录
-INSERT INTO `menu_page` VALUES (408, '历史记录', 400, '/saleops-optimizer/history', '盈策通决策历史记录', NULL, 'history', 3, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+-- 三级菜单：薪酬功能页
+INSERT INTO `menu_page` VALUES (408, '薪酬计算', 407, '/saleops-optimizer/salary-calculation', '薪酬计算管理', NULL, 'calculator', 1, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+INSERT INTO `menu_page` VALUES (409, '工资查询', 407, '/saleops-optimizer/salary-query', '工资查询统计', NULL, 'search', 2, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+INSERT INTO `menu_page` VALUES (410, '工资条生成', 407, '/saleops-optimizer/payslip-generation', '工资条生成管理', NULL, 'file-text', 3, 1, 0, NOW(), 'default', NULL, NULL, NULL);
 
--- 按钮权限（以部门分红配置为例，其他功能页可类推扩展）
-INSERT INTO `menu_page` VALUES (409, '新增部门分红', 402, NULL, '新增部门分红按钮', NULL, 'plus', 1, 1, 0, NOW(), 'default', NULL, NULL, NULL);
-INSERT INTO `menu_page` VALUES (410, '编辑部门分红', 402, NULL, '编辑部门分红按钮', NULL, 'edit', 2, 1, 0, NOW(), 'default', NULL, NULL, NULL);
-INSERT INTO `menu_page` VALUES (411, '删除部门分红', 402, NULL, '删除部门分红按钮', NULL, 'delete', 3, 1, 0, NOW(), 'default', NULL, NULL, NULL);
-INSERT INTO `menu_page` VALUES (412, '批量导入部门分红', 402, NULL, '批量导入部门分红按钮', NULL, 'import', 4, 1, 0, NOW(), 'default', NULL, NULL, NULL);
-INSERT INTO `menu_page` VALUES (413, '批量导出部门分红', 402, NULL, '批量导出部门分红按钮', NULL, 'export', 5, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+-- 二级菜单：决策数据看板
+INSERT INTO `menu_page` VALUES (411, '决策数据看板', 400, '/saleops-optimizer/dashboard', '盈策通决策数据看板', NULL, 'dashboard', 3, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+
+-- 二级菜单：历史记录
+INSERT INTO `menu_page` VALUES (412, '历史记录', 400, '/saleops-optimizer/history', '盈策通决策历史记录', NULL, 'history', 4, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+
+-- -- 按钮权限（以部门分红配置为例，其他功能页可类推扩展）
+-- INSERT INTO `menu_page` VALUES (409, '新增部门分红', 402, NULL, '新增部门分红按钮', NULL, 'plus', 1, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+-- INSERT INTO `menu_page` VALUES (410, '编辑部门分红', 402, NULL, '编辑部门分红按钮', NULL, 'edit', 2, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+-- INSERT INTO `menu_page` VALUES (411, '删除部门分红', 402, NULL, '删除部门分红按钮', NULL, 'delete', 3, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+-- INSERT INTO `menu_page` VALUES (412, '批量导入部门分红', 402, NULL, '批量导入部门分红按钮', NULL, 'import', 4, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+-- INSERT INTO `menu_page` VALUES (413, '批量导出部门分红', 402, NULL, '批量导出部门分红按钮', NULL, 'export', 5, 1, 0, NOW(), 'default', NULL, NULL, NULL);
 
 SET FOREIGN_KEY_CHECKS = 1;

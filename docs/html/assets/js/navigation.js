@@ -119,7 +119,16 @@ const menuData = [
             { id: 'soo-dashboard', name: '运营工作台', url: 'saleops-optimizer/dashboard.html' },
             { id: 'soo-config', name: '基础配置', url: 'saleops-optimizer/config-center.html' },
             { id: 'soo-performance', name: '绩效管理', url: 'saleops-optimizer/performance-manage.html' },
-            { id: 'soo-payroll', name: '薪酬计算', url: 'saleops-optimizer/payroll-calculate.html' },
+            { 
+                id: 'soo-salary', 
+                name: '薪酬管理', 
+                icon: 'fas fa-dollar-sign',
+                children: [
+                    { id: 'salary-calculation', name: '薪酬计算', url: 'saleops-optimizer/salary-calculation.html' },
+                    { id: 'salary-query', name: '工资查询', url: 'saleops-optimizer/salary-query.html' },
+                    { id: 'payslip-generation', name: '工资条生成', url: 'saleops-optimizer/payslip-generation.html' }
+                ]
+            },
             { id: 'soo-analysis', name: '财务分析', url: 'saleops-optimizer/financial-analysis.html' },
             { id: 'soo-reports', name: '报表中心', url: 'saleops-optimizer/report-center.html' }
         ]

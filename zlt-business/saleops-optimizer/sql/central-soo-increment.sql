@@ -149,7 +149,7 @@ CREATE TABLE `soo_payroll_result` (
   `department_id` bigint(20) NOT NULL COMMENT '部门ID',
   `department_name` varchar(128) NOT NULL COMMENT '部门名称',
   `position_id` bigint(20) NOT NULL COMMENT '岗位ID',
-  `job_level_id` varchar(50) NOT NULL COMMENT '职级ID',
+  `job_level_code` varchar(50) NOT NULL COMMENT '职级编码-岗位所对应的职级',
   `region` varchar(50) NOT NULL COMMENT '地区',
   
   -- 基础薪酬

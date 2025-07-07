@@ -1,8 +1,10 @@
 package com.central.soo.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.central.common.context.TenantContextHolder;
 import com.central.common.model.PageResult;
 import com.central.common.model.Result;
+import com.central.common.utils.LoginUserUtils;
 import com.central.soo.mapper.SalaryCalculationTaskMapper;
 import com.central.soo.model.dto.*;
 import com.central.soo.model.entity.*;
@@ -56,6 +58,9 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
                 task.setCalculationRules(buildCalculationRulesJson(createDTO.getCalculationRules()));
             }
             
+            // 设置备注
+            task.setRemark(createDTO.getRemark());
+            
             // 初始状态
             task.setTaskStatus(SalaryCalculationTask.TaskStatus.PENDING);
             task.setProgressPercent(BigDecimal.ZERO);
@@ -68,13 +73,20 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
             task.setTotalCompanyCost(BigDecimal.ZERO);
             task.setIsFinal(false);
             task.setCreatedAt(LocalDateTime.now());
-            task.setCreatedBy(1L); // 模拟当前用户ID
-            task.setTenantId("default");
+            task.setCreatedBy(LoginUserUtils.getCurrentSysUser().getId()); // 应该从当前登录用户获取，这里模拟为1
+            task.setTenantId(TenantContextHolder.getTenant());
             task.setDelflag(false);
             
-            // 这里应该调用 save(task) 保存到数据库，暂时模拟返回
-            return Result.succeed(task);
+            // 保存到数据库
+            boolean saved = this.save(task);
+            if (saved) {
+                return Result.succeed(task);
+            } else {
+                return Result.failed("保存薪酬计算任务失败");
+            }
         } catch (Exception e) {
+            System.err.println("创建薪酬计算任务失败: " + e.getMessage());
+            e.printStackTrace();
             return Result.failed("创建薪酬计算任务失败: " + e.getMessage());
         }
     }
@@ -99,42 +111,71 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
     @Override
     public PageResult<SalaryCalculationTask> getCalculationTasks(SalaryTaskQueryDTO queryDTO) {
         try {
-            List<SalaryCalculationTask> tasks = new ArrayList<>();
+            // 使用MyBatis-Plus进行数据库查询
+            com.baomidou.mybatisplus.extension.plugins.pagination.Page<SalaryCalculationTask> page =
+                new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(
+                    queryDTO.getPage() != null ? queryDTO.getPage() : 1,
+                    queryDTO.getSize() != null ? queryDTO.getSize() : 20
+                );
+
+            // 构建查询条件
+            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SalaryCalculationTask> queryWrapper =
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
             
-            // 模拟任务数据
-            for (int i = 1; i <= 5; i++) {
-                SalaryCalculationTask task = new SalaryCalculationTask();
-                task.setTaskId("TASK_202412_00" + i);
-                task.setTaskName("2024年" + (12-i+1) + "月薪酬计算");
-                task.setCalculationMonth("2024-" + String.format("%02d", 12-i+1));
-                task.setCalculationType(SalaryCalculationTask.CalculationType.FULL);
-                task.setTaskStatus(i == 1 ? SalaryCalculationTask.TaskStatus.RUNNING : 
-                                  i == 2 ? SalaryCalculationTask.TaskStatus.COMPLETED : 
-                                  SalaryCalculationTask.TaskStatus.PENDING);
-                task.setProgressPercent(new BigDecimal(i == 1 ? 75 : (i == 2 ? 100 : 0)));
-                task.setTotalEmployeeCount(50);
-                task.setProcessedEmployeeCount(i == 1 ? 38 : (i == 2 ? 50 : 0));
-                task.setSuccessEmployeeCount(i == 1 ? 35 : (i == 2 ? 50 : 0));
-                task.setFailedEmployeeCount(i == 1 ? 3 : 0);
-                task.setTotalGrossPay(new BigDecimal("1650000.00"));
-                task.setTotalNetPay(new BigDecimal("1450000.00"));
-                task.setTotalCompanyCost(new BigDecimal("1850000.00"));
-                task.setIsFinal(i == 2);
-                task.setCreatedAt(LocalDateTime.now().minusDays(i));
-                task.setExecutionDuration(i == 2 ? 1800 : null);
-                
-                tasks.add(task);
+            // 设置查询条件
+            if (queryDTO.getCalculationMonth() != null && !queryDTO.getCalculationMonth().trim().isEmpty()) {
+                queryWrapper.eq(SalaryCalculationTask::getCalculationMonth, queryDTO.getCalculationMonth());
+            }
+            if (queryDTO.getTaskStatus() != null && !queryDTO.getTaskStatus().trim().isEmpty()) {
+                queryWrapper.eq(SalaryCalculationTask::getTaskStatus, queryDTO.getTaskStatus());
+            }
+            if (queryDTO.getTaskName() != null && !queryDTO.getTaskName().trim().isEmpty()) {
+                queryWrapper.like(SalaryCalculationTask::getTaskName, queryDTO.getTaskName());
+            }
+            if (queryDTO.getCalculationType() != null && !queryDTO.getCalculationType().trim().isEmpty()) {
+                queryWrapper.eq(SalaryCalculationTask::getCalculationType, queryDTO.getCalculationType());
+            }
+            if (queryDTO.getCreatedBy() != null) {
+                queryWrapper.eq(SalaryCalculationTask::getCreatedBy, queryDTO.getCreatedBy());
+            }
+            if (queryDTO.getIsFinal() != null) {
+                queryWrapper.eq(SalaryCalculationTask::getIsFinal, queryDTO.getIsFinal());
             }
             
+            // 只查询未删除的记录
+            queryWrapper.eq(SalaryCalculationTask::getDelflag, false);
+            
+            // 按创建时间倒序排列
+            queryWrapper.orderByDesc(SalaryCalculationTask::getCreatedAt);
+
+            // 执行分页查询
+            com.baomidou.mybatisplus.extension.plugins.pagination.Page<SalaryCalculationTask> pageResult = 
+                this.page(page, queryWrapper);
+
+            // 构建返回结果
             PageResult<SalaryCalculationTask> result = new PageResult<>();
-            result.setData(tasks);
-            result.setCount((long) tasks.size());
+            result.setData(pageResult.getRecords());
+            result.setCount(pageResult.getTotal());
+            result.setPage((int) pageResult.getCurrent());
+            result.setSize((int) pageResult.getSize());
+            result.setPages((int) pageResult.getPages());
+            result.setResp_code(0); // 0表示成功
             
             return result;
         } catch (Exception e) {
+            // 查询失败时返回错误信息
             PageResult<SalaryCalculationTask> result = new PageResult<>();
             result.setData(new ArrayList<>());
             result.setCount(0L);
+            result.setPage(queryDTO.getPage() != null ? queryDTO.getPage() : 1);
+            result.setSize(queryDTO.getSize() != null ? queryDTO.getSize() : 20);
+            result.setPages(0);
+            result.setResp_code(1); // 1表示失败
+            
+            // 记录错误日志
+            System.err.println("查询薪酬计算任务失败: " + e.getMessage());
+            e.printStackTrace();
+            
             return result;
         }
     }
@@ -218,18 +259,105 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
     @Override
     public Result<SalaryTaskStatisticsDTO> getTaskStatistics() {
         try {
+            // 使用数据库查询统计数据
+            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<SalaryCalculationTask> queryWrapper =
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+            
+            // 只查询未删除的记录
+            queryWrapper.eq(SalaryCalculationTask::getDelflag, false);
+            
+            // 统计总任务数
+            long totalTasks = this.count(queryWrapper);
+            
+            // 统计各状态任务数
+            queryWrapper.clear();
+            queryWrapper.eq(SalaryCalculationTask::getDelflag, false)
+                        .eq(SalaryCalculationTask::getTaskStatus, SalaryCalculationTask.TaskStatus.RUNNING);
+            long runningTasks = this.count(queryWrapper);
+            
+            queryWrapper.clear();
+            queryWrapper.eq(SalaryCalculationTask::getDelflag, false)
+                        .eq(SalaryCalculationTask::getTaskStatus, SalaryCalculationTask.TaskStatus.COMPLETED);
+            long completedTasks = this.count(queryWrapper);
+            
+            queryWrapper.clear();
+            queryWrapper.eq(SalaryCalculationTask::getDelflag, false)
+                        .eq(SalaryCalculationTask::getTaskStatus, SalaryCalculationTask.TaskStatus.FAILED);
+            long failedTasks = this.count(queryWrapper);
+            
+            // 计算本月任务数（当前月份）
+            String currentMonth = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            queryWrapper.clear();
+            queryWrapper.eq(SalaryCalculationTask::getDelflag, false)
+                        .eq(SalaryCalculationTask::getCalculationMonth, currentMonth);
+            long thisMonthTasks = this.count(queryWrapper);
+            
+            // 计算上月任务数
+            String lastMonth = LocalDateTime.now().minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM"));
+            queryWrapper.clear();
+            queryWrapper.eq(SalaryCalculationTask::getDelflag, false)
+                        .eq(SalaryCalculationTask::getCalculationMonth, lastMonth);
+            long lastMonthTasks = this.count(queryWrapper);
+            
+            // 计算平均执行时间（已完成的任务）
+            queryWrapper.clear();
+            queryWrapper.eq(SalaryCalculationTask::getDelflag, false)
+                        .eq(SalaryCalculationTask::getTaskStatus, SalaryCalculationTask.TaskStatus.COMPLETED)
+                        .isNotNull(SalaryCalculationTask::getExecutionDuration);
+            List<SalaryCalculationTask> completedTasksWithDuration = this.list(queryWrapper);
+            
+            double avgExecutionTime = 0;
+            String avgExecutionTimeStr = "0分钟";
+            if (!completedTasksWithDuration.isEmpty()) {
+                double totalDuration = completedTasksWithDuration.stream()
+                    .mapToDouble(task -> task.getExecutionDuration() != null ? task.getExecutionDuration() : 0)
+                    .sum();
+                avgExecutionTime = totalDuration / completedTasksWithDuration.size();
+                
+                // 转换为可读格式
+                if (avgExecutionTime < 60) {
+                    avgExecutionTimeStr = String.format("%.0f秒", avgExecutionTime);
+                } else if (avgExecutionTime < 3600) {
+                    avgExecutionTimeStr = String.format("%.1f分钟", avgExecutionTime / 60);
+                } else {
+                    avgExecutionTimeStr = String.format("%.1f小时", avgExecutionTime / 3600);
+                }
+            }
+            
+            // 计算成功率
+            double successRate = 0;
+            if (totalTasks > 0) {
+                successRate = (double) completedTasks / totalTasks * 100;
+            }
+            
+            // 构建统计结果
             SalaryTaskStatisticsDTO statistics = new SalaryTaskStatisticsDTO();
-            statistics.setTotalTasks(156);
-            statistics.setRunningTasks(2);
-            statistics.setCompletedTasks(145);
-            statistics.setFailedTasks(9);
-            statistics.setThisMonthTasks(8);
-            statistics.setLastMonthTasks(12);
-            statistics.setAvgExecutionTime("15分钟");
-            statistics.setSuccessRate(new BigDecimal("94.23"));
+            statistics.setTotalTasks((int) totalTasks);
+            statistics.setRunningTasks((int) runningTasks);
+            statistics.setCompletedTasks((int) completedTasks);
+            statistics.setFailedTasks((int) failedTasks);
+            statistics.setThisMonthTasks((int) thisMonthTasks);
+            statistics.setLastMonthTasks((int) lastMonthTasks);
+            statistics.setAvgExecutionTime(avgExecutionTimeStr);
+            statistics.setSuccessRate(BigDecimal.valueOf(successRate).setScale(2, BigDecimal.ROUND_HALF_UP));
             
             return Result.succeed(statistics);
         } catch (Exception e) {
+            // 记录错误日志
+            System.err.println("获取任务统计失败: " + e.getMessage());
+            e.printStackTrace();
+            
+            // 返回默认统计数据
+            SalaryTaskStatisticsDTO statistics = new SalaryTaskStatisticsDTO();
+            statistics.setTotalTasks(0);
+            statistics.setRunningTasks(0);
+            statistics.setCompletedTasks(0);
+            statistics.setFailedTasks(0);
+            statistics.setThisMonthTasks(0);
+            statistics.setLastMonthTasks(0);
+            statistics.setAvgExecutionTime("0分钟");
+            statistics.setSuccessRate(BigDecimal.ZERO);
+            
             return Result.failed("获取任务统计失败: " + e.getMessage());
         }
     }

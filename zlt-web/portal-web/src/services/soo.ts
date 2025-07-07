@@ -2,8 +2,13 @@ import { request } from '@/utils/request';
 
 // 统一处理响应数据格式兼容性
 const handleResponse = (response: any) => {
+  console.log('API响应原始数据:', response);
+  
+  // 处理成功响应
   if (response.resp_code === 0 || response.success) {
     const data = response.data || response.datas;
+    
+    // 如果是分页数据且包含records字段
     if (data && data.records) {
       return {
         success: true,
@@ -15,11 +20,19 @@ const handleResponse = (response: any) => {
         },
       };
     }
-    return { success: true, data };
+    
+    // 直接返回数据
+    return { 
+      success: true, 
+      data,
+      resp_code: response.resp_code || 0
+    };
   } else {
+    // 处理失败响应
     return {
       success: false,
       message: response.resp_msg || response.message || '请求失败',
+      resp_code: response.resp_code || response.code || 1
     };
   }
 };
@@ -238,7 +251,7 @@ export async function getSalaryCalculationTasks(params: {
   return request('/api-soo/api/soo/salary/tasks', {
     method: 'GET',
     params,
-  });
+  }).then(handleResponse);
 }
 
 /**
@@ -265,7 +278,7 @@ export async function getSalaryTaskProgress(taskId: string) {
 export async function getSalaryTaskStatistics() {
   return request('/api-soo/api/soo/salary/tasks/statistics', {
     method: 'GET',
-  });
+  }).then(handleResponse);
 }
 
 /**
@@ -592,7 +605,7 @@ export async function downloadPayslip(recordId: number) {
 export async function validateCalculationData(taskId: string) {
   return request(`/api-soo/api/soo/salary/validate/${taskId}`, {
     method: 'POST',
-  });
+  }).then(handleResponse);
 }
 
 /**
@@ -631,8 +644,20 @@ export async function getEmployeeOptions(params: {
  * 获取部门列表（用于选择）
  */
 export async function getDepartmentOptions() {
-  return request('/api-organization/api/organization/departments', {
+  return request('/api-organization/api/organization/departments/tree', {
     method: 'GET',
+  }).then((response: any) => {
+    console.log('部门列表API响应:', response);
+    // 适配响应格式，支持 datas 和 data 两种格式
+    if (response.resp_code === 0 || response.success) {
+      const data = response.data || response.datas || [];
+      return { success: true, data };
+    } else {
+      return {
+        success: false,
+        message: response.resp_msg || response.message || '获取部门列表失败',
+      };
+    }
   });
 }
 

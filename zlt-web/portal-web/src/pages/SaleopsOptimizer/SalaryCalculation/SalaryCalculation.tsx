@@ -151,8 +151,13 @@ const SalaryCalculation: React.FC = () => {
         size: 20,
       });
       
-      if (response.success && response.data.records) {
-        setTasks(response.data.records);
+      console.log('任务列表API响应:', response);
+      
+      // 适配不同的响应格式
+      if ((response.resp_code === 0 || response.success) && response.data) {
+        // 后端返回的是PageResult格式，data字段直接包含任务数组
+        const taskList = Array.isArray(response.data) ? response.data : response.data.records || response.data;
+        setTasks(taskList);
       } else {
         message.error('加载计算任务失败');
       }
@@ -196,8 +201,16 @@ const SalaryCalculation: React.FC = () => {
   const loadTaskStats = async () => {
     try {
       const response = await getSalaryTaskStatistics();
-      if (response.success) {
+      
+      console.log('任务统计API响应:', response);
+      
+      // 适配不同的响应格式: success/data 或 resp_code/datas
+      if (response.success && response.data) {
         setTaskStats(response.data);
+      } else if (response.resp_code === 0 && response.datas) {
+        setTaskStats(response.datas);
+      } else {
+        console.error('加载统计数据失败:', response);
       }
     } catch (error) {
       console.error('加载统计数据失败:', error);
@@ -277,8 +290,19 @@ const SalaryCalculation: React.FC = () => {
       
       // 先验证数据完整性
       const validationResponse = await validateCalculationData(taskId);
+      console.log('数据验证响应:', validationResponse);
+      
       if (!validationResponse.success) {
         message.error('数据验证失败，无法执行计算');
+        return;
+      }
+      
+      // 检查具体的验证结果
+      if (!validationResponse.data?.isValid) {
+        const failedChecks = validationResponse.data?.failedChecks || 0;
+        const validationResults = validationResponse.data?.validationResults || [];
+        message.error(`数据验证失败：${failedChecks} 项检查未通过`);
+        console.error('验证失败详情:', validationResults);
         return;
       }
 

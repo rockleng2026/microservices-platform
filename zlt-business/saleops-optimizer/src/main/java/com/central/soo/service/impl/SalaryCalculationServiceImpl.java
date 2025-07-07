@@ -6,23 +6,39 @@ import com.central.common.model.PageResult;
 import com.central.common.model.Result;
 import com.central.common.utils.LoginUserUtils;
 import com.central.soo.mapper.SalaryCalculationTaskMapper;
+import com.central.soo.mapper.PayrollResultMapper;
 import com.central.soo.model.dto.*;
 import com.central.soo.model.entity.*;
+import com.central.soo.model.MonthlyPerformance;
+import com.central.soo.engine.SalaryCalculationEngine;
+import com.central.soo.engine.context.SalaryCalculationContext;
 import com.central.soo.service.ISalaryCalculationService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * 薪酬计算服务实现类
  * 基于新的表结构和接口设计
  */
+@Slf4j
 @Service
 public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationTaskMapper, SalaryCalculationTask> 
     implements ISalaryCalculationService {
+
+    @Autowired
+    private PayrollResultMapper payrollResultMapper;
+
+    @Autowired
+    private SalaryCalculationEngine salaryCalculationEngine;
 
     // ===========================
     // 薪酬计算任务管理
@@ -94,18 +110,345 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
     @Override
     public Result<String> executeCalculationTask(String taskId) {
         try {
-            // 模拟异步执行任务
-            System.out.println("开始执行薪酬计算任务: " + taskId);
+            log.info("开始执行薪酬计算任务: {}", taskId);
             
-            // 实际实现中应该：
-            // 1. 更新任务状态为RUNNING
-            // 2. 投递到异步队列或线程池执行
-            // 3. 执行计算逻辑
+            // 1. 查询任务详情
+            SalaryCalculationTask task = this.lambdaQuery()
+                .eq(SalaryCalculationTask::getTaskId, taskId)
+                .eq(SalaryCalculationTask::getDelflag, false)
+                .one();
+            
+            if (task == null) {
+                return Result.failed("任务不存在: " + taskId);
+            }
+            
+            // 2. 检查任务状态
+            if (!SalaryCalculationTask.TaskStatus.PENDING.equals(task.getTaskStatus())) {
+                return Result.failed("任务状态不正确，当前状态: " + task.getTaskStatus());
+            }
+            
+            // 3. 更新任务状态为执行中
+            task.setTaskStatus(SalaryCalculationTask.TaskStatus.RUNNING);
+            task.setStartTime(LocalDateTime.now());
+            task.setProgressPercent(BigDecimal.ZERO);
+            this.updateById(task);
+            
+            // 4. 异步执行薪资计算
+            CompletableFuture.runAsync(() -> {
+                performSalaryCalculation(task);
+            });
             
             return Result.succeed("任务已开始执行");
         } catch (Exception e) {
+            log.error("执行薪酬计算任务失败: {}", e.getMessage(), e);
             return Result.failed("执行薪酬计算任务失败: " + e.getMessage());
         }
+    }
+
+    /**
+     * 执行薪资计算的具体逻辑
+     */
+    private void performSalaryCalculation(SalaryCalculationTask task) {
+        try {
+            log.info("开始执行薪资计算，任务ID: {}", task.getTaskId());
+            
+            // 1. 获取目标员工列表
+            List<EmployeeBasicInfo> targetEmployees = getTargetEmployees(task);
+            
+            // 2. 更新任务总员工数
+            task.setTotalEmployeeCount(targetEmployees.size());
+            task.setProcessedEmployeeCount(0);
+            task.setSuccessEmployeeCount(0);
+            task.setFailedEmployeeCount(0);
+            this.updateById(task);
+            
+            // 3. 逐个计算员工薪资
+            BigDecimal totalGrossPay = BigDecimal.ZERO;
+            BigDecimal totalNetPay = BigDecimal.ZERO;
+            BigDecimal totalCompanyCost = BigDecimal.ZERO;
+            
+            int processedCount = 0;
+            int successCount = 0;
+            int failedCount = 0;
+            
+            for (EmployeeBasicInfo employee : targetEmployees) {
+                try {
+                    // 计算单个员工薪资
+                    PayrollResult payrollResult = calculateEmployeeSalary(task, employee);
+                    
+                    // 保存工资结果
+                    payrollResultMapper.insert(payrollResult);
+                    
+                    // 累加统计数据
+                    totalGrossPay = totalGrossPay.add(payrollResult.getGrossPay());
+                    totalNetPay = totalNetPay.add(payrollResult.getNetPay());
+                    totalCompanyCost = totalCompanyCost.add(payrollResult.getTotalCompanyCost());
+                    
+                    successCount++;
+                    log.debug("员工 {} 薪资计算成功", employee.getEmployeeName());
+                    
+                } catch (Exception e) {
+                    log.error("员工 {} 薪资计算失败: {}", employee.getEmployeeName(), e.getMessage(), e);
+                    failedCount++;
+                }
+                
+                processedCount++;
+                
+                // 更新进度
+                BigDecimal progress = BigDecimal.valueOf(processedCount)
+                    .divide(BigDecimal.valueOf(targetEmployees.size()), 4, RoundingMode.HALF_UP)
+                    .multiply(BigDecimal.valueOf(100));
+                
+                task.setProcessedEmployeeCount(processedCount);
+                task.setSuccessEmployeeCount(successCount);
+                task.setFailedEmployeeCount(failedCount);
+                task.setProgressPercent(progress);
+                task.setTotalGrossPay(totalGrossPay);
+                task.setTotalNetPay(totalNetPay);
+                task.setTotalCompanyCost(totalCompanyCost);
+                this.updateById(task);
+                
+                // 模拟计算耗时
+                Thread.sleep(500);
+            }
+            
+            // 4. 更新任务完成状态
+            task.setTaskStatus(SalaryCalculationTask.TaskStatus.COMPLETED);
+            task.setEndTime(LocalDateTime.now());
+            task.setExecutionDuration(calculateExecutionDuration(task.getStartTime(), task.getEndTime()));
+            task.setProgressPercent(BigDecimal.valueOf(100));
+            task.setIsFinal(false); // 需要人工确认后才是最终版本
+            this.updateById(task);
+            
+            log.info("薪资计算任务完成，任务ID: {}，处理员工数: {}，成功: {}，失败: {}", 
+                task.getTaskId(), processedCount, successCount, failedCount);
+                
+        } catch (Exception e) {
+            log.error("薪资计算任务执行失败，任务ID: {}", task.getTaskId(), e);
+            
+            // 更新任务为失败状态
+            task.setTaskStatus(SalaryCalculationTask.TaskStatus.FAILED);
+            task.setEndTime(LocalDateTime.now());
+            task.setErrorMessage(e.getMessage());
+            this.updateById(task);
+        }
+    }
+    
+    /**
+     * 获取目标员工列表
+     */
+    private List<EmployeeBasicInfo> getTargetEmployees(SalaryCalculationTask task) {
+        // 模拟获取员工数据 - 实际应该从组织架构服务获取
+        List<EmployeeBasicInfo> employees = new ArrayList<>();
+        
+        // 模拟数据
+        String[] names = {"张伟强", "李雅芳", "王建华", "陈小明", "刘晓宇", "赵敏", "孙丽", "周强", "吴梅", "郑刚"};
+        String[] departments = {"技术开发部", "销售部", "市场部", "财务部", "人事部"};
+        String[] positions = {"高级开发工程师", "销售经理", "市场专员", "财务分析师", "人事主管"};
+        
+        int employeeCount = 10; // 默认10个员工用于测试
+        if ("DEPARTMENT".equals(task.getCalculationType()) && task.getTargetDepartmentIds() != null) {
+            employeeCount = 5; // 部门计算减少员工数
+        } else if ("EMPLOYEE".equals(task.getCalculationType()) && task.getTargetEmployeeIds() != null) {
+            employeeCount = task.getTargetEmployeeIds().split(",").length;
+        }
+        
+        for (int i = 0; i < employeeCount; i++) {
+            EmployeeBasicInfo employee = new EmployeeBasicInfo();
+            employee.setEmployeeId((long) (i + 1));
+            employee.setEmployeeName(names[i % names.length]);
+            employee.setEmployeeNo("EMP" + String.format("%03d", i + 1));
+            employee.setDepartmentId((long) (i % 3 + 1));
+            employee.setDepartmentName(departments[i % departments.length]);
+            employee.setPositionName(positions[i % positions.length]);
+            employee.setRegion("BEIJING");
+            employees.add(employee);
+        }
+        
+        return employees;
+    }
+    
+    /**
+     * 计算单个员工薪资
+     */
+    private PayrollResult calculateEmployeeSalary(SalaryCalculationTask task, EmployeeBasicInfo employee) {
+        try {
+            // 构建计算上下文
+            SalaryCalculationContext context = buildCalculationContext(task, employee);
+            
+            // 使用薪酬计算引擎进行计算
+            PayrollResult result = salaryCalculationEngine.calculateSalary(context);
+            
+            // 设置任务相关信息
+            result.setTaskId(task.getTaskId());
+            result.setTaskName(task.getTaskName());
+            result.setCalculationVersion(1);
+            result.setMonth(task.getCalculationMonth());
+            
+            // 设置状态信息
+            result.setCalculationStatus("SUCCESS");
+            result.setApprovalStatus("PENDING");
+            result.setIsFinal(false);
+            result.setIsCurrentVersion(true);
+            result.setCreatedAt(LocalDateTime.now());
+            result.setTenantId(TenantContextHolder.getTenant());
+            result.setDelflag(false);
+            
+            return result;
+        } catch (Exception e) {
+            log.error("员工薪资计算失败，员工ID: {}", employee.getEmployeeId(), e);
+            
+            // 创建失败记录
+            PayrollResult result = new PayrollResult();
+            result.setTaskId(task.getTaskId());
+            result.setTaskName(task.getTaskName());
+            result.setMonth(task.getCalculationMonth());
+            result.setEmployeeId(employee.getEmployeeId());
+            result.setEmployeeName(employee.getEmployeeName());
+            result.setEmployeeNo(employee.getEmployeeNo());
+            result.setDepartmentId(employee.getDepartmentId());
+            result.setDepartmentName(employee.getDepartmentName());
+            result.setCalculationStatus("FAILED");
+            result.setErrorMessage(e.getMessage());
+            result.setCreatedAt(LocalDateTime.now());
+            result.setTenantId(TenantContextHolder.getTenant());
+            result.setDelflag(false);
+            
+            return result;
+        }
+    }
+    
+    /**
+     * 构建薪酬计算上下文
+     */
+    private SalaryCalculationContext buildCalculationContext(SalaryCalculationTask task, EmployeeBasicInfo employee) {
+        SalaryCalculationContext context = new SalaryCalculationContext();
+        context.setMonth(task.getCalculationMonth());
+        
+        // 设置员工信息
+        SalaryCalculationContext.EmployeeInfo employeeInfo = new SalaryCalculationContext.EmployeeInfo();
+        employeeInfo.setId(employee.getEmployeeId());
+        employeeInfo.setName(employee.getEmployeeName());
+        employeeInfo.setEmployeeNo(employee.getEmployeeNo());
+        employeeInfo.setDepartmentId(employee.getDepartmentId());
+        employeeInfo.setDepartmentName(employee.getDepartmentName());
+        employeeInfo.setRegion(employee.getRegion());
+        employeeInfo.setStatus(1);
+        context.setEmployee(employeeInfo);
+        
+        // 设置薪酬配置（模拟数据）
+        SalaryCalculationContext.SalaryConfig salaryConfig = new SalaryCalculationContext.SalaryConfig();
+        salaryConfig.setEmployeeId(employee.getEmployeeId());
+        salaryConfig.setBaseSalary(BigDecimal.valueOf(15000 + (employee.getEmployeeId() * 1000)));
+        salaryConfig.setRegion(employee.getRegion());
+        salaryConfig.setIsSalesIncentive(true);
+        salaryConfig.setSalesIncentiveRatio(BigDecimal.valueOf(100));
+        salaryConfig.setIsTeamIncentive(true);
+        salaryConfig.setTeamIncentiveRatio(BigDecimal.valueOf(80));
+        salaryConfig.setIsDepartmentBonus(true);
+        salaryConfig.setStatus(1);
+        context.setSalaryConfig(salaryConfig);
+        
+        // 设置地区系数（模拟数据）
+        SalaryCalculationContext.RegionalCoefficient regionalCoefficient = new SalaryCalculationContext.RegionalCoefficient();
+        regionalCoefficient.setRegion(employee.getRegion());
+        regionalCoefficient.setSalaryCoefficient(BigDecimal.valueOf(1.2));
+        regionalCoefficient.setStatus(1);
+        context.setRegionalCoefficient(regionalCoefficient);
+        
+        // 设置绩效数据（模拟数据）
+        MonthlyPerformance performance = new MonthlyPerformance();
+        performance.setEmployeeId(employee.getEmployeeId());
+        performance.setMonth(task.getCalculationMonth());
+        performance.setPerformanceScore(BigDecimal.valueOf(85 + (employee.getEmployeeId() % 15))); // 85-100分
+        performance.setPersonalProjectRevenue(BigDecimal.valueOf(100000 + (employee.getEmployeeId() * 10000)));
+        performance.setPersonalProjectMargin(BigDecimal.valueOf(0.3));
+        performance.setTeamProjectRevenue(BigDecimal.valueOf(500000));
+        performance.setTeamProjectMargin(BigDecimal.valueOf(0.25));
+        performance.setTeamMemberCount(5);
+        context.setPerformance(performance);
+        
+        // 设置职级配置（模拟数据）
+        SalaryCalculationContext.JobLevelSalary jobLevelSalary = new SalaryCalculationContext.JobLevelSalary();
+        jobLevelSalary.setJobLevelCode("SENIOR");
+        jobLevelSalary.setPerformanceRatioMin(BigDecimal.valueOf(0.8));
+        jobLevelSalary.setPerformanceRatioMax(BigDecimal.valueOf(1.2));
+        jobLevelSalary.setStatus(1);
+        context.setJobLevelSalary(jobLevelSalary);
+        
+        // 设置社保配置（模拟数据）
+        SalaryCalculationContext.SocialSecurityConfig socialSecurityConfig = new SalaryCalculationContext.SocialSecurityConfig();
+        socialSecurityConfig.setRegion(employee.getRegion());
+        socialSecurityConfig.setYear(2024);
+        socialSecurityConfig.setSocialSecurityBaseLower(BigDecimal.valueOf(3500));
+        socialSecurityConfig.setSocialSecurityBaseUpper(BigDecimal.valueOf(25000));
+        socialSecurityConfig.setHousingFundBaseLower(BigDecimal.valueOf(3500));
+        socialSecurityConfig.setHousingFundBaseUpper(BigDecimal.valueOf(25000));
+        socialSecurityConfig.setPensionPersonalRatio(BigDecimal.valueOf(8));
+        socialSecurityConfig.setPensionCompanyRatio(BigDecimal.valueOf(16));
+        socialSecurityConfig.setMedicalPersonalRatio(BigDecimal.valueOf(2));
+        socialSecurityConfig.setMedicalCompanyRatio(BigDecimal.valueOf(10));
+        socialSecurityConfig.setUnemploymentPersonalRatio(BigDecimal.valueOf(0.5));
+        socialSecurityConfig.setUnemploymentCompanyRatio(BigDecimal.valueOf(0.5));
+        socialSecurityConfig.setMaternityCompanyRatio(BigDecimal.valueOf(0.8));
+        socialSecurityConfig.setInjuryCompanyRatio(BigDecimal.valueOf(0.2));
+        socialSecurityConfig.setHousingFundPersonalRatio(BigDecimal.valueOf(12));
+        socialSecurityConfig.setHousingFundCompanyRatio(BigDecimal.valueOf(12));
+        context.setSocialSecurityConfig(socialSecurityConfig);
+        
+        // 设置部门分红配置（模拟数据）
+        SalaryCalculationContext.DepartmentBonusConfig departmentBonusConfig = new SalaryCalculationContext.DepartmentBonusConfig();
+        departmentBonusConfig.setDepartmentId(employee.getDepartmentId());
+        departmentBonusConfig.setBonusWeight(BigDecimal.valueOf(20)); // 20%权重
+        departmentBonusConfig.setStatus(1);
+        context.setDepartmentBonusConfig(departmentBonusConfig);
+        
+        // 设置盈亏平衡分析数据（模拟数据）
+        SalaryCalculationContext.BreakevenAnalysisData breakevenAnalysis = new SalaryCalculationContext.BreakevenAnalysisData();
+        breakevenAnalysis.setPeriod(task.getCalculationMonth());
+        breakevenAnalysis.setDistributableProfit(BigDecimal.valueOf(1000000)); // 100万可分配利润
+        context.setBreakevenAnalysis(breakevenAnalysis);
+        
+        return context;
+    }
+    
+    /**
+     * 计算执行时长(秒)
+     */
+    private Integer calculateExecutionDuration(LocalDateTime startTime, LocalDateTime endTime) {
+        if (startTime == null || endTime == null) {
+            return 0;
+        }
+        return (int) java.time.Duration.between(startTime, endTime).getSeconds();
+    }
+    
+    /**
+     * 员工基础信息类
+     */
+    private static class EmployeeBasicInfo {
+        private Long employeeId;
+        private String employeeName;
+        private String employeeNo;
+        private Long departmentId;
+        private String departmentName;
+        private String positionName;
+        private String region;
+        
+        // getter setter方法
+        public Long getEmployeeId() { return employeeId; }
+        public void setEmployeeId(Long employeeId) { this.employeeId = employeeId; }
+        public String getEmployeeName() { return employeeName; }
+        public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
+        public String getEmployeeNo() { return employeeNo; }
+        public void setEmployeeNo(String employeeNo) { this.employeeNo = employeeNo; }
+        public Long getDepartmentId() { return departmentId; }
+        public void setDepartmentId(Long departmentId) { this.departmentId = departmentId; }
+        public String getDepartmentName() { return departmentName; }
+        public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+        public String getPositionName() { return positionName; }
+        public void setPositionName(String positionName) { this.positionName = positionName; }
+        public String getRegion() { return region; }
+        public void setRegion(String region) { this.region = region; }
     }
 
     @Override

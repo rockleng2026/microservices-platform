@@ -55,6 +55,12 @@ spring:
             - Path=/api-portal/**
           filters:
             - StripPrefix=1
+        - id: organization
+          uri: lb://organization-service
+          predicates:
+            - Path=/api-organization/**
+          filters:
+            - StripPrefix=1
         - id: multi-table
           uri: lb://multi-table-service
           predicates:

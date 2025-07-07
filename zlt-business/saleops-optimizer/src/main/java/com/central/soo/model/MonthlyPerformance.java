@@ -47,6 +47,9 @@ public class MonthlyPerformance extends BaseEntity {
     @Schema(description = "部门ID")
     private Long departmentId;
 
+    @Schema(description = "部门名称")
+    private String departmentName;
+
     @NotNull(message = "绩效得分不能为空")
     @DecimalMin(value = "0.00", message = "绩效得分不能小于0")
     @DecimalMax(value = "100.00", message = "绩效得分不能大于100")

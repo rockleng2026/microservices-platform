@@ -10,7 +10,7 @@ public interface IMonthlyPerformanceService extends IService<MonthlyPerformance>
     /**
      * 分页条件查询
      */
-    IPage<MonthlyPerformance> pageQuery(com.baomidou.mybatisplus.extension.plugins.pagination.Page<MonthlyPerformance> page, Long employeeId, String employeeName, Long departmentId, String month, Integer status);
+    IPage<MonthlyPerformance> pageQuery(Page<MonthlyPerformance> page, Long employeeId, String employeeName, Long departmentId, String month, Integer status, Boolean includeSubDept);
 
     /**
      * 校验唯一性（同一员工、同一月份不能重复）
@@ -26,4 +26,9 @@ public interface IMonthlyPerformanceService extends IService<MonthlyPerformance>
      * 恢复已删除的月度绩效
      */
     boolean restore(Long id);
+
+    /**
+     * 批量保存月度绩效，全部校验通过才保存，否则抛出异常
+     */
+    void batchSave(List<MonthlyPerformance> list);
 } 

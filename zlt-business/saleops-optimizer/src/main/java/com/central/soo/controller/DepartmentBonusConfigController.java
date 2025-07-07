@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 
 import java.util.List;
 import com.central.common.model.PageResult;
-import com.central.common.utils.PageResultUtil;
+import com.central.soo.utils.PageResultUtil;
 
 @RestController
 @RequestMapping("/api/soo/department-bonus-config")

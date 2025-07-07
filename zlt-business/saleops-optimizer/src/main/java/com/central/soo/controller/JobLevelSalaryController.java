@@ -13,7 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.central.common.model.PageResult;
-import com.central.common.utils.PageResultUtil;
+import com.central.soo.utils.PageResultUtil;
 
 @RestController
 @RequestMapping("/api/soo/job-level-salary")

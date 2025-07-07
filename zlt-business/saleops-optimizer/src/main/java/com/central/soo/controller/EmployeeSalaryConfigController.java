@@ -2,7 +2,7 @@ package com.central.soo.controller;
 
 import com.central.common.model.Result;
 import com.central.common.model.PageResult;
-import com.central.common.utils.PageResultUtil;
+import com.central.soo.utils.PageResultUtil;
 import com.central.soo.model.EmployeeSalaryConfig;
 import com.central.soo.model.dto.EmployeeSalaryQueryDTO;
 import com.central.soo.model.vo.EmployeeSalaryVO;

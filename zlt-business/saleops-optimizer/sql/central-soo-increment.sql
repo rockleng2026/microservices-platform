@@ -109,6 +109,7 @@ CREATE TABLE `soo_monthly_performance` (
   `employee_id` bigint(20) NOT NULL COMMENT '员工ID',
   `employee_name` varchar(50) NOT NULL COMMENT '员工姓名',
   `department_id` bigint(20) NOT NULL COMMENT '部门ID',
+  `department_name` varchar(64) DEFAULT NULL COMMENT '部门名称',
   `performance_score` decimal(5,2) NOT NULL COMMENT '绩效得分(0-100)',
   `personal_project_revenue` decimal(15,2) DEFAULT 0 COMMENT '个人项目营业额',
   `personal_project_margin` decimal(5,4) DEFAULT 0 COMMENT '个人项目毛利率',

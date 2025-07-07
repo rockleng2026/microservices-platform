@@ -11,7 +11,8 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
 import com.central.common.model.PageResult;
-import com.central.common.utils.PageResultUtil;
+import com.central.soo.utils.PageResultUtil;
+import com.central.common.exception.BusinessException;
 
 @RestController
 @RequestMapping("/api/soo/monthly-performance")
@@ -28,30 +29,41 @@ public class MonthlyPerformanceController {
         return Result.succeed(list);
     }
 
+    @GetMapping("/{id}")
+    @Operation(summary = "根据ID获取月度绩效")
+    public Result<MonthlyPerformance> getById(@PathVariable Long id) {
+        MonthlyPerformance mp = monthlyPerformanceService.getById(id);
+        if (mp == null) throw new BusinessException("未找到对应的月度绩效记录", 404);
+        return Result.succeed(mp);
+    }
+
     @PostMapping
     @Operation(summary = "新增月度绩效")
-    public Result<?> add(@RequestBody MonthlyPerformance config) {
+    public Result<Void> add(@RequestBody MonthlyPerformance config) {
         boolean unique = monthlyPerformanceService.checkUnique(config.getEmployeeId(), config.getMonth(), null);
-        if (!unique) return Result.failed("同一员工、同一月份已存在绩效记录");
+        if (!unique) throw new BusinessException("同一员工、同一月份已存在绩效记录", 400);
         boolean saved = monthlyPerformanceService.save(config);
-        return saved ? Result.succeed(null) : Result.failed(null);
+        if (!saved) throw new BusinessException("保存失败", 500);
+        return Result.succeed(null);
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "更新月度绩效")
-    public Result<?> update(@PathVariable Long id, @RequestBody MonthlyPerformance config) {
+    public Result<Void> update(@PathVariable Long id, @RequestBody MonthlyPerformance config) {
         boolean unique = monthlyPerformanceService.checkUnique(config.getEmployeeId(), config.getMonth(), id);
-        if (!unique) return Result.failed("同一员工、同一月份已存在绩效记录");
+        if (!unique) throw new BusinessException("同一员工、同一月份已存在绩效记录", 400);
         config.setId(id);
         boolean updated = monthlyPerformanceService.updateById(config);
-        return updated ? Result.succeed(null) : Result.failed(null);
+        if (!updated) throw new BusinessException("更新失败", 500);
+        return Result.succeed(null);
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除月度绩效")
-    public Result<?> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         boolean removed = monthlyPerformanceService.removeById(id);
-        return removed ? Result.succeed(null) : Result.failed(null);
+        if (!removed) throw new BusinessException("删除失败", 500);
+        return Result.succeed(null);
     }
 
     @GetMapping("/page")
@@ -63,16 +75,18 @@ public class MonthlyPerformanceController {
             @RequestParam(required = false) String employeeName,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) String month,
-            @RequestParam(required = false) Integer status) {
+            @RequestParam(required = false) Integer status,
+            @RequestParam(required = false, defaultValue = "false") Boolean includeSubDept) {
         Page<MonthlyPerformance> page = new Page<>(pageNum, pageSize);
-        IPage<MonthlyPerformance> result = monthlyPerformanceService.pageQuery(page, employeeId, employeeName, departmentId, month, status);
+        IPage<MonthlyPerformance> result = monthlyPerformanceService.pageQuery(page, employeeId, employeeName, departmentId, month, status, includeSubDept);
         return PageResultUtil.buildPageResult(result);
     }
 
     @GetMapping("/history/{employeeId}")
     @Operation(summary = "查询员工历史绩效")
     public Result<List<MonthlyPerformance>> history(@PathVariable Long employeeId) {
-        return Result.succeed(monthlyPerformanceService.getHistoryByEmployee(employeeId));
+        List<MonthlyPerformance> list = monthlyPerformanceService.getHistoryByEmployee(employeeId);
+        return Result.succeed(list);
     }
 
     @PostMapping("/check-unique")
@@ -89,5 +103,12 @@ public class MonthlyPerformanceController {
     public Result<?> restore(@PathVariable Long id) {
         boolean ok = monthlyPerformanceService.restore(id);
         return ok ? Result.succeed(null) : Result.failed(null);
+    }
+
+    @PostMapping("/batch")
+    @Operation(summary = "批量录入月度绩效")
+    public Result<Void> batchAdd(@RequestBody List<MonthlyPerformance> list) {
+        monthlyPerformanceService.batchSave(list);
+        return Result.succeed(null);
     }
 } 

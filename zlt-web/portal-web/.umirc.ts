@@ -141,6 +141,11 @@ export default defineConfig({
               name: '配置中心',
               component: '@/pages/SaleopsOptimizer/ConfigCenter',
             },
+            {
+              path: '/saleops-optimizer/monthly-performance',
+              name: '月度绩效管理',
+              component: '@/pages/SaleopsOptimizer/MonthlyPerformance',
+            },
             // 其他子页面可在此补充
           ],
         },

@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.central.common.model.Result;
 import com.central.common.model.PageResult;
-import com.central.common.utils.PageResultUtil;
+import com.central.soo.utils.PageResultUtil;
 import com.central.soo.mapper.RegionalSalaryCoefficientMapper;
 import com.central.soo.model.dto.RegionalSalaryCoefficientQueryDTO;
 import com.central.soo.model.entity.RegionalSalaryCoefficient;

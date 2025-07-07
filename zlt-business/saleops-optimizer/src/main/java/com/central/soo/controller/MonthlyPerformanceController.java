@@ -3,16 +3,24 @@ package com.central.soo.controller;
 import com.central.common.model.Result;
 import com.central.soo.model.MonthlyPerformance;
 import com.central.soo.service.IMonthlyPerformanceService;
+import com.central.soo.utils.PageResultUtil;
+import com.central.common.model.PageResult;
+import com.central.common.exception.BusinessException;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.core.io.ByteArrayResource;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import java.util.List;
-import com.central.common.model.PageResult;
-import com.central.soo.utils.PageResultUtil;
-import com.central.common.exception.BusinessException;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/soo/monthly-performance")
@@ -110,5 +118,61 @@ public class MonthlyPerformanceController {
     public Result<Void> batchAdd(@RequestBody List<MonthlyPerformance> list) {
         monthlyPerformanceService.batchSave(list);
         return Result.succeed(null);
+    }
+
+    @PostMapping("/import/template")
+    @Operation(summary = "下载导入模板")
+    public ResponseEntity<ByteArrayResource> downloadTemplate() {
+        try {
+            byte[] templateBytes = monthlyPerformanceService.generateImportTemplate();
+            
+            ByteArrayResource resource = new ByteArrayResource(templateBytes);
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=monthly_performance_template.xlsx");
+            headers.add(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM_VALUE);
+            
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(templateBytes.length)
+                    .body(resource);
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @PostMapping("/import")
+    @Operation(summary = "导入月度绩效数据")
+    public Result<Map<String, Object>> importData(@RequestParam("file") MultipartFile file) {
+        try {
+            if (file.isEmpty()) {
+                return Result.failed("文件不能为空");
+            }
+            
+            String fileName = file.getOriginalFilename();
+            if (fileName == null || (!fileName.toLowerCase().endsWith(".xlsx") && !fileName.toLowerCase().endsWith(".xls"))) {
+                return Result.failed("请上传Excel文件(.xlsx或.xls格式)");
+            }
+            
+            Map<String, Object> result = monthlyPerformanceService.importExcelData(file);
+            
+            if ((Boolean) result.get("success")) {
+                return Result.succeed(result, "导入成功");
+            } else {
+                return Result.failed(result, (String) result.get("message"));
+            }
+        } catch (Exception e) {
+            return Result.failed("导入失败：" + e.getMessage());
+        }
+    }
+
+    @GetMapping("/import/status")
+    @Operation(summary = "查询导入结果")
+    public Result<Map<String, String>> getImportStatus() {
+        // 这里可以实现异步导入状态查询，目前简化为同步处理
+        Map<String, String> status = new HashMap<>();
+        status.put("status", "completed");
+        status.put("message", "导入已完成");
+        return Result.succeed(status);
     }
 } 

@@ -1,10 +1,52 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Table, Button, Modal, Form, Input, InputNumber, Select, DatePicker, message, Space, Popconfirm, Checkbox, TreeSelect } from 'antd';
-import { getMonthlyPerformanceList, addMonthlyPerformance, updateMonthlyPerformance, deleteMonthlyPerformance, batchSaveMonthlyPerformance, getDepartmentTree, getEmployeesByDepartment, getEmployeePage } from '@/services/soo';
-import { MonthlyPerformance } from '@/types/monthlyPerformance';
+import {
+  Table,
+  Button,
+  Modal,
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  Space,
+  message,
+  Popconfirm,
+  InputNumber,
+  TreeSelect,
+  Checkbox,
+  Upload,
+  Progress,
+  Alert,
+  Divider,
+  Typography,
+  Row,
+  Col,
+  Tag,
+} from 'antd';
+import {
+  PlusOutlined,
+  UploadOutlined,
+  DownloadOutlined,
+  ExclamationCircleOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+} from '@ant-design/icons';
+import {
+  getMonthlyPerformanceList,
+  addMonthlyPerformance,
+  updateMonthlyPerformance,
+  deleteMonthlyPerformance,
+  batchSaveMonthlyPerformance,
+  downloadImportTemplate,
+  importMonthlyPerformance,
+  getDepartmentTree,
+  getEmployeesByDepartment,
+  getEmployeePage,
+} from '@/services/soo';
+import type { MonthlyPerformance } from '@/types/monthlyPerformance';
 import dayjs from 'dayjs';
 
 const { Option } = Select;
+const { Text, Title } = Typography;
 
 const defaultPageSize = 10;
 
@@ -33,9 +75,9 @@ const MonthlyPerformancePage: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<MonthlyPerformance | null>(null);
   const [form] = Form.useForm();
-  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<any[]>([]);
   const [batchModalOpen, setBatchModalOpen] = useState(false);
-  const [batchList, setBatchList] = useState<MonthlyPerformance[]>([]);
+  const [batchList, setBatchList] = useState<any[]>([]);
 
   // 筛选条件
   const [searchMonth, setSearchMonth] = useState<string | undefined>(undefined);
@@ -49,6 +91,14 @@ const MonthlyPerformancePage: React.FC = () => {
   // 员工列表
   const [employees, setEmployees] = useState<EmployeeInfo[]>([]);
   const [employeeLoading, setEmployeeLoading] = useState(false);
+
+  // 批量导入相关状态
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [importResult, setImportResult] = useState<any>(null);
+  const [errorData, setErrorData] = useState<any[]>([]);
+  const [showErrors, setShowErrors] = useState(false);
 
   // 转换部门树形数据为TreeSelect格式
   const transformDepartmentTree = (departments: any[]): any[] => {
@@ -66,12 +116,19 @@ const MonthlyPerformancePage: React.FC = () => {
       console.log('开始加载部门树...');
       const response = await getDepartmentTree();
       console.log('部门树加载响应:', response);
-      if (response.success && response.data) {
-        setDepartmentTree(response.data);
-        console.log('部门树设置成功:', response.data);
+      
+      // 适配后端数据格式：检查 resp_code 或 code 字段，或者直接有data
+      const res = response as any;
+      if ((res.resp_code === 0 || res.code === 0 || res.success) && res.data) {
+        setDepartmentTree(res.data);
+        console.log('部门树设置成功:', res.data);
+      } else if (Array.isArray(response)) {
+        // 如果直接返回数组
+        setDepartmentTree(response);
+        console.log('部门树设置成功(数组格式):', response);
       } else {
-        console.warn('部门树加载失败:', response.message);
-        message.warning('获取部门列表失败：' + (response.message || '未知错误'));
+        console.warn('部门树加载失败:', res.message || res.resp_msg);
+        message.warning('获取部门列表失败：' + (res.message || res.resp_msg || '未知错误'));
       }
     } catch (error) {
       console.error('获取部门树失败:', error);
@@ -90,15 +147,18 @@ const MonthlyPerformancePage: React.FC = () => {
         status: 1, // 在职员工
       });
       console.log('员工列表加载响应:', response);
-      if (response.success && response.data) {
+      
+      // 适配后端数据格式：检查 resp_code 或 code 字段
+      const res = response as any;
+      if ((res.resp_code === 0 || res.code === 0 || res.success) && res.data) {
         // 兼容不同的响应结构
         let employeeList = [];
-        if (response.data.list) {
-          employeeList = response.data.list;
-        } else if (response.data.data) {
-          employeeList = response.data.data;
-        } else if (Array.isArray(response.data)) {
-          employeeList = response.data;
+        if (res.data.list) {
+          employeeList = res.data.list;
+        } else if (res.data.data) {
+          employeeList = res.data.data;
+        } else if (Array.isArray(res.data)) {
+          employeeList = res.data;
         }
         
         console.log('员工原始列表:', employeeList);
@@ -115,8 +175,8 @@ const MonthlyPerformancePage: React.FC = () => {
         setEmployees(formattedEmployees);
         console.log('员工列表设置成功:', formattedEmployees);
       } else {
-        console.warn('员工列表加载失败:', response.message);
-        message.warning('获取员工列表失败：' + (response.message || '未知错误'));
+        console.warn('员工列表加载失败:', res.message || res.resp_msg);
+        message.warning('获取员工列表失败：' + (res.message || res.resp_msg || '未知错误'));
       }
     } catch (error) {
       console.error('获取员工列表失败:', error);
@@ -163,13 +223,23 @@ const MonthlyPerformancePage: React.FC = () => {
       });
       
       console.log('绩效数据加载响应:', res);
-      if (res && res.success) {
-        const list = res.data.list || res.data.data || [];
+      
+      // 适配后端数据格式：检查 resp_code 或 code 字段
+      if (res && (res.resp_code === 0 || res.code === 0)) {
+        // 后端返回的数据直接在 data 数组中
+        const list = res.data || [];
+        const total = res.count || 0;
+        
         setData(list);
-        setPagination({ current: page, pageSize, total: res.data.total || 0 });
-        console.log('绩效数据设置成功:', list);
+        setPagination({ 
+          current: page, 
+          pageSize, 
+          total: total 
+        });
+        console.log('绩效数据设置成功:', { list, total });
       } else {
-        message.error(res?.message || '获取数据失败');
+        console.error('数据格式异常:', res);
+        message.error(res?.resp_msg || res?.message || '获取数据失败');
       }
     } catch (e: any) {
       console.error('获取绩效数据失败:', e);
@@ -287,7 +357,24 @@ const MonthlyPerformancePage: React.FC = () => {
   const handleBatchAdd = () => {
     setBatchList([]);
     setBatchModalOpen(true);
+    // 重置批量导入相关状态
+    setImportResult(null);
+    setErrorData([]);
+    setShowErrors(false);
+    setImportProgress(0);
+    setUploading(false);
   };
+
+  const handleCloseBatchModal = () => {
+    setBatchModalOpen(false);
+    // 重置相关状态
+    setImportResult(null);
+    setErrorData([]);
+    setShowErrors(false);
+    setImportProgress(0);
+    setUploading(false);
+  };
+  
   const handleBatchSave = async () => {
     try {
       await batchSaveMonthlyPerformance(batchList);
@@ -297,6 +384,159 @@ const MonthlyPerformancePage: React.FC = () => {
     } catch (e: any) {
       message.error(e.message || '批量保存失败');
     }
+  };
+
+  // 批量导入方法
+  const handleImportClick = () => {
+    setImportModalOpen(true);
+    setImportResult(null);
+    setErrorData([]);
+    setShowErrors(false);
+    setImportProgress(0);
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      console.log('开始下载模板...');
+      const response = await downloadImportTemplate();
+      console.log('模板下载响应:', response);
+      
+      // 检查响应是否为blob
+      let blob;
+      if (response instanceof Blob) {
+        blob = response;
+      } else if (response instanceof ArrayBuffer) {
+        blob = new Blob([response], { 
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+        });
+      } else {
+        // 如果响应是其他格式，尝试转换
+        blob = new Blob([response], { 
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+        });
+      }
+      
+      console.log('创建的blob:', blob, '大小:', blob.size);
+      
+      // 检查blob是否有效
+      if (blob.size === 0) {
+        throw new Error('下载的文件为空');
+      }
+      
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = '月度绩效导入模板.xlsx';
+      
+      // 确保链接被添加到DOM中
+      document.body.appendChild(link);
+      
+      console.log('触发下载...');
+      link.click();
+      
+      // 清理
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+      
+      message.success('模板下载成功');
+    } catch (error: any) {
+      console.error('模板下载失败:', error);
+      message.error(`模板下载失败: ${error.message || '未知错误'}`);
+    }
+  };
+
+  const handleImportUpload = async (file: File) => {
+    setUploading(true);
+    setImportProgress(10);
+    
+    try {
+      console.log('开始上传文件:', file.name, '大小:', file.size);
+      
+      // 检查认证信息
+      const token = localStorage.getItem('access_token');
+      const tenantId = localStorage.getItem('tenant_id');
+      console.log('认证信息检查:', { 
+        hasToken: !!token, 
+        tokenLength: token?.length,
+        tenantId 
+      });
+      
+      // 模拟上传进度
+      const progressTimer = setInterval(() => {
+        setImportProgress(prev => {
+          if (prev < 80) return prev + 10;
+          return prev;
+        });
+      }, 200);
+
+      const result = await importMonthlyPerformance(file);
+      
+      clearInterval(progressTimer);
+      setImportProgress(100);
+      
+      console.log('导入原始结果:', result);
+      
+      // 解析后端返回的数据结构
+      let importData;
+      if (result.datas) {
+        // 如果有 datas 字段，使用 datas 中的数据
+        importData = result.datas;
+      } else {
+        // 否则直接使用 result
+        importData = result;
+      }
+      
+      console.log('解析后的导入数据:', importData);
+      
+      // 检查导入是否成功
+      if (importData.success || (result.resp_code === 0)) {
+        setImportResult({
+          success: true,
+          successCount: importData.successCount || 0,
+          message: '导入成功'
+        });
+        message.success(`导入成功！共导入 ${importData.successCount || 0} 条数据`);
+        loadData(pagination.current, pagination.pageSize);
+      } else {
+        // 导入失败，处理错误数据
+        const errorData = importData.errorData || [];
+        const errorCount = importData.errorCount || errorData.length;
+        
+        console.log('错误数据:', errorData);
+        
+        setImportResult({
+          success: false,
+          message: importData.message || result.resp_msg || '导入失败',
+          errorCount: errorCount,
+          errorData: errorData
+        });
+        
+        setErrorData(errorData);
+        setShowErrors(true);
+        
+        message.error(`导入失败！共 ${errorCount} 条数据存在错误`);
+      }
+    } catch (error: any) {
+      console.error('导入错误:', error);
+      message.error(error.message || '导入失败');
+      setImportResult({
+        success: false,
+        message: error.message || '导入失败'
+      });
+    } finally {
+      setUploading(false);
+    }
+    
+    return false; // 阻止默认上传行为
+  };
+
+  const handleCloseImportModal = () => {
+    setImportModalOpen(false);
+    setImportResult(null);
+    setErrorData([]);
+    setShowErrors(false);
+    setImportProgress(0);
+    setUploading(false);
   };
 
   const columns = [
@@ -354,6 +594,7 @@ const MonthlyPerformancePage: React.FC = () => {
         </Checkbox>
         <Button type="primary" onClick={handleAdd}>新增</Button>
         <Button onClick={handleBatchAdd}>批量录入</Button>
+        <Button icon={<UploadOutlined />} onClick={handleImportClick}>批量导入</Button>
       </Space>
       <Table
         rowKey="id"
@@ -458,11 +699,314 @@ const MonthlyPerformancePage: React.FC = () => {
       <Modal
         open={batchModalOpen}
         title="批量录入绩效"
-        onCancel={() => setBatchModalOpen(false)}
-        onOk={handleBatchSave}
+        onCancel={handleCloseBatchModal}
+        footer={[
+          <Button key="cancel" onClick={handleCloseBatchModal}>
+            取消
+          </Button>,
+        ]}
+        width={700}
         destroyOnClose
       >
-        <p>请在此处实现批量录入表单（可用Excel导入或多行录入，示例略）</p>
+        <div>
+          {/* 上半部分：模板下载 */}
+          <div style={{ marginBottom: 24 }}>
+            <Alert
+              message="操作说明"
+              description="请先下载模板，按模板格式填写数据后上传"
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+            
+            <Button 
+              icon={<DownloadOutlined />} 
+              onClick={handleDownloadTemplate}
+              type="primary"
+              size="large"
+              block
+            >
+              下载Excel模板
+            </Button>
+          </div>
+
+          <Divider>文件上传</Divider>
+
+          {/* 下半部分：文件上传 */}
+          <div>
+            <Upload.Dragger
+              name="file"
+              multiple={false}
+              accept=".xlsx,.xls"
+              beforeUpload={handleImportUpload}
+              disabled={uploading}
+              showUploadList={false}
+            >
+              <p className="ant-upload-drag-icon">
+                <UploadOutlined style={{ fontSize: 48, color: uploading ? '#ccc' : '#1890ff' }} />
+              </p>
+              <p className="ant-upload-text">
+                {uploading ? '正在上传...' : '拖拽文件到这里 或 点击上传'}
+              </p>
+              <p className="ant-upload-hint">
+                支持.xlsx和.xls格式的Excel文件，最大10MB
+              </p>
+            </Upload.Dragger>
+
+            {/* 上传进度 */}
+            {uploading && (
+              <div style={{ marginTop: 16 }}>
+                <Progress percent={importProgress} status="active" />
+                <Text type="secondary">正在处理上传文件...</Text>
+              </div>
+            )}
+
+            {/* 导入结果 */}
+            {importResult && (
+              <div style={{ marginTop: 16 }}>
+                {importResult.success ? (
+                  <Alert
+                    message="导入成功"
+                    description={`成功导入 ${importResult.successCount || 0} 条数据`}
+                    type="success"
+                    showIcon
+                    icon={<CheckCircleOutlined />}
+                    action={
+                      <Button 
+                        type="primary" 
+                        size="small"
+                        onClick={() => {
+                          handleCloseBatchModal();
+                          loadData(pagination.current, pagination.pageSize);
+                        }}
+                      >
+                        确认
+                      </Button>
+                    }
+                  />
+                ) : (
+                  <Alert
+                    message="导入失败"
+                    description={importResult.message}
+                    type="error"
+                    showIcon
+                    icon={<CloseCircleOutlined />}
+                    action={
+                      errorData.length > 0 && (
+                        <Button 
+                          size="small" 
+                          onClick={() => setShowErrors(!showErrors)}
+                        >
+                          {showErrors ? '隐藏' : '查看'}错误详情
+                        </Button>
+                      )
+                    }
+                  />
+                )}
+              </div>
+            )}
+
+            {/* 错误详情 */}
+            {showErrors && errorData.length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                <Title level={5}>错误详情</Title>
+                <div style={{ maxHeight: 200, overflow: 'auto', border: '1px solid #f0f0f0', padding: 8, borderRadius: 4 }}>
+                  {errorData.map((error, index) => (
+                    <div key={index} style={{ marginBottom: 12, padding: 12, backgroundColor: '#fff2f0', borderRadius: 4, border: '1px solid #ffccc7' }}>
+                      <div style={{ marginBottom: 8 }}>
+                        <Text strong style={{ color: '#cf1322' }}>第 {error.rowNum} 行数据错误</Text>
+                      </div>
+                      
+                      {/* 显示数据信息 */}
+                      <div style={{ marginBottom: 8, padding: 8, backgroundColor: '#fafafa', borderRadius: 4 }}>
+                        <Text style={{ fontSize: '12px', color: '#666' }}>
+                          月份: {error.month || '未填写'} | 
+                          员工: {error.employeeName || '未知'} | 
+                          部门: {error.departmentName || '未知'} | 
+                          绩效得分: {error.performanceScore || '未填写'}
+                        </Text>
+                      </div>
+                      
+                      {/* 显示具体错误列表 */}
+                      <div>
+                        <Text strong style={{ fontSize: '12px', color: '#8c8c8c' }}>错误详情：</Text>
+                        {error.errors && error.errors.length > 0 ? (
+                          <ul style={{ margin: '4px 0 0 0', paddingLeft: '16px' }}>
+                            {error.errors.map((err: string, errIndex: number) => (
+                              <li key={errIndex} style={{ color: '#cf1322', fontSize: '12px', marginBottom: '2px' }}>
+                                {err}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <div style={{ color: '#cf1322', fontSize: '12px', marginTop: '4px' }}>
+                            {error.errorMessage}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </Modal>
+      
+      {/* 批量导入模态框 */}
+      <Modal
+        open={importModalOpen}
+        title="批量导入月度绩效"
+        onCancel={handleCloseImportModal}
+        footer={[
+          <Button key="cancel" onClick={handleCloseImportModal}>
+            关闭
+          </Button>,
+        ]}
+        width={800}
+        destroyOnClose
+      >
+        <div>
+          {/* 操作说明 */}
+          <Alert
+            message="导入说明"
+            description={
+              <div>
+                <p>1. 请先下载导入模板，按模板格式填写数据</p>
+                <p>2. 支持.xlsx和.xls格式的Excel文件</p>
+                <p>3. 带*号的字段为必填项</p>
+                <p>4. 月份格式：YYYY-MM（如：2024-01）</p>
+                <p>5. 绩效得分范围：0-100</p>
+                <p>6. 毛利率范围：0-1（如：0.2表示20%）</p>
+                <p>7. 状态：1表示有效，0表示无效</p>
+              </div>
+            }
+            type="info"
+            showIcon
+            style={{ marginBottom: 16 }}
+          />
+
+          {/* 模板下载 */}
+          <Row gutter={16} style={{ marginBottom: 16 }}>
+            <Col span={12}>
+              <Button 
+                icon={<DownloadOutlined />} 
+                onClick={handleDownloadTemplate}
+                type="dashed"
+                block
+              >
+                下载导入模板
+              </Button>
+            </Col>
+          </Row>
+
+          <Divider>文件上传</Divider>
+
+          {/* 文件上传 */}
+          <Upload.Dragger
+            name="file"
+            multiple={false}
+            accept=".xlsx,.xls"
+            beforeUpload={handleImportUpload}
+            disabled={uploading}
+            showUploadList={false}
+          >
+            <p className="ant-upload-drag-icon">
+              <UploadOutlined style={{ fontSize: 48, color: uploading ? '#ccc' : '#1890ff' }} />
+            </p>
+            <p className="ant-upload-text">
+              {uploading ? '正在上传...' : '点击或拖拽文件到此区域上传'}
+            </p>
+            <p className="ant-upload-hint">
+              支持.xlsx和.xls格式的Excel文件
+            </p>
+          </Upload.Dragger>
+
+          {/* 上传进度 */}
+          {uploading && (
+            <div style={{ marginTop: 16 }}>
+              <Progress percent={importProgress} status="active" />
+              <Text type="secondary">正在处理上传文件...</Text>
+            </div>
+          )}
+
+          {/* 导入结果 */}
+          {importResult && (
+            <div style={{ marginTop: 16 }}>
+              {importResult.success ? (
+                <Alert
+                  message="导入成功"
+                  description={`成功导入 ${importResult.successCount || 0} 条数据`}
+                  type="success"
+                  showIcon
+                  icon={<CheckCircleOutlined />}
+                />
+              ) : (
+                <Alert
+                  message="导入失败"
+                  description={importResult.message}
+                  type="error"
+                  showIcon
+                  icon={<CloseCircleOutlined />}
+                  action={
+                    errorData.length > 0 && (
+                      <Button 
+                        size="small" 
+                        onClick={() => setShowErrors(!showErrors)}
+                      >
+                        {showErrors ? '隐藏' : '查看'}错误详情
+                      </Button>
+                    )
+                  }
+                />
+              )}
+            </div>
+          )}
+
+          {/* 错误详情 */}
+          {showErrors && errorData.length > 0 && (
+            <div style={{ marginTop: 16 }}>
+              <Title level={5}>错误详情</Title>
+              <div style={{ maxHeight: 200, overflow: 'auto', border: '1px solid #f0f0f0', padding: 8, borderRadius: 4 }}>
+                {errorData.map((error, index) => (
+                  <div key={index} style={{ marginBottom: 12, padding: 12, backgroundColor: '#fff2f0', borderRadius: 4, border: '1px solid #ffccc7' }}>
+                    <div style={{ marginBottom: 8 }}>
+                      <Text strong style={{ color: '#cf1322' }}>第 {error.rowNum} 行数据错误</Text>
+                    </div>
+                    
+                    {/* 显示数据信息 */}
+                    <div style={{ marginBottom: 8, padding: 8, backgroundColor: '#fafafa', borderRadius: 4 }}>
+                      <Text style={{ fontSize: '12px', color: '#666' }}>
+                        月份: {error.month || '未填写'} | 
+                        员工: {error.employeeName || '未知'} | 
+                        部门: {error.departmentName || '未知'} | 
+                        绩效得分: {error.performanceScore || '未填写'}
+                      </Text>
+                    </div>
+                    
+                    {/* 显示具体错误列表 */}
+                    <div>
+                      <Text strong style={{ fontSize: '12px', color: '#8c8c8c' }}>错误详情：</Text>
+                      {error.errors && error.errors.length > 0 ? (
+                        <ul style={{ margin: '4px 0 0 0', paddingLeft: '16px' }}>
+                          {error.errors.map((err: string, errIndex: number) => (
+                            <li key={errIndex} style={{ color: '#cf1322', fontSize: '12px', marginBottom: '2px' }}>
+                              {err}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <div style={{ color: '#cf1322', fontSize: '12px', marginTop: '4px' }}>
+                          {error.errorMessage}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
       </Modal>
     </div>
   );

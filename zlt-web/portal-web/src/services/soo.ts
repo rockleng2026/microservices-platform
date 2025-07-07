@@ -60,50 +60,34 @@ export const deleteDepartmentBonus = (id: string) => {
 // ==================== 月度绩效管理 ====================
 
 // 分页查询
-export const getMonthlyPerformanceList = (params: any) => {
+export const getMonthlyPerformanceList = (params?: any) => {
   return request('/api-soo/api/soo/monthly-performance/page', {
     method: 'GET',
     params,
-  }).then((response: any) => {
-    console.log('月度绩效分页查询响应:', response);
-    // 新老结构兼容：data为数组，count为总数
-    if (Array.isArray(response.data) && typeof response.count === 'number') {
-      return {
-        success: true,
-        data: {
-          list: response.data,
-          total: response.count,
-        },
-      };
-    }
-    // 兼容原有结构
-    return handleResponse(response);
   });
 };
 
 // 新增
 export const addMonthlyPerformance = (data: any) => {
-  console.log('新增月度绩效请求数据:', data);
   return request('/api-soo/api/soo/monthly-performance', {
     method: 'POST',
     data,
-  }).then(handleResponse);
+  });
 };
 
 // 编辑
 export const updateMonthlyPerformance = (id: string, data: any) => {
-  console.log('更新月度绩效请求数据:', data);
   return request(`/api-soo/api/soo/monthly-performance/${id}`, {
     method: 'PUT',
     data,
-  }).then(handleResponse);
+  });
 };
 
 // 删除
 export const deleteMonthlyPerformance = (id: string) => {
   return request(`/api-soo/api/soo/monthly-performance/${id}`, {
     method: 'DELETE',
-  }).then(handleResponse);
+  });
 };
 
 // 批量保存
@@ -111,7 +95,7 @@ export const batchSaveMonthlyPerformance = (data: any[]) => {
   return request('/api-soo/api/soo/monthly-performance/batch', {
     method: 'POST',
     data,
-  }).then(handleResponse);
+  });
 };
 
 // 查询单条
@@ -126,7 +110,31 @@ export const getMonthlyPerformanceHistory = (employeeId: string) => {
   return request(`/api-soo/api/soo/monthly-performance/history/${employeeId}`, {
     method: 'GET',
   }).then(handleResponse);
-}; 
+};
+
+// 批量导入相关API
+export const downloadImportTemplate = () => {
+  return request('/api-soo/api/soo/monthly-performance/import/template', {
+    method: 'POST',
+    responseType: 'blob',
+  });
+};
+
+export const importMonthlyPerformance = (file: File) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  
+  return request('/api-soo/api/soo/monthly-performance/import', {
+    method: 'POST',
+    data: formData,
+  });
+};
+
+export const getImportStatus = () => {
+  return request('/api-soo/api/soo/monthly-performance/import/status', {
+    method: 'GET',
+  });
+};
 
 // ==================== 组织架构API ====================
 

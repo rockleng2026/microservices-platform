@@ -81,8 +81,14 @@ public class SalaryCalculationContext {
         private Long employeeId;
         private BigDecimal baseSalary;
         private String region;
+        /**
+         * 是否参与销售提成
+         */
         private Boolean isSalesIncentive;
         private BigDecimal salesIncentiveRatio;
+        /**
+         * 是否参与团队提成
+         */
         private Boolean isTeamIncentive;
         private BigDecimal teamIncentiveRatio;
         private Boolean isDepartmentBonus;

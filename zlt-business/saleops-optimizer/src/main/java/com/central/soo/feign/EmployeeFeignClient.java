@@ -31,13 +31,12 @@ public interface EmployeeFeignClient {
      */
     @GetMapping("/api/organization/employee/page")
     Result<PageResult<Map<String, Object>>> getEmployeePage(
-            @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
-            @RequestParam(value = "pageSize", defaultValue = "20") Integer pageSize,
+            @RequestParam(value = "page", defaultValue = "1") Integer pageNum,
+            @RequestParam(value = "size", defaultValue = "20") Integer pageSize,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "empNo", required = false) String empNo,
             @RequestParam(value = "departmentId", required = false) Long departmentId,
             @RequestParam(value = "status", required = false) Integer status);
-
     /**
      * 根据部门ID查询员工列表
      *

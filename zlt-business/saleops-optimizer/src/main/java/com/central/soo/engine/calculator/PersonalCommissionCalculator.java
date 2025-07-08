@@ -30,9 +30,9 @@ public class PersonalCommissionCalculator implements SalaryCalculator {
             return BigDecimal.ZERO;
         }
 
-        if (context.getPerformance() == null || 
-            context.getPerformance().getPersonalProjectRevenue() == null ||
-            context.getPerformance().getPersonalProjectMargin() == null) {
+        if (context.getPerformance() == null ||
+                context.getPerformance().getPersonalProjectRevenue() == null ||
+                context.getPerformance().getPersonalProjectMargin() == null) {
             return BigDecimal.ZERO;
         }
 
@@ -55,8 +55,13 @@ public class PersonalCommissionCalculator implements SalaryCalculator {
                 .multiply(salesIncentiveRatio)
                 .setScale(2, RoundingMode.HALF_UP);
 
+        // 参考公式 IF(员工基础信息表.是否参与销售提成=1, (月度绩效与提成输入表.个人项目营业额 * 月度绩效与提成输入表.个人项目毛利率 * 0.5 * 0.7 * 0.2 * (月度绩效与提成输入表.绩效得分/100)) - (AdjustedBaseSalary + PerformancePay), 0)
+        // 这里还要减去(基础工资+绩效工资)(AdjustedBaseSalary + PerformancePay)
+        BigDecimal difference = personalCommission.subtract(payrollResult.getAdjustedBaseSalary().add(payrollResult.getPerformancePay()));
+        personalCommission = difference.compareTo(BigDecimal.ZERO) > 0 ? difference : BigDecimal.ZERO;
+
         log.debug("个人项目提成计算 - 员工ID: {}, 项目毛利润: {}, 绩效系数: {}, 提成比例: {}, 个人提成: {}",
-                context.getEmployee().getId(), personalProjectProfit, performanceFactor, 
+                context.getEmployee().getId(), personalProjectProfit, performanceFactor,
                 salesIncentiveRatio, personalCommission);
 
         return personalCommission;
@@ -64,9 +69,9 @@ public class PersonalCommissionCalculator implements SalaryCalculator {
 
     @Override
     public boolean isApplicable(SalaryCalculationContext context) {
-        return context.getSalaryConfig() != null && 
-               context.getSalaryConfig().getIsSalesIncentive() &&
-               context.getPerformance() != null;
+        return context.getSalaryConfig() != null &&
+                context.getSalaryConfig().getIsSalesIncentive() &&
+                context.getPerformance() != null;
     }
 
     @Override

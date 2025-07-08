@@ -2,6 +2,7 @@ package com.central.soo.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.central.common.context.TenantContextHolder;
+import com.central.common.exception.BusinessException;
 import com.central.common.model.PageResult;
 import com.central.common.model.Result;
 import com.central.common.utils.LoginUserUtils;
@@ -466,7 +467,7 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
             employee.setPositionName((String) empData.get("positionName"));
             
             // 默认地区，可以从员工的扩展信息中获取
-            employee.setRegion("BEIJING"); // 默认值，后续可以从员工配置中读取
+//            employee.setRegion("BEIJING"); // 默认值，后续可以从员工配置中读取
             
             log.debug("转换员工数据成功，员工ID: {}, 姓名: {}, 部门: {}, 岗位: {}", 
                     employee.getEmployeeId(), employee.getEmployeeName(), 
@@ -560,7 +561,6 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
         employeeInfo.setDepartmentName(employee.getDepartmentName());
         employeeInfo.setPositionId(employee.getPositionId());
         employeeInfo.setPositionName(employee.getPositionName());
-        employeeInfo.setRegion(employee.getRegion());
         employeeInfo.setStatus(1);
         context.setEmployee(employeeInfo);
         
@@ -568,9 +568,10 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
             // 1. 获取员工薪酬配置
             SalaryCalculationContext.SalaryConfig salaryConfig = getSalaryConfig(employee.getEmployeeId());
             context.setSalaryConfig(salaryConfig);
+            employeeInfo.setRegion(salaryConfig.getRegion());
             
             // 2. 获取地区系数
-            SalaryCalculationContext.RegionalCoefficient regionalCoefficient = getRegionalCoefficient(employee.getRegion());
+            SalaryCalculationContext.RegionalCoefficient regionalCoefficient = getRegionalCoefficient(salaryConfig.getRegion());
             context.setRegionalCoefficient(regionalCoefficient);
             
             // 3. 获取绩效数据
@@ -582,7 +583,7 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
             context.setJobLevelSalary(jobLevelSalary);
             
             // 5. 获取社保配置
-            SalaryCalculationContext.SocialSecurityConfig socialSecurityConfig = getSocialSecurityConfig(employee.getRegion());
+            SalaryCalculationContext.SocialSecurityConfig socialSecurityConfig = getSocialSecurityConfig(salaryConfig.getRegion(), task.getCalculationMonth());
             context.setSocialSecurityConfig(socialSecurityConfig);
             
             // 6. 获取部门分红配置
@@ -597,8 +598,9 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
             
         } catch (Exception e) {
             log.error("构建薪酬计算上下文失败，员工ID: {}, 错误信息: {}", employee.getEmployeeId(), e.getMessage(), e);
+            throw new BusinessException("构建薪酬计算上下文失败", 1);
             // 设置默认值以确保计算能够继续
-            setDefaultCalculationContext(context, employee);
+            // setDefaultCalculationContext(context, employee);
         }
         
         return context;
@@ -633,7 +635,7 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
                 salaryConfig.setTeamIncentiveRatio(config.getTeamIncentiveRatio());
                 salaryConfig.setIsDepartmentBonus(config.getIsDepartmentBonus() != null && config.getIsDepartmentBonus() == 1);
                 salaryConfig.setStatus(1);
-                
+
                 log.debug("获取员工薪酬配置成功，员工ID: {}, 基础工资: {}", employeeId, config.getBaseSalary());
             } else {
                 // 如果没有配置，设置默认值
@@ -657,10 +659,10 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
         
         try {
             QueryWrapper<RegionalSalaryCoefficient> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("region", region)
+            queryWrapper.eq("region_code", region)
                        .eq("status", 1)
                        .eq("delflag", 0)
-                       .le("effective_date", LocalDate.now())
+                    .le("effective_date", LocalDate.now())
                        .and(wrapper -> wrapper.isNull("expire_date").or().ge("expire_date", LocalDate.now()))
                        .orderByDesc("effective_date")
                        .last("LIMIT 1");
@@ -774,13 +776,13 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
     /**
      * 获取社保配置
      */
-    private SalaryCalculationContext.SocialSecurityConfig getSocialSecurityConfig(String region) {
+    private SalaryCalculationContext.SocialSecurityConfig getSocialSecurityConfig(String region, String month) {
         SalaryCalculationContext.SocialSecurityConfig socialSecurityConfig = new SalaryCalculationContext.SocialSecurityConfig();
         
         try {
             QueryWrapper<SocialSecurityBase> queryWrapper = new QueryWrapper<>();
             queryWrapper.eq("region", region)
-                       .eq("year", LocalDate.now().getYear())
+                       .eq("year", month.substring(0,4))
                        .eq("status", 1)
                        .eq("delflag", 0)
                        .le("effective_date", LocalDate.now())
@@ -876,7 +878,7 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
             // 这里可以根据实际业务需求从盈亏平衡分析表中获取数据
             // 暂时设置模拟数据
             breakevenAnalysis.setPeriod(month);
-            breakevenAnalysis.setDistributableProfit(BigDecimal.valueOf(1000000)); // 100万可分配利润
+            breakevenAnalysis.setDistributableProfit(BigDecimal.valueOf(0)); // 100万可分配利润,展示没有可分配利润，到年底才有分红这一说
             
             log.debug("获取盈亏平衡分析数据成功，月份: {}, 可分配利润: {}", month, breakevenAnalysis.getDistributableProfit());
             
@@ -954,7 +956,7 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
         
         // 设置默认地区系数
         SalaryCalculationContext.RegionalCoefficient regionalCoefficient = new SalaryCalculationContext.RegionalCoefficient();
-        regionalCoefficient.setRegion(employee.getRegion());
+        regionalCoefficient.setRegion(context.getSalaryConfig().getRegion());
         regionalCoefficient.setSalaryCoefficient(BigDecimal.valueOf(1.0));
         regionalCoefficient.setStatus(1);
         context.setRegionalCoefficient(regionalCoefficient);
@@ -973,7 +975,7 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
         
         // 设置默认社保配置
         SalaryCalculationContext.SocialSecurityConfig socialSecurityConfig = new SalaryCalculationContext.SocialSecurityConfig();
-        setDefaultSocialSecurityConfig(socialSecurityConfig, employee.getRegion());
+        setDefaultSocialSecurityConfig(socialSecurityConfig, context.getSalaryConfig().getRegion());
         context.setSocialSecurityConfig(socialSecurityConfig);
         
         // 设置默认部门分红配置
@@ -1013,8 +1015,7 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
         private String departmentName;
         private Long positionId;
         private String positionName;
-        private String region;
-        
+
         // getter setter方法
         public Long getEmployeeId() { return employeeId; }
         public void setEmployeeId(Long employeeId) { this.employeeId = employeeId; }
@@ -1030,8 +1031,6 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
         public void setPositionId(Long positionId) { this.positionId = positionId; }
         public String getPositionName() { return positionName; }
         public void setPositionName(String positionName) { this.positionName = positionName; }
-        public String getRegion() { return region; }
-        public void setRegion(String region) { this.region = region; }
     }
 
     @Override

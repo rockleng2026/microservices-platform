@@ -28,6 +28,7 @@ import java.util.concurrent.CompletableFuture;
 import com.alibaba.ttl.threadpool.TtlExecutors;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 
 /**
  * 薪酬计算服务实现类
@@ -822,7 +823,8 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
                 taskQueryWrapper.like(SalaryCalculationTask::getTaskName, queryDTO.getTaskName())
                                .eq(SalaryCalculationTask::getDelflag, false);
                 
-                List<SalaryCalculationTask> matchingTasks = baseMapper.selectList(taskQueryWrapper);
+                // 使用正确的Mapper来查询任务
+                List<SalaryCalculationTask> matchingTasks = this.list(taskQueryWrapper);
                 if (matchingTasks.isEmpty()) {
                     log.warn("未找到匹配的薪酬计算任务，任务名称: {}", queryDTO.getTaskName());
                     // 返回空结果
@@ -840,6 +842,8 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
                             .map(SalaryCalculationTask::getTaskId)
                             .collect(java.util.stream.Collectors.toList());
                     queryWrapper.in(PayrollResult::getTaskId, taskIds);
+                    log.info("根据任务名称 '{}' 找到 {} 个匹配任务，任务ID: {}", 
+                            queryDTO.getTaskName(), taskIds.size(), taskIds);
                 }
             }
             
@@ -1078,58 +1082,273 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
     @Override
     public Result<String> exportPayrollResults(PayrollExportDTO exportDTO) {
         try {
-            log.info("开始导出工资计算结果，导出条件: taskId={}, taskName={}, month={}", 
-                    exportDTO.getTaskId(), exportDTO.getTaskName(), exportDTO.getMonth());
-            
-            // 构建查询条件来获取需要导出的数据
-            PayrollResultQueryDTO queryDTO = new PayrollResultQueryDTO();
-            queryDTO.setPage(1);
-            queryDTO.setSize(10000); // 设置一个大的数量以获取所有数据
-            queryDTO.setTaskId(exportDTO.getTaskId());
-            queryDTO.setTaskName(exportDTO.getTaskName());
-            queryDTO.setMonth(exportDTO.getMonth());
-            queryDTO.setStartMonth(exportDTO.getStartMonth());
-            queryDTO.setEndMonth(exportDTO.getEndMonth());
-            queryDTO.setDepartmentIds(exportDTO.getDepartmentIds());
-            queryDTO.setEmployeeIds(exportDTO.getEmployeeIds());
-            queryDTO.setEmployeeName(exportDTO.getEmployeeName());
-            queryDTO.setIsFinal(exportDTO.getIsFinal());
-            
-            // 获取要导出的数据
-            PageResult<PayrollResult> pageResult = this.getPayrollResults(queryDTO);
-            List<PayrollResult> dataList = pageResult.getData();
-            
-            if (dataList == null || dataList.isEmpty()) {
-                log.warn("没有找到符合条件的工资数据进行导出");
-                return Result.failed("没有找到符合条件的数据");
+            byte[] excelBytes = generateExcelBytes(exportDTO);
+            if (excelBytes != null && excelBytes.length > 0) {
+                return Result.succeed("导出成功");
+            } else {
+                return Result.failed("导出失败，无数据");
             }
-            
-            log.info("找到 {} 条工资记录需要导出", dataList.size());
-            
-            // 这里应该使用Apache POI来生成真正的Excel文件
-            // 但为了避免复杂的依赖，我们先返回一个模拟的文件路径
-            // 在实际项目中，这里需要：
-            // 1. 创建Excel工作簿
-            // 2. 创建表头
-            // 3. 填充数据
-            // 4. 保存到临时文件
-            // 5. 返回文件路径或直接返回文件流
-            
-            String fileName = generateExportFileName(exportDTO);
-            String filePath = "/temp/exports/" + fileName;
-            
-            // 模拟文件导出过程
-            log.info("开始生成Excel文件: {}", fileName);
-            
-            // 这里应该是真正的Excel生成逻辑
-            // 现在先返回模拟结果
-            
-            log.info("Excel文件生成完成，导出了 {} 条记录", dataList.size());
-            
-            return Result.succeed(filePath);
         } catch (Exception e) {
             log.error("导出工资计算结果失败，错误信息: {}", e.getMessage(), e);
             return Result.failed("导出工资计算结果失败: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public byte[] generateExcelBytes(PayrollExportDTO exportDTO) {
+        try {
+            log.info("开始生成Excel文件，导出参数: {}", exportDTO);
+            
+            // 1. 根据任务名称查询任务
+            List<SalaryCalculationTask> tasks = new ArrayList<>();
+            if (exportDTO.getTaskName() != null && !exportDTO.getTaskName().trim().isEmpty()) {
+                String taskName = exportDTO.getTaskName().trim();
+                log.info("根据任务名称查询: {}", taskName);
+                
+                QueryWrapper<SalaryCalculationTask> taskQueryWrapper = new QueryWrapper<>();
+                taskQueryWrapper.like("task_name", taskName);
+                List<SalaryCalculationTask> matchingTasks = this.list(taskQueryWrapper);
+                
+                log.info("根据任务名称 '{}' 找到 {} 个匹配任务，任务ID: {}", 
+                    taskName, matchingTasks.size(), 
+                    matchingTasks.stream().map(SalaryCalculationTask::getTaskId).toArray());
+                
+                tasks.addAll(matchingTasks);
+            }
+            
+            // 2. 构建查询条件
+            QueryWrapper<PayrollResult> queryWrapper = new QueryWrapper<>();
+            
+            // 添加任务ID条件（如果通过任务名称找到了任务）
+            if (!tasks.isEmpty()) {
+                List<String> taskIds = tasks.stream()
+                    .map(SalaryCalculationTask::getTaskId)
+                    .toList();
+                queryWrapper.in("task_id", taskIds);
+            }
+            
+            // 添加其他查询条件
+            if (exportDTO.getEmployeeIds() != null && !exportDTO.getEmployeeIds().isEmpty()) {
+                queryWrapper.in("employee_id", exportDTO.getEmployeeIds());
+            }
+            
+            if (exportDTO.getDepartmentIds() != null && !exportDTO.getDepartmentIds().isEmpty()) {
+                queryWrapper.in("department_id", exportDTO.getDepartmentIds());
+            }
+            
+            if (exportDTO.getEmployeeName() != null && !exportDTO.getEmployeeName().trim().isEmpty()) {
+                queryWrapper.like("employee_name", exportDTO.getEmployeeName().trim());
+            }
+            
+            if (exportDTO.getMonth() != null && !exportDTO.getMonth().trim().isEmpty()) {
+                queryWrapper.eq("month", exportDTO.getMonth().trim());
+            }
+            
+            if (exportDTO.getStartMonth() != null && !exportDTO.getStartMonth().trim().isEmpty() &&
+                exportDTO.getEndMonth() != null && !exportDTO.getEndMonth().trim().isEmpty()) {
+                queryWrapper.between("month", exportDTO.getStartMonth().trim(), exportDTO.getEndMonth().trim());
+            }
+            
+            if (exportDTO.getIsFinal() != null) {
+                queryWrapper.eq("is_final", exportDTO.getIsFinal());
+            }
+            
+            // 按员工姓名和月份排序
+            queryWrapper.orderByAsc("employee_name", "month");
+            
+            // 3. 查询数据
+            List<PayrollResult> dataList = payrollResultMapper.selectList(queryWrapper);
+            log.info("找到 {} 条工资记录需要导出", dataList.size());
+            
+            if (dataList.isEmpty()) {
+                log.warn("没有找到匹配的工资记录");
+                return null;
+            }
+            
+            // 4. 创建Excel工作簿
+            org.apache.poi.xssf.usermodel.XSSFWorkbook workbook = new org.apache.poi.xssf.usermodel.XSSFWorkbook();
+            org.apache.poi.ss.usermodel.Sheet sheet = workbook.createSheet("工资查询结果");
+            
+            // 5. 创建表头样式
+            org.apache.poi.ss.usermodel.CellStyle headerStyle = workbook.createCellStyle();
+            headerStyle.setFillForegroundColor(org.apache.poi.ss.usermodel.IndexedColors.BLUE.getIndex());
+            headerStyle.setFillPattern(org.apache.poi.ss.usermodel.FillPatternType.SOLID_FOREGROUND);
+            headerStyle.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            headerStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            headerStyle.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            headerStyle.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            
+            org.apache.poi.ss.usermodel.Font headerFont = workbook.createFont();
+            headerFont.setColor(org.apache.poi.ss.usermodel.IndexedColors.WHITE.getIndex());
+            headerFont.setBold(true);
+            headerStyle.setFont(headerFont);
+            
+            // 6. 创建数据样式
+            org.apache.poi.ss.usermodel.CellStyle dataStyle = workbook.createCellStyle();
+            dataStyle.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            dataStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            dataStyle.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            dataStyle.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            
+            // 7. 创建数字格式样式
+            org.apache.poi.ss.usermodel.CellStyle numberStyle = workbook.createCellStyle();
+            numberStyle.setBorderTop(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            numberStyle.setBorderBottom(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            numberStyle.setBorderLeft(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            numberStyle.setBorderRight(org.apache.poi.ss.usermodel.BorderStyle.THIN);
+            numberStyle.setDataFormat(workbook.createDataFormat().getFormat("#,##0.00"));
+            
+            // 8. 创建表头
+            String[] headers = {
+                "员工工号", "员工姓名", "部门名称", "岗位名称", "月份", "区域",
+                "基础工资", "调整后基础工资", "绩效得分", "绩效系数", "绩效工资",
+                "个人提成", "团队提成", "部门分红", "应发工资", 
+                "个人社保合计", "个人所得税", "实发工资", "公司总成本",
+                "是否最终版", "确认时间"
+            };
+            
+            org.apache.poi.ss.usermodel.Row headerRow = sheet.createRow(0);
+            for (int i = 0; i < headers.length; i++) {
+                org.apache.poi.ss.usermodel.Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+                cell.setCellStyle(headerStyle);
+            }
+            
+            // 9. 填充数据
+            for (int i = 0; i < dataList.size(); i++) {
+                PayrollResult result = dataList.get(i);
+                org.apache.poi.ss.usermodel.Row row = sheet.createRow(i + 1);
+                
+                // 员工工号
+                org.apache.poi.ss.usermodel.Cell cell0 = row.createCell(0);
+                cell0.setCellValue(result.getEmployeeNo() != null ? result.getEmployeeNo() : "");
+                cell0.setCellStyle(dataStyle);
+                
+                // 员工姓名
+                org.apache.poi.ss.usermodel.Cell cell1 = row.createCell(1);
+                cell1.setCellValue(result.getEmployeeName() != null ? result.getEmployeeName() : "");
+                cell1.setCellStyle(dataStyle);
+                
+                // 部门名称
+                org.apache.poi.ss.usermodel.Cell cell2 = row.createCell(2);
+                cell2.setCellValue(result.getDepartmentName() != null ? result.getDepartmentName() : "");
+                cell2.setCellStyle(dataStyle);
+                
+                // 岗位名称
+                org.apache.poi.ss.usermodel.Cell cell3 = row.createCell(3);
+                cell3.setCellValue(result.getPositionName() != null ? result.getPositionName() : "");
+                cell3.setCellStyle(dataStyle);
+                
+                // 月份
+                org.apache.poi.ss.usermodel.Cell cell4 = row.createCell(4);
+                cell4.setCellValue(result.getMonth() != null ? result.getMonth() : "");
+                cell4.setCellStyle(dataStyle);
+                
+                // 区域
+                org.apache.poi.ss.usermodel.Cell cell5 = row.createCell(5);
+                cell5.setCellValue(result.getRegion() != null ? result.getRegion() : "");
+                cell5.setCellStyle(dataStyle);
+                
+                // 基础工资
+                org.apache.poi.ss.usermodel.Cell cell6 = row.createCell(6);
+                cell6.setCellValue(result.getBaseSalary() != null ? result.getBaseSalary().doubleValue() : 0.0);
+                cell6.setCellStyle(numberStyle);
+                
+                // 调整后基础工资
+                org.apache.poi.ss.usermodel.Cell cell7 = row.createCell(7);
+                cell7.setCellValue(result.getAdjustedBaseSalary() != null ? result.getAdjustedBaseSalary().doubleValue() : 0.0);
+                cell7.setCellStyle(numberStyle);
+                
+                // 绩效得分
+                org.apache.poi.ss.usermodel.Cell cell8 = row.createCell(8);
+                cell8.setCellValue(result.getPerformanceScore() != null ? result.getPerformanceScore().doubleValue() : 0.0);
+                cell8.setCellStyle(numberStyle);
+                
+                // 绩效系数
+                org.apache.poi.ss.usermodel.Cell cell9 = row.createCell(9);
+                cell9.setCellValue(result.getPerformanceRatio() != null ? result.getPerformanceRatio().doubleValue() : 0.0);
+                cell9.setCellStyle(numberStyle);
+                
+                // 绩效工资
+                org.apache.poi.ss.usermodel.Cell cell10 = row.createCell(10);
+                cell10.setCellValue(result.getPerformancePay() != null ? result.getPerformancePay().doubleValue() : 0.0);
+                cell10.setCellStyle(numberStyle);
+                
+                // 个人提成
+                org.apache.poi.ss.usermodel.Cell cell11 = row.createCell(11);
+                cell11.setCellValue(result.getPersonalCommission() != null ? result.getPersonalCommission().doubleValue() : 0.0);
+                cell11.setCellStyle(numberStyle);
+                
+                // 团队提成
+                org.apache.poi.ss.usermodel.Cell cell12 = row.createCell(12);
+                cell12.setCellValue(result.getTeamCommission() != null ? result.getTeamCommission().doubleValue() : 0.0);
+                cell12.setCellStyle(numberStyle);
+                
+                // 部门分红
+                org.apache.poi.ss.usermodel.Cell cell13 = row.createCell(13);
+                cell13.setCellValue(result.getDepartmentBonus() != null ? result.getDepartmentBonus().doubleValue() : 0.0);
+                cell13.setCellStyle(numberStyle);
+                
+                // 应发工资
+                org.apache.poi.ss.usermodel.Cell cell14 = row.createCell(14);
+                cell14.setCellValue(result.getGrossPay() != null ? result.getGrossPay().doubleValue() : 0.0);
+                cell14.setCellStyle(numberStyle);
+                
+                // 个人社保合计
+                org.apache.poi.ss.usermodel.Cell cell15 = row.createCell(15);
+                cell15.setCellValue(result.getPersonalSocialTotal() != null ? result.getPersonalSocialTotal().doubleValue() : 0.0);
+                cell15.setCellStyle(numberStyle);
+                
+                // 个人所得税
+                org.apache.poi.ss.usermodel.Cell cell16 = row.createCell(16);
+                cell16.setCellValue(result.getPersonalIncomeTax() != null ? result.getPersonalIncomeTax().doubleValue() : 0.0);
+                cell16.setCellStyle(numberStyle);
+                
+                // 实发工资
+                org.apache.poi.ss.usermodel.Cell cell17 = row.createCell(17);
+                cell17.setCellValue(result.getNetPay() != null ? result.getNetPay().doubleValue() : 0.0);
+                cell17.setCellStyle(numberStyle);
+                
+                // 公司总成本
+                org.apache.poi.ss.usermodel.Cell cell18 = row.createCell(18);
+                cell18.setCellValue(result.getTotalCompanyCost() != null ? result.getTotalCompanyCost().doubleValue() : 0.0);
+                cell18.setCellStyle(numberStyle);
+                
+                // 是否最终版
+                org.apache.poi.ss.usermodel.Cell cell19 = row.createCell(19);
+                cell19.setCellValue(result.getIsFinal() != null && result.getIsFinal() ? "是" : "否");
+                cell19.setCellStyle(dataStyle);
+                
+                // 确认时间
+                org.apache.poi.ss.usermodel.Cell cell20 = row.createCell(20);
+                cell20.setCellValue(result.getConfirmedAt() != null ? 
+                    result.getConfirmedAt().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : "");
+                cell20.setCellStyle(dataStyle);
+            }
+            
+            // 自动调整列宽
+            for (int i = 0; i < headers.length; i++) {
+                sheet.autoSizeColumn(i);
+                // 设置最小列宽
+                if (sheet.getColumnWidth(i) < 2000) {
+                    sheet.setColumnWidth(i, 2000);
+                }
+            }
+            
+            // 将工作簿写入字节数组
+            java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream();
+            workbook.write(outputStream);
+            workbook.close();
+            
+            byte[] excelBytes = outputStream.toByteArray();
+            outputStream.close();
+            
+            log.info("Excel文件生成完成，导出了 {} 条记录，文件大小: {} 字节", dataList.size(), excelBytes.length);
+            
+            return excelBytes;
+        } catch (Exception e) {
+            log.error("生成Excel文件失败，错误信息: {}", e.getMessage(), e);
+            return null;
         }
     }
     

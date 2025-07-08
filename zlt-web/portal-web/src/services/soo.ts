@@ -461,20 +461,21 @@ export async function getSalaryDistribution(taskId: string) {
 /**
  * 导出工资计算结果
  */
-export async function exportPayrollResults(params: {
-  taskId?: string;
-  month?: string;
-  departmentIds?: number[];
-  employeeIds?: number[];
-  exportType: 'EXCEL' | 'PDF';
-  includeDetails?: boolean;
-}) {
-  return request('/api-soo/api/soo/salary/export', {
+export const exportPayrollResults = async (params: any) => {
+  console.log('导出API请求参数:', params);
+  
+  const response = await request('/api-soo/api/soo/salary/export', {
     method: 'POST',
     data: params,
-    responseType: 'blob',
+    responseType: 'blob', // 设置为blob类型以接收文件
   });
-}
+  
+  console.log('导出API原始响应:', response);
+  console.log('响应类型:', typeof response);
+  console.log('响应数据:', response.data || response);
+  
+  return response;
+};
 
 // ===========================
 // 盈亏平衡分析 API

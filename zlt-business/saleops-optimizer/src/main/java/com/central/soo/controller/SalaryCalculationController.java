@@ -165,6 +165,7 @@ public class SalaryCalculationController {
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size,
             @RequestParam(required = false) String taskId,
+            @RequestParam(required = false) String taskName,
             @RequestParam(required = false) String month,
             @RequestParam(required = false) String startMonth,
             @RequestParam(required = false) String endMonth,
@@ -183,6 +184,7 @@ public class SalaryCalculationController {
             queryDTO.setPage(page);
             queryDTO.setSize(size);
             queryDTO.setTaskId(taskId);
+            queryDTO.setTaskName(taskName);
             queryDTO.setMonth(month);
             queryDTO.setStartMonth(startMonth);
             queryDTO.setEndMonth(endMonth);
@@ -316,14 +318,58 @@ public class SalaryCalculationController {
 
     @PostMapping("/export")
     @Operation(summary = "导出工资计算结果")
-    public Result<String> exportPayrollResults(@RequestBody PayrollExportDTO exportDTO) {
+    public ResponseEntity<ByteArrayResource> exportPayrollResults(@RequestBody PayrollExportDTO exportDTO) {
         try {
-            log.info("导出工资计算结果: {}", exportDTO.getTaskId());
-            return salaryCalculationService.exportPayrollResults(exportDTO);
+            log.info("开始导出工资计算结果，导出参数: {}", exportDTO);
+            
+            // 调用服务层方法获取Excel字节数组
+            byte[] excelBytes = salaryCalculationService.generateExcelBytes(exportDTO);
+            
+            if (excelBytes == null || excelBytes.length == 0) {
+                return ResponseEntity.badRequest().build();
+            }
+            
+            // 生成文件名
+            String fileName = generateExportFileName(exportDTO);
+            
+            ByteArrayResource resource = new ByteArrayResource(excelBytes);
+            
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + fileName);
+            headers.add(HttpHeaders.CONTENT_TYPE, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            
+            log.info("Excel文件导出成功，文件名: {}, 文件大小: {} 字节", fileName, excelBytes.length);
+            
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .contentLength(excelBytes.length)
+                    .body(resource);
         } catch (Exception e) {
-            log.error("导出工资计算结果失败", e);
-            return Result.failed("导出失败: " + e.getMessage());
+            log.error("导出工资计算结果失败，错误信息: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
         }
+    }
+    
+    /**
+     * 生成导出文件名
+     */
+    private String generateExportFileName(PayrollExportDTO exportDTO) {
+        StringBuilder fileName = new StringBuilder("工资查询结果");
+        
+        if (exportDTO.getTaskName() != null && !exportDTO.getTaskName().trim().isEmpty()) {
+            fileName.append("_").append(exportDTO.getTaskName());
+        }
+        
+        if (exportDTO.getMonth() != null && !exportDTO.getMonth().trim().isEmpty()) {
+            fileName.append("_").append(exportDTO.getMonth());
+        } else if (exportDTO.getStartMonth() != null && exportDTO.getEndMonth() != null) {
+            fileName.append("_").append(exportDTO.getStartMonth()).append("至").append(exportDTO.getEndMonth());
+        }
+        
+        fileName.append("_").append(java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")));
+        fileName.append(".xlsx");
+        
+        return fileName.toString();
     }
 
     // ==================== 盈亏平衡分析 ====================

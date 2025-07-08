@@ -92,7 +92,6 @@ const SalaryQuery: React.FC = () => {
   const [trendData, setTrendData] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
-  const [salaryTasks, setSalaryTasks] = useState<any[]>([]); // 添加薪酬计算任务列表
   
   const [pagination, setPagination] = useState({
     current: 1,
@@ -103,15 +102,31 @@ const SalaryQuery: React.FC = () => {
   useEffect(() => {
     loadDepartments();
     loadEmployees();
-    loadSalaryTasks(); // 加载薪酬计算任务列表
     handleSearch(1);
   }, []);
 
+  // 展开部门树为平级列表（与岗位管理页面保持一致）
+  const flattenDepartments = (departments: any[], level = 0): any[] => {
+    let result: any[] = [];
+    departments.forEach(dept => {
+      const indent = '　'.repeat(level); // 使用全角空格作为缩进
+      result.push({
+        id: dept.id,
+        name: `${indent}${dept.name}`,
+        level: level
+      });
+      if (dept.children && dept.children.length > 0) {
+        result = result.concat(flattenDepartments(dept.children, level + 1));
+      }
+    });
+    return result;
+  };
+
   const loadDepartments = async () => {
     try {
-      const response = await sooApi.getDepartments();
+      const response = await sooApi.getDepartmentOptions();
       if (response.success) {
-        setDepartments(response.data || []);
+        setDepartments(flattenDepartments(response.data || []));
       }
     } catch (error) {
       console.error('加载部门列表失败:', error);
@@ -120,8 +135,13 @@ const SalaryQuery: React.FC = () => {
 
   const loadEmployees = async () => {
     try {
-      const response = await sooApi.getEmployees();
-      if (response.success && Array.isArray(response.data)) {
+      const response = await sooApi.getEmployeeOptions({
+        page: 1,
+        size: 1000, // 获取更多员工数据用于下拉选择
+      });
+      if (response.success && Array.isArray(response.data?.list)) {
+        setEmployees(response.data.list);
+      } else if (response.success && Array.isArray(response.data)) {
         setEmployees(response.data);
       } else {
         setEmployees([]);
@@ -129,24 +149,6 @@ const SalaryQuery: React.FC = () => {
     } catch (error) {
       console.error('加载员工列表失败:', error);
       setEmployees([]); // 确保在出错时也设置为空数组
-    }
-  };
-
-  // 新增：加载薪酬计算任务列表
-  const loadSalaryTasks = async () => {
-    try {
-      const response = await sooApi.getSalaryCalculationTasks({
-        page: 1,
-        size: 100, // 获取更多任务用于下拉选择
-      });
-      if (response.success && Array.isArray(response.data?.list)) {
-        setSalaryTasks(response.data.list);
-      } else {
-        setSalaryTasks([]);
-      }
-    } catch (error) {
-      console.error('加载薪酬计算任务列表失败:', error);
-      setSalaryTasks([]);
     }
   };
 
@@ -283,22 +285,42 @@ const SalaryQuery: React.FC = () => {
         exportParams.isFinal = values.isFinal;
       }
 
+      console.log('导出API请求参数:', exportParams);
       const response = await sooApi.exportPayrollResults(exportParams);
       
-      // 创建下载链接
-      const blob = new Blob([response], { 
-        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `工资查询结果_${dayjs().format('YYYY-MM-DD_HH-mm-ss')}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      console.log('导出API响应结果:', response);
       
-      message.success('导出成功！');
+      // 处理blob响应
+      if (response instanceof Blob) {
+        // 直接是blob类型
+        const fileName = `工资查询结果_${dayjs().format('YYYY-MM-DD_HH-mm-ss')}.xlsx`;
+        const url = window.URL.createObjectURL(response);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        message.success('导出成功！');
+      } else if (response && response.data instanceof Blob) {
+        // response.data是blob类型
+        const fileName = `工资查询结果_${dayjs().format('YYYY-MM-DD_HH-mm-ss')}.xlsx`;
+        const url = window.URL.createObjectURL(response.data);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+        
+        message.success('导出成功！');
+      } else {
+        console.error('导出失败，响应数据格式不正确:', response);
+        throw new Error('导出失败，响应数据格式不正确');
+      }
     } catch (error) {
       console.error('导出失败:', error);
       message.error('导出失败，请重试');
@@ -550,21 +572,11 @@ const SalaryQuery: React.FC = () => {
           onFinish={() => handleSearch(1)}
         >
           <Form.Item name="taskName" label="任务名称">
-            <Select 
+            <Input 
               style={{ width: 200 }} 
-              placeholder="请选择薪酬计算任务" 
+              placeholder="请输入任务名称" 
               allowClear
-              showSearch
-              filterOption={(input, option) =>
-                (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
-              }
-            >
-              {salaryTasks.map(task => (
-                <Option key={task.taskId} value={task.taskName}>
-                  {task.taskName}
-                </Option>
-              ))}
-            </Select>
+            />
           </Form.Item>
 
           <Form.Item name="monthRange" label="月份范围">

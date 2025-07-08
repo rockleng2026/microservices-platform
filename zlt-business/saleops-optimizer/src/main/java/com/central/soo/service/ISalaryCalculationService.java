@@ -163,6 +163,11 @@ public interface ISalaryCalculationService extends IService<SalaryCalculationTas
      */
     Result<String> exportPayrollResults(PayrollExportDTO exportDTO);
     
+    /**
+     * 生成Excel字节数组
+     */
+    byte[] generateExcelBytes(PayrollExportDTO exportDTO);
+    
     // ===========================
     // 盈亏平衡分析
     // ===========================

@@ -1,6 +1,7 @@
 package com.central.soo.engine.calculator;
 
 import com.central.soo.engine.context.SalaryCalculationContext;
+import com.central.soo.model.entity.PayrollResult;
 
 import java.math.BigDecimal;
 
@@ -17,7 +18,7 @@ public interface SalaryCalculator {
     /**
      * 计算金额
      */
-    BigDecimal calculate(SalaryCalculationContext context);
+    BigDecimal calculate(SalaryCalculationContext context, PayrollResult payrollResult);
 
     /**
      * 判断是否适用于当前计算上下文

@@ -324,6 +324,31 @@ export async function getPayrollResults(params: {
   return request('/api-soo/api/soo/salary/results', {
     method: 'GET',
     params,
+  }).then((response: any) => {
+    console.log('薪资查询API响应:', response);
+    
+    // 处理分页响应格式，转换为前端期望的格式
+    if (response.resp_code === 0) {
+      return {
+        success: true,
+        data: {
+          list: response.data || [],
+          total: response.count || 0,
+          current: response.page || 1,
+          size: response.size || 10,
+          pages: response.pages || 0,
+        },
+      };
+    } else {
+      return {
+        success: false,
+        message: response.resp_msg || '查询失败',
+        data: {
+          list: [],
+          total: 0,
+        },
+      };
+    }
   });
 }
 

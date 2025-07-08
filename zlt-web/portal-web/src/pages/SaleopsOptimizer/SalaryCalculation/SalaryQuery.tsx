@@ -17,6 +17,7 @@ import {
   Tooltip,
   Drawer,
   Progress,
+  message, // 添加 message 导入
 } from 'antd';
 import {
   SearchOutlined,
@@ -59,7 +60,7 @@ interface PayrollResult {
   personalSocialTotal: number;
   personalIncomeTax: number;
   netPay: number;
-  totalCost: number;
+  totalCompanyCost: number;
   isFinal: boolean;
   confirmedAt: string;
   calculationDetails: any;
@@ -69,13 +70,13 @@ interface SalaryStatistics {
   totalEmployees: number;
   totalGrossPay: number;
   totalNetPay: number;
-  totalCost: number;
+  totalCompanyCost: number;
   averageGrossPay: number;
   averageNetPay: number;
   departmentStats: Array<{
     departmentName: string;
     employeeCount: number;
-    totalCost: number;
+    totalCompanyCost: number;
     averageSalary: number;
   }>;
 }
@@ -91,6 +92,7 @@ const SalaryQuery: React.FC = () => {
   const [trendData, setTrendData] = useState<any[]>([]);
   const [departments, setDepartments] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
+  const [salaryTasks, setSalaryTasks] = useState<any[]>([]); // 添加薪酬计算任务列表
   
   const [pagination, setPagination] = useState({
     current: 1,
@@ -101,6 +103,7 @@ const SalaryQuery: React.FC = () => {
   useEffect(() => {
     loadDepartments();
     loadEmployees();
+    loadSalaryTasks(); // 加载薪酬计算任务列表
     handleSearch(1);
   }, []);
 
@@ -129,20 +132,62 @@ const SalaryQuery: React.FC = () => {
     }
   };
 
+  // 新增：加载薪酬计算任务列表
+  const loadSalaryTasks = async () => {
+    try {
+      const response = await sooApi.getSalaryCalculationTasks({
+        page: 1,
+        size: 100, // 获取更多任务用于下拉选择
+      });
+      if (response.success && Array.isArray(response.data?.list)) {
+        setSalaryTasks(response.data.list);
+      } else {
+        setSalaryTasks([]);
+      }
+    } catch (error) {
+      console.error('加载薪酬计算任务列表失败:', error);
+      setSalaryTasks([]);
+    }
+  };
+
   const handleSearch = async (page = 1) => {
     try {
       setLoading(true);
       const values = form.getFieldsValue();
       
-      const response = await sooApi.getPayrollResults({
-        ...values,
-        monthRange: values.monthRange ? [
-          values.monthRange[0].format('YYYY-MM'),
-          values.monthRange[1].format('YYYY-MM')
-        ] : undefined,
+      // 构建查询参数
+      const searchParams: any = {
         page,
         size: pagination.pageSize,
-      });
+      };
+
+      // 添加搜索条件
+      if (values.taskName) {
+        searchParams.taskName = values.taskName;
+      }
+      
+      if (values.monthRange && values.monthRange.length === 2) {
+        searchParams.startMonth = values.monthRange[0].format('YYYY-MM');
+        searchParams.endMonth = values.monthRange[1].format('YYYY-MM');
+      }
+      
+      if (values.departmentId) {
+        searchParams.departmentIds = [values.departmentId];
+      }
+      
+      if (values.employeeId) {
+        searchParams.employeeIds = [values.employeeId];
+      }
+      
+      if (values.employeeName) {
+        searchParams.employeeName = values.employeeName;
+      }
+      
+      if (values.isFinal !== undefined) {
+        searchParams.isFinal = values.isFinal;
+      }
+
+      const response = await sooApi.getPayrollResults(searchParams);
 
       if (response.success) {
         setPayrollResults(response.data.list || []);
@@ -152,8 +197,8 @@ const SalaryQuery: React.FC = () => {
           total: response.data.total || 0,
         });
         
-        // 加载统计数据
-        loadSalaryStatistics(values);
+        // 加载统计数据（如果有对应API）
+        // loadSalaryStatistics(values);
       }
     } catch (error) {
       console.error('查询工资数据失败:', error);
@@ -162,16 +207,17 @@ const SalaryQuery: React.FC = () => {
     }
   };
 
-  const loadSalaryStatistics = async (filters: any) => {
-    try {
-      const response = await sooApi.getSalaryStatistics(filters);
-      if (response.success) {
-        setSalaryStats(response.data);
-      }
-    } catch (error) {
-      console.error('加载统计数据失败:', error);
-    }
-  };
+  // 移除有问题的统计数据加载函数
+  // const loadSalaryStatistics = async (filters: any) => {
+  //   try {
+  //     const response = await sooApi.getSalaryStatistics(filters);
+  //     if (response.success) {
+  //       setSalaryStats(response.data);
+  //     }
+  //   } catch (error) {
+  //     console.error('加载统计数据失败:', error);
+  //   }
+  // };
 
   const handleViewDetail = (record: PayrollResult) => {
     setSelectedRecord(record);
@@ -182,8 +228,9 @@ const SalaryQuery: React.FC = () => {
     try {
       setLoading(true);
       const response = await sooApi.getSalaryTrend({
-        employeeId,
-        months: 12, // 最近12个月
+        employeeIds: [employeeId], // 修复参数名
+        startMonth: dayjs().subtract(11, 'month').format('YYYY-MM'),
+        endMonth: dayjs().format('YYYY-MM'),
       });
       
       if (response.success) {
@@ -199,14 +246,44 @@ const SalaryQuery: React.FC = () => {
 
   const handleExport = async () => {
     try {
+      setLoading(true);
       const values = form.getFieldsValue();
-      const response = await sooApi.exportPayrollData({
-        ...values,
-        monthRange: values.monthRange ? [
-          values.monthRange[0].format('YYYY-MM'),
-          values.monthRange[1].format('YYYY-MM')
-        ] : undefined,
-      });
+      
+      // 构建导出参数
+      const exportParams: any = {
+        exportType: 'EXCEL',
+        includeDetails: true, // 包含详细信息
+      };
+
+      // 添加搜索条件进行全量导出
+      if (values.taskName) {
+        exportParams.taskName = values.taskName;
+      }
+      
+      if (values.monthRange && values.monthRange.length === 2) {
+        exportParams.startMonth = values.monthRange[0].format('YYYY-MM');
+        exportParams.endMonth = values.monthRange[1].format('YYYY-MM');
+      } else if (values.month) {
+        exportParams.month = values.month;
+      }
+      
+      if (values.departmentId) {
+        exportParams.departmentIds = [values.departmentId];
+      }
+      
+      if (values.employeeId) {
+        exportParams.employeeIds = [values.employeeId];
+      }
+      
+      if (values.employeeName) {
+        exportParams.employeeName = values.employeeName;
+      }
+      
+      if (values.isFinal !== undefined) {
+        exportParams.isFinal = values.isFinal;
+      }
+
+      const response = await sooApi.exportPayrollResults(exportParams);
       
       // 创建下载链接
       const blob = new Blob([response], { 
@@ -215,13 +292,18 @@ const SalaryQuery: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `工资查询结果_${dayjs().format('YYYY-MM-DD')}.xlsx`;
+      link.download = `工资查询结果_${dayjs().format('YYYY-MM-DD_HH-mm-ss')}.xlsx`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
+      
+      message.success('导出成功！');
     } catch (error) {
       console.error('导出失败:', error);
+      message.error('导出失败，请重试');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -362,15 +444,15 @@ const SalaryQuery: React.FC = () => {
     },
     {
       title: '公司成本',
-      dataIndex: 'totalCost',
-      key: 'totalCost',
+      dataIndex: 'totalCompanyCost',
+      key: 'totalCompanyCost',
       width: 120,
       render: (value) => (
         <span style={{ color: '#722ed1' }}>
           ¥{value?.toLocaleString() || 0}
         </span>
       ),
-      sorter: (a, b) => (a.totalCost || 0) - (b.totalCost || 0),
+      sorter: (a, b) => (a.totalCompanyCost || 0) - (b.totalCompanyCost || 0),
     },
     {
       title: '状态',
@@ -450,7 +532,7 @@ const SalaryQuery: React.FC = () => {
             <Card>
               <Statistic
                 title="公司总成本"
-                value={salaryStats.totalCost}
+                value={salaryStats.totalCompanyCost}
                 precision={0}
                 prefix="¥"
                 valueStyle={{ color: '#722ed1' }}
@@ -467,6 +549,24 @@ const SalaryQuery: React.FC = () => {
           layout="inline"
           onFinish={() => handleSearch(1)}
         >
+          <Form.Item name="taskName" label="任务名称">
+            <Select 
+              style={{ width: 200 }} 
+              placeholder="请选择薪酬计算任务" 
+              allowClear
+              showSearch
+              filterOption={(input, option) =>
+                (option?.children as unknown as string)?.toLowerCase().includes(input.toLowerCase())
+              }
+            >
+              {salaryTasks.map(task => (
+                <Option key={task.taskId} value={task.taskName}>
+                  {task.taskName}
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
           <Form.Item name="monthRange" label="月份范围">
             <RangePicker picker="month" format="YYYY-MM" />
           </Form.Item>
@@ -526,8 +626,9 @@ const SalaryQuery: React.FC = () => {
               <Button 
                 icon={<DownloadOutlined />}
                 onClick={handleExport}
+                loading={loading}
               >
-                导出
+                导出Excel
               </Button>
             </Space>
           </Form.Item>
@@ -658,7 +759,7 @@ const SalaryQuery: React.FC = () => {
             >
               <Descriptions.Item label="公司总成本">
                 <span style={{ fontWeight: 'bold', color: '#722ed1', fontSize: '16px' }}>
-                  ¥{selectedRecord.totalCost?.toLocaleString() || 0}
+                  ¥{selectedRecord.totalCompanyCost?.toLocaleString() || 0}
                 </span>
               </Descriptions.Item>
             </Descriptions>
@@ -709,7 +810,7 @@ const SalaryQuery: React.FC = () => {
                     <Col span={6}>
                       <Statistic
                         title="公司成本"
-                        value={item.totalCost}
+                        value={item.totalCompanyCost}
                         precision={0}
                         prefix="¥"
                         valueStyle={{ fontSize: '14px', color: '#722ed1' }}

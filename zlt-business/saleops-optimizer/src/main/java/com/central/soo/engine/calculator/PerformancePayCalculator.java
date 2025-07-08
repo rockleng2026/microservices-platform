@@ -1,6 +1,7 @@
 package com.central.soo.engine.calculator;
 
 import com.central.soo.engine.context.SalaryCalculationContext;
+import com.central.soo.model.entity.PayrollResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -22,7 +23,7 @@ public class PerformancePayCalculator implements SalaryCalculator {
     }
 
     @Override
-    public BigDecimal calculate(SalaryCalculationContext context) {
+    public BigDecimal calculate(SalaryCalculationContext context, PayrollResult payrollResult) {
         // 绩效工资 = 调整后基础工资 * 绩效比例
         BigDecimal adjustedBaseSalary = context.getSalaryConfig().getBaseSalary()
                 .multiply(context.getRegionalCoefficient() != null ? 
@@ -36,7 +37,8 @@ public class PerformancePayCalculator implements SalaryCalculator {
 
         log.debug("绩效工资计算 - 员工ID: {}, 调整后基础工资: {}, 绩效比例: {}, 绩效工资: {}",
                 context.getEmployee().getId(), adjustedBaseSalary, performanceRatio, performancePay);
-
+        payrollResult.setPerformanceScore(context.getPerformance().getPerformanceScore());
+        payrollResult.setPerformanceRatio(performanceRatio);
         return performancePay;
     }
 

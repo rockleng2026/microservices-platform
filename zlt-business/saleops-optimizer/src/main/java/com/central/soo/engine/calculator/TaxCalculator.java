@@ -1,6 +1,7 @@
 package com.central.soo.engine.calculator;
 
 import com.central.soo.engine.context.SalaryCalculationContext;
+import com.central.soo.model.entity.PayrollResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -25,7 +26,7 @@ public class TaxCalculator implements SalaryCalculator {
     }
 
     @Override
-    public BigDecimal calculate(SalaryCalculationContext context) {
+    public BigDecimal calculate(SalaryCalculationContext context, PayrollResult payrollResult) {
         // 计算应纳税所得额
         BigDecimal taxableIncome = calculateTaxableIncome(context);
         

@@ -12,6 +12,7 @@ public class PayrollResultQueryDTO {
     private int page = 1;
     private int size = 10;
     private String taskId;
+    private String taskName; // 新增：任务名称搜索
     private String month;
     private String startMonth;
     private String endMonth;

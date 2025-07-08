@@ -52,7 +52,7 @@ public class SalaryCalculationEngine {
             for (SalaryCalculator calculator : calculators) {
                 if (calculator.isApplicable(context)) {
                     try {
-                        BigDecimal amount = calculator.calculate(context);
+                        BigDecimal amount = calculator.calculate(context, result);
                         setCalculationResult(result, calculator.getCalculatorType(), amount);
                         log.debug("计算器 {} 计算完成，金额: {}", 
                                 calculator.getCalculatorType(), amount);

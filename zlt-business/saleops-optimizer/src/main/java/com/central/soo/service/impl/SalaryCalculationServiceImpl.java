@@ -8,6 +8,7 @@ import com.central.common.model.Result;
 import com.central.common.utils.LoginUserUtils;
 import com.central.soo.mapper.SalaryCalculationTaskMapper;
 import com.central.soo.mapper.PayrollResultMapper;
+import com.central.soo.mapper.SalarySummaryMapper;
 import com.central.soo.model.dto.*;
 import com.central.soo.model.entity.*;
 import com.central.soo.model.MonthlyPerformance;
@@ -83,6 +84,9 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
     
     @Autowired
     private DepartmentFeignClient departmentFeignClient;
+    
+    @Autowired
+    private SalarySummaryMapper salarySummaryMapper;
 
     // 配置支持TTL的线程池
     private final Executor ttlExecutor = TtlExecutors.getTtlExecutor(
@@ -308,6 +312,9 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
             
             log.info("薪资汇总计算完成，任务ID: {}, 总应发工资: {}, 总实发工资: {}, 总公司成本: {}", 
                     task.getTaskId(), totalGrossPay, totalNetPay, totalCompanyCost);
+            
+            // 生成薪酬统计汇总数据
+            generateSalarySummary(task, results);
             
             // 更新任务状态为完成
             task.setTaskStatus("COMPLETED");
@@ -1489,24 +1496,10 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
     @Override
     public Result<List<SalarySummary>> getSalarySummary(String taskId) {
         try {
-            List<SalarySummary> summaries = new ArrayList<>();
-            
-            SalarySummary summary = new SalarySummary();
-            summary.setTaskId(taskId);
-            summary.setSummaryType("COMPANY");
-            summary.setTotalEmployeeCount(50);
-            summary.setCalculationEmployeeCount(50);
-            summary.setTotalBaseSalary(new BigDecimal("750000.00"));
-            summary.setTotalGrossPay(new BigDecimal("1650000.00"));
-            summary.setTotalNetPay(new BigDecimal("1450000.00"));
-            summary.setTotalCompanyCost(new BigDecimal("1850000.00"));
-            summary.setAvgGrossPay(new BigDecimal("33000.00"));
-            summary.setAvgNetPay(new BigDecimal("29000.00"));
-            summary.setAvgCompanyCost(new BigDecimal("37000.00"));
-            summaries.add(summary);
-            
+            List<SalarySummary> summaries = salarySummaryMapper.selectByTaskId(taskId);
             return Result.succeed(summaries);
         } catch (Exception e) {
+            log.error("获取薪酬统计汇总失败，任务ID: {}, 错误信息: {}", taskId, e.getMessage(), e);
             return Result.failed("获取薪酬统计汇总失败: " + e.getMessage());
         }
     }
@@ -1514,18 +1507,13 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
     @Override
     public Result<SalarySummary> getDepartmentSalarySummary(String taskId, Long departmentId) {
         try {
-            SalarySummary summary = new SalarySummary();
-            summary.setTaskId(taskId);
-            summary.setDepartmentId(departmentId);
-            summary.setSummaryType("DEPARTMENT");
-            summary.setTotalEmployeeCount(15);
-            summary.setCalculationEmployeeCount(15);
-            summary.setTotalGrossPay(new BigDecimal("495000.00"));
-            summary.setTotalNetPay(new BigDecimal("435000.00"));
-            summary.setTotalCompanyCost(new BigDecimal("555000.00"));
-            
+            SalarySummary summary = salarySummaryMapper.selectByTaskIdAndDepartmentId(taskId, departmentId);
+            if (summary == null) {
+                return Result.failed("未找到指定任务和部门的薪酬统计数据");
+            }
             return Result.succeed(summary);
         } catch (Exception e) {
+            log.error("获取部门薪酬统计失败，任务ID: {}, 部门ID: {}, 错误信息: {}", taskId, departmentId, e.getMessage(), e);
             return Result.failed("获取部门薪酬统计失败: " + e.getMessage());
         }
     }
@@ -1960,14 +1948,301 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
     // ===========================
 
     private String buildCalculationRulesJson(SalaryTaskCreateDTO.CalculationRulesDTO rules) {
-        StringBuilder json = new StringBuilder();
-        json.append("{");
-        json.append("\"baseCalculation\":").append(rules.getBaseCalculation()).append(",");
-        json.append("\"performanceCalculation\":").append(rules.getPerformanceCalculation()).append(",");
-        json.append("\"commissionCalculation\":").append(rules.getCommissionCalculation()).append(",");
-        json.append("\"socialSecurityCalculation\":").append(rules.getSocialSecurityCalculation()).append(",");
-        json.append("\"taxCalculation\":").append(rules.getTaxCalculation());
-        json.append("}");
-        return json.toString();
+        if (rules == null) {
+            return "{}";
+        }
+        return String.format(
+                "{\"baseCalculation\": %s, \"performanceCalculation\": %s, \"commissionCalculation\": %s, \"socialSecurityCalculation\": %s, \"taxCalculation\": %s}",
+                rules.getBaseCalculation(), rules.getPerformanceCalculation(), rules.getCommissionCalculation(), 
+                rules.getSocialSecurityCalculation(), rules.getTaxCalculation()
+        );
+    }
+    
+    /**
+     * 生成薪酬统计汇总数据
+     */
+    private void generateSalarySummary(SalaryCalculationTask task, List<PayrollResult> results) {
+        try {
+            log.info("开始生成薪酬统计汇总数据，任务ID: {}, 结果数量: {}", task.getTaskId(), results.size());
+            
+            // 删除该任务的旧统计数据
+            salarySummaryMapper.deleteByTaskId(task.getTaskId());
+            
+            // 1. 生成全公司汇总统计
+            generateTotalSummary(task, results);
+            
+            // 2. 生成各部门汇总统计
+            // generateDepartmentSummary(task, results);
+            
+            log.info("薪酬统计汇总数据生成完成，任务ID: {}", task.getTaskId());
+            
+        } catch (Exception e) {
+            log.error("生成薪酬统计汇总数据失败，任务ID: {}, 错误信息: {}", task.getTaskId(), e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 生成全公司汇总统计
+     */
+    private void generateTotalSummary(SalaryCalculationTask task, List<PayrollResult> results) {
+        try {
+            SalarySummary totalSummary = new SalarySummary();
+            
+            // 基本信息
+            totalSummary.setTaskId(task.getTaskId());
+            totalSummary.setSummaryType("TOTAL");
+            totalSummary.setMonth(task.getCalculationMonth());
+            totalSummary.setDepartmentId(null);
+            totalSummary.setDepartmentName("全公司");
+            
+            // 统计数据
+            int totalEmployees = results.size();
+            int calculationEmployees = 0;
+            
+            BigDecimal totalBaseSalary = BigDecimal.ZERO;
+            BigDecimal totalPerformancePay = BigDecimal.ZERO;
+            BigDecimal totalCommission = BigDecimal.ZERO;
+            BigDecimal totalBonus = BigDecimal.ZERO;
+            BigDecimal totalAllowance = BigDecimal.ZERO;
+            BigDecimal totalGrossPay = BigDecimal.ZERO;
+            BigDecimal totalDeduction = BigDecimal.ZERO;
+            BigDecimal totalNetPay = BigDecimal.ZERO;
+            BigDecimal totalPersonalSocial = BigDecimal.ZERO;
+            BigDecimal totalCompanySocial = BigDecimal.ZERO;
+            BigDecimal totalPersonalTax = BigDecimal.ZERO;
+            BigDecimal totalCompanyCost = BigDecimal.ZERO;
+            
+            for (PayrollResult result : results) {
+                if ("SUCCESS".equals(result.getCalculationStatus())) {
+                    calculationEmployees++;
+                    
+                    if (result.getBaseSalary() != null) {
+                        totalBaseSalary = totalBaseSalary.add(result.getBaseSalary());
+                    }
+                    if (result.getPerformancePay() != null) {
+                        totalPerformancePay = totalPerformancePay.add(result.getPerformancePay());
+                    }
+                    if (result.getPersonalCommission() != null) {
+                        totalCommission = totalCommission.add(result.getPersonalCommission());
+                    }
+                    if (result.getTeamCommission() != null) {
+                        totalCommission = totalCommission.add(result.getTeamCommission());
+                    }
+                    if (result.getDepartmentBonus() != null) {
+                        totalBonus = totalBonus.add(result.getDepartmentBonus());
+                    }
+                    if (result.getGrossPay() != null) {
+                        totalGrossPay = totalGrossPay.add(result.getGrossPay());
+                    }
+                    if (result.getPersonalSocialTotal() != null) {
+                        totalPersonalSocial = totalPersonalSocial.add(result.getPersonalSocialTotal());
+                        totalDeduction = totalDeduction.add(result.getPersonalSocialTotal());
+                    }
+                    if (result.getPersonalIncomeTax() != null) {
+                        totalPersonalTax = totalPersonalTax.add(result.getPersonalIncomeTax());
+                        totalDeduction = totalDeduction.add(result.getPersonalIncomeTax());
+                    }
+                    if (result.getNetPay() != null) {
+                        totalNetPay = totalNetPay.add(result.getNetPay());
+                    }
+                    if (result.getCompanySocialTotal() != null) {
+                        totalCompanySocial = totalCompanySocial.add(result.getCompanySocialTotal());
+                    }
+                    if (result.getTotalCompanyCost() != null) {
+                        totalCompanyCost = totalCompanyCost.add(result.getTotalCompanyCost());
+                    }
+                }
+            }
+            
+            // 设置统计数据
+            totalSummary.setTotalEmployeeCount(totalEmployees);
+            totalSummary.setCalculationEmployeeCount(calculationEmployees);
+            totalSummary.setTotalBaseSalary(totalBaseSalary);
+            totalSummary.setTotalPerformancePay(totalPerformancePay);
+            totalSummary.setTotalCommission(totalCommission);
+            totalSummary.setTotalBonus(totalBonus);
+            totalSummary.setTotalAllowance(totalAllowance);
+            totalSummary.setTotalGrossPay(totalGrossPay);
+            totalSummary.setTotalDeduction(totalDeduction);
+            totalSummary.setTotalNetPay(totalNetPay);
+            totalSummary.setTotalPersonalSocial(totalPersonalSocial);
+            totalSummary.setTotalCompanySocial(totalCompanySocial);
+            totalSummary.setTotalPersonalTax(totalPersonalTax);
+            totalSummary.setTotalCompanyCost(totalCompanyCost);
+            
+            // 计算平均值
+            if (calculationEmployees > 0) {
+                totalSummary.setAvgGrossPay(totalGrossPay.divide(BigDecimal.valueOf(calculationEmployees), 2, BigDecimal.ROUND_HALF_UP));
+                totalSummary.setAvgNetPay(totalNetPay.divide(BigDecimal.valueOf(calculationEmployees), 2, BigDecimal.ROUND_HALF_UP));
+                totalSummary.setAvgCompanyCost(totalCompanyCost.divide(BigDecimal.valueOf(calculationEmployees), 2, BigDecimal.ROUND_HALF_UP));
+            } else {
+                totalSummary.setAvgGrossPay(BigDecimal.ZERO);
+                totalSummary.setAvgNetPay(BigDecimal.ZERO);
+                totalSummary.setAvgCompanyCost(BigDecimal.ZERO);
+            }
+            
+            // 设置系统字段
+            totalSummary.setCreatedAt(LocalDateTime.now());
+            totalSummary.setUpdatedAt(LocalDateTime.now());
+            totalSummary.setTenantId(TenantContextHolder.getTenant());
+            totalSummary.setDelflag(0);
+            
+            // 保存全公司汇总
+            salarySummaryMapper.insert(totalSummary);
+            
+            log.info("全公司薪酬汇总生成完成，任务ID: {}, 总员工数: {}, 参与计算: {}, 总应发: {}, 总实发: {}", 
+                    task.getTaskId(), totalEmployees, calculationEmployees, totalGrossPay, totalNetPay);
+            
+        } catch (Exception e) {
+            log.error("生成全公司薪酬汇总失败，任务ID: {}, 错误信息: {}", task.getTaskId(), e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 生成各部门汇总统计
+     */
+    private void generateDepartmentSummary(SalaryCalculationTask task, List<PayrollResult> results) {
+        try {
+            // 按部门分组统计
+            Map<Long, List<PayrollResult>> departmentResults = new HashMap<>();
+            Map<Long, String> departmentNames = new HashMap<>();
+            
+            for (PayrollResult result : results) {
+                if ("SUCCESS".equals(result.getCalculationStatus()) && result.getDepartmentId() != null) {
+                    departmentResults.computeIfAbsent(result.getDepartmentId(), k -> new ArrayList<>()).add(result);
+                    departmentNames.put(result.getDepartmentId(), result.getDepartmentName());
+                }
+            }
+            
+            // 为每个部门生成汇总
+            for (Map.Entry<Long, List<PayrollResult>> entry : departmentResults.entrySet()) {
+                Long departmentId = entry.getKey();
+                List<PayrollResult> deptResults = entry.getValue();
+                String departmentName = departmentNames.get(departmentId);
+                
+                generateSingleDepartmentSummary(task, departmentId, departmentName, deptResults);
+            }
+            
+            log.info("部门薪酬汇总生成完成，任务ID: {}, 部门数量: {}", task.getTaskId(), departmentResults.size());
+            
+        } catch (Exception e) {
+            log.error("生成部门薪酬汇总失败，任务ID: {}, 错误信息: {}", task.getTaskId(), e.getMessage(), e);
+        }
+    }
+    
+    /**
+     * 生成单个部门汇总统计
+     */
+    private void generateSingleDepartmentSummary(SalaryCalculationTask task, Long departmentId, String departmentName, List<PayrollResult> deptResults) {
+        try {
+            SalarySummary deptSummary = new SalarySummary();
+            
+            // 基本信息
+            deptSummary.setTaskId(task.getTaskId());
+            deptSummary.setSummaryType("DEPARTMENT");
+            deptSummary.setMonth(task.getCalculationMonth());
+            deptSummary.setDepartmentId(departmentId);
+            deptSummary.setDepartmentName(departmentName);
+            
+            // 统计数据
+            int totalEmployees = deptResults.size();
+            int calculationEmployees = 0;
+            
+            BigDecimal totalBaseSalary = BigDecimal.ZERO;
+            BigDecimal totalPerformancePay = BigDecimal.ZERO;
+            BigDecimal totalCommission = BigDecimal.ZERO;
+            BigDecimal totalBonus = BigDecimal.ZERO;
+            BigDecimal totalAllowance = BigDecimal.ZERO;
+            BigDecimal totalGrossPay = BigDecimal.ZERO;
+            BigDecimal totalDeduction = BigDecimal.ZERO;
+            BigDecimal totalNetPay = BigDecimal.ZERO;
+            BigDecimal totalPersonalSocial = BigDecimal.ZERO;
+            BigDecimal totalCompanySocial = BigDecimal.ZERO;
+            BigDecimal totalPersonalTax = BigDecimal.ZERO;
+            BigDecimal totalCompanyCost = BigDecimal.ZERO;
+            
+            for (PayrollResult result : deptResults) {
+                calculationEmployees++;
+                
+                if (result.getBaseSalary() != null) {
+                    totalBaseSalary = totalBaseSalary.add(result.getBaseSalary());
+                }
+                if (result.getPerformancePay() != null) {
+                    totalPerformancePay = totalPerformancePay.add(result.getPerformancePay());
+                }
+                if (result.getPersonalCommission() != null) {
+                    totalCommission = totalCommission.add(result.getPersonalCommission());
+                }
+                if (result.getTeamCommission() != null) {
+                    totalCommission = totalCommission.add(result.getTeamCommission());
+                }
+                if (result.getDepartmentBonus() != null) {
+                    totalBonus = totalBonus.add(result.getDepartmentBonus());
+                }
+                if (result.getGrossPay() != null) {
+                    totalGrossPay = totalGrossPay.add(result.getGrossPay());
+                }
+                if (result.getPersonalSocialTotal() != null) {
+                    totalPersonalSocial = totalPersonalSocial.add(result.getPersonalSocialTotal());
+                    totalDeduction = totalDeduction.add(result.getPersonalSocialTotal());
+                }
+                if (result.getPersonalIncomeTax() != null) {
+                    totalPersonalTax = totalPersonalTax.add(result.getPersonalIncomeTax());
+                    totalDeduction = totalDeduction.add(result.getPersonalIncomeTax());
+                }
+                if (result.getNetPay() != null) {
+                    totalNetPay = totalNetPay.add(result.getNetPay());
+                }
+                if (result.getCompanySocialTotal() != null) {
+                    totalCompanySocial = totalCompanySocial.add(result.getCompanySocialTotal());
+                }
+                if (result.getTotalCompanyCost() != null) {
+                    totalCompanyCost = totalCompanyCost.add(result.getTotalCompanyCost());
+                }
+            }
+            
+            // 设置统计数据
+            deptSummary.setTotalEmployeeCount(totalEmployees);
+            deptSummary.setCalculationEmployeeCount(calculationEmployees);
+            deptSummary.setTotalBaseSalary(totalBaseSalary);
+            deptSummary.setTotalPerformancePay(totalPerformancePay);
+            deptSummary.setTotalCommission(totalCommission);
+            deptSummary.setTotalBonus(totalBonus);
+            deptSummary.setTotalAllowance(totalAllowance);
+            deptSummary.setTotalGrossPay(totalGrossPay);
+            deptSummary.setTotalDeduction(totalDeduction);
+            deptSummary.setTotalNetPay(totalNetPay);
+            deptSummary.setTotalPersonalSocial(totalPersonalSocial);
+            deptSummary.setTotalCompanySocial(totalCompanySocial);
+            deptSummary.setTotalPersonalTax(totalPersonalTax);
+            deptSummary.setTotalCompanyCost(totalCompanyCost);
+            
+            // 计算平均值
+            if (calculationEmployees > 0) {
+                deptSummary.setAvgGrossPay(totalGrossPay.divide(BigDecimal.valueOf(calculationEmployees), 2, BigDecimal.ROUND_HALF_UP));
+                deptSummary.setAvgNetPay(totalNetPay.divide(BigDecimal.valueOf(calculationEmployees), 2, BigDecimal.ROUND_HALF_UP));
+                deptSummary.setAvgCompanyCost(totalCompanyCost.divide(BigDecimal.valueOf(calculationEmployees), 2, BigDecimal.ROUND_HALF_UP));
+            } else {
+                deptSummary.setAvgGrossPay(BigDecimal.ZERO);
+                deptSummary.setAvgNetPay(BigDecimal.ZERO);
+                deptSummary.setAvgCompanyCost(BigDecimal.ZERO);
+            }
+            
+            // 设置系统字段
+            deptSummary.setCreatedAt(LocalDateTime.now());
+            deptSummary.setUpdatedAt(LocalDateTime.now());
+            deptSummary.setTenantId(TenantContextHolder.getTenant());
+            deptSummary.setDelflag(0);
+            
+            // 保存部门汇总
+            salarySummaryMapper.insert(deptSummary);
+            
+            log.info("部门薪酬汇总生成完成，任务ID: {}, 部门: {}({}), 员工数: {}, 总应发: {}, 总实发: {}", 
+                    task.getTaskId(), departmentName, departmentId, calculationEmployees, totalGrossPay, totalNetPay);
+            
+        } catch (Exception e) {
+            log.error("生成部门薪酬汇总失败，任务ID: {}, 部门: {}({}), 错误信息: {}", 
+                    task.getTaskId(), departmentName, departmentId, e.getMessage(), e);
+        }
     }
 } 

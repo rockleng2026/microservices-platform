@@ -428,4 +428,64 @@ INSERT INTO `soo_social_security_base` VALUES (1, 'BEIJING', 2024, 31884.00, 586
 INSERT INTO `soo_social_security_base` VALUES (2, 'SHANGHAI', 2024, 36549.00, 7310.00, 36549.00, 2690.00, 8, 2, 1, 7, 16, 10, 1, 1, 0, 7, '2024-01-01', NULL, 1, NULL, '2025-07-06 03:10:19', '2025-07-06 03:27:47', NULL, NULL, 'default', 1);
 INSERT INTO `soo_social_security_base` VALUES (3, 'GUANGZHOU', 2025, 30000.00, 5000.00, 30000.00, 2540.00, 8, 2, 1, 12, 16, 10, 1, 1, 0, 12, '2025-01-01', NULL, 1, 'GZ2025', '2025-07-06 03:25:28', '2025-07-06 03:25:28', NULL, NULL, 'default', 0);
 
+-- ----------------------------
+-- Table structure for soo_salary_summary
+-- ----------------------------
+DROP TABLE IF EXISTS `soo_salary_summary`;
+CREATE TABLE `soo_salary_summary` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `task_id` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '计算任务ID',
+  `summary_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '汇总类型(TOTAL全公司,DEPARTMENT部门)',
+  `month` varchar(7) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '月份(YYYY-MM)',
+  `department_id` bigint(20) NULL DEFAULT NULL COMMENT '部门ID(类型为DEPARTMENT时必填)',
+  `department_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '部门名称',
+  
+  -- 人员统计
+  `total_employee_count` int(11) NOT NULL DEFAULT 0 COMMENT '总员工数',
+  `calculation_employee_count` int(11) NOT NULL DEFAULT 0 COMMENT '参与计算员工数',
+  
+  -- 工资统计
+  `total_base_salary` decimal(15, 2) NOT NULL DEFAULT 0.00 COMMENT '基础工资总额',
+  `total_performance_pay` decimal(15, 2) NOT NULL DEFAULT 0.00 COMMENT '绩效工资总额',
+  `total_commission` decimal(15, 2) NOT NULL DEFAULT 0.00 COMMENT '提成总额',
+  `total_bonus` decimal(15, 2) NOT NULL DEFAULT 0.00 COMMENT '奖金总额',
+  `total_allowance` decimal(15, 2) NOT NULL DEFAULT 0.00 COMMENT '补贴总额',
+  `total_gross_pay` decimal(15, 2) NOT NULL DEFAULT 0.00 COMMENT '应发工资总额',
+  `total_deduction` decimal(15, 2) NOT NULL DEFAULT 0.00 COMMENT '扣除总额',
+  `total_net_pay` decimal(15, 2) NOT NULL DEFAULT 0.00 COMMENT '实发工资总额',
+  
+  -- 社保公积金统计
+  `total_personal_social` decimal(15, 2) NOT NULL DEFAULT 0.00 COMMENT '个人社保公积金总额',
+  `total_company_social` decimal(15, 2) NOT NULL DEFAULT 0.00 COMMENT '公司社保公积金总额',
+  `total_personal_tax` decimal(15, 2) NOT NULL DEFAULT 0.00 COMMENT '个人所得税总额',
+  
+  -- 公司成本统计
+  `total_company_cost` decimal(15, 2) NOT NULL DEFAULT 0.00 COMMENT '公司总成本',
+  
+  -- 平均数据
+  `avg_gross_pay` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '人均应发工资',
+  `avg_net_pay` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '人均实发工资',
+  `avg_company_cost` decimal(10, 2) NOT NULL DEFAULT 0.00 COMMENT '人均公司成本',
+  
+  -- 系统字段
+  `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `created_by` bigint(20) NULL DEFAULT NULL COMMENT '创建人',
+  `updated_by` bigint(20) NULL DEFAULT NULL COMMENT '更新人',
+  `tenant_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'default' COMMENT '租户ID',
+  `delflag` tinyint(1) NOT NULL DEFAULT 0 COMMENT '删除标识',
+  
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_task_type_dept`(`task_id`, `summary_type`, `department_id`, `tenant_id`) USING BTREE,
+  INDEX `idx_task_id`(`task_id`) USING BTREE,
+  INDEX `idx_month`(`month`) USING BTREE,
+  INDEX `idx_department_id`(`department_id`) USING BTREE,
+  INDEX `idx_tenant_id`(`tenant_id`) USING BTREE,
+  INDEX `idx_status_delflag`(`delflag`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '薪酬统计汇总表' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of soo_salary_summary
+-- ----------------------------
+
 SET FOREIGN_KEY_CHECKS = 1;

@@ -44,6 +44,21 @@ public class SocialSecurityCalculator implements SalaryCalculator {
         // 设置计算结果到上下文中（这里简化处理，实际应该有更好的方式传递结果）
         log.debug("社保公积金计算完成 - 员工ID: {}, 社保基数: {}, 公积金基数: {}", 
                 context.getEmployee().getId(), socialBase, housingBase);
+        //数据表中缺少个人和公司社保和公积金明细数据，,从socialSecurityAmounts赋值给payrollResult
+        payrollResult.setPersonalPension(socialSecurityAmounts.get("personal_pension"));
+        payrollResult.setPersonalMedical(socialSecurityAmounts.get("personal_medical"));
+        payrollResult.setPersonalUnemployment(socialSecurityAmounts.get("personal_unemployment"));
+        payrollResult.setPersonalHousingFund(socialSecurityAmounts.get("personal_housing_fund"));
+        payrollResult.setPersonalSocialTotal(socialSecurityAmounts.get("personal_total"));
+        payrollResult.setCompanyPension(socialSecurityAmounts.get("company_pension"));
+        payrollResult.setCompanyMedical(socialSecurityAmounts.get("company_medical"));
+        payrollResult.setCompanyUnemployment(socialSecurityAmounts.get("company_unemployment"));
+        payrollResult.setCompanyMaternity(socialSecurityAmounts.get("company_maternity"));
+        payrollResult.setCompanyInjury(socialSecurityAmounts.get("company_injury"));
+        payrollResult.setCompanyHousingFund(socialSecurityAmounts.get("company_housing_fund"));
+        payrollResult.setCompanySocialTotal(socialSecurityAmounts.get("company_total"));
+        
+        
 
         // 返回个人缴费总额（用于扣除）
         return socialSecurityAmounts.get("personal_total");

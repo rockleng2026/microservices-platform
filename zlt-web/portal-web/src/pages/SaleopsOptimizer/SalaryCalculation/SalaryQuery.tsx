@@ -39,31 +39,72 @@ const { RangePicker } = DatePicker;
 
 interface PayrollResult {
   id: number;
+  taskId: string;
+  taskName: string;
+  calculationVersion: number;
   month: string;
   employeeId: number;
   employeeName: string;
   employeeNo: string;
   departmentId: number;
   departmentName: string;
+  positionId: number;
   positionName: string;
   jobLevelCode: string;
   region: string;
   baseSalary: number;
+  regionCoefficient: number;
   adjustedBaseSalary: number;
   performanceScore: number;
   performanceRatio: number;
   performancePay: number;
+  personalProjectProfit: number;
+  personalCommissionRate: number;
   personalCommission: number;
+  teamProjectProfit: number;
+  teamCommissionRate: number;
   teamCommission: number;
   departmentBonus: number;
+  otherAllowance: number;
+  otherDeduction: number;
   grossPay: number;
+  // 个人社保公积金明细
+  personalPension: number;
+  personalMedical: number;
+  personalUnemployment: number;
+  personalHousingFund: number;
   personalSocialTotal: number;
+  taxableIncome: number;
   personalIncomeTax: number;
   netPay: number;
+  // 公司社保公积金明细
+  companyPension: number;
+  companyMedical: number;
+  companyUnemployment: number;
+  companyMaternity: number;
+  companyInjury: number;
+  companyHousingFund: number;
+  companySocialTotal: number;
   totalCompanyCost: number;
-  isFinal: boolean;
-  confirmedAt: string;
+  calculationRuleSnapshot: any;
   calculationDetails: any;
+  calculationLog: any;
+  calculationStatus: string;
+  errorMessage: string;
+  isCurrentVersion: boolean;
+  isFinal: boolean;
+  confirmedBy: number;
+  confirmedAt: string;
+  approvalStatus: string;
+  approvedBy: number;
+  approvedAt: string;
+  approvalRemark: string;
+  createdAt: string;
+  updatedAt: string;
+  createdBy: number;
+  updatedBy: number;
+  tenantId: string;
+  delflag: boolean;
 }
 
 interface SalaryStatistics {
@@ -433,21 +474,36 @@ const SalaryQuery: React.FC = () => {
     {
       title: '扣除明细',
       key: 'deductions',
-      width: 120,
+      width: 160,
       render: (_, record) => {
         const totalDeductions = (record.personalSocialTotal || 0) + 
-                               (record.personalIncomeTax || 0);
+                               (record.personalIncomeTax || 0) +
+                               (record.otherDeduction || 0);
         return (
           <Space direction="vertical" size={0}>
-            <span style={{ color: '#ff7875' }}>
+            <span style={{ color: '#ff7875', fontWeight: 'bold' }}>
               -¥{totalDeductions.toLocaleString()}
             </span>
             <span style={{ fontSize: '11px', color: '#8c8c8c' }}>
-              社保: ¥{(record.personalSocialTotal || 0).toLocaleString()}
+              养老: ¥{(record.personalPension || 0).toLocaleString()}
+            </span>
+            <span style={{ fontSize: '11px', color: '#8c8c8c' }}>
+              医疗: ¥{(record.personalMedical || 0).toLocaleString()}
+            </span>
+            <span style={{ fontSize: '11px', color: '#8c8c8c' }}>
+              失业: ¥{(record.personalUnemployment || 0).toLocaleString()}
+            </span>
+            <span style={{ fontSize: '11px', color: '#8c8c8c' }}>
+              公积金: ¥{(record.personalHousingFund || 0).toLocaleString()}
             </span>
             <span style={{ fontSize: '11px', color: '#8c8c8c' }}>
               个税: ¥{(record.personalIncomeTax || 0).toLocaleString()}
             </span>
+            {record.otherDeduction > 0 && (
+              <span style={{ fontSize: '11px', color: '#8c8c8c' }}>
+                其他: ¥{(record.otherDeduction || 0).toLocaleString()}
+              </span>
+            )}
           </Space>
         );
       },
@@ -465,15 +521,36 @@ const SalaryQuery: React.FC = () => {
       sorter: (a, b) => (a.netPay || 0) - (b.netPay || 0),
     },
     {
-      title: '公司成本',
-      dataIndex: 'totalCompanyCost',
-      key: 'totalCompanyCost',
-      width: 120,
-      render: (value) => (
-        <span style={{ color: '#722ed1' }}>
-          ¥{value?.toLocaleString() || 0}
-        </span>
-      ),
+      title: '公司成本明细',
+      key: 'companyCost',
+      width: 160,
+      render: (_, record) => {
+        return (
+          <Space direction="vertical" size={0}>
+            <span style={{ color: '#722ed1', fontWeight: 'bold' }}>
+              ¥{(record.totalCompanyCost || 0).toLocaleString()}
+            </span>
+            <span style={{ fontSize: '11px', color: '#8c8c8c' }}>
+              养老: ¥{(record.companyPension || 0).toLocaleString()}
+            </span>
+            <span style={{ fontSize: '11px', color: '#8c8c8c' }}>
+              医疗: ¥{(record.companyMedical || 0).toLocaleString()}
+            </span>
+            <span style={{ fontSize: '11px', color: '#8c8c8c' }}>
+              失业: ¥{(record.companyUnemployment || 0).toLocaleString()}
+            </span>
+            <span style={{ fontSize: '11px', color: '#8c8c8c' }}>
+              生育: ¥{(record.companyMaternity || 0).toLocaleString()}
+            </span>
+            <span style={{ fontSize: '11px', color: '#8c8c8c' }}>
+              工伤: ¥{(record.companyInjury || 0).toLocaleString()}
+            </span>
+            <span style={{ fontSize: '11px', color: '#8c8c8c' }}>
+              公积金: ¥{(record.companyHousingFund || 0).toLocaleString()}
+            </span>
+          </Space>
+        );
+      },
       sorter: (a, b) => (a.totalCompanyCost || 0) - (b.totalCompanyCost || 0),
     },
     {
@@ -716,18 +793,33 @@ const SalaryQuery: React.FC = () => {
               <Descriptions.Item label="基础工资">
                 ¥{selectedRecord.baseSalary?.toLocaleString() || 0}
               </Descriptions.Item>
+              <Descriptions.Item label="地区系数">
+                {selectedRecord.regionCoefficient || 1.0}
+              </Descriptions.Item>
               <Descriptions.Item label="调整后基础工资">
                 ¥{selectedRecord.adjustedBaseSalary?.toLocaleString() || 0}
-              </Descriptions.Item>
-              <Descriptions.Item label="绩效工资">
-                ¥{selectedRecord.performancePay?.toLocaleString() || 0}
               </Descriptions.Item>
               <Descriptions.Item label="绩效得分">
                 {selectedRecord.performanceScore || 0}分 
                 ({Math.round((selectedRecord.performanceRatio || 0) * 100)}%)
               </Descriptions.Item>
+              <Descriptions.Item label="绩效工资">
+                ¥{selectedRecord.performancePay?.toLocaleString() || 0}
+              </Descriptions.Item>
+              <Descriptions.Item label="个人项目利润">
+                ¥{selectedRecord.personalProjectProfit?.toLocaleString() || 0}
+              </Descriptions.Item>
+              <Descriptions.Item label="个人提成比例">
+                {((selectedRecord.personalCommissionRate || 0) * 100).toFixed(2)}%
+              </Descriptions.Item>
               <Descriptions.Item label="个人项目提成">
                 ¥{selectedRecord.personalCommission?.toLocaleString() || 0}
+              </Descriptions.Item>
+              <Descriptions.Item label="团队项目利润">
+                ¥{selectedRecord.teamProjectProfit?.toLocaleString() || 0}
+              </Descriptions.Item>
+              <Descriptions.Item label="团队提成比例">
+                {((selectedRecord.teamCommissionRate || 0) * 100).toFixed(2)}%
               </Descriptions.Item>
               <Descriptions.Item label="团队项目提成">
                 ¥{selectedRecord.teamCommission?.toLocaleString() || 0}
@@ -735,7 +827,12 @@ const SalaryQuery: React.FC = () => {
               <Descriptions.Item label="部门分红">
                 ¥{selectedRecord.departmentBonus?.toLocaleString() || 0}
               </Descriptions.Item>
-              <Descriptions.Item label="应发工资合计" span={1}>
+              {selectedRecord.otherAllowance > 0 && (
+                <Descriptions.Item label="其他补贴">
+                  ¥{selectedRecord.otherAllowance?.toLocaleString() || 0}
+                </Descriptions.Item>
+              )}
+              <Descriptions.Item label="应发工资合计" span={selectedRecord.otherAllowance > 0 ? 1 : 2}>
                 <span style={{ fontWeight: 'bold', color: '#1890ff', fontSize: '16px' }}>
                   ¥{selectedRecord.grossPay?.toLocaleString() || 0}
                 </span>
@@ -749,12 +846,38 @@ const SalaryQuery: React.FC = () => {
               column={2} 
               style={{ marginTop: '16px' }}
             >
-              <Descriptions.Item label="个人社保公积金">
-                ¥{selectedRecord.personalSocialTotal?.toLocaleString() || 0}
+              <Descriptions.Item label="个人养老保险">
+                ¥{selectedRecord.personalPension?.toLocaleString() || 0}
+              </Descriptions.Item>
+              <Descriptions.Item label="个人医疗保险">
+                ¥{selectedRecord.personalMedical?.toLocaleString() || 0}
+              </Descriptions.Item>
+              <Descriptions.Item label="个人失业保险">
+                ¥{selectedRecord.personalUnemployment?.toLocaleString() || 0}
+              </Descriptions.Item>
+              <Descriptions.Item label="个人住房公积金">
+                ¥{selectedRecord.personalHousingFund?.toLocaleString() || 0}
+              </Descriptions.Item>
+              <Descriptions.Item label="个人社保公积金合计">
+                <span style={{ color: '#ff7875', fontWeight: 'bold' }}>
+                  ¥{selectedRecord.personalSocialTotal?.toLocaleString() || 0}
+                </span>
+              </Descriptions.Item>
+              <Descriptions.Item label="应纳税所得额">
+                ¥{selectedRecord.taxableIncome?.toLocaleString() || 0}
               </Descriptions.Item>
               <Descriptions.Item label="个人所得税">
-                ¥{selectedRecord.personalIncomeTax?.toLocaleString() || 0}
+                <span style={{ color: '#ff7875' }}>
+                  ¥{selectedRecord.personalIncomeTax?.toLocaleString() || 0}
+                </span>
               </Descriptions.Item>
+              {selectedRecord.otherDeduction > 0 && (
+                <Descriptions.Item label="其他扣除">
+                  <span style={{ color: '#ff7875' }}>
+                    ¥{selectedRecord.otherDeduction?.toLocaleString() || 0}
+                  </span>
+                </Descriptions.Item>
+              )}
               <Descriptions.Item label="实发工资" span={2}>
                 <span style={{ fontWeight: 'bold', color: '#52c41a', fontSize: '16px' }}>
                   ¥{selectedRecord.netPay?.toLocaleString() || 0}
@@ -763,12 +886,35 @@ const SalaryQuery: React.FC = () => {
             </Descriptions>
 
             <Descriptions 
-              title="公司成本" 
+              title="公司成本明细" 
               bordered 
               size="small" 
-              column={1} 
+              column={2} 
               style={{ marginTop: '16px' }}
             >
+              <Descriptions.Item label="公司养老保险">
+                ¥{selectedRecord.companyPension?.toLocaleString() || 0}
+              </Descriptions.Item>
+              <Descriptions.Item label="公司医疗保险">
+                ¥{selectedRecord.companyMedical?.toLocaleString() || 0}
+              </Descriptions.Item>
+              <Descriptions.Item label="公司失业保险">
+                ¥{selectedRecord.companyUnemployment?.toLocaleString() || 0}
+              </Descriptions.Item>
+              <Descriptions.Item label="公司生育保险">
+                ¥{selectedRecord.companyMaternity?.toLocaleString() || 0}
+              </Descriptions.Item>
+              <Descriptions.Item label="公司工伤保险">
+                ¥{selectedRecord.companyInjury?.toLocaleString() || 0}
+              </Descriptions.Item>
+              <Descriptions.Item label="公司住房公积金">
+                ¥{selectedRecord.companyHousingFund?.toLocaleString() || 0}
+              </Descriptions.Item>
+              <Descriptions.Item label="公司社保公积金合计">
+                <span style={{ color: '#722ed1', fontWeight: 'bold' }}>
+                  ¥{selectedRecord.companySocialTotal?.toLocaleString() || 0}
+                </span>
+              </Descriptions.Item>
               <Descriptions.Item label="公司总成本">
                 <span style={{ fontWeight: 'bold', color: '#722ed1', fontSize: '16px' }}>
                   ¥{selectedRecord.totalCompanyCost?.toLocaleString() || 0}

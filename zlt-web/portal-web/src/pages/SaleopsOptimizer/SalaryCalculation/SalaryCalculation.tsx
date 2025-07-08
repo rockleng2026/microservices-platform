@@ -32,6 +32,7 @@ import {
   ExclamationCircleOutlined,
   PlayCircleOutlined,
   PauseCircleOutlined,
+  BarChartOutlined,
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
@@ -46,6 +47,7 @@ import {
   getDepartmentOptions,
   getEmployeeOptions,
   validateCalculationData,
+  getSalarySummary,
 } from '../../../services/soo';
 
 const { Option } = Select;
@@ -106,6 +108,34 @@ interface EmployeeOption {
   departmentName: string;
 }
 
+// 薪酬统计汇总接口
+interface SalarySummary {
+  id: number;
+  taskId: string;
+  summaryType: 'TOTAL' | 'DEPARTMENT';
+  month: string;
+  departmentId?: number;
+  departmentName?: string;
+  totalEmployeeCount: number;
+  calculationEmployeeCount: number;
+  totalBaseSalary: number;
+  totalPerformancePay: number;
+  totalCommission: number;
+  totalBonus: number;
+  totalAllowance: number;
+  totalGrossPay: number;
+  totalDeduction: number; // 后端返回的字段名
+  totalNetPay: number;
+  totalPersonalSocial: number; // 后端返回的字段名
+  totalCompanySocial: number; // 后端返回的字段名
+  totalPersonalTax: number; // 后端返回的字段名
+  totalCompanyCost: number;
+  avgGrossPay: number;
+  avgNetPay: number;
+  avgCompanyCost: number;
+  createdAt: string;
+}
+
 const SalaryCalculation: React.FC = () => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -118,6 +148,11 @@ const SalaryCalculation: React.FC = () => {
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [progressPolling, setProgressPolling] = useState<NodeJS.Timeout | null>(null);
   
+  // 薪酬统计汇总相关状态
+  const [salarySummary, setSalarySummary] = useState<SalarySummary[]>([]);
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+
   // 统计数据
   const [taskStats, setTaskStats] = useState({
     totalTasks: 0,
@@ -201,14 +236,10 @@ const SalaryCalculation: React.FC = () => {
   const loadTaskStats = async () => {
     try {
       const response = await getSalaryTaskStatistics();
-      
-      console.log('任务统计API响应:', response);
-      
-      // 适配不同的响应格式: success/data 或 resp_code/datas
       if (response.success && response.data) {
         setTaskStats(response.data);
-      } else if (response.resp_code === 0 && response.datas) {
-        setTaskStats(response.datas);
+      } else if (response.resp_code === 0 && response.data) {
+        setTaskStats(response.data);
       } else {
         console.error('加载统计数据失败:', response);
       }
@@ -406,6 +437,36 @@ const SalaryCalculation: React.FC = () => {
     setShowTaskModal(true);
   };
 
+  // 查看薪酬统计汇总
+  const handleViewSalarySummary = async (task: SalaryCalculationTask) => {
+    try {
+      setSummaryLoading(true);
+      const response = await getSalarySummary(task.taskId);
+      
+      console.log('薪酬统计汇总API响应:', response);
+      
+      // 适配不同的响应格式
+      let summaryData = [];
+      if (response.success && response.data) {
+        summaryData = Array.isArray(response.data) ? response.data : [response.data];
+      } else if (response.resp_code === 0 && response.datas) {
+        summaryData = Array.isArray(response.datas) ? response.datas : [response.datas];
+      } else {
+        message.error('获取薪酬统计汇总失败');
+        return;
+      }
+      
+      setSalarySummary(summaryData);
+      setCurrentTask(task);
+      setShowSummaryModal(true);
+    } catch (error) {
+      console.error('获取薪酬统计汇总失败:', error);
+      message.error('获取薪酬统计汇总失败');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
+
   // 表单计算类型变化处理
   const handleCalculationTypeChange = (value: string) => {
     form.setFieldsValue({
@@ -569,6 +630,17 @@ const SalaryCalculation: React.FC = () => {
               onClick={() => handleViewTaskDetail(record)}
             />
           </Tooltip>
+          
+          {record.taskStatus === 'COMPLETED' && (
+            <Tooltip title="查看薪酬统计汇总">
+              <Button 
+                type="text" 
+                icon={<BarChartOutlined />} 
+                onClick={() => handleViewSalarySummary(record)}
+                loading={summaryLoading}
+              />
+            </Tooltip>
+          )}
           
           {record.taskStatus === 'PENDING' && (
             <Tooltip title="执行任务">
@@ -981,6 +1053,250 @@ const SalaryCalculation: React.FC = () => {
               <div style={{ marginTop: 16 }}>
                 <strong>预计剩余时间：</strong>{taskProgress.estimatedTimeRemaining}
               </div>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      {/* 薪酬统计汇总模态框 */}
+      <Modal
+        title={`薪酬统计汇总 - ${currentTask?.taskName}`}
+        open={showSummaryModal}
+        onCancel={() => setShowSummaryModal(false)}
+        footer={[
+          <Button key="close" onClick={() => setShowSummaryModal(false)}>
+            关闭
+          </Button>
+        ]}
+        width={1200}
+      >
+        {salarySummary.length > 0 && (
+          <div>
+            {/* 全公司汇总 */}
+            {salarySummary.filter(s => s.summaryType === 'TOTAL').map(summary => (
+              <Card key={summary.id} title="全公司薪酬汇总" style={{ marginBottom: 16 }}>
+                <Row gutter={16}>
+                  <Col span={6}>
+                    <Statistic
+                      title="总员工数"
+                      value={summary.totalEmployeeCount}
+                      suffix="人"
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Statistic
+                      title="参与计算员工数"
+                      value={summary.calculationEmployeeCount}
+                      suffix="人"
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Statistic
+                      title="应发工资总额"
+                      value={summary.totalGrossPay}
+                      precision={2}
+                      formatter={(value) => formatAmount(Number(value))}
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Statistic
+                      title="实发工资总额"
+                      value={summary.totalNetPay}
+                      precision={2}
+                      formatter={(value) => formatAmount(Number(value))}
+                    />
+                  </Col>
+                </Row>
+                <Divider />
+                <Row gutter={16}>
+                  <Col span={4}>
+                    <Statistic
+                      title="基础工资"
+                      value={summary.totalBaseSalary}
+                      precision={2}
+                      formatter={(value) => formatAmount(Number(value))}
+                    />
+                  </Col>
+                  <Col span={4}>
+                    <Statistic
+                      title="绩效工资"
+                      value={summary.totalPerformancePay}
+                      precision={2}
+                      formatter={(value) => formatAmount(Number(value))}
+                    />
+                  </Col>
+                  <Col span={4}>
+                    <Statistic
+                      title="提成"
+                      value={summary.totalCommission}
+                      precision={2}
+                      formatter={(value) => formatAmount(Number(value))}
+                    />
+                  </Col>
+                  <Col span={4}>
+                    <Statistic
+                      title="奖金"
+                      value={summary.totalBonus}
+                      precision={2}
+                      formatter={(value) => formatAmount(Number(value))}
+                    />
+                  </Col>
+                  <Col span={4}>
+                    <Statistic
+                      title="补贴"
+                      value={summary.totalAllowance}
+                      precision={2}
+                      formatter={(value) => formatAmount(Number(value))}
+                    />
+                  </Col>
+                  <Col span={4}>
+                    <Statistic
+                      title="总扣除"
+                      value={summary.totalDeduction}
+                      precision={2}
+                      formatter={(value) => formatAmount(Number(value))}
+                    />
+                  </Col>
+                </Row>
+                <Divider />
+                <Row gutter={16}>
+                  <Col span={6}>
+                    <Statistic
+                      title="个人社保公积金"
+                      value={summary.totalPersonalSocial}
+                      precision={2}
+                      formatter={(value) => formatAmount(Number(value))}
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Statistic
+                      title="个人所得税"
+                      value={summary.totalPersonalTax}
+                      precision={2}
+                      formatter={(value) => formatAmount(Number(value))}
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Statistic
+                      title="公司社保公积金"
+                      value={summary.totalCompanySocial}
+                      precision={2}
+                      formatter={(value) => formatAmount(Number(value))}
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Statistic
+                      title="公司总成本"
+                      value={summary.totalCompanyCost}
+                      precision={2}
+                      formatter={(value) => formatAmount(Number(value))}
+                    />
+                  </Col>
+                </Row>
+                <Divider />
+                <Row gutter={16}>
+                  <Col span={6}>
+                    <Statistic
+                      title="人均应发工资"
+                      value={summary.avgGrossPay}
+                      precision={2}
+                      formatter={(value) => formatAmount(Number(value))}
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Statistic
+                      title="人均实发工资"
+                      value={summary.avgNetPay}
+                      precision={2}
+                      formatter={(value) => formatAmount(Number(value))}
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Statistic
+                      title="人均公司成本"
+                      value={summary.avgCompanyCost}
+                      precision={2}
+                      formatter={(value) => formatAmount(Number(value))}
+                    />
+                  </Col>
+                  <Col span={6}>
+                    <Statistic
+                      title="计算参与率"
+                      value={((summary.calculationEmployeeCount / summary.totalEmployeeCount) * 100).toFixed(1)}
+                      suffix="%"
+                    />
+                  </Col>
+                </Row>
+              </Card>
+            ))}
+
+            {/* 部门汇总 */}
+            {salarySummary.filter(s => s.summaryType === 'DEPARTMENT').length > 0 && (
+              <Card title="部门薪酬汇总">
+                <Table
+                  columns={[
+                    {
+                      title: '部门名称',
+                      dataIndex: 'departmentName',
+                      key: 'departmentName',
+                      width: 120,
+                    },
+                    {
+                      title: '员工数',
+                      dataIndex: 'calculationEmployeeCount',
+                      key: 'calculationEmployeeCount',
+                      width: 80,
+                      render: (count) => `${count}人`,
+                    },
+                    {
+                      title: '应发工资',
+                      dataIndex: 'totalGrossPay',
+                      key: 'totalGrossPay',
+                      width: 120,
+                      render: (amount) => formatAmount(amount),
+                    },
+                    {
+                      title: '实发工资',
+                      dataIndex: 'totalNetPay',
+                      key: 'totalNetPay',
+                      width: 120,
+                      render: (amount) => formatAmount(amount),
+                    },
+                    {
+                      title: '公司成本',
+                      dataIndex: 'totalCompanyCost',
+                      key: 'totalCompanyCost',
+                      width: 120,
+                      render: (amount) => formatAmount(amount),
+                    },
+                    {
+                      title: '人均应发',
+                      dataIndex: 'avgGrossPay',
+                      key: 'avgGrossPay',
+                      width: 120,
+                      render: (amount) => formatAmount(amount),
+                    },
+                    {
+                      title: '人均实发',
+                      dataIndex: 'avgNetPay',
+                      key: 'avgNetPay',
+                      width: 120,
+                      render: (amount) => formatAmount(amount),
+                    },
+                    {
+                      title: '人均成本',
+                      dataIndex: 'avgCompanyCost',
+                      key: 'avgCompanyCost',
+                      width: 120,
+                      render: (amount) => formatAmount(amount),
+                    },
+                  ]}
+                  dataSource={salarySummary.filter(s => s.summaryType === 'DEPARTMENT')}
+                  rowKey="id"
+                  pagination={false}
+                  size="small"
+                />
+              </Card>
             )}
           </div>
         )}

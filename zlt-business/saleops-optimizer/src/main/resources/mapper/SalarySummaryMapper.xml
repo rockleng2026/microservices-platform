@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.soo.mapper.SalarySummaryMapper">
+
+    <!-- 基础resultMap -->
+    <resultMap id="BaseResultMap" type="com.central.soo.model.entity.SalarySummary">
+        <id property="id" column="id" />
+        <result property="taskId" column="task_id" />
+        <result property="summaryType" column="summary_type" />
+        <result property="month" column="month" />
+        <result property="departmentId" column="department_id" />
+        <result property="departmentName" column="department_name" />
+        <result property="totalEmployeeCount" column="total_employee_count" />
+        <result property="calculationEmployeeCount" column="calculation_employee_count" />
+        <result property="totalBaseSalary" column="total_base_salary" />
+        <result property="totalPerformancePay" column="total_performance_pay" />
+        <result property="totalCommission" column="total_commission" />
+        <result property="totalBonus" column="total_bonus" />
+        <result property="totalAllowance" column="total_allowance" />
+        <result property="totalGrossPay" column="total_gross_pay" />
+        <result property="totalDeduction" column="total_deduction" />
+        <result property="totalNetPay" column="total_net_pay" />
+        <result property="totalPersonalSocial" column="total_personal_social" />
+        <result property="totalCompanySocial" column="total_company_social" />
+        <result property="totalPersonalTax" column="total_personal_tax" />
+        <result property="totalCompanyCost" column="total_company_cost" />
+        <result property="avgGrossPay" column="avg_gross_pay" />
+        <result property="avgNetPay" column="avg_net_pay" />
+        <result property="avgCompanyCost" column="avg_company_cost" />
+        <result property="createdAt" column="created_at" />
+        <result property="updatedAt" column="updated_at" />
+        <result property="createdBy" column="created_by" />
+        <result property="updatedBy" column="updated_by" />
+        <result property="tenantId" column="tenant_id" />
+        <result property="delflag" column="delflag" />
+    </resultMap>
+
+    <!-- 根据任务ID查询汇总统计 -->
+    <select id="selectByTaskId" resultMap="BaseResultMap">
+        SELECT * FROM soo_salary_summary 
+        WHERE task_id = #{taskId} 
+        AND delflag = 0
+        ORDER BY summary_type, department_id
+    </select>
+
+    <!-- 根据任务ID和部门ID查询汇总统计 -->
+    <select id="selectByTaskIdAndDepartmentId" resultMap="BaseResultMap">
+        SELECT * FROM soo_salary_summary 
+        WHERE task_id = #{taskId} 
+        AND department_id = #{departmentId}
+        AND delflag = 0
+        LIMIT 1
+    </select>
+
+    <!-- 根据任务ID删除统计数据 -->
+    <delete id="deleteByTaskId">
+        DELETE FROM soo_salary_summary 
+        WHERE task_id = #{taskId}
+    </delete>
+
+</mapper> 

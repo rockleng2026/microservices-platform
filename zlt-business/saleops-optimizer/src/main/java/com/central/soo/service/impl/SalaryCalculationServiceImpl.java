@@ -29,6 +29,20 @@ import com.alibaba.ttl.threadpool.TtlExecutors;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.central.soo.service.IEmployeeSalaryConfigService;
+import com.central.soo.service.IDepartmentBonusConfigService;
+import com.central.soo.service.IMonthlyPerformanceService;
+import com.central.soo.service.IJobLevelSalaryService;
+import com.central.soo.service.IRegionalSalaryCoefficientService;
+import com.central.soo.service.ISocialSecurityBaseService;
+import com.central.soo.feign.EmployeeFeignClient;
+import com.central.soo.feign.DepartmentFeignClient;
+import com.central.soo.model.EmployeeSalaryConfig;
+import com.central.soo.model.entity.RegionalSalaryCoefficient;
+import com.central.soo.model.JobLevelSalary;
+import com.central.soo.model.SocialSecurityBase;
+import com.central.soo.model.DepartmentBonusConfig;
+import java.time.LocalDate;
 
 /**
  * 薪酬计算服务实现类
@@ -44,6 +58,30 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
 
     @Autowired
     private SalaryCalculationEngine salaryCalculationEngine;
+    
+    @Autowired
+    private IEmployeeSalaryConfigService employeeSalaryConfigService;
+    
+    @Autowired
+    private IDepartmentBonusConfigService departmentBonusConfigService;
+    
+    @Autowired
+    private IMonthlyPerformanceService monthlyPerformanceService;
+    
+    @Autowired
+    private IJobLevelSalaryService jobLevelSalaryService;
+    
+    @Autowired
+    private IRegionalSalaryCoefficientService regionalSalaryCoefficientService;
+    
+    @Autowired
+    private ISocialSecurityBaseService socialSecurityBaseService;
+    
+    @Autowired
+    private EmployeeFeignClient employeeFeignClient;
+    
+    @Autowired
+    private DepartmentFeignClient departmentFeignClient;
 
     // 配置支持TTL的线程池
     private final Executor ttlExecutor = TtlExecutors.getTtlExecutor(
@@ -309,44 +347,136 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
     private List<EmployeeBasicInfo> getTargetEmployees(SalaryCalculationTask task) {
         log.info("开始获取目标员工列表，任务ID: {}, 计算类型: {}", task.getTaskId(), task.getCalculationType());
         
-        // 模拟获取员工数据 - 实际应该从组织架构服务获取
         List<EmployeeBasicInfo> employees = new ArrayList<>();
         
-        // 模拟数据
-        String[] names = {"张伟强", "李雅芳", "王建华", "陈小明", "刘晓宇", "赵敏", "孙丽", "周强", "吴梅", "郑刚"};
-        String[] departments = {"技术开发部", "销售部", "市场部", "财务部", "人事部"};
-        String[] positions = {"高级开发工程师", "销售经理", "市场专员", "财务分析师", "人事主管"};
-        
-        int employeeCount = 10; // 默认10个员工用于测试
-        if ("DEPARTMENT".equals(task.getCalculationType()) && task.getTargetDepartmentIds() != null) {
-            employeeCount = 5; // 部门计算减少员工数
-            log.info("按部门计算，目标部门IDs: {}, 员工数量: {}", task.getTargetDepartmentIds(), employeeCount);
-        } else if ("EMPLOYEE".equals(task.getCalculationType()) && task.getTargetEmployeeIds() != null) {
-            employeeCount = task.getTargetEmployeeIds().split(",").length;
-            log.info("按员工计算，目标员工IDs: {}, 员工数量: {}", task.getTargetEmployeeIds(), employeeCount);
-        } else {
-            log.info("全员计算，员工数量: {}", employeeCount);
+        try {
+            if ("DEPARTMENT".equals(task.getCalculationType()) && task.getTargetDepartmentIds() != null) {
+                // 按部门计算：获取指定部门的所有员工
+                String[] departmentIds = task.getTargetDepartmentIds().split(",");
+                log.info("按部门计算，目标部门IDs: {}", task.getTargetDepartmentIds());
+                
+                for (String departmentIdStr : departmentIds) {
+                    Long departmentId = Long.valueOf(departmentIdStr.trim());
+                    try {
+                        Result<List<Map<String, Object>>> result = employeeFeignClient.getEmployeesByDepartment(departmentId, true);
+                        if (result != null && result.getDatas() != null) {
+                            for (Map<String, Object> empData : result.getDatas()) {
+                                EmployeeBasicInfo employee = convertToEmployeeBasicInfo(empData);
+                                if (employee != null) {
+                                    employees.add(employee);
+                                }
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.error("获取部门{}员工列表失败: {}", departmentId, e.getMessage(), e);
+                    }
+                }
+                
+            } else if ("EMPLOYEE".equals(task.getCalculationType()) && task.getTargetEmployeeIds() != null) {
+                // 按员工计算：获取指定员工信息
+                String[] employeeIds = task.getTargetEmployeeIds().split(",");
+                log.info("按员工计算，目标员工IDs: {}", task.getTargetEmployeeIds());
+                
+                List<Long> employeeIdList = new ArrayList<>();
+                for (String employeeIdStr : employeeIds) {
+                    employeeIdList.add(Long.valueOf(employeeIdStr.trim()));
+                }
+                
+                try {
+                    Result<List<Map<String, Object>>> result = employeeFeignClient.getEmployeeBatchDetail(employeeIdList);
+                                            if (result != null && result.getDatas() != null) {
+                            for (Map<String, Object> empData : result.getDatas()) {
+                            EmployeeBasicInfo employee = convertToEmployeeBasicInfo(empData);
+                            if (employee != null) {
+                                employees.add(employee);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.error("批量获取员工详情失败: {}", e.getMessage(), e);
+                }
+                
+            } else {
+                // 全员计算：获取所有在职员工
+                log.info("全员计算，获取所有在职员工");
+                try {
+                    Result<PageResult<Map<String, Object>>> result = employeeFeignClient.getEmployeePage(1, 1000, null, null, null, 1);
+                                         if (result != null && result.getDatas() != null && result.getDatas().getData() != null) {
+                         for (Map<String, Object> empData : result.getDatas().getData()) {
+                            EmployeeBasicInfo employee = convertToEmployeeBasicInfo(empData);
+                            if (employee != null) {
+                                employees.add(employee);
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    log.error("获取全员列表失败: {}", e.getMessage(), e);
+                }
+            }
+            
+            log.info("目标员工列表获取完成，任务ID: {}, 员工总数: {}", task.getTaskId(), employees.size());
+            
+        } catch (Exception e) {
+            log.error("获取目标员工列表异常，任务ID: {}, 错误信息: {}", task.getTaskId(), e.getMessage(), e);
         }
         
-        for (int i = 0; i < employeeCount; i++) {
+        return employees;
+    }
+    
+    /**
+     * 将组织服务返回的员工数据转换为EmployeeBasicInfo
+     */
+    private EmployeeBasicInfo convertToEmployeeBasicInfo(Map<String, Object> empData) {
+        try {
             EmployeeBasicInfo employee = new EmployeeBasicInfo();
-            employee.setEmployeeId((long) (i + 1));
-            employee.setEmployeeName(names[i % names.length]);
-            employee.setEmployeeNo("EMP" + String.format("%03d", i + 1));
-            employee.setDepartmentId((long) (i % 3 + 1));
-            employee.setDepartmentName(departments[i % departments.length]);
-            employee.setPositionId((long) (i % 5 + 1)); // 设置岗位ID
-            employee.setPositionName(positions[i % positions.length]);
-            employee.setRegion("BEIJING");
-            employees.add(employee);
             
-            log.debug("添加员工到计算列表，员工ID: {}, 姓名: {}, 部门: {}, 岗位: {}", 
+            // 处理Long类型的ID字段
+            Object idObj = empData.get("id");
+            if (idObj != null) {
+                if (idObj instanceof String) {
+                    employee.setEmployeeId(Long.valueOf((String) idObj));
+                } else if (idObj instanceof Number) {
+                    employee.setEmployeeId(((Number) idObj).longValue());
+                }
+            }
+            
+            employee.setEmployeeName((String) empData.get("name"));
+            employee.setEmployeeNo((String) empData.get("empNo"));
+            
+            // 处理部门信息
+            Object deptIdObj = empData.get("departmentId");
+            if (deptIdObj != null) {
+                if (deptIdObj instanceof String) {
+                    employee.setDepartmentId(Long.valueOf((String) deptIdObj));
+                } else if (deptIdObj instanceof Number) {
+                    employee.setDepartmentId(((Number) deptIdObj).longValue());
+                }
+            }
+            employee.setDepartmentName((String) empData.get("departmentName"));
+            
+            // 处理岗位信息
+            Object positionIdObj = empData.get("positionId");
+            if (positionIdObj != null) {
+                if (positionIdObj instanceof String) {
+                    employee.setPositionId(Long.valueOf((String) positionIdObj));
+                } else if (positionIdObj instanceof Number) {
+                    employee.setPositionId(((Number) positionIdObj).longValue());
+                }
+            }
+            employee.setPositionName((String) empData.get("positionName"));
+            
+            // 默认地区，可以从员工的扩展信息中获取
+            employee.setRegion("BEIJING"); // 默认值，后续可以从员工配置中读取
+            
+            log.debug("转换员工数据成功，员工ID: {}, 姓名: {}, 部门: {}, 岗位: {}", 
                     employee.getEmployeeId(), employee.getEmployeeName(), 
                     employee.getDepartmentName(), employee.getPositionName());
+            
+            return employee;
+        } catch (Exception e) {
+            log.error("转换员工数据失败，原始数据: {}, 错误信息: {}", empData, e.getMessage(), e);
+            return null;
         }
-        
-        log.info("目标员工列表获取完成，任务ID: {}, 员工总数: {}", task.getTaskId(), employees.size());
-        return employees;
     }
     
     /**
@@ -419,6 +549,8 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
         SalaryCalculationContext context = new SalaryCalculationContext();
         context.setMonth(task.getCalculationMonth());
         
+        log.debug("开始构建薪酬计算上下文，员工ID: {}, 月份: {}", employee.getEmployeeId(), task.getCalculationMonth());
+        
         // 设置员工信息
         SalaryCalculationContext.EmployeeInfo employeeInfo = new SalaryCalculationContext.EmployeeInfo();
         employeeInfo.setId(employee.getEmployeeId());
@@ -432,80 +564,432 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
         employeeInfo.setStatus(1);
         context.setEmployee(employeeInfo);
         
-        // 设置薪酬配置（模拟数据）
+        try {
+            // 1. 获取员工薪酬配置
+            SalaryCalculationContext.SalaryConfig salaryConfig = getSalaryConfig(employee.getEmployeeId());
+            context.setSalaryConfig(salaryConfig);
+            
+            // 2. 获取地区系数
+            SalaryCalculationContext.RegionalCoefficient regionalCoefficient = getRegionalCoefficient(employee.getRegion());
+            context.setRegionalCoefficient(regionalCoefficient);
+            
+            // 3. 获取绩效数据
+            MonthlyPerformance performance = getMonthlyPerformance(employee.getEmployeeId(), task.getCalculationMonth());
+            context.setPerformance(performance);
+            
+            // 4. 获取职级配置
+            SalaryCalculationContext.JobLevelSalary jobLevelSalary = getJobLevelSalary(employee.getPositionId());
+            context.setJobLevelSalary(jobLevelSalary);
+            
+            // 5. 获取社保配置
+            SalaryCalculationContext.SocialSecurityConfig socialSecurityConfig = getSocialSecurityConfig(employee.getRegion());
+            context.setSocialSecurityConfig(socialSecurityConfig);
+            
+            // 6. 获取部门分红配置
+            SalaryCalculationContext.DepartmentBonusConfig departmentBonusConfig = getDepartmentBonusConfig(employee.getDepartmentId());
+            context.setDepartmentBonusConfig(departmentBonusConfig);
+            
+            // 7. 获取盈亏平衡分析数据
+            SalaryCalculationContext.BreakevenAnalysisData breakevenAnalysis = getBreakevenAnalysisData(task.getCalculationMonth());
+            context.setBreakevenAnalysis(breakevenAnalysis);
+            
+            log.debug("薪酬计算上下文构建完成，员工ID: {}", employee.getEmployeeId());
+            
+        } catch (Exception e) {
+            log.error("构建薪酬计算上下文失败，员工ID: {}, 错误信息: {}", employee.getEmployeeId(), e.getMessage(), e);
+            // 设置默认值以确保计算能够继续
+            setDefaultCalculationContext(context, employee);
+        }
+        
+        return context;
+    }
+    
+    /**
+     * 获取员工薪酬配置
+     */
+    private SalaryCalculationContext.SalaryConfig getSalaryConfig(Long employeeId) {
         SalaryCalculationContext.SalaryConfig salaryConfig = new SalaryCalculationContext.SalaryConfig();
-        salaryConfig.setEmployeeId(employee.getEmployeeId());
-        salaryConfig.setBaseSalary(BigDecimal.valueOf(15000 + (employee.getEmployeeId() * 1000)));
-        salaryConfig.setRegion(employee.getRegion());
-        salaryConfig.setIsSalesIncentive(true);
-        salaryConfig.setSalesIncentiveRatio(BigDecimal.valueOf(100));
-        salaryConfig.setIsTeamIncentive(true);
-        salaryConfig.setTeamIncentiveRatio(BigDecimal.valueOf(80));
+        
+        try {
+            // 从数据库获取员工薪酬配置
+            QueryWrapper<EmployeeSalaryConfig> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("employee_id", employeeId)
+                       .eq("status", 1)
+                       .eq("delflag", 0)
+                       .le("effective_date", LocalDate.now())
+                       .and(wrapper -> wrapper.isNull("expire_date").or().ge("expire_date", LocalDate.now()))
+                       .orderByDesc("effective_date")
+                       .last("LIMIT 1");
+            
+            EmployeeSalaryConfig config = employeeSalaryConfigService.getOne(queryWrapper);
+            
+            if (config != null) {
+                salaryConfig.setEmployeeId(employeeId);
+                salaryConfig.setBaseSalary(config.getBaseSalary());
+                salaryConfig.setRegion(config.getRegion());
+                salaryConfig.setIsSalesIncentive(config.getIsSalesIncentive() != null && config.getIsSalesIncentive() == 1);
+                salaryConfig.setSalesIncentiveRatio(config.getSalesIncentiveRatio());
+                salaryConfig.setIsTeamIncentive(config.getIsTeamIncentive() != null && config.getIsTeamIncentive() == 1);
+                salaryConfig.setTeamIncentiveRatio(config.getTeamIncentiveRatio());
+                salaryConfig.setIsDepartmentBonus(config.getIsDepartmentBonus() != null && config.getIsDepartmentBonus() == 1);
+                salaryConfig.setStatus(1);
+                
+                log.debug("获取员工薪酬配置成功，员工ID: {}, 基础工资: {}", employeeId, config.getBaseSalary());
+            } else {
+                // 如果没有配置，设置默认值
+                setDefaultSalaryConfig(salaryConfig, employeeId);
+                log.warn("员工{}未找到薪酬配置，使用默认值", employeeId);
+            }
+            
+        } catch (Exception e) {
+            log.error("获取员工薪酬配置失败，员工ID: {}, 错误信息: {}", employeeId, e.getMessage(), e);
+            setDefaultSalaryConfig(salaryConfig, employeeId);
+        }
+        
+        return salaryConfig;
+    }
+    
+    /**
+     * 获取地区系数
+     */
+    private SalaryCalculationContext.RegionalCoefficient getRegionalCoefficient(String region) {
+        SalaryCalculationContext.RegionalCoefficient regionalCoefficient = new SalaryCalculationContext.RegionalCoefficient();
+        
+        try {
+            QueryWrapper<RegionalSalaryCoefficient> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("region", region)
+                       .eq("status", 1)
+                       .eq("delflag", 0)
+                       .le("effective_date", LocalDate.now())
+                       .and(wrapper -> wrapper.isNull("expire_date").or().ge("expire_date", LocalDate.now()))
+                       .orderByDesc("effective_date")
+                       .last("LIMIT 1");
+            
+            RegionalSalaryCoefficient config = regionalSalaryCoefficientService.getOne(queryWrapper);
+            
+            if (config != null) {
+                regionalCoefficient.setRegion(region);
+                regionalCoefficient.setSalaryCoefficient(config.getSalaryCoefficient());
+                regionalCoefficient.setStatus(1);
+                
+                log.debug("获取地区系数成功，地区: {}, 系数: {}", region, config.getSalaryCoefficient());
+            } else {
+                // 如果没有配置，设置默认系数为1.0
+                regionalCoefficient.setRegion(region);
+                regionalCoefficient.setSalaryCoefficient(BigDecimal.valueOf(1.0));
+                regionalCoefficient.setStatus(1);
+                log.warn("地区{}未找到工资系数配置，使用默认系数1.0", region);
+            }
+            
+        } catch (Exception e) {
+            log.error("获取地区系数失败，地区: {}, 错误信息: {}", region, e.getMessage(), e);
+            // 设置默认值
+            regionalCoefficient.setRegion(region);
+            regionalCoefficient.setSalaryCoefficient(BigDecimal.valueOf(1.0));
+            regionalCoefficient.setStatus(1);
+        }
+        
+        return regionalCoefficient;
+    }
+    
+    /**
+     * 获取月度绩效数据
+     */
+    private MonthlyPerformance getMonthlyPerformance(Long employeeId, String month) {
+        try {
+            QueryWrapper<MonthlyPerformance> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("employee_id", employeeId)
+                       .eq("month", month)
+                       .eq("status", 1)
+                       .eq("delflag", 0)
+                       .orderByDesc("updated_at")
+                       .last("LIMIT 1");
+            
+            MonthlyPerformance performance = monthlyPerformanceService.getOne(queryWrapper);
+            
+            if (performance != null) {
+                log.debug("获取月度绩效数据成功，员工ID: {}, 月份: {}, 绩效得分: {}", 
+                        employeeId, month, performance.getPerformanceScore());
+                return performance;
+            } else {
+                // 如果没有绩效数据，创建默认绩效
+                MonthlyPerformance defaultPerformance = createDefaultPerformance(employeeId, month);
+                log.warn("员工{}在{}月未找到绩效数据，使用默认绩效: {}", employeeId, month, defaultPerformance.getPerformanceScore());
+                return defaultPerformance;
+            }
+            
+        } catch (Exception e) {
+            log.error("获取月度绩效数据失败，员工ID: {}, 月份: {}, 错误信息: {}", employeeId, month, e.getMessage(), e);
+            return createDefaultPerformance(employeeId, month);
+        }
+    }
+    
+    /**
+     * 获取职级薪资标准
+     */
+    private SalaryCalculationContext.JobLevelSalary getJobLevelSalary(Long positionId) {
+        SalaryCalculationContext.JobLevelSalary jobLevelSalary = new SalaryCalculationContext.JobLevelSalary();
+        
+        try {
+            QueryWrapper<JobLevelSalary> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("position_id", positionId)
+                       .eq("status", 1)
+                       .eq("delflag", 0)
+                       .le("effective_date", LocalDate.now())
+                       .and(wrapper -> wrapper.isNull("expire_date").or().ge("expire_date", LocalDate.now()))
+                       .orderByDesc("effective_date")
+                       .last("LIMIT 1");
+            
+            JobLevelSalary config = jobLevelSalaryService.getOne(queryWrapper);
+            
+            if (config != null) {
+                jobLevelSalary.setJobLevelCode(config.getJobLevelCode());
+                jobLevelSalary.setPerformanceRatioMin(config.getPerformanceRatioMin());
+                jobLevelSalary.setPerformanceRatioMax(config.getPerformanceRatioMax());
+                jobLevelSalary.setStatus(1);
+                
+                log.debug("获取职级薪资标准成功，岗位ID: {}, 职级: {}, 绩效比例范围: {} - {}", 
+                        positionId, config.getJobLevelCode(), config.getPerformanceRatioMin(), config.getPerformanceRatioMax());
+            } else {
+                // 设置默认值
+                jobLevelSalary.setJobLevelCode("NORMAL");
+                jobLevelSalary.setPerformanceRatioMin(BigDecimal.valueOf(0.8));
+                jobLevelSalary.setPerformanceRatioMax(BigDecimal.valueOf(1.2));
+                jobLevelSalary.setStatus(1);
+                log.warn("岗位{}未找到职级薪资标准，使用默认值", positionId);
+            }
+            
+        } catch (Exception e) {
+            log.error("获取职级薪资标准失败，岗位ID: {}, 错误信息: {}", positionId, e.getMessage(), e);
+            // 设置默认值
+            jobLevelSalary.setJobLevelCode("NORMAL");
+            jobLevelSalary.setPerformanceRatioMin(BigDecimal.valueOf(0.8));
+            jobLevelSalary.setPerformanceRatioMax(BigDecimal.valueOf(1.2));
+            jobLevelSalary.setStatus(1);
+        }
+        
+        return jobLevelSalary;
+    }
+    
+    /**
+     * 获取社保配置
+     */
+    private SalaryCalculationContext.SocialSecurityConfig getSocialSecurityConfig(String region) {
+        SalaryCalculationContext.SocialSecurityConfig socialSecurityConfig = new SalaryCalculationContext.SocialSecurityConfig();
+        
+        try {
+            QueryWrapper<SocialSecurityBase> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("region", region)
+                       .eq("year", LocalDate.now().getYear())
+                       .eq("status", 1)
+                       .eq("delflag", 0)
+                       .le("effective_date", LocalDate.now())
+                       .and(wrapper -> wrapper.isNull("expire_date").or().ge("expire_date", LocalDate.now()))
+                       .orderByDesc("effective_date")
+                       .last("LIMIT 1");
+            
+            SocialSecurityBase config = socialSecurityBaseService.getOne(queryWrapper);
+            
+            if (config != null) {
+                socialSecurityConfig.setRegion(region);
+                socialSecurityConfig.setYear(config.getYear());
+                socialSecurityConfig.setSocialSecurityBaseLower(config.getSocialSecurityBaseLower());
+                socialSecurityConfig.setSocialSecurityBaseUpper(config.getSocialSecurityBaseUpper());
+                socialSecurityConfig.setHousingFundBaseLower(config.getHousingFundBaseLower());
+                socialSecurityConfig.setHousingFundBaseUpper(config.getHousingFundBaseUpper());
+                socialSecurityConfig.setPensionPersonalRatio(config.getPensionPersonalRatio());
+                socialSecurityConfig.setPensionCompanyRatio(config.getPensionCompanyRatio());
+                socialSecurityConfig.setMedicalPersonalRatio(config.getMedicalPersonalRatio());
+                socialSecurityConfig.setMedicalCompanyRatio(config.getMedicalCompanyRatio());
+                socialSecurityConfig.setUnemploymentPersonalRatio(config.getUnemploymentPersonalRatio());
+                socialSecurityConfig.setUnemploymentCompanyRatio(config.getUnemploymentCompanyRatio());
+                socialSecurityConfig.setMaternityCompanyRatio(config.getMaternityCompanyRatio());
+                socialSecurityConfig.setInjuryCompanyRatio(config.getInjuryCompanyRatio());
+                socialSecurityConfig.setHousingFundPersonalRatio(config.getHousingFundPersonalRatio());
+                socialSecurityConfig.setHousingFundCompanyRatio(config.getHousingFundCompanyRatio());
+                
+                log.debug("获取社保配置成功，地区: {}, 年度: {}", region, config.getYear());
+            } else {
+                // 设置默认社保配置
+                setDefaultSocialSecurityConfig(socialSecurityConfig, region);
+                log.warn("地区{}未找到社保配置，使用默认值", region);
+            }
+            
+        } catch (Exception e) {
+            log.error("获取社保配置失败，地区: {}, 错误信息: {}", region, e.getMessage(), e);
+            setDefaultSocialSecurityConfig(socialSecurityConfig, region);
+        }
+        
+        return socialSecurityConfig;
+    }
+    
+    /**
+     * 获取部门分红配置
+     */
+    private SalaryCalculationContext.DepartmentBonusConfig getDepartmentBonusConfig(Long departmentId) {
+        SalaryCalculationContext.DepartmentBonusConfig departmentBonusConfig = new SalaryCalculationContext.DepartmentBonusConfig();
+        
+        try {
+            QueryWrapper<DepartmentBonusConfig> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("department_id", departmentId)
+                       .eq("status", 1)
+                       .eq("delflag", 0)
+                       .le("effective_date", LocalDate.now())
+                       .and(wrapper -> wrapper.isNull("expire_date").or().ge("expire_date", LocalDate.now()))
+                       .orderByDesc("effective_date")
+                       .last("LIMIT 1");
+            
+            DepartmentBonusConfig config = departmentBonusConfigService.getOne(queryWrapper);
+            
+            if (config != null) {
+                departmentBonusConfig.setDepartmentId(departmentId);
+                departmentBonusConfig.setBonusWeight(config.getBonusWeight());
+                departmentBonusConfig.setStatus(1);
+                
+                log.debug("获取部门分红配置成功，部门ID: {}, 分红权重: {}", departmentId, config.getBonusWeight());
+            } else {
+                // 设置默认值
+                departmentBonusConfig.setDepartmentId(departmentId);
+                departmentBonusConfig.setBonusWeight(BigDecimal.valueOf(10)); // 默认10%权重
+                departmentBonusConfig.setStatus(1);
+                log.warn("部门{}未找到分红配置，使用默认权重10%", departmentId);
+            }
+            
+        } catch (Exception e) {
+            log.error("获取部门分红配置失败，部门ID: {}, 错误信息: {}", departmentId, e.getMessage(), e);
+            // 设置默认值
+            departmentBonusConfig.setDepartmentId(departmentId);
+            departmentBonusConfig.setBonusWeight(BigDecimal.valueOf(10));
+            departmentBonusConfig.setStatus(1);
+        }
+        
+        return departmentBonusConfig;
+    }
+    
+    /**
+     * 获取盈亏平衡分析数据
+     */
+    private SalaryCalculationContext.BreakevenAnalysisData getBreakevenAnalysisData(String month) {
+        SalaryCalculationContext.BreakevenAnalysisData breakevenAnalysis = new SalaryCalculationContext.BreakevenAnalysisData();
+        
+        try {
+            // 这里可以根据实际业务需求从盈亏平衡分析表中获取数据
+            // 暂时设置模拟数据
+            breakevenAnalysis.setPeriod(month);
+            breakevenAnalysis.setDistributableProfit(BigDecimal.valueOf(1000000)); // 100万可分配利润
+            
+            log.debug("获取盈亏平衡分析数据成功，月份: {}, 可分配利润: {}", month, breakevenAnalysis.getDistributableProfit());
+            
+        } catch (Exception e) {
+            log.error("获取盈亏平衡分析数据失败，月份: {}, 错误信息: {}", month, e.getMessage(), e);
+            breakevenAnalysis.setPeriod(month);
+            breakevenAnalysis.setDistributableProfit(BigDecimal.valueOf(500000)); // 默认50万
+        }
+        
+        return breakevenAnalysis;
+    }
+    
+    /**
+     * 创建默认绩效数据
+     */
+    private MonthlyPerformance createDefaultPerformance(Long employeeId, String month) {
+        MonthlyPerformance performance = new MonthlyPerformance();
+        performance.setEmployeeId(employeeId);
+        performance.setMonth(month);
+        performance.setPerformanceScore(BigDecimal.valueOf(80)); // 默认80分
+        performance.setPersonalProjectRevenue(BigDecimal.ZERO);
+        performance.setPersonalProjectMargin(BigDecimal.ZERO);
+        performance.setTeamProjectRevenue(BigDecimal.ZERO);
+        performance.setTeamProjectMargin(BigDecimal.ZERO);
+        performance.setTeamMemberCount(1);
+        performance.setStatus(1);
+        return performance;
+    }
+    
+    /**
+     * 设置默认薪酬配置
+     */
+    private void setDefaultSalaryConfig(SalaryCalculationContext.SalaryConfig salaryConfig, Long employeeId) {
+        salaryConfig.setEmployeeId(employeeId);
+        salaryConfig.setBaseSalary(BigDecimal.valueOf(8000)); // 默认基础工资8000
+        salaryConfig.setRegion("BEIJING");
+        salaryConfig.setIsSalesIncentive(false);
+        salaryConfig.setSalesIncentiveRatio(BigDecimal.ZERO);
+        salaryConfig.setIsTeamIncentive(false);
+        salaryConfig.setTeamIncentiveRatio(BigDecimal.ZERO);
         salaryConfig.setIsDepartmentBonus(true);
         salaryConfig.setStatus(1);
+    }
+    
+    /**
+     * 设置默认社保配置
+     */
+    private void setDefaultSocialSecurityConfig(SalaryCalculationContext.SocialSecurityConfig config, String region) {
+        config.setRegion(region);
+        config.setYear(LocalDate.now().getYear());
+        config.setSocialSecurityBaseLower(BigDecimal.valueOf(3500));
+        config.setSocialSecurityBaseUpper(BigDecimal.valueOf(25000));
+        config.setHousingFundBaseLower(BigDecimal.valueOf(3500));
+        config.setHousingFundBaseUpper(BigDecimal.valueOf(25000));
+        config.setPensionPersonalRatio(BigDecimal.valueOf(8));
+        config.setPensionCompanyRatio(BigDecimal.valueOf(16));
+        config.setMedicalPersonalRatio(BigDecimal.valueOf(2));
+        config.setMedicalCompanyRatio(BigDecimal.valueOf(10));
+        config.setUnemploymentPersonalRatio(BigDecimal.valueOf(1));
+        config.setUnemploymentCompanyRatio(BigDecimal.valueOf(1));
+        config.setMaternityCompanyRatio(BigDecimal.valueOf(1));
+        config.setInjuryCompanyRatio(BigDecimal.valueOf(1));
+        config.setHousingFundPersonalRatio(BigDecimal.valueOf(12));
+        config.setHousingFundCompanyRatio(BigDecimal.valueOf(12));
+    }
+    
+    /**
+     * 设置默认计算上下文
+     */
+    private void setDefaultCalculationContext(SalaryCalculationContext context, EmployeeBasicInfo employee) {
+        // 设置默认薪酬配置
+        SalaryCalculationContext.SalaryConfig salaryConfig = new SalaryCalculationContext.SalaryConfig();
+        setDefaultSalaryConfig(salaryConfig, employee.getEmployeeId());
         context.setSalaryConfig(salaryConfig);
         
-        // 设置地区系数（模拟数据）
+        // 设置默认地区系数
         SalaryCalculationContext.RegionalCoefficient regionalCoefficient = new SalaryCalculationContext.RegionalCoefficient();
         regionalCoefficient.setRegion(employee.getRegion());
-        regionalCoefficient.setSalaryCoefficient(BigDecimal.valueOf(1.2));
+        regionalCoefficient.setSalaryCoefficient(BigDecimal.valueOf(1.0));
         regionalCoefficient.setStatus(1);
         context.setRegionalCoefficient(regionalCoefficient);
         
-        // 设置绩效数据（模拟数据）
-        MonthlyPerformance performance = new MonthlyPerformance();
-        performance.setEmployeeId(employee.getEmployeeId());
-        performance.setMonth(task.getCalculationMonth());
-        performance.setPerformanceScore(BigDecimal.valueOf(85 + (employee.getEmployeeId() % 15))); // 85-100分
-        performance.setPersonalProjectRevenue(BigDecimal.valueOf(100000 + (employee.getEmployeeId() * 10000)));
-        performance.setPersonalProjectMargin(BigDecimal.valueOf(0.3));
-        performance.setTeamProjectRevenue(BigDecimal.valueOf(500000));
-        performance.setTeamProjectMargin(BigDecimal.valueOf(0.25));
-        performance.setTeamMemberCount(5);
+        // 设置默认绩效
+        MonthlyPerformance performance = createDefaultPerformance(employee.getEmployeeId(), context.getMonth());
         context.setPerformance(performance);
         
-        // 设置职级配置（模拟数据）
+        // 设置默认职级配置
         SalaryCalculationContext.JobLevelSalary jobLevelSalary = new SalaryCalculationContext.JobLevelSalary();
-        jobLevelSalary.setJobLevelCode("SENIOR");
+        jobLevelSalary.setJobLevelCode("NORMAL");
         jobLevelSalary.setPerformanceRatioMin(BigDecimal.valueOf(0.8));
         jobLevelSalary.setPerformanceRatioMax(BigDecimal.valueOf(1.2));
         jobLevelSalary.setStatus(1);
         context.setJobLevelSalary(jobLevelSalary);
         
-        // 设置社保配置（模拟数据）
+        // 设置默认社保配置
         SalaryCalculationContext.SocialSecurityConfig socialSecurityConfig = new SalaryCalculationContext.SocialSecurityConfig();
-        socialSecurityConfig.setRegion(employee.getRegion());
-        socialSecurityConfig.setYear(2024);
-        socialSecurityConfig.setSocialSecurityBaseLower(BigDecimal.valueOf(3500));
-        socialSecurityConfig.setSocialSecurityBaseUpper(BigDecimal.valueOf(25000));
-        socialSecurityConfig.setHousingFundBaseLower(BigDecimal.valueOf(3500));
-        socialSecurityConfig.setHousingFundBaseUpper(BigDecimal.valueOf(25000));
-        socialSecurityConfig.setPensionPersonalRatio(BigDecimal.valueOf(8));
-        socialSecurityConfig.setPensionCompanyRatio(BigDecimal.valueOf(16));
-        socialSecurityConfig.setMedicalPersonalRatio(BigDecimal.valueOf(2));
-        socialSecurityConfig.setMedicalCompanyRatio(BigDecimal.valueOf(10));
-        socialSecurityConfig.setUnemploymentPersonalRatio(BigDecimal.valueOf(0.5));
-        socialSecurityConfig.setUnemploymentCompanyRatio(BigDecimal.valueOf(0.5));
-        socialSecurityConfig.setMaternityCompanyRatio(BigDecimal.valueOf(0.8));
-        socialSecurityConfig.setInjuryCompanyRatio(BigDecimal.valueOf(0.2));
-        socialSecurityConfig.setHousingFundPersonalRatio(BigDecimal.valueOf(12));
-        socialSecurityConfig.setHousingFundCompanyRatio(BigDecimal.valueOf(12));
+        setDefaultSocialSecurityConfig(socialSecurityConfig, employee.getRegion());
         context.setSocialSecurityConfig(socialSecurityConfig);
         
-        // 设置部门分红配置（模拟数据）
+        // 设置默认部门分红配置
         SalaryCalculationContext.DepartmentBonusConfig departmentBonusConfig = new SalaryCalculationContext.DepartmentBonusConfig();
         departmentBonusConfig.setDepartmentId(employee.getDepartmentId());
-        departmentBonusConfig.setBonusWeight(BigDecimal.valueOf(20)); // 20%权重
+        departmentBonusConfig.setBonusWeight(BigDecimal.valueOf(10));
         departmentBonusConfig.setStatus(1);
         context.setDepartmentBonusConfig(departmentBonusConfig);
         
-        // 设置盈亏平衡分析数据（模拟数据）
+        // 设置默认盈亏平衡分析
         SalaryCalculationContext.BreakevenAnalysisData breakevenAnalysis = new SalaryCalculationContext.BreakevenAnalysisData();
-        breakevenAnalysis.setPeriod(task.getCalculationMonth());
-        breakevenAnalysis.setDistributableProfit(BigDecimal.valueOf(1000000)); // 100万可分配利润
+        breakevenAnalysis.setPeriod(context.getMonth());
+        breakevenAnalysis.setDistributableProfit(BigDecimal.valueOf(500000));
         context.setBreakevenAnalysis(breakevenAnalysis);
         
-        return context;
+        log.warn("使用默认计算上下文，员工ID: {}", employee.getEmployeeId());
     }
     
     /**

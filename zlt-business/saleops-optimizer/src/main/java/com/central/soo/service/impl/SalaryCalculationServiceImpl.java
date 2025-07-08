@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
+import com.central.soo.utils.PageResultUtil;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -24,6 +25,9 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import com.alibaba.ttl.threadpool.TtlExecutors;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 /**
  * 薪酬计算服务实现类
@@ -40,22 +44,32 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
     @Autowired
     private SalaryCalculationEngine salaryCalculationEngine;
 
+    // 配置支持TTL的线程池
+    private final Executor ttlExecutor = TtlExecutors.getTtlExecutor(
+        Executors.newFixedThreadPool(5)
+    );
+
     // ===========================
     // 薪酬计算任务管理
     // ===========================
 
     @Override
     public Result<SalaryCalculationTask> createCalculationTask(SalaryTaskCreateDTO createDTO) {
+        log.info("开始创建薪酬计算任务，任务名称: {}, 计算月份: {}, 计算类型: {}", 
+                createDTO.getTaskName(), createDTO.getCalculationMonth(), createDTO.getCalculationType());
+        
         try {
-            String taskId = "TASK_" + System.currentTimeMillis();
+            // 生成任务ID
+            String taskId = "SALARY_" + System.currentTimeMillis();
             
+            // 创建任务实体
             SalaryCalculationTask task = new SalaryCalculationTask();
             task.setTaskId(taskId);
             task.setTaskName(createDTO.getTaskName());
             task.setCalculationMonth(createDTO.getCalculationMonth());
             task.setCalculationType(createDTO.getCalculationType());
             
-            // 处理目标设置
+            // 处理目标设置，转换为逗号分隔的字符串
             if (createDTO.getTargetDepartmentIds() != null) {
                 task.setTargetDepartmentIds(String.join(",", createDTO.getTargetDepartmentIds().stream()
                     .map(String::valueOf).toArray(String[]::new)));
@@ -69,167 +83,179 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
                     .map(String::valueOf).toArray(String[]::new)));
             }
             
-            // 设置计算规则（转换为JSON字符串）
-            if (createDTO.getCalculationRules() != null) {
-                task.setCalculationRules(buildCalculationRulesJson(createDTO.getCalculationRules()));
-            }
-            
-            // 设置备注
+            task.setCalculationRules(buildCalculationRulesJson(createDTO.getCalculationRules()));
             task.setRemark(createDTO.getRemark());
-            
-            // 初始状态
-            task.setTaskStatus(SalaryCalculationTask.TaskStatus.PENDING);
-            task.setProgressPercent(BigDecimal.ZERO);
-            task.setTotalEmployeeCount(0);
-            task.setProcessedEmployeeCount(0);
-            task.setSuccessEmployeeCount(0);
-            task.setFailedEmployeeCount(0);
-            task.setTotalGrossPay(BigDecimal.ZERO);
-            task.setTotalNetPay(BigDecimal.ZERO);
-            task.setTotalCompanyCost(BigDecimal.ZERO);
-            task.setIsFinal(false);
+            task.setTaskStatus("PENDING");
             task.setCreatedAt(LocalDateTime.now());
-            task.setCreatedBy(LoginUserUtils.getCurrentSysUser().getId()); // 应该从当前登录用户获取，这里模拟为1
+            task.setCreatedBy(LoginUserUtils.getCurrentSysUser().getId()); // 模拟创建人ID，实际应该从当前登录用户获取
             task.setTenantId(TenantContextHolder.getTenant());
             task.setDelflag(false);
             
             // 保存到数据库
             boolean saved = this.save(task);
             if (saved) {
-                return Result.succeed(task);
+                log.info("薪酬计算任务创建成功，任务ID: {}, 任务名称: {}", taskId, createDTO.getTaskName());
+                return Result.succeed(task, "任务创建成功");
             } else {
-                return Result.failed("保存薪酬计算任务失败");
+                log.error("薪酬计算任务保存到数据库失败，任务ID: {}", taskId);
+                return Result.failed("任务创建失败");
             }
+            
         } catch (Exception e) {
-            System.err.println("创建薪酬计算任务失败: " + e.getMessage());
-            e.printStackTrace();
-            return Result.failed("创建薪酬计算任务失败: " + e.getMessage());
+            log.error("创建薪酬计算任务失败，任务名称: {}, 错误信息: {}", createDTO.getTaskName(), e.getMessage(), e);
+            return Result.failed("任务创建失败: " + e.getMessage());
         }
     }
 
     @Override
     public Result<String> executeCalculationTask(String taskId) {
+        log.info("开始执行薪酬计算任务，任务ID: {}", taskId);
+        
         try {
-            log.info("开始执行薪酬计算任务: {}", taskId);
-            
-            // 1. 查询任务详情
-            SalaryCalculationTask task = this.lambdaQuery()
-                .eq(SalaryCalculationTask::getTaskId, taskId)
-                .eq(SalaryCalculationTask::getDelflag, false)
-                .one();
-            
+            // 查询任务信息
+            SalaryCalculationTask task = this.getById(taskId);
             if (task == null) {
-                return Result.failed("任务不存在: " + taskId);
+                log.warn("薪酬计算任务不存在，任务ID: {}", taskId);
+                return Result.failed("任务不存在");
             }
             
-            // 2. 检查任务状态
-            if (!SalaryCalculationTask.TaskStatus.PENDING.equals(task.getTaskStatus())) {
-                return Result.failed("任务状态不正确，当前状态: " + task.getTaskStatus());
+            if (!"PENDING".equals(task.getTaskStatus())) {
+                log.warn("薪酬计算任务状态不正确，无法执行，任务ID: {}, 当前状态: {}", taskId, task.getTaskStatus());
+                return Result.failed("任务状态不正确，无法执行");
             }
             
-            // 3. 更新任务状态为执行中
-            task.setTaskStatus(SalaryCalculationTask.TaskStatus.RUNNING);
+            log.info("薪酬计算任务验证通过，开始异步执行，任务ID: {}, 任务名称: {}", taskId, task.getTaskName());
+            
+            // 更新任务状态为运行中
+            task.setTaskStatus("RUNNING");
             task.setStartTime(LocalDateTime.now());
-            task.setProgressPercent(BigDecimal.ZERO);
             this.updateById(task);
             
-            // 4. 异步执行薪资计算
-            CompletableFuture.runAsync(() -> {
-                performSalaryCalculation(task);
-            });
+            log.info("薪酬计算任务状态已更新为RUNNING，任务ID: {}", taskId);
             
-            return Result.succeed("任务已开始执行");
+            // 保存当前租户ID，用于异步线程
+            String currentTenantId = TenantContextHolder.getTenant();
+            log.info("保存租户上下文，租户ID: {}, 任务ID: {}", currentTenantId, taskId);
+            
+            // 异步执行薪酬计算
+            CompletableFuture.runAsync(() -> {
+                try {
+                    // 在异步线程中设置租户上下文
+                    TenantContextHolder.setTenant(currentTenantId);
+                    log.info("异步线程开始执行薪酬计算，任务ID: {}, 租户ID: {}", taskId, currentTenantId);
+                    
+                    performSalaryCalculation(task);
+                    
+                    log.info("异步薪酬计算任务执行完成，任务ID: {}", taskId);
+                } catch (Exception e) {
+                    log.error("异步薪酬计算任务执行失败，任务ID: {}, 错误信息: {}", taskId, e.getMessage(), e);
+                } finally {
+                    // 清理租户上下文
+                    TenantContextHolder.clear();
+                    log.debug("清理租户上下文，任务ID: {}", taskId);
+                }
+            }, ttlExecutor);
+            
+            log.info("薪酬计算任务已提交到异步执行队列，任务ID: {}", taskId);
+            return Result.succeed("任务执行中");
+            
         } catch (Exception e) {
-            log.error("执行薪酬计算任务失败: {}", e.getMessage(), e);
-            return Result.failed("执行薪酬计算任务失败: " + e.getMessage());
+            log.error("执行薪酬计算任务失败，任务ID: {}, 错误信息: {}", taskId, e.getMessage(), e);
+            return Result.failed("任务执行失败: " + e.getMessage());
         }
     }
 
     /**
-     * 执行薪资计算的具体逻辑
+     * 执行薪酬计算的核心逻辑
      */
     private void performSalaryCalculation(SalaryCalculationTask task) {
+        log.info("开始执行薪酬计算核心逻辑，任务ID: {}, 任务名称: {}", task.getTaskId(), task.getTaskName());
+        
         try {
-            log.info("开始执行薪资计算，任务ID: {}", task.getTaskId());
+            // 获取目标员工列表
+            List<EmployeeBasicInfo> employees = getTargetEmployees(task);
+            log.info("获取到待计算员工列表，员工数量: {}, 任务ID: {}", employees.size(), task.getTaskId());
             
-            // 1. 获取目标员工列表
-            List<EmployeeBasicInfo> targetEmployees = getTargetEmployees(task);
+            if (employees.isEmpty()) {
+                log.warn("没有找到符合条件的员工，任务ID: {}", task.getTaskId());
+                task.setTaskStatus("COMPLETED");
+                task.setEndTime(LocalDateTime.now());
+                this.updateById(task);
+                return;
+            }
             
-            // 2. 更新任务总员工数
-            task.setTotalEmployeeCount(targetEmployees.size());
-            task.setProcessedEmployeeCount(0);
-            task.setSuccessEmployeeCount(0);
-            task.setFailedEmployeeCount(0);
-            this.updateById(task);
-            
-            // 3. 逐个计算员工薪资
-            BigDecimal totalGrossPay = BigDecimal.ZERO;
-            BigDecimal totalNetPay = BigDecimal.ZERO;
-            BigDecimal totalCompanyCost = BigDecimal.ZERO;
-            
-            int processedCount = 0;
+            // 计算结果列表
+            List<PayrollResult> results = new ArrayList<>();
             int successCount = 0;
             int failedCount = 0;
             
-            for (EmployeeBasicInfo employee : targetEmployees) {
+            log.info("开始逐个计算员工薪资，任务ID: {}, 总员工数: {}", task.getTaskId(), employees.size());
+            
+            // 逐个计算员工薪资
+            for (int i = 0; i < employees.size(); i++) {
+                EmployeeBasicInfo employee = employees.get(i);
                 try {
-                    // 计算单个员工薪资
-                    PayrollResult payrollResult = calculateEmployeeSalary(task, employee);
+                    log.info("开始计算员工薪资，员工ID: {}, 员工姓名: {}, 进度: {}/{}, 任务ID: {}", 
+                            employee.getEmployeeId(), employee.getEmployeeName(), 
+                            i + 1, employees.size(), task.getTaskId());
                     
-                    // 保存工资结果
-                    payrollResultMapper.insert(payrollResult);
+                    PayrollResult result = calculateEmployeeSalary(task, employee);
+                    results.add(result);
                     
-                    // 累加统计数据
-                    totalGrossPay = totalGrossPay.add(payrollResult.getGrossPay());
-                    totalNetPay = totalNetPay.add(payrollResult.getNetPay());
-                    totalCompanyCost = totalCompanyCost.add(payrollResult.getTotalCompanyCost());
-                    
-                    successCount++;
-                    log.debug("员工 {} 薪资计算成功", employee.getEmployeeName());
+                    if ("SUCCESS".equals(result.getCalculationStatus())) {
+                        successCount++;
+                        log.info("员工薪资计算成功，员工ID: {}, 员工姓名: {}, 应发工资: {}, 实发工资: {}", 
+                                employee.getEmployeeId(), employee.getEmployeeName(), 
+                                result.getGrossPay(), result.getNetPay());
+                    } else {
+                        failedCount++;
+                        log.warn("员工薪资计算失败，员工ID: {}, 员工姓名: {}, 错误信息: {}", 
+                                employee.getEmployeeId(), employee.getEmployeeName(), result.getErrorMessage());
+                    }
                     
                 } catch (Exception e) {
-                    log.error("员工 {} 薪资计算失败: {}", employee.getEmployeeName(), e.getMessage(), e);
                     failedCount++;
+                    log.error("计算员工薪资时发生异常，员工ID: {}, 员工姓名: {}, 错误信息: {}", 
+                            employee.getEmployeeId(), employee.getEmployeeName(), e.getMessage(), e);
                 }
-                
-                processedCount++;
-                
-                // 更新进度
-                BigDecimal progress = BigDecimal.valueOf(processedCount)
-                    .divide(BigDecimal.valueOf(targetEmployees.size()), 4, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal.valueOf(100));
-                
-                task.setProcessedEmployeeCount(processedCount);
-                task.setSuccessEmployeeCount(successCount);
-                task.setFailedEmployeeCount(failedCount);
-                task.setProgressPercent(progress);
-                task.setTotalGrossPay(totalGrossPay);
-                task.setTotalNetPay(totalNetPay);
-                task.setTotalCompanyCost(totalCompanyCost);
-                this.updateById(task);
-                
-                // 模拟计算耗时
-                Thread.sleep(500);
             }
             
-            // 4. 更新任务完成状态
-            task.setTaskStatus(SalaryCalculationTask.TaskStatus.COMPLETED);
+            log.info("员工薪资计算阶段完成，任务ID: {}, 成功: {}, 失败: {}, 总数: {}", 
+                    task.getTaskId(), successCount, failedCount, employees.size());
+            
+            // 批量保存计算结果
+            if (!results.isEmpty()) {
+                log.info("开始批量保存薪资计算结果，任务ID: {}, 结果数量: {}", task.getTaskId(), results.size());
+                
+                for (PayrollResult result : results) {
+                    try {
+                        payrollResultMapper.insert(result);
+                        log.debug("薪资计算结果保存成功，员工ID: {}, 结果ID: {}", result.getEmployeeId(), result.getId());
+                    } catch (Exception e) {
+                        log.error("保存薪资计算结果失败，员工ID: {}, 错误信息: {}", result.getEmployeeId(), e.getMessage(), e);
+                    }
+                }
+                
+                log.info("薪资计算结果批量保存完成，任务ID: {}", task.getTaskId());
+            }
+            
+            // 更新任务状态为完成
+            task.setTaskStatus("COMPLETED");
             task.setEndTime(LocalDateTime.now());
             task.setExecutionDuration(calculateExecutionDuration(task.getStartTime(), task.getEndTime()));
-            task.setProgressPercent(BigDecimal.valueOf(100));
-            task.setIsFinal(false); // 需要人工确认后才是最终版本
             this.updateById(task);
             
-            log.info("薪资计算任务完成，任务ID: {}，处理员工数: {}，成功: {}，失败: {}", 
-                task.getTaskId(), processedCount, successCount, failedCount);
-                
-        } catch (Exception e) {
-            log.error("薪资计算任务执行失败，任务ID: {}", task.getTaskId(), e);
+            log.info("薪酬计算任务执行完成，任务ID: {}, 任务名称: {}, 执行时长: {}秒, 成功: {}, 失败: {}", 
+                    task.getTaskId(), task.getTaskName(), task.getExecutionDuration(), successCount, failedCount);
             
-            // 更新任务为失败状态
-            task.setTaskStatus(SalaryCalculationTask.TaskStatus.FAILED);
+        } catch (Exception e) {
+            log.error("薪酬计算任务执行失败，任务ID: {}, 错误信息: {}", task.getTaskId(), e.getMessage(), e);
+            
+            // 更新任务状态为失败
+            task.setTaskStatus("FAILED");
             task.setEndTime(LocalDateTime.now());
             task.setErrorMessage(e.getMessage());
+            task.setExecutionDuration(calculateExecutionDuration(task.getStartTime(), task.getEndTime()));
             this.updateById(task);
         }
     }
@@ -238,6 +264,8 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
      * 获取目标员工列表
      */
     private List<EmployeeBasicInfo> getTargetEmployees(SalaryCalculationTask task) {
+        log.info("开始获取目标员工列表，任务ID: {}, 计算类型: {}", task.getTaskId(), task.getCalculationType());
+        
         // 模拟获取员工数据 - 实际应该从组织架构服务获取
         List<EmployeeBasicInfo> employees = new ArrayList<>();
         
@@ -249,8 +277,12 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
         int employeeCount = 10; // 默认10个员工用于测试
         if ("DEPARTMENT".equals(task.getCalculationType()) && task.getTargetDepartmentIds() != null) {
             employeeCount = 5; // 部门计算减少员工数
+            log.info("按部门计算，目标部门IDs: {}, 员工数量: {}", task.getTargetDepartmentIds(), employeeCount);
         } else if ("EMPLOYEE".equals(task.getCalculationType()) && task.getTargetEmployeeIds() != null) {
             employeeCount = task.getTargetEmployeeIds().split(",").length;
+            log.info("按员工计算，目标员工IDs: {}, 员工数量: {}", task.getTargetEmployeeIds(), employeeCount);
+        } else {
+            log.info("全员计算，员工数量: {}", employeeCount);
         }
         
         for (int i = 0; i < employeeCount; i++) {
@@ -260,11 +292,17 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
             employee.setEmployeeNo("EMP" + String.format("%03d", i + 1));
             employee.setDepartmentId((long) (i % 3 + 1));
             employee.setDepartmentName(departments[i % departments.length]);
+            employee.setPositionId((long) (i % 5 + 1)); // 设置岗位ID
             employee.setPositionName(positions[i % positions.length]);
             employee.setRegion("BEIJING");
             employees.add(employee);
+            
+            log.debug("添加员工到计算列表，员工ID: {}, 姓名: {}, 部门: {}, 岗位: {}", 
+                    employee.getEmployeeId(), employee.getEmployeeName(), 
+                    employee.getDepartmentName(), employee.getPositionName());
         }
         
+        log.info("目标员工列表获取完成，任务ID: {}, 员工总数: {}", task.getTaskId(), employees.size());
         return employees;
     }
     
@@ -272,13 +310,19 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
      * 计算单个员工薪资
      */
     private PayrollResult calculateEmployeeSalary(SalaryCalculationTask task, EmployeeBasicInfo employee) {
+        log.info("开始计算单个员工薪资，员工ID: {}, 员工姓名: {}, 任务ID: {}", 
+                employee.getEmployeeId(), employee.getEmployeeName(), task.getTaskId());
+        
         try {
             // 构建计算上下文
+            log.debug("构建薪资计算上下文，员工ID: {}", employee.getEmployeeId());
             SalaryCalculationContext context = buildCalculationContext(task, employee);
             
             // 使用薪酬计算引擎进行计算
+            log.debug("调用薪酬计算引擎进行计算，员工ID: {}", employee.getEmployeeId());
             PayrollResult result = salaryCalculationEngine.calculateSalary(context);
-            
+
+            result.setTenantId(TenantContextHolder.getTenant());
             // 设置任务相关信息
             result.setTaskId(task.getTaskId());
             result.setTaskName(task.getTaskName());
@@ -294,9 +338,14 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
             result.setTenantId(TenantContextHolder.getTenant());
             result.setDelflag(false);
             
+            log.info("员工薪资计算成功，员工ID: {}, 员工姓名: {}, 应发工资: {}, 实发工资: {}, 任务ID: {}", 
+                    employee.getEmployeeId(), employee.getEmployeeName(), 
+                    result.getGrossPay(), result.getNetPay(), task.getTaskId());
+            
             return result;
         } catch (Exception e) {
-            log.error("员工薪资计算失败，员工ID: {}", employee.getEmployeeId(), e);
+            log.error("员工薪资计算失败，员工ID: {}, 员工姓名: {}, 任务ID: {}, 错误信息: {}", 
+                    employee.getEmployeeId(), employee.getEmployeeName(), task.getTaskId(), e.getMessage(), e);
             
             // 创建失败记录
             PayrollResult result = new PayrollResult();
@@ -308,6 +357,8 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
             result.setEmployeeNo(employee.getEmployeeNo());
             result.setDepartmentId(employee.getDepartmentId());
             result.setDepartmentName(employee.getDepartmentName());
+            result.setPositionId(employee.getPositionId());
+            result.setPositionName(employee.getPositionName());
             result.setCalculationStatus("FAILED");
             result.setErrorMessage(e.getMessage());
             result.setCreatedAt(LocalDateTime.now());
@@ -332,6 +383,8 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
         employeeInfo.setEmployeeNo(employee.getEmployeeNo());
         employeeInfo.setDepartmentId(employee.getDepartmentId());
         employeeInfo.setDepartmentName(employee.getDepartmentName());
+        employeeInfo.setPositionId(employee.getPositionId());
+        employeeInfo.setPositionName(employee.getPositionName());
         employeeInfo.setRegion(employee.getRegion());
         employeeInfo.setStatus(1);
         context.setEmployee(employeeInfo);
@@ -431,6 +484,7 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
         private String employeeNo;
         private Long departmentId;
         private String departmentName;
+        private Long positionId;
         private String positionName;
         private String region;
         
@@ -445,6 +499,8 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
         public void setDepartmentId(Long departmentId) { this.departmentId = departmentId; }
         public String getDepartmentName() { return departmentName; }
         public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+        public Long getPositionId() { return positionId; }
+        public void setPositionId(Long positionId) { this.positionId = positionId; }
         public String getPositionName() { return positionName; }
         public void setPositionName(String positionName) { this.positionName = positionName; }
         public String getRegion() { return region; }
@@ -495,17 +551,12 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
             com.baomidou.mybatisplus.extension.plugins.pagination.Page<SalaryCalculationTask> pageResult = 
                 this.page(page, queryWrapper);
 
-            // 构建返回结果
-            PageResult<SalaryCalculationTask> result = new PageResult<>();
-            result.setData(pageResult.getRecords());
-            result.setCount(pageResult.getTotal());
-            result.setPage((int) pageResult.getCurrent());
-            result.setSize((int) pageResult.getSize());
-            result.setPages((int) pageResult.getPages());
-            result.setResp_code(0); // 0表示成功
+            // 使用工具类构建返回结果
+            return PageResultUtil.buildPageResult(pageResult);
             
-            return result;
         } catch (Exception e) {
+            log.error("查询薪酬计算任务失败: {}", e.getMessage(), e);
+            
             // 查询失败时返回错误信息
             PageResult<SalaryCalculationTask> result = new PageResult<>();
             result.setData(new ArrayList<>());
@@ -513,11 +564,7 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
             result.setPage(queryDTO.getPage() != null ? queryDTO.getPage() : 1);
             result.setSize(queryDTO.getSize() != null ? queryDTO.getSize() : 20);
             result.setPages(0);
-            result.setResp_code(1); // 1表示失败
-            
-            // 记录错误日志
-            System.err.println("查询薪酬计算任务失败: " + e.getMessage());
-            e.printStackTrace();
+            // 不直接调用setResp_code，让它保持默认值
             
             return result;
         }

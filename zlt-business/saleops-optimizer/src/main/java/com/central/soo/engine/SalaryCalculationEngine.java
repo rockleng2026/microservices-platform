@@ -3,12 +3,14 @@ package com.central.soo.engine;
 import com.central.soo.engine.calculator.*;
 import com.central.soo.engine.context.SalaryCalculationContext;
 import com.central.soo.model.entity.PayrollResult;
+import com.central.common.context.TenantContextHolder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -42,6 +44,9 @@ public class SalaryCalculationEngine {
             result.setPositionId(context.getEmployee().getPositionId());
             result.setJobLevelCode(context.getJobLevelSalary().getJobLevelCode());
             result.setRegion(context.getSalaryConfig().getRegion());
+            result.setTenantId(TenantContextHolder.getTenant());
+            result.setCreatedAt(LocalDateTime.now());
+            result.setDelflag(false);
 
             // 按顺序执行各个计算器
             for (SalaryCalculator calculator : calculators) {

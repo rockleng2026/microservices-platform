@@ -44,7 +44,7 @@ public class BreakevenConfig {
      * 租户ID
      */
     @TableField("tenant_id")
-    private Long tenantId;
+    private String tenantId;
 
     /**
      * 配置值

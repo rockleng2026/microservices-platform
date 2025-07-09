@@ -78,6 +78,8 @@ public class BreakevenQueryDTO {
     @Schema(description = "是否包含详细信息")
     private Boolean includeDetails = false;
 
-    @Schema(description = "租户ID")
-    private Long tenantId;
+    /**
+     * 租户ID
+     */
+    private String tenantId;
 } 

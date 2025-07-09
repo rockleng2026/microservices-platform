@@ -9,7 +9,7 @@
         <result column="analysis_name" property="analysisName" jdbcType="VARCHAR"/>
         <result column="analysis_type" property="analysisType" jdbcType="VARCHAR"/>
         <result column="analysis_period" property="analysisPeriod" jdbcType="VARCHAR"/>
-        <result column="tenant_id" property="tenantId" jdbcType="BIGINT"/>
+        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
         <result column="creator_id" property="creatorId" jdbcType="BIGINT"/>
         <result column="creator_name" property="creatorName" jdbcType="VARCHAR"/>
         <result column="current_parameters" property="currentParameters" jdbcType="LONGVARCHAR"/>
@@ -72,10 +72,10 @@
                 AND analysis_period = #{query.analysisPeriod}
             </if>
             <if test="query.periodStart != null and query.periodStart != ''">
-                AND analysis_period >= #{query.periodStart}
+                AND analysis_period &gt;= #{query.periodStart}
             </if>
             <if test="query.periodEnd != null and query.periodEnd != ''">
-                AND analysis_period <= #{query.periodEnd}
+                AND analysis_period &lt;= #{query.periodEnd}
             </if>
             <if test="query.creatorId != null">
                 AND creator_id = #{query.creatorId}
@@ -86,7 +86,7 @@
             <if test="query.status != null and query.status != ''">
                 AND status = #{query.status}
             </if>
-            <if test="query.statusList != null and query.statusList.size() > 0">
+            <if test="query.statusList != null and query.statusList.size() &gt; 0">
                 AND status IN
                 <foreach collection="query.statusList" item="status" open="(" close=")" separator=",">
                     #{status}
@@ -99,16 +99,16 @@
                 AND auto_recalculation = #{query.autoRecalculation}
             </if>
             <if test="query.createdStart != null and query.createdStart != ''">
-                AND created_at >= #{query.createdStart}
+                AND created_at &gt;= #{query.createdStart}
             </if>
             <if test="query.createdEnd != null and query.createdEnd != ''">
-                AND created_at <= #{query.createdEnd}
+                AND created_at &lt;= #{query.createdEnd}
             </if>
             <if test="query.lastRecalculationStart != null and query.lastRecalculationStart != ''">
-                AND last_recalculation >= #{query.lastRecalculationStart}
+                AND last_recalculation &gt;= #{query.lastRecalculationStart}
             </if>
             <if test="query.lastRecalculationEnd != null and query.lastRecalculationEnd != ''">
-                AND last_recalculation <= #{query.lastRecalculationEnd}
+                AND last_recalculation &lt;= #{query.lastRecalculationEnd}
             </if>
             <if test="query.keyword != null and query.keyword != ''">
                 AND (analysis_name LIKE CONCAT('%', #{query.keyword}, '%')
@@ -145,7 +145,7 @@
         FROM soo_breakeven_analysis
         WHERE auto_recalculation = true
           AND status = 'active'
-          AND (last_recalculation IS NULL OR last_recalculation < DATE_SUB(NOW(), INTERVAL 1 HOUR))
+          AND (last_recalculation IS NULL OR last_recalculation &lt; DATE_SUB(NOW(), INTERVAL 1 HOUR))
         ORDER BY last_recalculation ASC
         LIMIT 100
     </select>
@@ -184,7 +184,7 @@
             <if test="query.status != null and query.status != ''">
                 AND status = #{query.status}
             </if>
-            <if test="query.statusList != null and query.statusList.size() > 0">
+            <if test="query.statusList != null and query.statusList.size() &gt; 0">
                 AND status IN
                 <foreach collection="query.statusList" item="status" open="(" close=")" separator=",">
                     #{status}
@@ -205,7 +205,7 @@
         WHERE tenant_id = #{tenantId}
           AND status = 'active'
         ORDER BY created_at DESC
-        <if test="limit != null and limit > 0">
+        <if test="limit != null and limit &gt; 0">
             LIMIT #{limit}
         </if>
     </select>
@@ -223,7 +223,7 @@
         DELETE FROM soo_breakeven_analysis
         WHERE tenant_id = #{tenantId}
           AND status = 'archived'
-          AND created_at < DATE_SUB(NOW(), INTERVAL #{days} DAY)
+          AND created_at &lt; DATE_SUB(NOW(), INTERVAL #{days} DAY)
     </delete>
 
     <!-- 查询分析记录统计信息 -->

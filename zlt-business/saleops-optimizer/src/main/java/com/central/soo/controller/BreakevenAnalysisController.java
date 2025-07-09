@@ -105,7 +105,16 @@ public class BreakevenAnalysisController {
             return breakevenAnalysisService.getAnalysisList(queryDTO);
         } catch (Exception e) {
             log.error("查询盈亏平衡分析列表失败", e);
-            return PageResult.failed("查询失败: " + e.getMessage());
+            PageResult<BreakevenAnalysis> failResult = PageResult.<BreakevenAnalysis>builder()
+                    .code(1)
+                    .resp_code(1)
+                    .count(0L)
+                    .page(page)
+                    .size(size)
+                    .pages(0)
+                    .data(null)
+                    .build();
+            return failResult;
         }
     }
 

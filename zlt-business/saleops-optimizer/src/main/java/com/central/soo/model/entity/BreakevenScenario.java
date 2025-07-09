@@ -38,7 +38,7 @@ public class BreakevenScenario {
      * 租户ID
      */
     @TableField("tenant_id")
-    private Long tenantId;
+    private String tenantId;
 
     /**
      * 场景名称

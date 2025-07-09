@@ -1097,6 +1097,7 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
             result.setPage(queryDTO.getPage() != null ? queryDTO.getPage() : 1);
             result.setSize(queryDTO.getSize() != null ? queryDTO.getSize() : 20);
             result.setPages(0);
+            result.setResp_code(1);
             // 不直接调用setResp_code，让它保持默认值
             
             return result;
@@ -1853,10 +1854,10 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
     public Result<BreakevenAnalysis> generateBreakevenAnalysis(BreakevenAnalysisDTO analysisDTO) {
         try {
             BreakevenAnalysis analysis = new BreakevenAnalysis();
-            analysis.setTaskId(analysisDTO.getTaskId());
+//            analysis.setTaskId(analysisDTO.getTaskId());
             analysis.setAnalysisName(analysisDTO.getAnalysisName());
             analysis.setAnalysisType(analysisDTO.getAnalysisType());
-            analysis.setPeriod(analysisDTO.getPeriod());
+            analysis.setAnalysisPeriod(analysisDTO.getAnalysisPeriod());
             
             return Result.succeed(analysis);
         } catch (Exception e) {
@@ -1879,6 +1880,7 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
             PageResult<BreakevenAnalysis> result = new PageResult<>();
             result.setData(new ArrayList<>());
             result.setCount(0L);
+            result.setResp_code(1);
             return result;
         }
     }

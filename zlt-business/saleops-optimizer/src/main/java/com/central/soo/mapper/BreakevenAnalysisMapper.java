@@ -26,22 +26,20 @@ public interface BreakevenAnalysisMapper extends BaseMapper<BreakevenAnalysis> {
     IPage<BreakevenAnalysis> selectAnalysisList(Page<BreakevenAnalysis> page, @Param("query") BreakevenQueryDTO queryDTO);
 
     /**
-     * 根据分析ID查询
-     *
+     * 根据分析ID和租户ID查询分析记录
      * @param analysisId 分析ID
      * @param tenantId 租户ID
      * @return 分析记录
      */
-    BreakevenAnalysis selectByAnalysisId(@Param("analysisId") String analysisId, @Param("tenantId") Long tenantId);
+    BreakevenAnalysis selectByAnalysisId(@Param("analysisId") String analysisId, @Param("tenantId") String tenantId);
 
     /**
-     * 查询指定租户的所有分析记录
-     *
+     * 根据租户ID查询分析列表
      * @param tenantId 租户ID
-     * @param status 状态过滤
-     * @return 分析记录列表
+     * @param status 状态
+     * @return 分析列表
      */
-    List<BreakevenAnalysis> selectByTenantId(@Param("tenantId") Long tenantId, @Param("status") String status);
+    List<BreakevenAnalysis> selectByTenantId(@Param("tenantId") String tenantId, @Param("status") String status);
 
     /**
      * 查询需要自动重算的分析记录
@@ -52,58 +50,52 @@ public interface BreakevenAnalysisMapper extends BaseMapper<BreakevenAnalysis> {
 
     /**
      * 批量更新状态
-     *
      * @param analysisIds 分析ID列表
      * @param status 新状态
      * @param tenantId 租户ID
      * @return 更新记录数
      */
     int batchUpdateStatus(@Param("analysisIds") List<String> analysisIds, 
-                         @Param("status") String status, 
-                         @Param("tenantId") Long tenantId);
+                         @Param("status") String status,
+                         @Param("tenantId") String tenantId);
 
     /**
-     * 统计分析记录数量
-     *
+     * 统计查询条件下的记录数
      * @param queryDTO 查询条件
-     * @return 记录数量
+     * @return 记录数
      */
-    Long countAnalysis(@Param("query") BreakevenQueryDTO queryDTO);
+    long countAnalysis(@Param("query") BreakevenQueryDTO queryDTO);
 
     /**
      * 查询最近的分析记录
-     *
      * @param tenantId 租户ID
      * @param limit 限制数量
-     * @return 最近的分析记录
+     * @return 分析列表
      */
-    List<BreakevenAnalysis> selectRecentAnalysis(@Param("tenantId") Long tenantId, @Param("limit") Integer limit);
+    List<BreakevenAnalysis> selectRecentAnalysis(@Param("tenantId") String tenantId, @Param("limit") Integer limit);
 
     /**
-     * 根据创建人查询分析记录
-     *
+     * 根据创建人查询分析列表
      * @param creatorId 创建人ID
      * @param tenantId 租户ID
-     * @return 分析记录列表
+     * @return 分析列表
      */
-    List<BreakevenAnalysis> selectByCreator(@Param("creatorId") Long creatorId, @Param("tenantId") Long tenantId);
+    List<BreakevenAnalysis> selectByCreator(@Param("creatorId") Long creatorId, @Param("tenantId") String tenantId);
 
     /**
      * 删除过期的分析记录
-     *
      * @param days 过期天数
      * @param tenantId 租户ID
      * @return 删除记录数
      */
-    int deleteExpiredAnalysis(@Param("days") Integer days, @Param("tenantId") Long tenantId);
+    int deleteExpiredAnalysis(@Param("days") Integer days, @Param("tenantId") String tenantId);
 
     /**
-     * 查询分析记录统计信息
-     *
+     * 获取分析统计信息
      * @param tenantId 租户ID
      * @param analysisPeriod 分析期间
-     * @return 统计信息Map
+     * @return 统计数据
      */
-    List<java.util.Map<String, Object>> selectAnalysisStatistics(@Param("tenantId") Long tenantId, 
-                                                                 @Param("analysisPeriod") String analysisPeriod);
+    List<java.util.Map<String, Object>> selectAnalysisStatistics(@Param("tenantId") String tenantId,
+                                                               @Param("analysisPeriod") String analysisPeriod);
 } 

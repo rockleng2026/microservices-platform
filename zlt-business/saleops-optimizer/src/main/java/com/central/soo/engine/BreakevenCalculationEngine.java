@@ -35,7 +35,7 @@ public class BreakevenCalculationEngine {
      * @param creatorId 创建人ID
      * @return 分析结果
      */
-    public BreakevenAnalysis performAnalysis(BreakevenAnalysisDTO analysisDTO, Long tenantId, Long creatorId) {
+    public BreakevenAnalysis performAnalysis(BreakevenAnalysisDTO analysisDTO, String tenantId, Long creatorId) {
         log.info("开始执行盈亏平衡分析: {}", analysisDTO.getAnalysisName());
         
         long startTime = System.currentTimeMillis();
@@ -87,7 +87,7 @@ public class BreakevenCalculationEngine {
     /**
      * 执行基础盈亏平衡计算
      */
-    private BreakevenAnalysis performBasicCalculation(BreakevenAnalysisDTO analysisDTO, Long tenantId, Long creatorId) {
+    private BreakevenAnalysis performBasicCalculation(BreakevenAnalysisDTO analysisDTO, String tenantId, Long creatorId) {
         BreakevenAnalysisDTO.CalculationParameters params = analysisDTO.getCalculationParameters();
         
         // 基础参数验证
@@ -143,7 +143,7 @@ public class BreakevenCalculationEngine {
      */
     private List<BreakevenScenario> performScenarioAnalysis(String analysisId, 
             List<BreakevenAnalysisDTO.ScenarioConfig> scenarioConfigs,
-            BreakevenAnalysisDTO.CalculationParameters baseParams, Long tenantId) {
+            BreakevenAnalysisDTO.CalculationParameters baseParams, String tenantId) {
         
         List<BreakevenScenario> scenarios = new ArrayList<>();
         int sortOrder = 1;
@@ -183,7 +183,7 @@ public class BreakevenCalculationEngine {
      */
     private List<BreakevenSensitivity> performSensitivityAnalysis(String analysisId,
             BreakevenAnalysisDTO.SensitivityConfig sensitivityConfig,
-            BreakevenAnalysisDTO.CalculationParameters baseParams, Long tenantId) {
+            BreakevenAnalysisDTO.CalculationParameters baseParams, String tenantId) {
         
         List<BreakevenSensitivity> sensitivities = new ArrayList<>();
         
@@ -208,7 +208,7 @@ public class BreakevenCalculationEngine {
      */
     private BreakevenForecast performForecastAnalysis(String analysisId,
             BreakevenAnalysisDTO.ForecastConfig forecastConfig,
-            BreakevenAnalysisDTO.CalculationParameters baseParams, Long tenantId) {
+            BreakevenAnalysisDTO.CalculationParameters baseParams, String tenantId) {
         
         BreakevenForecast forecast = new BreakevenForecast();
         forecast.setForecastId(generateForecastId());
@@ -340,14 +340,14 @@ public class BreakevenCalculationEngine {
     }
 
     private List<BreakevenSensitivity> performDefaultSensitivityAnalysis(String analysisId,
-            BreakevenAnalysisDTO.SensitivityConfig config, BreakevenAnalysisDTO.CalculationParameters params, Long tenantId) {
+            BreakevenAnalysisDTO.SensitivityConfig config, BreakevenAnalysisDTO.CalculationParameters params, String tenantId) {
         // 实现默认敏感性分析
         return new ArrayList<>();
     }
 
     private BreakevenSensitivity performParameterSensitivityAnalysis(String analysisId,
             BreakevenAnalysisDTO.SensitivityParameter param, BreakevenAnalysisDTO.SensitivityConfig config,
-            BreakevenAnalysisDTO.CalculationParameters params, Long tenantId) {
+            BreakevenAnalysisDTO.CalculationParameters params, String tenantId) {
         // 实现参数敏感性分析
         return new BreakevenSensitivity();
     }

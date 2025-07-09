@@ -50,7 +50,7 @@ public class BreakevenAnalysis {
      * 租户ID
      */
     @TableField("tenant_id")
-    private Long tenantId;
+    private String tenantId;
 
     /**
      * 创建人ID

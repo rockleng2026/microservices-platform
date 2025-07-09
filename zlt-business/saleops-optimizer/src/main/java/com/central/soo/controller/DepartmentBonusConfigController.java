@@ -1,6 +1,7 @@
 package com.central.soo.controller;
 
 import com.central.common.model.Result;
+
 import com.central.soo.model.DepartmentBonusConfig;
 import com.central.soo.service.IDepartmentBonusConfigService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -90,4 +91,4 @@ public class DepartmentBonusConfigController {
         boolean ok = departmentBonusConfigService.restore(id);
         return ok ? Result.succeed(null) : Result.failed(null);
     }
-} 
+}

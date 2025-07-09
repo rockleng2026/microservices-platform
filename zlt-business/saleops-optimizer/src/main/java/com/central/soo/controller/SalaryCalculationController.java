@@ -93,6 +93,7 @@ public class SalaryCalculationController {
             PageResult<SalaryCalculationTask> result = new PageResult<>();
             result.setData(new ArrayList<>());
             result.setCount(0L);
+            result.setResp_code(1);
             return result;
         }
     }
@@ -401,10 +402,8 @@ public class SalaryCalculationController {
             BreakevenQueryDTO queryDTO = new BreakevenQueryDTO();
             queryDTO.setPage(page);
             queryDTO.setSize(size);
-            queryDTO.setTaskId(taskId);
             queryDTO.setAnalysisType(analysisType);
-            queryDTO.setPeriod(period);
-            
+
             return salaryCalculationService.getBreakevenAnalysisList(queryDTO);
         } catch (Exception e) {
             log.error("查询盈亏平衡分析列表失败", e);

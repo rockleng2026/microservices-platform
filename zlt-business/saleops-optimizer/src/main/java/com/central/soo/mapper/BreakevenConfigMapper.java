@@ -14,40 +14,36 @@ import java.util.List;
 public interface BreakevenConfigMapper extends BaseMapper<BreakevenConfig> {
 
     /**
-     * 根据配置键查询配置
-     *
+     * 根据配置键和租户ID查询配置
      * @param configKey 配置键
      * @param tenantId 租户ID
      * @return 配置信息
      */
-    BreakevenConfig selectByConfigKey(@Param("configKey") String configKey, @Param("tenantId") Long tenantId);
+    BreakevenConfig selectByConfigKey(@Param("configKey") String configKey, @Param("tenantId") String tenantId);
 
     /**
      * 根据配置分类查询配置列表
-     *
      * @param configCategory 配置分类
      * @param tenantId 租户ID
      * @return 配置列表
      */
-    List<BreakevenConfig> selectByCategory(@Param("configCategory") String configCategory, @Param("tenantId") Long tenantId);
+    List<BreakevenConfig> selectByCategory(@Param("configCategory") String configCategory, @Param("tenantId") String tenantId);
 
     /**
-     * 查询所有启用的配置
-     *
+     * 查询启用的配置列表
      * @param tenantId 租户ID
-     * @return 启用的配置列表
+     * @return 配置列表
      */
-    List<BreakevenConfig> selectEnabledConfigs(@Param("tenantId") Long tenantId);
+    List<BreakevenConfig> selectEnabledConfigs(@Param("tenantId") String tenantId);
 
     /**
      * 更新配置值
-     *
      * @param configKey 配置键
      * @param configValue 配置值
      * @param tenantId 租户ID
      * @return 更新记录数
      */
-    int updateConfigValue(@Param("configKey") String configKey, @Param("configValue") String configValue, @Param("tenantId") Long tenantId);
+    int updateConfigValue(@Param("configKey") String configKey, @Param("configValue") String configValue, @Param("tenantId") String tenantId);
 
     /**
      * 批量插入配置

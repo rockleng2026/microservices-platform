@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>盈策通决策平台 - 盈亏平衡分析</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        /* Portal框架标准布局 */
+        .app-layout {
+            display: grid;
+            grid-template-areas: "sidebar header" "sidebar main" "sidebar footer";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr auto;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .app-sidebar {
+            grid-area: sidebar;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 100;
+        }
+
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        /* 页面布局 */
+        .analysis-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 24px;
+            height: calc(100vh - 120px);
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            overflow-y: auto;
+        }
+
+        .results-area {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* 参数控制面板样式 */
+        .panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: between;
+            margin-bottom: 24px;
+        }
+
+        .panel-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+            display: flex;
+            align-items: center;
+        }
+
+        .panel-title i {
+            color: #1890ff;
+            margin-right: 8px;
+        }
+
+        .calculation-status {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 12px;
+            margin-left: auto;
+        }
+
+        .status-ready {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .status-calculating {
+            background: #e6f7ff;
+            color: #1890ff;
+        }
+
+        .param-section {
+            margin-bottom: 24px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #666;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .param-group {
+            margin-bottom: 16px;
+        }
+
+        .param-label {
+            display: flex;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: #262626;
+            margin-bottom: 8px;
+        }
+
+        .param-label i {
+            margin-right: 8px;
+            color: #1890ff;
+            width: 16px;
+        }
+
+        .help-icon {
+            margin-left: 8px;
+            color: #8c8c8c;
+            cursor: help;
+        }
+
+        .param-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .param-input:focus {
+            border-color: #1890ff;
+            box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+            outline: none;
+        }
+
+        .param-slider {
+            margin: 12px 0;
+        }
+
+        .slider-marks {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #8c8c8c;
+            margin-top: 4px;
+        }
+
+        .validation-message {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .validation-error {
+            color: #ff4d4f;
+        }
+
+        .validation-warning {
+            color: #faad14;
+        }
+
+        .validation-success {
+            color: #52c41a;
+        }
+
+        /* 结果展示区域 */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .metric-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .metric-card.primary::before { background: #1890ff; }
+        .metric-card.success::before { background: #52c41a; }
+        .metric-card.warning::before { background: #faad14; }
+        .metric-card.danger::before { background: #ff4d4f; }
+
+        .metric-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .metric-title {
+            font-size: 13px;
+            color: #8c8c8c;
+            font-weight: 500;
+        }
+
+        .metric-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #262626;
+            margin-bottom: 8px;
+        }
+
+        .metric-trend {
+            display: flex;
+            align-items: center;
+            font-size: 11px;
+            color: #8c8c8c;
+        }
+
+        .metric-trend i {
+            margin-right: 4px;
+        }
+
+        /* 图表区域 */
+        .chart-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .chart-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .chart-tabs {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            padding: 6px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            color: #666;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .chart-container {
+            height: 400px;
+        }
+
+        /* 场景对比表格 */
+        .scenarios-table {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table th,
+        .data-table td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .data-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #262626;
+            position: sticky;
+            top: 0;
+        }
+
+        .data-table td {
+            color: #595959;
+        }
+
+        .data-table tr:hover {
+            background: #fafafa;
+        }
+
+        .scenario-name {
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .risk-badge {
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        .risk-low {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .risk-medium {
+            background: #fffbe6;
+            color: #faad14;
+        }
+
+        .risk-high {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+
+        .progress-bar {
+            width: 80px;
+            height: 6px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .progress-high { background: #52c41a; }
+        .progress-medium { background: #faad14; }
+        .progress-low { background: #ff4d4f; }
+
+        /* 操作按钮 */
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            color: #666;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .analysis-layout {
+                grid-template-columns: 280px 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .app-layout {
+                grid-template-columns: 1fr;
+                grid-template-areas: "header" "main" "footer";
+            }
+
+            .app-sidebar {
+                display: none;
+            }
+
+            .analysis-layout {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .control-panel {
+                order: 2;
+                margin-top: 20px;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 左侧导航菜单 -->
+        <nav class="app-sidebar" id="app-sidebar">
+            <!-- 导航内容将通过 JavaScript 动态生成 -->
+        </nav>
+
+        <!-- 头部区域 -->
+        <header class="app-header">
+            <div class="breadcrumb">
+                <span>盈策通决策平台</span>
+                <span style="margin: 0 8px; color: #d9d9d9;">/</span>
+                <span>盈亏平衡分析</span>
+            </div>
+            <div class="header-actions">
+                <i class="fas fa-bell"></i>
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: #1890ff; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 14px; margin: 0 8px;">A</div>
+                <span>管理员</span>
+            </div>
+        </header>
+
+        <!-- 主内容区域 -->
+        <main class="app-main">
+            <div class="analysis-layout">
+                <!-- 左侧参数控制面板 -->
+                <div class="control-panel">
+                    <div class="panel-header">
+                        <h3 class="panel-title">
+                            <i class="fas fa-sliders-h"></i>
+                            参数设置
+                        </h3>
+                        <span class="calculation-status status-ready">就绪</span>
+                    </div>
+
+                    <!-- 基础参数 -->
+                    <div class="param-section">
+                        <h4 class="section-title">基础参数</h4>
+                        
+                        <div class="param-group">
+                            <label class="param-label">
+                                <i class="fas fa-dollar-sign"></i>
+                                当期总营业额
+                                <i class="fas fa-question-circle help-icon" title="影响变动成本率和安全边际计算"></i>
+                            </label>
+                            <input type="number" class="param-input" id="currentRevenue" value="5000000" placeholder="输入营业额">
+                            <div class="validation-message validation-success">参数有效</div>
+                        </div>
+
+                        <div class="param-group">
+                            <label class="param-label">
+                                <i class="fas fa-percentage"></i>
+                                当期毛利率
+                                <i class="fas fa-question-circle help-icon" title="直接影响盈亏平衡点计算"></i>
+                            </label>
+                            <input type="range" class="param-slider" id="grossMargin" min="0.05" max="0.8" step="0.01" value="0.35">
+                            <div class="slider-marks">
+                                <span>保守 5%</span>
+                                <span>基准 30%</span>
+                                <span>乐观 65%</span>
+                            </div>
+                            <input type="number" class="param-input" id="grossMarginInput" value="35" placeholder="输入百分比">
+                        </div>
+                    </div>
+
+                    <!-- 成本参数 -->
+                    <div class="param-section">
+                        <h4 class="section-title">成本结构</h4>
+                        
+                        <div class="param-group">
+                            <label class="param-label">
+                                <i class="fas fa-building"></i>
+                                固定运营成本
+                            </label>
+                            <input type="number" class="param-input" id="fixedCost" value="800000" placeholder="租金、设备等">
+                        </div>
+
+                        <div class="param-group">
+                            <label class="param-label">
+                                <i class="fas fa-chart-line"></i>
+                                可变运营成本
+                            </label>
+                            <input type="number" class="param-input" id="variableCost" value="200000" placeholder="营销、物流等">
+                        </div>
+                    </div>
+
+                    <!-- 人员参数 -->
+                    <div class="param-section">
+                        <h4 class="section-title">人员配置</h4>
+                        
+                        <div class="param-group">
+                            <label class="param-label">
+                                <i class="fas fa-users"></i>
+                                总员工数
+                            </label>
+                            <input type="number" class="param-input" id="totalEmployees" value="150" placeholder="员工总数">
+                        </div>
+
+                        <div class="param-group">
+                            <label class="param-label">
+                                <i class="fas fa-money-bill"></i>
+                                平均基础工资
+                            </label>
+                            <input type="number" class="param-input" id="avgSalary" value="12000" placeholder="月平均工资">
+                        </div>
+                    </div>
+
+                    <!-- 操作按钮 -->
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" onclick="calculateBreakeven()">
+                            <i class="fas fa-calculator"></i>
+                            重新计算
+                        </button>
+                        <button class="btn" onclick="resetParameters()">
+                            <i class="fas fa-undo"></i>
+                            重置
+                        </button>
+                        <button class="btn" onclick="saveTemplate()">
+                            <i class="fas fa-save"></i>
+                            保存模板
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 右侧结果展示区域 -->
+                <div class="results-area">
+                    <!-- 核心指标卡片 -->
+                    <div class="metrics-grid">
+                        <div class="metric-card primary">
+                            <div class="metric-header">
+                                <span class="metric-title">盈亏平衡点</span>
+                                <div class="metric-icon" style="background: #1890ff;">
+                                    <i class="fas fa-balance-scale"></i>
+                                </div>
+                            </div>
+                            <div class="metric-value" id="breakevenValue">¥2,857,143</div>
+                            <div class="metric-trend">
+                                <i class="fas fa-arrow-up" style="color: #52c41a;"></i>
+                                较基准下降 5.2%
+                            </div>
+                        </div>
+
+                        <div class="metric-card success">
+                            <div class="metric-header">
+                                <span class="metric-title">安全边际</span>
+                                <div class="metric-icon" style="background: #52c41a;">
+                                    <i class="fas fa-shield-alt"></i>
+                                </div>
+                            </div>
+                            <div class="metric-value" id="safetyMargin">¥2,142,857</div>
+                            <div class="metric-trend">
+                                安全边际率 42.9%
+                            </div>
+                        </div>
+
+                        <div class="metric-card warning">
+                            <div class="metric-header">
+                                <span class="metric-title">固定成本</span>
+                                <div class="metric-icon" style="background: #faad14;">
+                                    <i class="fas fa-anchor"></i>
+                                </div>
+                            </div>
+                            <div class="metric-value" id="fixedCostValue">¥2,000,000</div>
+                            <div class="metric-trend">
+                                占营业额 40%
+                            </div>
+                        </div>
+
+                        <div class="metric-card danger">
+                            <div class="metric-header">
+                                <span class="metric-title">变动成本率</span>
+                                <div class="metric-icon" style="background: #ff4d4f;">
+                                    <i class="fas fa-percentage"></i>
+                                </div>
+                            </div>
+                            <div class="metric-value" id="variableCostRatio">15%</div>
+                            <div class="metric-trend">
+                                低于行业平均
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 图表展示区域 -->
+                    <div class="chart-section">
+                        <div class="chart-header">
+                            <h3 class="chart-title">盈亏平衡分析图</h3>
+                            <div class="chart-tabs">
+                                <button class="tab-btn active" onclick="switchChart('breakeven')">盈亏平衡</button>
+                                <button class="tab-btn" onclick="switchChart('sensitivity')">敏感性分析</button>
+                                <button class="tab-btn" onclick="switchChart('scenarios')">场景对比</button>
+                            </div>
+                        </div>
+                        <div class="chart-container" id="mainChart"></div>
+                    </div>
+
+                    <!-- 场景对比表格 -->
+                    <div class="scenarios-table">
+                        <h3 class="chart-title" style="margin-bottom: 20px;">多场景分析对比</h3>
+                        
+                        <div class="table-wrapper">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>场景名称</th>
+                                        <th>毛利率</th>
+                                        <th>盈亏平衡点</th>
+                                        <th>达成概率</th>
+                                        <th>风险等级</th>
+                                        <th>安全边际</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="scenario-name">保守场景</td>
+                                        <td>10%</td>
+                                        <td>¥8,000,000</td>
+                                        <td>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill progress-low" style="width: 20%;"></div>
+                                            </div>
+                                            20%
+                                        </td>
+                                        <td><span class="risk-badge risk-high">高风险</span></td>
+                                        <td>-¥3,000,000</td>
+                                        <td>
+                                            <button class="btn" onclick="selectScenario('conservative')">
+                                                <i class="fas fa-eye"></i>
+                                                详细分析
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr style="background: rgba(24, 144, 255, 0.05);">
+                                        <td class="scenario-name">基准场景</td>
+                                        <td>30%</td>
+                                        <td>¥2,857,143</td>
+                                        <td>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill progress-medium" style="width: 75%;"></div>
+                                            </div>
+                                            75%
+                                        </td>
+                                        <td><span class="risk-badge risk-medium">中等风险</span></td>
+                                        <td>¥2,142,857</td>
+                                        <td>
+                                            <button class="btn btn-primary" onclick="selectScenario('baseline')">
+                                                <i class="fas fa-check"></i>
+                                                当前选择
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="scenario-name">乐观场景</td>
+                                        <td>65%</td>
+                                        <td>¥1,176,471</td>
+                                        <td>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill progress-high" style="width: 90%;"></div>
+                                            </div>
+                                            90%
+                                        </td>
+                                        <td><span class="risk-badge risk-low">低风险</span></td>
+                                        <td>¥3,823,529</td>
+                                        <td>
+                                            <button class="btn" onclick="selectScenario('optimistic')">
+                                                <i class="fas fa-rocket"></i>
+                                                切换场景
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 导航菜单数据
+        const menuData = [
+            {
+                title: "运营工作台",
+                icon: "fas fa-chart-pie",
+                url: "dashboard.html"
+            },
+            {
+                title: "财务分析",
+                icon: "fas fa-calculator",
+                children: [
+                    { title: "盈亏平衡分析", url: "breakeven-analysis.html", active: true },
+                    { title: "成本结构分析", url: "cost-analysis.html" },
+                    { title: "投资回报分析", url: "roi-analysis.html" }
+                ]
+            },
+            {
+                title: "薪酬计算",
+                icon: "fas fa-money-bill-wave",
+                url: "payroll-calculate.html"
+            },
+            {
+                title: "绩效管理",
+                icon: "fas fa-chart-bar",
+                url: "performance-manage.html"
+            },
+            {
+                title: "配置中心",
+                icon: "fas fa-cog",
+                url: "config-center.html"
+            }
+        ];
+
+        // 生成导航菜单
+        function generateNavigation() {
+            const sidebar = document.getElementById('app-sidebar');
+            
+            sidebar.innerHTML = `
+                <div class="sidebar-header">
+                    <div class="logo">盈</div>
+                    <span class="brand-name">盈策通</span>
+                </div>
+                <ul class="nav-menu">
+                    ${menuData.map(item => {
+                        if (item.children) {
+                            return `
+                                <li class="nav-item">
+                                    <button class="nav-group expanded">
+                                        <i class="${item.icon} nav-icon"></i>
+                                        ${item.title}
+                                        <i class="fas fa-chevron-right nav-arrow rotated"></i>
+                                    </button>
+                                    <div class="nav-submenu expanded">
+                                        ${item.children.map(subItem => `
+                                            <a href="${subItem.url}" class="nav-subitem ${subItem.active ? 'active' : ''}">
+                                                ${subItem.title}
+                                            </a>
+                                        `).join('')}
+                                    </div>
+                                </li>
+                            `;
+                        } else {
+                            return `
+                                <li class="nav-item">
+                                    <a href="${item.url}" class="nav-link">
+                                        <i class="${item.icon} nav-icon"></i>
+                                        ${item.title}
+                                    </a>
+                                </li>
+                            `;
+                        }
+                    }).join('')}
+                </ul>
+            `;
+        }
+
+        // 初始化图表
+        function initCharts() {
+            const chartContainer = document.getElementById('mainChart');
+            const chart = echarts.init(chartContainer);
+            
+            const option = {
+                title: {
+                    text: '盈亏平衡分析',
+                    left: 'center'
+                },
+                tooltip: {
+                    trigger: 'axis'
+                },
+                xAxis: {
+                    type: 'value',
+                    name: '营业额 (万元)',
+                    nameLocation: 'middle',
+                    nameGap: 30
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '利润 (万元)',
+                    nameLocation: 'middle',
+                    nameGap: 40
+                },
+                series: [
+                    {
+                        name: '利润线',
+                        type: 'line',
+                        data: [
+                            [0, -200],
+                            [100, -150],
+                            [200, -100],
+                            [285.7, 0],
+                            [400, 50],
+                            [500, 100]
+                        ],
+                        lineStyle: {
+                            color: '#1890ff',
+                            width: 3
+                        },
+                        symbol: 'none'
+                    },
+                    {
+                        name: '盈亏平衡点',
+                        type: 'scatter',
+                        data: [[285.7, 0]],
+                        symbolSize: 12,
+                        itemStyle: {
+                            color: '#ff4d4f'
+                        }
+                    },
+                    {
+                        name: '当前位置',
+                        type: 'scatter',
+                        data: [[500, 100]],
+                        symbolSize: 15,
+                        itemStyle: {
+                            color: '#52c41a'
+                        }
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+        }
+
+        // 参数实时联动计算
+        function setupParameterBinding() {
+            const inputs = document.querySelectorAll('.param-input');
+            
+            inputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    // 显示计算状态
+                    updateCalculationStatus('calculating');
+                    
+                    // 防抖执行计算
+                    clearTimeout(this.calculateTimeout);
+                    this.calculateTimeout = setTimeout(() => {
+                        calculateBreakeven();
+                        updateCalculationStatus('ready');
+                    }, 500);
+                });
+            });
+
+            // 毛利率滑块联动
+            const slider = document.getElementById('grossMargin');
+            const input = document.getElementById('grossMarginInput');
+            
+            slider.addEventListener('input', function() {
+                input.value = (this.value * 100).toFixed(1);
+            });
+            
+            input.addEventListener('input', function() {
+                slider.value = this.value / 100;
+            });
+        }
+
+        // 更新计算状态
+        function updateCalculationStatus(status) {
+            const statusEl = document.querySelector('.calculation-status');
+            
+            if (status === 'calculating') {
+                statusEl.className = 'calculation-status status-calculating';
+                statusEl.textContent = '计算中...';
+            } else {
+                statusEl.className = 'calculation-status status-ready';
+                statusEl.textContent = '就绪';
+            }
+        }
+
+        // 计算盈亏平衡点
+        function calculateBreakeven() {
+            const revenue = parseFloat(document.getElementById('currentRevenue').value) || 0;
+            const grossMargin = parseFloat(document.getElementById('grossMarginInput').value) / 100 || 0;
+            const fixedCost = parseFloat(document.getElementById('fixedCost').value) || 0;
+            const variableCost = parseFloat(document.getElementById('variableCost').value) || 0;
+            const employees = parseFloat(document.getElementById('totalEmployees').value) || 0;
+            const avgSalary = parseFloat(document.getElementById('avgSalary').value) || 0;
+            
+            // 计算总固定成本
+            const totalFixedCost = fixedCost + (employees * avgSalary * 12);
+            
+            // 计算变动成本率
+            const variableCostRatio = variableCost / revenue;
+            
+            // 计算盈亏平衡点
+            const breakevenPoint = totalFixedCost / (grossMargin - variableCostRatio);
+            
+            // 计算安全边际
+            const safetyMargin = revenue - breakevenPoint;
+            
+            // 更新显示
+            document.getElementById('breakevenValue').textContent = 
+                '¥' + breakevenPoint.toLocaleString(undefined, {maximumFractionDigits: 0});
+            document.getElementById('safetyMargin').textContent = 
+                '¥' + safetyMargin.toLocaleString(undefined, {maximumFractionDigits: 0});
+            document.getElementById('fixedCostValue').textContent = 
+                '¥' + totalFixedCost.toLocaleString(undefined, {maximumFractionDigits: 0});
+            document.getElementById('variableCostRatio').textContent = 
+                (variableCostRatio * 100).toFixed(1) + '%';
+        }
+
+        // 切换图表类型
+        function switchChart(type) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            // 这里可以根据type加载不同的图表
+            console.log('切换到图表类型:', type);
+        }
+
+        // 选择场景
+        function selectScenario(scenario) {
+            console.log('选择场景:', scenario);
+            
+            // 更新参数值
+            const scenarios = {
+                conservative: { grossMargin: 10 },
+                baseline: { grossMargin: 30 },
+                optimistic: { grossMargin: 65 }
+            };
+            
+            if (scenarios[scenario]) {
+                document.getElementById('grossMarginInput').value = scenarios[scenario].grossMargin;
+                document.getElementById('grossMargin').value = scenarios[scenario].grossMargin / 100;
+                calculateBreakeven();
+            }
+        }
+
+        // 重置参数
+        function resetParameters() {
+            document.getElementById('currentRevenue').value = '5000000';
+            document.getElementById('grossMarginInput').value = '35';
+            document.getElementById('grossMargin').value = '0.35';
+            document.getElementById('fixedCost').value = '800000';
+            document.getElementById('variableCost').value = '200000';
+            document.getElementById('totalEmployees').value = '150';
+            document.getElementById('avgSalary').value = '12000';
+            
+            calculateBreakeven();
+        }
+
+        // 保存模板
+        function saveTemplate() {
+            alert('模板保存功能开发中...');
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            generateNavigation();
+            initCharts();
+            setupParameterBinding();
+            calculateBreakeven();
+        });
+    </script>
+</body>
+</html> 

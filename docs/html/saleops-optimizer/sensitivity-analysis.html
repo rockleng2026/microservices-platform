@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>盈策通决策平台 - 敏感性分析</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        .app-layout {
+            display: grid;
+            grid-template-areas: "sidebar header" "sidebar main";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .app-sidebar {
+            grid-area: sidebar;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin: 0 0 8px 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .page-title i {
+            color: #1890ff;
+            margin-right: 12px;
+        }
+
+        .page-subtitle {
+            color: #8c8c8c;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .analysis-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .card-title i {
+            color: #1890ff;
+            margin-right: 8px;
+        }
+
+        .sensitivity-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sensitivity-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .sensitivity-item:last-child {
+            border-bottom: none;
+        }
+
+        .param-name {
+            font-weight: 500;
+            color: #262626;
+        }
+
+        .sensitivity-bar {
+            flex: 1;
+            margin: 0 16px;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .sensitivity-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .sensitivity-high { background: #ff4d4f; }
+        .sensitivity-medium { background: #faad14; }
+        .sensitivity-low { background: #52c41a; }
+
+        .sensitivity-value {
+            font-weight: 600;
+            color: #262626;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .chart-container {
+            height: 300px;
+        }
+
+        .scenario-matrix {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .matrix-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .matrix-table th,
+        .matrix-table td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #f0f0f0;
+        }
+
+        .matrix-table th {
+            background: #fafafa;
+            font-weight: 600;
+        }
+
+        .matrix-cell {
+            position: relative;
+        }
+
+        .matrix-positive {
+            background: rgba(82, 196, 26, 0.1);
+            color: #52c41a;
+        }
+
+        .matrix-negative {
+            background: rgba(255, 77, 79, 0.1);
+            color: #ff4d4f;
+        }
+
+        .matrix-neutral {
+            background: rgba(140, 140, 140, 0.1);
+            color: #8c8c8c;
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .control-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .control-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #666;
+        }
+
+        .control-input {
+            padding: 6px 10px;
+            border: 1px solid #d9d9d9;
+            border-radius: 4px;
+            font-size: 13px;
+            width: 120px;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            color: #666;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .impact-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .impact-card {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            text-align: center;
+        }
+
+        .impact-value {
+            font-size: 20px;
+            font-weight: 700;
+            color: #262626;
+            margin-bottom: 4px;
+        }
+
+        .impact-label {
+            font-size: 12px;
+            color: #8c8c8c;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 导航菜单 -->
+        <nav class="app-sidebar" id="app-sidebar"></nav>
+
+        <!-- 头部 -->
+        <header class="app-header">
+            <div class="breadcrumb">
+                <span>盈策通决策平台</span>
+                <span style="margin: 0 8px; color: #d9d9d9;">/</span>
+                <span>敏感性分析</span>
+            </div>
+            <div class="header-actions">
+                <span>管理员</span>
+            </div>
+        </header>
+
+        <!-- 主内容 -->
+        <main class="app-main">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-chart-area"></i>
+                    敏感性分析
+                </h1>
+                <p class="page-subtitle">分析各参数对盈亏平衡点的影响程度，识别关键风险因素</p>
+            </div>
+
+            <!-- 控制面板 -->
+            <div class="control-panel">
+                <div class="control-row">
+                    <div class="control-group">
+                        <label class="control-label">分析变量</label>
+                        <select class="control-input" id="analysisVariables" multiple>
+                            <option value="grossMargin" selected>毛利率</option>
+                            <option value="fixedCost" selected>固定成本</option>
+                            <option value="variableCost" selected>变动成本</option>
+                            <option value="avgSalary" selected>平均工资</option>
+                            <option value="employeeCount">员工数量</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">变化范围</label>
+                        <select class="control-input" id="changeRange">
+                            <option value="10">±10%</option>
+                            <option value="20" selected>±20%</option>
+                            <option value="30">±30%</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label class="control-label">分析深度</label>
+                        <select class="control-input" id="analysisDepth">
+                            <option value="basic">基础分析</option>
+                            <option value="detailed" selected>详细分析</option>
+                            <option value="advanced">高级分析</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-primary" onclick="runSensitivityAnalysis()">
+                        <i class="fas fa-play"></i> 开始分析
+                    </button>
+                </div>
+            </div>
+
+            <!-- 影响度摘要 -->
+            <div class="impact-summary">
+                <div class="impact-card">
+                    <div class="impact-value" id="maxImpact">67%</div>
+                    <div class="impact-label">最大影响程度</div>
+                </div>
+                <div class="impact-card">
+                    <div class="impact-value" id="criticalParams">2</div>
+                    <div class="impact-label">关键参数数量</div>
+                </div>
+                <div class="impact-card">
+                    <div class="impact-value" id="riskLevel">中等</div>
+                    <div class="impact-label">整体风险等级</div>
+                </div>
+                <div class="impact-card">
+                    <div class="impact-value" id="stabilityScore">7.2</div>
+                    <div class="impact-label">稳定性评分</div>
+                </div>
+            </div>
+
+            <!-- 分析结果 -->
+            <div class="analysis-grid">
+                <!-- 参数敏感性排序 -->
+                <div class="analysis-card">
+                    <h3 class="card-title">
+                        <i class="fas fa-sort-amount-down"></i>
+                        参数敏感性排序
+                    </h3>
+                    <ul class="sensitivity-list">
+                        <li class="sensitivity-item">
+                            <span class="param-name">毛利率</span>
+                            <div class="sensitivity-bar">
+                                <div class="sensitivity-fill sensitivity-high" style="width: 85%;"></div>
+                            </div>
+                            <span class="sensitivity-value">85%</span>
+                        </li>
+                        <li class="sensitivity-item">
+                            <span class="param-name">固定成本</span>
+                            <div class="sensitivity-bar">
+                                <div class="sensitivity-fill sensitivity-high" style="width: 67%;"></div>
+                            </div>
+                            <span class="sensitivity-value">67%</span>
+                        </li>
+                        <li class="sensitivity-item">
+                            <span class="param-name">平均工资</span>
+                            <div class="sensitivity-bar">
+                                <div class="sensitivity-fill sensitivity-medium" style="width: 45%;"></div>
+                            </div>
+                            <span class="sensitivity-value">45%</span>
+                        </li>
+                        <li class="sensitivity-item">
+                            <span class="param-name">变动成本</span>
+                            <div class="sensitivity-bar">
+                                <div class="sensitivity-fill sensitivity-medium" style="width: 32%;"></div>
+                            </div>
+                            <span class="sensitivity-value">32%</span>
+                        </li>
+                        <li class="sensitivity-item">
+                            <span class="param-name">员工数量</span>
+                            <div class="sensitivity-bar">
+                                <div class="sensitivity-fill sensitivity-low" style="width: 28%;"></div>
+                            </div>
+                            <span class="sensitivity-value">28%</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 敏感性蜘蛛图 -->
+                <div class="analysis-card">
+                    <h3 class="card-title">
+                        <i class="fas fa-spider"></i>
+                        敏感性蜘蛛图
+                    </h3>
+                    <div class="chart-container" id="spiderChart"></div>
+                </div>
+            </div>
+
+            <!-- 影响矩阵 -->
+            <div class="scenario-matrix">
+                <h3 class="card-title">
+                    <i class="fas fa-th"></i>
+                    参数变化影响矩阵
+                </h3>
+                <div style="overflow-x: auto;">
+                    <table class="matrix-table">
+                        <thead>
+                            <tr>
+                                <th>参数/变化幅度</th>
+                                <th>-20%</th>
+                                <th>-10%</th>
+                                <th>-5%</th>
+                                <th>基准</th>
+                                <th>+5%</th>
+                                <th>+10%</th>
+                                <th>+20%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: 600;">毛利率</td>
+                                <td class="matrix-cell matrix-negative">+285%</td>
+                                <td class="matrix-cell matrix-negative">+67%</td>
+                                <td class="matrix-cell matrix-negative">+28%</td>
+                                <td class="matrix-cell matrix-neutral">0%</td>
+                                <td class="matrix-cell matrix-positive">-22%</td>
+                                <td class="matrix-cell matrix-positive">-40%</td>
+                                <td class="matrix-cell matrix-positive">-67%</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600;">固定成本</td>
+                                <td class="matrix-cell matrix-positive">-20%</td>
+                                <td class="matrix-cell matrix-positive">-10%</td>
+                                <td class="matrix-cell matrix-positive">-5%</td>
+                                <td class="matrix-cell matrix-neutral">0%</td>
+                                <td class="matrix-cell matrix-negative">+5%</td>
+                                <td class="matrix-cell matrix-negative">+10%</td>
+                                <td class="matrix-cell matrix-negative">+20%</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600;">平均工资</td>
+                                <td class="matrix-cell matrix-positive">-15%</td>
+                                <td class="matrix-cell matrix-positive">-7%</td>
+                                <td class="matrix-cell matrix-positive">-4%</td>
+                                <td class="matrix-cell matrix-neutral">0%</td>
+                                <td class="matrix-cell matrix-negative">+4%</td>
+                                <td class="matrix-cell matrix-negative">+7%</td>
+                                <td class="matrix-cell matrix-negative">+15%</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600;">变动成本</td>
+                                <td class="matrix-cell matrix-positive">-8%</td>
+                                <td class="matrix-cell matrix-positive">-4%</td>
+                                <td class="matrix-cell matrix-positive">-2%</td>
+                                <td class="matrix-cell matrix-neutral">0%</td>
+                                <td class="matrix-cell matrix-negative">+2%</td>
+                                <td class="matrix-cell matrix-negative">+4%</td>
+                                <td class="matrix-cell matrix-negative">+8%</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600;">员工数量</td>
+                                <td class="matrix-cell matrix-positive">-12%</td>
+                                <td class="matrix-cell matrix-positive">-6%</td>
+                                <td class="matrix-cell matrix-positive">-3%</td>
+                                <td class="matrix-cell matrix-neutral">0%</td>
+                                <td class="matrix-cell matrix-negative">+3%</td>
+                                <td class="matrix-cell matrix-negative">+6%</td>
+                                <td class="matrix-cell matrix-negative">+12%</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 详细图表分析 -->
+            <div class="analysis-grid">
+                <div class="analysis-card">
+                    <h3 class="card-title">
+                        <i class="fas fa-chart-line"></i>
+                        参数变化趋势图
+                    </h3>
+                    <div class="chart-container" id="trendChart"></div>
+                </div>
+
+                <div class="analysis-card">
+                    <h3 class="card-title">
+                        <i class="fas fa-bullseye"></i>
+                        风险热力图
+                    </h3>
+                    <div class="chart-container" id="heatmapChart"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 初始化蜘蛛图
+        function initSpiderChart() {
+            const chart = echarts.init(document.getElementById('spiderChart'));
+            
+            const option = {
+                radar: {
+                    indicator: [
+                        { name: '毛利率', max: 100 },
+                        { name: '固定成本', max: 100 },
+                        { name: '平均工资', max: 100 },
+                        { name: '变动成本', max: 100 },
+                        { name: '员工数量', max: 100 }
+                    ],
+                    shape: 'polygon',
+                    splitNumber: 4,
+                    axisName: {
+                        color: '#666'
+                    },
+                    splitLine: {
+                        lineStyle: {
+                            color: '#e8e8e8'
+                        }
+                    },
+                    splitArea: {
+                        areaStyle: {
+                            color: ['#f9f9f9', '#fff']
+                        }
+                    }
+                },
+                series: [{
+                    type: 'radar',
+                    data: [
+                        {
+                            value: [85, 67, 45, 32, 28],
+                            name: '敏感性程度',
+                            areaStyle: {
+                                color: 'rgba(24, 144, 255, 0.3)'
+                            },
+                            lineStyle: {
+                                color: '#1890ff',
+                                width: 2
+                            },
+                            symbol: 'circle',
+                            symbolSize: 6
+                        }
+                    ]
+                }]
+            };
+            
+            chart.setOption(option);
+        }
+
+        // 初始化趋势图
+        function initTrendChart() {
+            const chart = echarts.init(document.getElementById('trendChart'));
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis'
+                },
+                legend: {
+                    data: ['毛利率', '固定成本', '平均工资', '变动成本']
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['-20%', '-10%', '-5%', '基准', '+5%', '+10%', '+20%']
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '影响程度'
+                },
+                series: [
+                    {
+                        name: '毛利率',
+                        type: 'line',
+                        data: [285, 67, 28, 0, -22, -40, -67],
+                        lineStyle: { color: '#ff4d4f' }
+                    },
+                    {
+                        name: '固定成本',
+                        type: 'line',
+                        data: [-20, -10, -5, 0, 5, 10, 20],
+                        lineStyle: { color: '#1890ff' }
+                    },
+                    {
+                        name: '平均工资',
+                        type: 'line',
+                        data: [-15, -7, -4, 0, 4, 7, 15],
+                        lineStyle: { color: '#52c41a' }
+                    },
+                    {
+                        name: '变动成本',
+                        type: 'line',
+                        data: [-8, -4, -2, 0, 2, 4, 8],
+                        lineStyle: { color: '#faad14' }
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+        }
+
+        // 初始化热力图
+        function initHeatmapChart() {
+            const chart = echarts.init(document.getElementById('heatmapChart'));
+            
+            const params = ['毛利率', '固定成本', '平均工资', '变动成本', '员工数量'];
+            const changes = ['-20%', '-10%', '+10%', '+20%'];
+            const data = [];
+            
+            // 生成热力图数据
+            params.forEach((param, i) => {
+                changes.forEach((change, j) => {
+                    const value = Math.abs(Math.random() * 100);
+                    data.push([j, i, value]);
+                });
+            });
+            
+            const option = {
+                tooltip: {
+                    position: 'top'
+                },
+                grid: {
+                    height: '60%',
+                    top: '10%'
+                },
+                xAxis: {
+                    type: 'category',
+                    data: changes,
+                    splitArea: {
+                        show: true
+                    }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: params,
+                    splitArea: {
+                        show: true
+                    }
+                },
+                visualMap: {
+                    min: 0,
+                    max: 100,
+                    calculable: true,
+                    orient: 'horizontal',
+                    left: 'center',
+                    bottom: '5%',
+                    inRange: {
+                        color: ['#50a3ba', '#eac736', '#d94e5d']
+                    }
+                },
+                series: [{
+                    name: '风险程度',
+                    type: 'heatmap',
+                    data: data,
+                    label: {
+                        show: true
+                    },
+                    emphasis: {
+                        itemStyle: {
+                            shadowBlur: 10,
+                            shadowColor: 'rgba(0, 0, 0, 0.5)'
+                        }
+                    }
+                }]
+            };
+            
+            chart.setOption(option);
+        }
+
+        // 运行敏感性分析
+        function runSensitivityAnalysis() {
+            console.log('开始敏感性分析...');
+            
+            // 模拟分析过程
+            setTimeout(() => {
+                // 更新影响度数据
+                document.getElementById('maxImpact').textContent = '85%';
+                document.getElementById('criticalParams').textContent = '2';
+                document.getElementById('riskLevel').textContent = '高风险';
+                document.getElementById('stabilityScore').textContent = '6.8';
+                
+                // 重新初始化图表
+                initSpiderChart();
+                initTrendChart();
+                initHeatmapChart();
+            }, 1000);
+        }
+
+        // 生成导航菜单
+        function generateNavigation() {
+            const menuData = [
+                { title: "运营工作台", icon: "fas fa-chart-pie", url: "dashboard.html" },
+                {
+                    title: "财务分析",
+                    icon: "fas fa-calculator",
+                    children: [
+                        { title: "盈亏平衡分析", url: "breakeven-analysis.html" },
+                        { title: "敏感性分析", url: "sensitivity-analysis.html", active: true },
+                        { title: "成本结构分析", url: "cost-analysis.html" }
+                    ]
+                },
+                { title: "薪酬计算", icon: "fas fa-money-bill-wave", url: "payroll-calculate.html" },
+                { title: "绩效管理", icon: "fas fa-chart-bar", url: "performance-manage.html" },
+                { title: "配置中心", icon: "fas fa-cog", url: "config-center.html" }
+            ];
+
+            const sidebar = document.getElementById('app-sidebar');
+            sidebar.innerHTML = `
+                <div style="height: 60px; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #e8e8e8;">
+                    <div style="width: 32px; height: 32px; background: #1890ff; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 12px;">盈</div>
+                    <span style="font-size: 18px; font-weight: 600; color: #333;">盈策通</span>
+                </div>
+                <ul style="padding: 20px 0; list-style: none; margin: 0;">
+                    ${menuData.map(item => {
+                        if (item.children) {
+                            return `
+                                <li style="margin-bottom: 4px;">
+                                    <div style="display: flex; align-items: center; padding: 12px 20px; color: #1890ff; background: rgba(24, 144, 255, 0.05);">
+                                        <i class="${item.icon}" style="margin-right: 12px; width: 20px;"></i>
+                                        ${item.title}
+                                    </div>
+                                    <div style="background: #fafafa;">
+                                        ${item.children.map(subItem => `
+                                            <a href="${subItem.url}" style="display: block; padding: 10px 20px 10px 52px; color: ${subItem.active ? '#1890ff' : '#666'}; text-decoration: none; font-size: 13px; ${subItem.active ? 'background: rgba(24, 144, 255, 0.1); border-left: 3px solid #1890ff;' : ''}">
+                                                ${subItem.title}
+                                            </a>
+                                        `).join('')}
+                                    </div>
+                                </li>
+                            `;
+                        } else {
+                            return `
+                                <li style="margin-bottom: 4px;">
+                                    <a href="${item.url}" style="display: flex; align-items: center; padding: 12px 20px; color: #666; text-decoration: none; font-size: 14px;">
+                                        <i class="${item.icon}" style="margin-right: 12px; width: 20px;"></i>
+                                        ${item.title}
+                                    </a>
+                                </li>
+                            `;
+                        }
+                    }).join('')}
+                </ul>
+            `;
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            generateNavigation();
+            initSpiderChart();
+            initTrendChart();
+            initHeatmapChart();
+        });
+    </script>
+</body>
+</html> 

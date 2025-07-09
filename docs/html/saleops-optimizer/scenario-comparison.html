@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>盈策通决策平台 - 场景对比分析</title>
+    <link rel="stylesheet" href="../assets/css/common.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        .app-layout {
+            display: grid;
+            grid-template-areas: "sidebar header" "sidebar main";
+            grid-template-columns: 240px 1fr;
+            grid-template-rows: 60px 1fr;
+            min-height: 100vh;
+            background: #f5f5f5;
+        }
+
+        .app-header {
+            grid-area: header;
+            background: white;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .app-sidebar {
+            grid-area: sidebar;
+            background: white;
+            box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .app-main {
+            grid-area: main;
+            padding: 24px;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #262626;
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .page-title i {
+            color: #1890ff;
+            margin-right: 12px;
+        }
+
+        .page-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #d9d9d9;
+            background: white;
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+            border-color: #1890ff;
+        }
+
+        .btn:hover {
+            border-color: #1890ff;
+            color: #1890ff;
+        }
+
+        .btn-primary:hover {
+            background: #40a9ff;
+        }
+
+        .scenario-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .scenario-panel {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .panel-title i {
+            color: #1890ff;
+            margin-right: 8px;
+        }
+
+        .scenario-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .scenario-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            border: 1px solid #f0f0f0;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .scenario-item:hover {
+            border-color: #1890ff;
+            background: rgba(24, 144, 255, 0.05);
+        }
+
+        .scenario-item.selected {
+            border-color: #1890ff;
+            background: rgba(24, 144, 255, 0.1);
+        }
+
+        .scenario-checkbox {
+            margin-right: 12px;
+        }
+
+        .scenario-info {
+            flex: 1;
+        }
+
+        .scenario-name {
+            font-weight: 500;
+            color: #262626;
+            margin-bottom: 4px;
+        }
+
+        .scenario-desc {
+            font-size: 12px;
+            color: #8c8c8c;
+        }
+
+        .scenario-metrics {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 2px;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: #262626;
+            font-size: 14px;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #8c8c8c;
+        }
+
+        .risk-badge {
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        .risk-low {
+            background: #f6ffed;
+            color: #52c41a;
+        }
+
+        .risk-medium {
+            background: #fffbe6;
+            color: #faad14;
+        }
+
+        .risk-high {
+            background: #fff2f0;
+            color: #ff4d4f;
+        }
+
+        .comparison-chart {
+            height: 400px;
+        }
+
+        .comparison-table {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            margin-bottom: 24px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table th,
+        .data-table td {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .data-table th {
+            background: #fafafa;
+            font-weight: 600;
+            color: #262626;
+            position: sticky;
+            top: 0;
+        }
+
+        .data-table td {
+            color: #595959;
+        }
+
+        .data-table tr:hover {
+            background: #fafafa;
+        }
+
+        .table-metric {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .metric-main {
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .metric-sub {
+            font-size: 11px;
+            color: #8c8c8c;
+        }
+
+        .recommendation-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .recommendation-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .recommendation-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            color: white;
+        }
+
+        .recommendation-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .recommendation-content {
+            color: #595959;
+            line-height: 1.6;
+            margin-bottom: 12px;
+        }
+
+        .recommendation-action {
+            display: flex;
+            align-items: center;
+            color: #1890ff;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .recommendation-action i {
+            margin-left: 4px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            min-width: 400px;
+            max-width: 600px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #262626;
+        }
+
+        .modal-close {
+            color: #8c8c8c;
+            cursor: pointer;
+            font-size: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #262626;
+            margin-bottom: 6px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 导航菜单 -->
+        <nav class="app-sidebar" id="app-sidebar"></nav>
+
+        <!-- 头部 -->
+        <header class="app-header">
+            <div class="breadcrumb">
+                <span>盈策通决策平台</span>
+                <span style="margin: 0 8px; color: #d9d9d9;">/</span>
+                <span>场景对比分析</span>
+            </div>
+            <div class="header-actions">
+                <span>管理员</span>
+            </div>
+        </header>
+
+        <!-- 主内容 -->
+        <main class="app-main">
+            <div class="page-header">
+                <h1 class="page-title">
+                    <i class="fas fa-layer-group"></i>
+                    场景对比分析
+                </h1>
+                <div class="page-actions">
+                    <button class="btn" onclick="exportReport()">
+                        <i class="fas fa-download"></i>
+                        导出报告
+                    </button>
+                    <button class="btn" onclick="saveComparison()">
+                        <i class="fas fa-save"></i>
+                        保存对比
+                    </button>
+                    <button class="btn btn-primary" onclick="openScenarioModal()">
+                        <i class="fas fa-plus"></i>
+                        新建场景
+                    </button>
+                </div>
+            </div>
+
+            <!-- 场景选择和对比图表 -->
+            <div class="scenario-grid">
+                <!-- 场景选择面板 -->
+                <div class="scenario-panel">
+                    <h3 class="panel-title">
+                        <i class="fas fa-list"></i>
+                        场景选择
+                    </h3>
+                    <ul class="scenario-list" id="scenarioList">
+                        <li class="scenario-item selected" data-scenario="conservative">
+                            <input type="checkbox" class="scenario-checkbox" checked>
+                            <div class="scenario-info">
+                                <div class="scenario-name">保守场景</div>
+                                <div class="scenario-desc">低毛利率，高风险控制</div>
+                            </div>
+                            <div class="scenario-metrics">
+                                <span class="metric-value">¥8.0M</span>
+                                <span class="metric-label">盈亏平衡点</span>
+                                <span class="risk-badge risk-high">高风险</span>
+                            </div>
+                        </li>
+                        <li class="scenario-item selected" data-scenario="baseline">
+                            <input type="checkbox" class="scenario-checkbox" checked>
+                            <div class="scenario-info">
+                                <div class="scenario-name">基准场景</div>
+                                <div class="scenario-desc">标准毛利率，平衡发展</div>
+                            </div>
+                            <div class="scenario-metrics">
+                                <span class="metric-value">¥2.9M</span>
+                                <span class="metric-label">盈亏平衡点</span>
+                                <span class="risk-badge risk-medium">中等风险</span>
+                            </div>
+                        </li>
+                        <li class="scenario-item selected" data-scenario="optimistic">
+                            <input type="checkbox" class="scenario-checkbox" checked>
+                            <div class="scenario-info">
+                                <div class="scenario-name">乐观场景</div>
+                                <div class="scenario-desc">高毛利率，积极扩张</div>
+                            </div>
+                            <div class="scenario-metrics">
+                                <span class="metric-value">¥1.2M</span>
+                                <span class="metric-label">盈亏平衡点</span>
+                                <span class="risk-badge risk-low">低风险</span>
+                            </div>
+                        </li>
+                        <li class="scenario-item" data-scenario="expansion">
+                            <input type="checkbox" class="scenario-checkbox">
+                            <div class="scenario-info">
+                                <div class="scenario-name">扩张场景</div>
+                                <div class="scenario-desc">人员扩张，增加投入</div>
+                            </div>
+                            <div class="scenario-metrics">
+                                <span class="metric-value">¥3.5M</span>
+                                <span class="metric-label">盈亏平衡点</span>
+                                <span class="risk-badge risk-medium">中等风险</span>
+                            </div>
+                        </li>
+                        <li class="scenario-item" data-scenario="costcut">
+                            <input type="checkbox" class="scenario-checkbox">
+                            <div class="scenario-info">
+                                <div class="scenario-name">成本优化场景</div>
+                                <div class="scenario-desc">降低成本，提升效率</div>
+                            </div>
+                            <div class="scenario-metrics">
+                                <span class="metric-value">¥2.1M</span>
+                                <span class="metric-label">盈亏平衡点</span>
+                                <span class="risk-badge risk-low">低风险</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 对比图表 -->
+                <div class="scenario-panel">
+                    <h3 class="panel-title">
+                        <i class="fas fa-chart-bar"></i>
+                        场景对比图表
+                    </h3>
+                    <div class="comparison-chart" id="comparisonChart"></div>
+                </div>
+            </div>
+
+            <!-- 详细对比表格 -->
+            <div class="comparison-table">
+                <h3 class="panel-title">
+                    <i class="fas fa-table"></i>
+                    详细对比分析
+                </h3>
+                <div style="overflow-x: auto;">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>场景名称</th>
+                                <th>毛利率</th>
+                                <th>盈亏平衡点</th>
+                                <th>安全边际</th>
+                                <th>达成概率</th>
+                                <th>风险评级</th>
+                                <th>投资需求</th>
+                                <th>预期收益</th>
+                                <th>实施难度</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td style="font-weight: 600;">保守场景</td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">10%</span>
+                                        <span class="metric-sub">基准-20%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">¥8.0M</span>
+                                        <span class="metric-sub">+180%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">-¥3.0M</span>
+                                        <span class="metric-sub">负边际</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">20%</span>
+                                        <span class="metric-sub">很低</span>
+                                    </div>
+                                </td>
+                                <td><span class="risk-badge risk-high">高风险</span></td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">¥0.5M</span>
+                                        <span class="metric-sub">低投入</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">-15%</span>
+                                        <span class="metric-sub">负收益</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">容易</span>
+                                        <span class="metric-sub">★★</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="background: rgba(24, 144, 255, 0.05);">
+                                <td style="font-weight: 600;">基准场景</td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">30%</span>
+                                        <span class="metric-sub">基准</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">¥2.9M</span>
+                                        <span class="metric-sub">基准</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">¥2.1M</span>
+                                        <span class="metric-sub">42%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">75%</span>
+                                        <span class="metric-sub">较高</span>
+                                    </div>
+                                </td>
+                                <td><span class="risk-badge risk-medium">中等风险</span></td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">¥1.2M</span>
+                                        <span class="metric-sub">适中</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">25%</span>
+                                        <span class="metric-sub">稳健</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">适中</span>
+                                        <span class="metric-sub">★★★</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: 600;">乐观场景</td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">65%</span>
+                                        <span class="metric-sub">基准+35%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">¥1.2M</span>
+                                        <span class="metric-sub">-59%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">¥3.8M</span>
+                                        <span class="metric-sub">76%</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">90%</span>
+                                        <span class="metric-sub">很高</span>
+                                    </div>
+                                </td>
+                                <td><span class="risk-badge risk-low">低风险</span></td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">¥2.0M</span>
+                                        <span class="metric-sub">较高</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">45%</span>
+                                        <span class="metric-sub">高收益</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="table-metric">
+                                        <span class="metric-main">困难</span>
+                                        <span class="metric-sub">★★★★</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 智能推荐 -->
+            <div class="recommendation-cards">
+                <div class="recommendation-card">
+                    <div class="recommendation-header">
+                        <div class="recommendation-icon" style="background: #52c41a;">
+                            <i class="fas fa-trophy"></i>
+                        </div>
+                        <div class="recommendation-title">最佳场景推荐</div>
+                    </div>
+                    <div class="recommendation-content">
+                        基于风险评估和可行性分析，推荐选择<strong>基准场景</strong>作为当前最优策略。该场景具有较高的达成概率(75%)和适中的风险等级，能够在稳健发展与收益最大化之间取得平衡。
+                    </div>
+                    <div class="recommendation-action" onclick="selectRecommendedScenario('baseline')">
+                        应用推荐场景 <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="recommendation-header">
+                        <div class="recommendation-icon" style="background: #faad14;">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="recommendation-title">风险提示</div>
+                    </div>
+                    <div class="recommendation-content">
+                        保守场景存在较大风险，盈亏平衡点过高可能导致亏损。建议避免选择过于保守的策略，或者在该场景下制定更严格的成本控制措施。
+                    </div>
+                    <div class="recommendation-action" onclick="showRiskDetails()">
+                        查看详细风险分析 <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+
+                <div class="recommendation-card">
+                    <div class="recommendation-header">
+                        <div class="recommendation-icon" style="background: #1890ff;">
+                            <i class="fas fa-lightbulb"></i>
+                        </div>
+                        <div class="recommendation-title">优化建议</div>
+                    </div>
+                    <div class="recommendation-content">
+                        考虑将基准场景与成本优化措施结合，可以进一步降低盈亏平衡点至2.1M。建议优先优化固定成本和人力成本结构，提升整体运营效率。
+                    </div>
+                    <div class="recommendation-action" onclick="showOptimizationPlan()">
+                        查看优化方案 <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 新建场景模态框 -->
+    <div class="modal" id="scenarioModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">新建分析场景</h3>
+                <span class="modal-close" onclick="closeScenarioModal()">&times;</span>
+            </div>
+            <form id="scenarioForm">
+                <div class="form-group">
+                    <label class="form-label">场景名称</label>
+                    <input type="text" class="form-input" id="scenarioName" placeholder="输入场景名称">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">场景描述</label>
+                    <textarea class="form-textarea" id="scenarioDesc" placeholder="描述场景的特点和适用情况"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">基于模板</label>
+                    <select class="form-select" id="scenarioTemplate">
+                        <option value="">自定义设置</option>
+                        <option value="conservative">保守场景模板</option>
+                        <option value="baseline">基准场景模板</option>
+                        <option value="optimistic">乐观场景模板</option>
+                        <option value="expansion">扩张场景模板</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">毛利率 (%)</label>
+                    <input type="number" class="form-input" id="scenarioMargin" placeholder="输入毛利率" min="1" max="80">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">固定成本 (元)</label>
+                    <input type="number" class="form-input" id="scenarioFixedCost" placeholder="输入固定成本">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">变动成本率 (%)</label>
+                    <input type="number" class="form-input" id="scenarioVariableCost" placeholder="输入变动成本率" min="0" max="50">
+                </div>
+            </form>
+            <div class="modal-actions">
+                <button class="btn" onclick="closeScenarioModal()">取消</button>
+                <button class="btn btn-primary" onclick="createScenario()">创建场景</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 初始化对比图表
+        function initComparisonChart() {
+            const chart = echarts.init(document.getElementById('comparisonChart'));
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: {
+                        type: 'shadow'
+                    }
+                },
+                legend: {
+                    data: ['盈亏平衡点', '安全边际', '投资需求']
+                },
+                xAxis: {
+                    type: 'category',
+                    data: ['保守场景', '基准场景', '乐观场景']
+                },
+                yAxis: {
+                    type: 'value',
+                    name: '金额 (万元)'
+                },
+                series: [
+                    {
+                        name: '盈亏平衡点',
+                        type: 'bar',
+                        data: [800, 290, 120],
+                        itemStyle: { color: '#ff4d4f' }
+                    },
+                    {
+                        name: '安全边际',
+                        type: 'bar',
+                        data: [-300, 210, 380],
+                        itemStyle: { color: '#52c41a' }
+                    },
+                    {
+                        name: '投资需求',
+                        type: 'bar',
+                        data: [50, 120, 200],
+                        itemStyle: { color: '#1890ff' }
+                    }
+                ]
+            };
+            
+            chart.setOption(option);
+        }
+
+        // 场景选择事件处理
+        function setupScenarioSelection() {
+            const scenarioItems = document.querySelectorAll('.scenario-item');
+            
+            scenarioItems.forEach(item => {
+                const checkbox = item.querySelector('.scenario-checkbox');
+                
+                item.addEventListener('click', function(e) {
+                    if (e.target !== checkbox) {
+                        checkbox.checked = !checkbox.checked;
+                    }
+                    
+                    if (checkbox.checked) {
+                        item.classList.add('selected');
+                    } else {
+                        item.classList.remove('selected');
+                    }
+                    
+                    updateComparison();
+                });
+                
+                checkbox.addEventListener('change', function() {
+                    if (this.checked) {
+                        item.classList.add('selected');
+                    } else {
+                        item.classList.remove('selected');
+                    }
+                    updateComparison();
+                });
+            });
+        }
+
+        // 更新对比分析
+        function updateComparison() {
+            const selectedScenarios = document.querySelectorAll('.scenario-item.selected');
+            console.log('选中场景数量:', selectedScenarios.length);
+            
+            // 更新图表数据
+            updateComparisonChart();
+        }
+
+        // 更新对比图表
+        function updateComparisonChart() {
+            const chart = echarts.getInstanceByDom(document.getElementById('comparisonChart'));
+            const selectedItems = document.querySelectorAll('.scenario-item.selected');
+            
+            const names = [];
+            const breakevenData = [];
+            const marginData = [];
+            const investmentData = [];
+            
+            selectedItems.forEach(item => {
+                const scenario = item.dataset.scenario;
+                const name = item.querySelector('.scenario-name').textContent;
+                names.push(name);
+                
+                // 根据场景类型设置数据
+                switch(scenario) {
+                    case 'conservative':
+                        breakevenData.push(800);
+                        marginData.push(-300);
+                        investmentData.push(50);
+                        break;
+                    case 'baseline':
+                        breakevenData.push(290);
+                        marginData.push(210);
+                        investmentData.push(120);
+                        break;
+                    case 'optimistic':
+                        breakevenData.push(120);
+                        marginData.push(380);
+                        investmentData.push(200);
+                        break;
+                    case 'expansion':
+                        breakevenData.push(350);
+                        marginData.push(150);
+                        investmentData.push(300);
+                        break;
+                    case 'costcut':
+                        breakevenData.push(210);
+                        marginData.push(290);
+                        investmentData.push(80);
+                        break;
+                }
+            });
+            
+            chart.setOption({
+                xAxis: {
+                    data: names
+                },
+                series: [
+                    {
+                        name: '盈亏平衡点',
+                        data: breakevenData
+                    },
+                    {
+                        name: '安全边际',
+                        data: marginData
+                    },
+                    {
+                        name: '投资需求',
+                        data: investmentData
+                    }
+                ]
+            });
+        }
+
+        // 打开新建场景模态框
+        function openScenarioModal() {
+            document.getElementById('scenarioModal').style.display = 'block';
+        }
+
+        // 关闭新建场景模态框
+        function closeScenarioModal() {
+            document.getElementById('scenarioModal').style.display = 'none';
+            document.getElementById('scenarioForm').reset();
+        }
+
+        // 创建新场景
+        function createScenario() {
+            const name = document.getElementById('scenarioName').value;
+            const desc = document.getElementById('scenarioDesc').value;
+            const margin = document.getElementById('scenarioMargin').value;
+            
+            if (!name || !margin) {
+                alert('请填写必要信息');
+                return;
+            }
+            
+            // 这里实现创建逻辑
+            console.log('创建场景:', { name, desc, margin });
+            
+            // 添加到场景列表
+            addScenarioToList(name, desc, margin);
+            
+            closeScenarioModal();
+        }
+
+        // 添加场景到列表
+        function addScenarioToList(name, desc, margin) {
+            const list = document.getElementById('scenarioList');
+            const breakevenPoint = (2000000 / (margin / 100 - 0.15)).toFixed(0);
+            const riskLevel = margin > 40 ? 'low' : margin > 25 ? 'medium' : 'high';
+            const riskText = margin > 40 ? '低风险' : margin > 25 ? '中等风险' : '高风险';
+            
+            const itemHtml = `
+                <li class="scenario-item" data-scenario="custom_${Date.now()}">
+                    <input type="checkbox" class="scenario-checkbox">
+                    <div class="scenario-info">
+                        <div class="scenario-name">${name}</div>
+                        <div class="scenario-desc">${desc}</div>
+                    </div>
+                    <div class="scenario-metrics">
+                        <span class="metric-value">¥${(breakevenPoint / 1000000).toFixed(1)}M</span>
+                        <span class="metric-label">盈亏平衡点</span>
+                        <span class="risk-badge risk-${riskLevel}">${riskText}</span>
+                    </div>
+                </li>
+            `;
+            
+            list.insertAdjacentHTML('beforeend', itemHtml);
+            setupScenarioSelection();
+        }
+
+        // 选择推荐场景
+        function selectRecommendedScenario(scenario) {
+            // 取消所有选择
+            document.querySelectorAll('.scenario-item').forEach(item => {
+                item.classList.remove('selected');
+                item.querySelector('.scenario-checkbox').checked = false;
+            });
+            
+            // 选择推荐场景
+            const targetItem = document.querySelector(`[data-scenario="${scenario}"]`);
+            if (targetItem) {
+                targetItem.classList.add('selected');
+                targetItem.querySelector('.scenario-checkbox').checked = true;
+            }
+            
+            updateComparison();
+        }
+
+        // 显示风险详情
+        function showRiskDetails() {
+            alert('风险详情分析功能开发中...');
+        }
+
+        // 显示优化方案
+        function showOptimizationPlan() {
+            alert('优化方案功能开发中...');
+        }
+
+        // 导出报告
+        function exportReport() {
+            alert('导出报告功能开发中...');
+        }
+
+        // 保存对比
+        function saveComparison() {
+            alert('保存对比功能开发中...');
+        }
+
+        // 生成导航菜单
+        function generateNavigation() {
+            const menuData = [
+                { title: "运营工作台", icon: "fas fa-chart-pie", url: "dashboard.html" },
+                {
+                    title: "财务分析",
+                    icon: "fas fa-calculator",
+                    children: [
+                        { title: "盈亏平衡分析", url: "breakeven-analysis.html" },
+                        { title: "敏感性分析", url: "sensitivity-analysis.html" },
+                        { title: "场景对比分析", url: "scenario-comparison.html", active: true }
+                    ]
+                },
+                { title: "薪酬计算", icon: "fas fa-money-bill-wave", url: "payroll-calculate.html" },
+                { title: "绩效管理", icon: "fas fa-chart-bar", url: "performance-manage.html" },
+                { title: "配置中心", icon: "fas fa-cog", url: "config-center.html" }
+            ];
+
+            const sidebar = document.getElementById('app-sidebar');
+            sidebar.innerHTML = `
+                <div style="height: 60px; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #e8e8e8;">
+                    <div style="width: 32px; height: 32px; background: #1890ff; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; margin-right: 12px;">盈</div>
+                    <span style="font-size: 18px; font-weight: 600; color: #333;">盈策通</span>
+                </div>
+                <ul style="padding: 20px 0; list-style: none; margin: 0;">
+                    ${menuData.map(item => {
+                        if (item.children) {
+                            return `
+                                <li style="margin-bottom: 4px;">
+                                    <div style="display: flex; align-items: center; padding: 12px 20px; color: #1890ff; background: rgba(24, 144, 255, 0.05);">
+                                        <i class="${item.icon}" style="margin-right: 12px; width: 20px;"></i>
+                                        ${item.title}
+                                    </div>
+                                    <div style="background: #fafafa;">
+                                        ${item.children.map(subItem => `
+                                            <a href="${subItem.url}" style="display: block; padding: 10px 20px 10px 52px; color: ${subItem.active ? '#1890ff' : '#666'}; text-decoration: none; font-size: 13px; ${subItem.active ? 'background: rgba(24, 144, 255, 0.1); border-left: 3px solid #1890ff;' : ''}">
+                                                ${subItem.title}
+                                            </a>
+                                        `).join('')}
+                                    </div>
+                                </li>
+                            `;
+                        } else {
+                            return `
+                                <li style="margin-bottom: 4px;">
+                                    <a href="${item.url}" style="display: flex; align-items: center; padding: 12px 20px; color: #666; text-decoration: none; font-size: 14px;">
+                                        <i class="${item.icon}" style="margin-right: 12px; width: 20px;"></i>
+                                        ${item.title}
+                                    </a>
+                                </li>
+                            `;
+                        }
+                    }).join('')}
+                </ul>
+            `;
+        }
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            generateNavigation();
+            initComparisonChart();
+            setupScenarioSelection();
+        });
+
+        // 模态框外部点击关闭
+        window.addEventListener('click', function(e) {
+            const modal = document.getElementById('scenarioModal');
+            if (e.target === modal) {
+                closeScenarioModal();
+            }
+        });
+    </script>
+</body>
+</html> 

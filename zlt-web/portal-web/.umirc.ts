@@ -146,6 +146,17 @@ export default defineConfig({
               component: '@/pages/SaleopsOptimizer/ConfigCenter',
             },
             {
+              path: '/saleops-optimizer/financial-analysis',
+              name: '财务分析',
+              routes: [
+                {
+                  path: '/saleops-optimizer/financial-analysis/breakeven-analysis',
+                  name: '盈亏平衡分析',
+                  component: '@/pages/SaleopsOptimizer/BreakevenAnalysis',
+                },
+              ],
+            },
+            {
               path: '/saleops-optimizer/monthly-performance',
               name: '月度绩效管理',
               component: '@/pages/SaleopsOptimizer/MonthlyPerformance',

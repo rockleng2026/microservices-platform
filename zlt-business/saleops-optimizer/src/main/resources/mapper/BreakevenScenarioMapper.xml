@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.soo.mapper.BreakevenScenarioMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.central.soo.model.entity.BreakevenScenario">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="scenario_id" property="scenarioId" jdbcType="VARCHAR"/>
+        <result column="analysis_id" property="analysisId" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="BIGINT"/>
+        <result column="scenario_name" property="scenarioName" jdbcType="VARCHAR"/>
+        <result column="scenario_type" property="scenarioType" jdbcType="VARCHAR"/>
+        <result column="scenario_description" property="scenarioDescription" jdbcType="VARCHAR"/>
+        <result column="is_baseline" property="isBaseline" jdbcType="BOOLEAN"/>
+        <result column="is_recommended" property="isRecommended" jdbcType="BOOLEAN"/>
+        <result column="scenario_parameters" property="scenarioParameters" jdbcType="LONGVARCHAR"/>
+        <result column="parameter_changes" property="parameterChanges" jdbcType="LONGVARCHAR"/>
+        <result column="breakeven_point" property="breakevenPoint" jdbcType="DECIMAL"/>
+        <result column="total_fixed_cost" property="totalFixedCost" jdbcType="DECIMAL"/>
+        <result column="variable_cost_ratio" property="variableCostRatio" jdbcType="DECIMAL"/>
+        <result column="margin_safety" property="marginSafety" jdbcType="DECIMAL"/>
+        <result column="margin_safety_ratio" property="marginSafetyRatio" jdbcType="DECIMAL"/>
+        <result column="feasibility_score" property="feasibilityScore" jdbcType="DECIMAL"/>
+        <result column="risk_level" property="riskLevel" jdbcType="VARCHAR"/>
+        <result column="confidence_level" property="confidenceLevel" jdbcType="DECIMAL"/>
+        <result column="sensitivity_score" property="sensitivityScore" jdbcType="DECIMAL"/>
+        <result column="revenue_impact" property="revenueImpact" jdbcType="DECIMAL"/>
+        <result column="cost_impact" property="costImpact" jdbcType="DECIMAL"/>
+        <result column="profit_impact" property="profitImpact" jdbcType="DECIMAL"/>
+        <result column="implementation_cost" property="implementationCost" jdbcType="DECIMAL"/>
+        <result column="payback_period" property="paybackPeriod" jdbcType="INTEGER"/>
+        <result column="key_metrics" property="keyMetrics" jdbcType="LONGVARCHAR"/>
+        <result column="performance_indicators" property="performanceIndicators" jdbcType="LONGVARCHAR"/>
+        <result column="success_criteria" property="successCriteria" jdbcType="LONGVARCHAR"/>
+        <result column="sort_order" property="sortOrder" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="last_calculated" property="lastCalculated" jdbcType="TIMESTAMP"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, scenario_id, analysis_id, tenant_id, scenario_name, scenario_type, scenario_description,
+        is_baseline, is_recommended, scenario_parameters, parameter_changes, breakeven_point,
+        total_fixed_cost, variable_cost_ratio, margin_safety, margin_safety_ratio, feasibility_score,
+        risk_level, confidence_level, sensitivity_score, revenue_impact, cost_impact, profit_impact,
+        implementation_cost, payback_period, key_metrics, performance_indicators, success_criteria,
+        sort_order, status, last_calculated, created_at, updated_at
+    </sql>
+
+    <!-- 根据分析ID查询场景列表 -->
+    <select id="selectByAnalysisId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM soo_breakeven_scenarios
+        WHERE analysis_id = #{analysisId} AND tenant_id = #{tenantId}
+          AND status = 'active'
+        ORDER BY sort_order ASC, created_at ASC
+    </select>
+
+    <!-- 查询基准场景 -->
+    <select id="selectBaselineScenario" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM soo_breakeven_scenarios
+        WHERE analysis_id = #{analysisId} AND tenant_id = #{tenantId}
+          AND is_baseline = true AND status = 'active'
+        LIMIT 1
+    </select>
+
+    <!-- 查询推荐场景列表 -->
+    <select id="selectRecommendedScenarios" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM soo_breakeven_scenarios
+        WHERE analysis_id = #{analysisId} AND tenant_id = #{tenantId}
+          AND is_recommended = true AND status = 'active'
+        ORDER BY feasibility_score DESC, sort_order ASC
+    </select>
+
+    <!-- 批量插入场景 -->
+    <insert id="batchInsert">
+        INSERT INTO soo_breakeven_scenarios (
+            scenario_id, analysis_id, tenant_id, scenario_name, scenario_type, scenario_description,
+            is_baseline, is_recommended, scenario_parameters, parameter_changes, breakeven_point,
+            total_fixed_cost, variable_cost_ratio, margin_safety, margin_safety_ratio, feasibility_score,
+            risk_level, confidence_level, sensitivity_score, revenue_impact, cost_impact, profit_impact,
+            implementation_cost, payback_period, key_metrics, performance_indicators, success_criteria,
+            sort_order, status, last_calculated, created_at, updated_at
+        ) VALUES
+        <foreach collection="scenarios" item="scenario" separator=",">
+            (
+                #{scenario.scenarioId}, #{scenario.analysisId}, #{scenario.tenantId}, 
+                #{scenario.scenarioName}, #{scenario.scenarioType}, #{scenario.scenarioDescription},
+                #{scenario.isBaseline}, #{scenario.isRecommended}, #{scenario.scenarioParameters}, 
+                #{scenario.parameterChanges}, #{scenario.breakevenPoint}, #{scenario.totalFixedCost},
+                #{scenario.variableCostRatio}, #{scenario.marginSafety}, #{scenario.marginSafetyRatio},
+                #{scenario.feasibilityScore}, #{scenario.riskLevel}, #{scenario.confidenceLevel},
+                #{scenario.sensitivityScore}, #{scenario.revenueImpact}, #{scenario.costImpact},
+                #{scenario.profitImpact}, #{scenario.implementationCost}, #{scenario.paybackPeriod},
+                #{scenario.keyMetrics}, #{scenario.performanceIndicators}, #{scenario.successCriteria},
+                #{scenario.sortOrder}, #{scenario.status}, #{scenario.lastCalculated},
+                #{scenario.createdAt}, #{scenario.updatedAt}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 删除分析相关的所有场景 -->
+    <delete id="deleteByAnalysisId">
+        DELETE FROM soo_breakeven_scenarios
+        WHERE analysis_id = #{analysisId} AND tenant_id = #{tenantId}
+    </delete>
+
+    <!-- 更新场景排序 -->
+    <update id="updateSortOrder">
+        UPDATE soo_breakeven_scenarios
+        SET sort_order = #{sortOrder}, updated_at = NOW()
+        WHERE scenario_id = #{scenarioId} AND tenant_id = #{tenantId}
+    </update>
+
+</mapper> 

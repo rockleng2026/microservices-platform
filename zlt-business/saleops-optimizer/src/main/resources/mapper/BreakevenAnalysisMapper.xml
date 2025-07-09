@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.soo.mapper.BreakevenAnalysisMapper">
+
+    <!-- 结果映射 -->
+    <resultMap id="BaseResultMap" type="com.central.soo.model.entity.BreakevenAnalysis">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="analysis_id" property="analysisId" jdbcType="VARCHAR"/>
+        <result column="analysis_name" property="analysisName" jdbcType="VARCHAR"/>
+        <result column="analysis_type" property="analysisType" jdbcType="VARCHAR"/>
+        <result column="analysis_period" property="analysisPeriod" jdbcType="VARCHAR"/>
+        <result column="tenant_id" property="tenantId" jdbcType="BIGINT"/>
+        <result column="creator_id" property="creatorId" jdbcType="BIGINT"/>
+        <result column="creator_name" property="creatorName" jdbcType="VARCHAR"/>
+        <result column="current_parameters" property="currentParameters" jdbcType="LONGVARCHAR"/>
+        <result column="breakeven_point" property="breakevenPoint" jdbcType="DECIMAL"/>
+        <result column="total_fixed_cost" property="totalFixedCost" jdbcType="DECIMAL"/>
+        <result column="variable_cost_ratio" property="variableCostRatio" jdbcType="DECIMAL"/>
+        <result column="margin_safety" property="marginSafety" jdbcType="DECIMAL"/>
+        <result column="margin_safety_ratio" property="marginSafetyRatio" jdbcType="DECIMAL"/>
+        <result column="scenario_results" property="scenarioResults" jdbcType="LONGVARCHAR"/>
+        <result column="sensitivity_data" property="sensitivityData" jdbcType="LONGVARCHAR"/>
+        <result column="forecast_results" property="forecastResults" jdbcType="LONGVARCHAR"/>
+        <result column="reasonability_score" property="reasonabilityScore" jdbcType="DECIMAL"/>
+        <result column="constraint_violations" property="constraintViolations" jdbcType="LONGVARCHAR"/>
+        <result column="adjustment_history" property="adjustmentHistory" jdbcType="LONGVARCHAR"/>
+        <result column="calculation_trigger" property="calculationTrigger" jdbcType="VARCHAR"/>
+        <result column="calculation_duration" property="calculationDuration" jdbcType="INTEGER"/>
+        <result column="calculation_engine_version" property="calculationEngineVersion" jdbcType="VARCHAR"/>
+        <result column="last_recalculation" property="lastRecalculation" jdbcType="TIMESTAMP"/>
+        <result column="forecast_model" property="forecastModel" jdbcType="VARCHAR"/>
+        <result column="forecast_confidence" property="forecastConfidence" jdbcType="DECIMAL"/>
+        <result column="seasonal_factors" property="seasonalFactors" jdbcType="LONGVARCHAR"/>
+        <result column="model_metadata" property="modelMetadata" jdbcType="LONGVARCHAR"/>
+        <result column="status" property="status" jdbcType="VARCHAR"/>
+        <result column="is_real_time" property="isRealTime" jdbcType="BOOLEAN"/>
+        <result column="auto_recalculation" property="autoRecalculation" jdbcType="BOOLEAN"/>
+        <result column="alert_settings" property="alertSettings" jdbcType="LONGVARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="version" property="version" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, analysis_id, analysis_name, analysis_type, analysis_period, tenant_id, creator_id, creator_name,
+        current_parameters, breakeven_point, total_fixed_cost, variable_cost_ratio, margin_safety, margin_safety_ratio,
+        scenario_results, sensitivity_data, forecast_results, reasonability_score, constraint_violations,
+        adjustment_history, calculation_trigger, calculation_duration, calculation_engine_version,
+        last_recalculation, forecast_model, forecast_confidence, seasonal_factors, model_metadata,
+        status, is_real_time, auto_recalculation, alert_settings, created_at, updated_at, version
+    </sql>
+
+    <!-- 分页查询盈亏平衡分析列表 -->
+    <select id="selectAnalysisList" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM soo_breakeven_analysis
+        <where>
+            <if test="query.tenantId != null">
+                AND tenant_id = #{query.tenantId}
+            </if>
+            <if test="query.analysisId != null and query.analysisId != ''">
+                AND analysis_id = #{query.analysisId}
+            </if>
+            <if test="query.analysisName != null and query.analysisName != ''">
+                AND analysis_name LIKE CONCAT('%', #{query.analysisName}, '%')
+            </if>
+            <if test="query.analysisType != null and query.analysisType != ''">
+                AND analysis_type = #{query.analysisType}
+            </if>
+            <if test="query.analysisPeriod != null and query.analysisPeriod != ''">
+                AND analysis_period = #{query.analysisPeriod}
+            </if>
+            <if test="query.periodStart != null and query.periodStart != ''">
+                AND analysis_period >= #{query.periodStart}
+            </if>
+            <if test="query.periodEnd != null and query.periodEnd != ''">
+                AND analysis_period <= #{query.periodEnd}
+            </if>
+            <if test="query.creatorId != null">
+                AND creator_id = #{query.creatorId}
+            </if>
+            <if test="query.creatorName != null and query.creatorName != ''">
+                AND creator_name LIKE CONCAT('%', #{query.creatorName}, '%')
+            </if>
+            <if test="query.status != null and query.status != ''">
+                AND status = #{query.status}
+            </if>
+            <if test="query.statusList != null and query.statusList.size() > 0">
+                AND status IN
+                <foreach collection="query.statusList" item="status" open="(" close=")" separator=",">
+                    #{status}
+                </foreach>
+            </if>
+            <if test="query.isRealTime != null">
+                AND is_real_time = #{query.isRealTime}
+            </if>
+            <if test="query.autoRecalculation != null">
+                AND auto_recalculation = #{query.autoRecalculation}
+            </if>
+            <if test="query.createdStart != null and query.createdStart != ''">
+                AND created_at >= #{query.createdStart}
+            </if>
+            <if test="query.createdEnd != null and query.createdEnd != ''">
+                AND created_at <= #{query.createdEnd}
+            </if>
+            <if test="query.lastRecalculationStart != null and query.lastRecalculationStart != ''">
+                AND last_recalculation >= #{query.lastRecalculationStart}
+            </if>
+            <if test="query.lastRecalculationEnd != null and query.lastRecalculationEnd != ''">
+                AND last_recalculation <= #{query.lastRecalculationEnd}
+            </if>
+            <if test="query.keyword != null and query.keyword != ''">
+                AND (analysis_name LIKE CONCAT('%', #{query.keyword}, '%')
+                     OR creator_name LIKE CONCAT('%', #{query.keyword}, '%')
+                     OR analysis_id LIKE CONCAT('%', #{query.keyword}, '%'))
+            </if>
+        </where>
+        <if test="query.sortField != null and query.sortField != '' and query.sortDirection != null and query.sortDirection != ''">
+            ORDER BY ${query.sortField} ${query.sortDirection}
+        </if>
+    </select>
+
+    <!-- 根据分析ID查询 -->
+    <select id="selectByAnalysisId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM soo_breakeven_analysis
+        WHERE analysis_id = #{analysisId} AND tenant_id = #{tenantId}
+    </select>
+
+    <!-- 查询指定租户的所有分析记录 -->
+    <select id="selectByTenantId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM soo_breakeven_analysis
+        WHERE tenant_id = #{tenantId}
+        <if test="status != null and status != ''">
+            AND status = #{status}
+        </if>
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 查询需要自动重算的分析记录 -->
+    <select id="selectForAutoRecalculation" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM soo_breakeven_analysis
+        WHERE auto_recalculation = true
+          AND status = 'active'
+          AND (last_recalculation IS NULL OR last_recalculation < DATE_SUB(NOW(), INTERVAL 1 HOUR))
+        ORDER BY last_recalculation ASC
+        LIMIT 100
+    </select>
+
+    <!-- 批量更新状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE soo_breakeven_analysis
+        SET status = #{status}, updated_at = NOW()
+        WHERE analysis_id IN
+        <foreach collection="analysisIds" item="analysisId" open="(" close=")" separator=",">
+            #{analysisId}
+        </foreach>
+        AND tenant_id = #{tenantId}
+    </update>
+
+    <!-- 统计分析记录数量 -->
+    <select id="countAnalysis" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM soo_breakeven_analysis
+        <where>
+            <if test="query.tenantId != null">
+                AND tenant_id = #{query.tenantId}
+            </if>
+            <if test="query.analysisId != null and query.analysisId != ''">
+                AND analysis_id = #{query.analysisId}
+            </if>
+            <if test="query.analysisName != null and query.analysisName != ''">
+                AND analysis_name LIKE CONCAT('%', #{query.analysisName}, '%')
+            </if>
+            <if test="query.analysisType != null and query.analysisType != ''">
+                AND analysis_type = #{query.analysisType}
+            </if>
+            <if test="query.analysisPeriod != null and query.analysisPeriod != ''">
+                AND analysis_period = #{query.analysisPeriod}
+            </if>
+            <if test="query.status != null and query.status != ''">
+                AND status = #{query.status}
+            </if>
+            <if test="query.statusList != null and query.statusList.size() > 0">
+                AND status IN
+                <foreach collection="query.statusList" item="status" open="(" close=")" separator=",">
+                    #{status}
+                </foreach>
+            </if>
+            <if test="query.keyword != null and query.keyword != ''">
+                AND (analysis_name LIKE CONCAT('%', #{query.keyword}, '%')
+                     OR creator_name LIKE CONCAT('%', #{query.keyword}, '%')
+                     OR analysis_id LIKE CONCAT('%', #{query.keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+    <!-- 查询最近的分析记录 -->
+    <select id="selectRecentAnalysis" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM soo_breakeven_analysis
+        WHERE tenant_id = #{tenantId}
+          AND status = 'active'
+        ORDER BY created_at DESC
+        <if test="limit != null and limit > 0">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <!-- 根据创建人查询分析记录 -->
+    <select id="selectByCreator" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM soo_breakeven_analysis
+        WHERE creator_id = #{creatorId} AND tenant_id = #{tenantId}
+        ORDER BY created_at DESC
+    </select>
+
+    <!-- 删除过期的分析记录 -->
+    <delete id="deleteExpiredAnalysis">
+        DELETE FROM soo_breakeven_analysis
+        WHERE tenant_id = #{tenantId}
+          AND status = 'archived'
+          AND created_at < DATE_SUB(NOW(), INTERVAL #{days} DAY)
+    </delete>
+
+    <!-- 查询分析记录统计信息 -->
+    <select id="selectAnalysisStatistics" resultType="java.util.Map">
+        SELECT 
+            analysis_type,
+            COUNT(*) as count,
+            AVG(breakeven_point) as avg_breakeven_point,
+            AVG(margin_safety_ratio) as avg_margin_safety_ratio,
+            AVG(reasonability_score) as avg_reasonability_score,
+            MAX(created_at) as latest_created
+        FROM soo_breakeven_analysis
+        WHERE tenant_id = #{tenantId}
+          AND status = 'active'
+        <if test="analysisPeriod != null and analysisPeriod != ''">
+            AND analysis_period = #{analysisPeriod}
+        </if>
+        GROUP BY analysis_type
+        ORDER BY count DESC
+    </select>
+
+</mapper> 

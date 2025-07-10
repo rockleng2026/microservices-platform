@@ -31,7 +31,7 @@ import {
   HistoryOutlined,
   LineChartOutlined,
   BarChartOutlined,
-  ScatterChartOutlined,
+  DotChartOutlined,
   SettingOutlined,
   PlayCircleOutlined,
   CopyOutlined
@@ -254,7 +254,7 @@ const ChartManagement: React.FC = () => {
   const chartTypeIcons = {
     line: <LineChartOutlined />,
     bar: <BarChartOutlined />,
-    scatter: <ScatterChartOutlined />
+    scatter: <DotChartOutlined />
   };
 
   // 表格列配置

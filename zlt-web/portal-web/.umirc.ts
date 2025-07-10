@@ -150,9 +150,29 @@ export default defineConfig({
               name: '财务分析',
               routes: [
                 {
+                  path: '/saleops-optimizer/financial-analysis',
+                  redirect: '/saleops-optimizer/financial-analysis/financial-models',
+                },
+                {
+                  path: '/saleops-optimizer/financial-analysis/financial-models',
+                  name: '财务模型管理',
+                  component: '@/pages/SaleopsOptimizer/FinancialAnalysis/FinancialModelManagement',
+                },
+                {
+                  path: '/saleops-optimizer/financial-analysis/variable-management/:modelId',
+                  name: '变量配置管理',
+                  component: '@/pages/SaleopsOptimizer/FinancialAnalysis/VariableManagement',
+                  hideInMenu: true,
+                },
+                {
+                  path: '/saleops-optimizer/financial-analysis/chart-management',
+                  name: '模型图表管理',
+                  component: '@/pages/SaleopsOptimizer/FinancialAnalysis/ChartManagement',
+                },
+                {
                   path: '/saleops-optimizer/financial-analysis/breakeven-analysis',
                   name: '盈亏平衡分析',
-                  component: '@/pages/SaleopsOptimizer/BreakevenAnalysis',
+                  component: '@/pages/SaleopsOptimizer/FinancialAnalysis/BreakevenAnalysisPage',
                 },
               ],
             },

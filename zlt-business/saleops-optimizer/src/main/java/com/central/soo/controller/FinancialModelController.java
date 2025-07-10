@@ -2,9 +2,12 @@ package com.central.soo.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.central.common.annotation.LoginUser;
+import com.central.common.context.TenantContextHolder;
+import com.central.common.model.LoginAppUser;
 import com.central.common.model.PageResult;
 import com.central.common.model.Result;
 import com.central.common.model.SysUser;
+import com.central.common.utils.LoginUserUtils;
 import com.central.soo.model.entity.FinancialModel;
 import com.central.soo.service.FinancialModelService;
 import com.central.soo.utils.PageResultUtil;
@@ -50,7 +53,6 @@ public class FinancialModelController {
         
         // 设置创建人信息
         model.setCreatorId(user.getId());
-        model.setCreatorName(user.getUsername());
         model.setTenantId("default"); // 使用默认租户ID
         
         FinancialModel createdModel = financialModelService.createModel(model);
@@ -141,25 +143,23 @@ public class FinancialModelController {
     @Operation(summary = "克隆财务模型", description = "基于现有模型创建新模型")
     public Result<FinancialModel> cloneModel(
             @PathVariable @NotNull Long id,
-            @RequestBody Map<String, Object> cloneRequest,
-            @LoginUser SysUser user) {
+            @RequestBody Map<String, Object> cloneRequest) {
         
         String newModelCode = (String) cloneRequest.get("newModelCode");
         String newModelName = (String) cloneRequest.get("newModelName");
         Boolean includeVariables = (Boolean) cloneRequest.getOrDefault("includeVariables", true);
         
-        log.info("用户[{}]克隆财务模型[{}]为: {}", user.getUsername(), id, newModelName);
-        
+        log.info("克隆财务模型[{}]为: {}", id, newModelName);
+
         FinancialModel clonedModel = financialModelService.cloneModel(
             id, newModelCode, newModelName, includeVariables);
         
         // 设置克隆模型的创建人信息
-        clonedModel.setCreatorId(user.getId());
-        clonedModel.setCreatorName(user.getUsername());
-        clonedModel.setTenantId(user.getTenantId());
+        clonedModel.setCreatorId(LoginUserUtils.getCurrentSysUser().getCreatorId());
+        clonedModel.setTenantId(TenantContextHolder.getTenant());
         
         log.info("财务模型克隆成功，新模型ID: {}", clonedModel.getId());
-        return Result.success(clonedModel);
+        return Result.succeed(clonedModel);
     }
 
     /**
@@ -171,7 +171,7 @@ public class FinancialModelController {
             @PathVariable @NotNull Long id) {
         
         Map<String, Object> statistics = financialModelService.getModelStatistics(id);
-        return Result.success(statistics);
+        return Result.succeed(statistics);
     }
 
     /**
@@ -183,7 +183,7 @@ public class FinancialModelController {
             @PathVariable @NotNull Long id) {
         
         Map<String, Object> validationResult = financialModelService.validateModel(id);
-        return Result.success(validationResult);
+        return Result.succeed(validationResult);
     }
 
     /**
@@ -199,7 +199,7 @@ public class FinancialModelController {
         log.info("用户[{}]{}财务模型: {}", user.getUsername(), isActive ? "启用" : "禁用", id);
         
         boolean success = financialModelService.toggleModelStatus(id, isActive);
-        return Result.success(success);
+        return Result.succeed(success);
     }
 
     /**
@@ -211,7 +211,7 @@ public class FinancialModelController {
             @PathVariable @NotNull Long id) {
         
         String configJson = financialModelService.exportModelConfig(id);
-        return Result.success(configJson);
+        return Result.succeed(configJson);
     }
 
     /**
@@ -227,10 +227,10 @@ public class FinancialModelController {
         
         log.info("用户[{}]导入财务模型配置", user.getUsername());
         
-        FinancialModel importedModel = financialModelService.importModelConfig(configJson, user.getTenantId());
+        FinancialModel importedModel = financialModelService.importModelConfig(configJson, TenantContextHolder.getTenant());
         
         log.info("财务模型导入成功，ID: {}", importedModel.getId());
-        return Result.success(importedModel);
+        return Result.succeed(importedModel);
     }
 
     /**
@@ -241,8 +241,8 @@ public class FinancialModelController {
     public Result<List<Map<String, Object>>> getCategorySummary(
             @LoginUser SysUser user) {
         
-        List<Map<String, Object>> summary = financialModelService.getCategorySummary(user.getTenantId());
-        return Result.success(summary);
+        List<Map<String, Object>> summary = financialModelService.getCategorySummary(TenantContextHolder.getTenant());
+        return Result.succeed(summary);
     }
 
     /**
@@ -254,8 +254,8 @@ public class FinancialModelController {
             @RequestParam(defaultValue = "10") int limit,
             @LoginUser SysUser user) {
         
-        List<FinancialModel> recentModels = financialModelService.getRecentlyUsedModels(user.getTenantId(), limit);
-        return Result.success(recentModels);
+        List<FinancialModel> recentModels = financialModelService.getRecentlyUsedModels(TenantContextHolder.getTenant(), limit);
+        return Result.succeed(recentModels);
     }
 
     /**
@@ -267,7 +267,7 @@ public class FinancialModelController {
             @PathVariable String modelCode,
             @LoginUser SysUser user) {
         
-        FinancialModel model = financialModelService.getByModelCode(modelCode, user.getTenantId());
-        return Result.success(model);
+        FinancialModel model = financialModelService.getByModelCode(modelCode, TenantContextHolder.getTenant());
+        return Result.succeed(model);
     }
 } 

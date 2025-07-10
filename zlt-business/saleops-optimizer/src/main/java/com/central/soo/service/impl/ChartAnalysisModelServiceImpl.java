@@ -1,5 +1,6 @@
 package com.central.soo.service.impl;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.central.common.model.PageResult;
@@ -165,7 +166,7 @@ public class ChartAnalysisModelServiceImpl
         log.info("分页查询图表分析模型: modelId={}, chartName={}, chartType={}", 
                  modelId, chartName, chartType);
         
-        Page<ChartAnalysisModel> result = chartAnalysisModelMapper.selectChartModelPageWithDetails(
+        IPage<ChartAnalysisModel> result = chartAnalysisModelMapper.selectChartModelPageWithDetails(
                 page, modelId, chartName, chartType);
         
         return PageResultUtil.buildPageResult(result);
@@ -336,7 +337,8 @@ public class ChartAnalysisModelServiceImpl
                     
                     try {
                         // 使用公式引擎计算Y值
-                        BigDecimal yValue = formulaEngine.calculateFormula(series.getSeriesField(), calcParams);
+                        DynamicFormulaEngine.CalculationResult calcResult = formulaEngine.executeFormula(series.getSeriesField(), calcParams);
+                        BigDecimal yValue = calcResult.isSuccess() ? calcResult.getValue() : BigDecimal.ZERO;
                         
                         // 创建模拟结果记录
                         ChartSimulation simulation = new ChartSimulation();
@@ -613,7 +615,8 @@ public class ChartAnalysisModelServiceImpl
         
         try {
             // 使用公式引擎计算
-            return formulaEngine.calculateFormula(seriesValue, context);
+            DynamicFormulaEngine.CalculationResult calcResult = formulaEngine.executeFormula(seriesValue, context);
+            return calcResult.isSuccess() ? calcResult.getValue() : null;
         } catch (Exception e) {
             // 如果计算失败，尝试作为数值解析
             try {

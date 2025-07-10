@@ -92,12 +92,6 @@ public class FinancialModel extends BaseEntity {
     private Long creatorId;
 
     /**
-     * 创建人姓名
-     */
-    @TableField("creator_name")
-    private String creatorName;
-
-    /**
      * 租户ID
      */
     @TableField("tenant_id")

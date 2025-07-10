@@ -80,7 +80,7 @@ export const financialAnalysisRoutesLegacy = {
       component: BreakevenAnalysisPage,
       meta: { 
         title: '盈亏平衡分析', 
-        icon: 'TrendingUpOutlined',
+        icon: 'RiseOutlined',
         keepAlive: true,
         requireAuth: true
       }

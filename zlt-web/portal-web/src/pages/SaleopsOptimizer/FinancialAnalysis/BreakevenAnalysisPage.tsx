@@ -26,7 +26,7 @@ import {
   SettingOutlined,
   DownloadOutlined,
   ReloadOutlined,
-  TrendingUpOutlined
+  RiseOutlined
 } from '@ant-design/icons';
 import * as echarts from 'echarts';
 import type { EChartsOption } from 'echarts';
@@ -737,7 +737,7 @@ const BreakevenAnalysisPage: React.FC = () => {
           <TabPane 
             tab={
               <span>
-                <TrendingUpOutlined />
+                <RiseOutlined />
                 分析结果
                 {analysisResult && <Tag color="green" style={{ marginLeft: 8 }}>已完成</Tag>}
               </span>
@@ -767,7 +767,7 @@ const BreakevenAnalysisPage: React.FC = () => {
                         value={analysisResult.maxProfit}
                         suffix="元"
                         valueStyle={{ color: '#52c41a' }}
-                        prefix={<TrendingUpOutlined />}
+                        prefix={<RiseOutlined />}
                       />
                     </Card>
                   </Col>

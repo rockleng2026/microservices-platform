@@ -55,6 +55,11 @@ INSERT INTO `menu_page` VALUES (408, '薪酬计算', 407, '/saleops-optimizer/sa
 INSERT INTO `menu_page` VALUES (409, '工资查询', 407, '/saleops-optimizer/salary-query', '工资查询统计', NULL, 'search', 2, 1, 0, NOW(), 'default', NULL, NULL, NULL);
 INSERT INTO `menu_page` VALUES (410, '工资条生成', 407, '/saleops-optimizer/payslip-generation', '工资条生成管理', NULL, 'file-text', 3, 1, 0, NOW(), 'default', NULL, NULL, NULL);
 
+INSERT INTO `menu_page` VALUES (460, '财务分析', 400, '/saleops-optimizer/#', '财务分析模块', NULL, 'setting', 1, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+INSERT INTO `menu_page` VALUES (461, '财务模型定义', 460, '/saleops-optimizer/#', '财务模型定义', NULL, 'setting', 1, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+INSERT INTO `menu_page` VALUES (462, '变量配置管理', 460, '/saleops-optimizer/#', '变量配置管理', NULL, 'setting', 1, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+INSERT INTO `menu_page` VALUES (463, '盈亏平衡分析', 460, '/saleops-optimizer/#', '盈亏平衡分析', NULL, 'bar-chart', 1, 1, 0, NOW(), 'default', NULL, NULL, NULL);
+
 -- 二级菜单：决策数据看板
 INSERT INTO `menu_page` VALUES (411, '决策数据看板', 400, '/saleops-optimizer/dashboard', '盈策通决策数据看板', NULL, 'dashboard', 3, 1, 0, NOW(), 'default', NULL, NULL, NULL);
 

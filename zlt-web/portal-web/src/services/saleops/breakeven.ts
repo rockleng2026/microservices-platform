@@ -5,30 +5,132 @@ const API_PREFIX = '/api-soo/api/soo/breakeven';
 // ==================== 盈亏平衡分析核心API ====================
 
 /**
- * 创建盈亏平衡分析 - 根据设计文档实现
+ * 创建盈亏平衡分析 - 根据后端DTO实现
  */
 export async function createAnalysis(data: any) {
+  // 构建计算参数 - 严格匹配后端DTO字段名
+  const calculationParameters = {
+    baseRevenue: data.currentRevenue || 5000000,
+    fixedCost: data.fixedCost || 800000,
+    variableCostRatio: data.grossMargin ? (1 - data.grossMargin) : 0.65,
+    targetProfit: data.targetProfit || 500000,
+    taxRate: data.taxRate || 0.25,
+    costBreakdown: {
+      personnel: data.variableCost || 200000,
+      operational: data.fixedCost || 800000
+    },
+    revenueBreakdown: {
+      core: data.currentRevenue || 5000000
+    },
+    capacityConstraints: {
+      employees: data.totalEmployees || 150
+    },
+    marketConstraints: {
+      maxRevenue: (data.currentRevenue || 5000000) * 2
+    }
+  };
+
+  // 构建场景配置
+  const scenarioConfigs = data.scenarios?.map((scenario: any) => ({
+    scenarioName: scenario.name,
+    scenarioType: scenario.type || 'custom',
+    scenarioDescription: scenario.description || `${scenario.name}分析`,
+    isBaseline: scenario.name === '基准场景',
+    parameterAdjustments: {
+      variableCostRatio: scenario.grossMargin ? (1 - scenario.grossMargin) : 0.65
+    },
+    constraints: {},
+    confidenceLevel: 0.95
+  })) || [
+    {
+      scenarioName: '保守场景',
+      scenarioType: 'conservative',
+      scenarioDescription: '保守估计的市场情况',
+      isBaseline: false,
+      parameterAdjustments: { variableCostRatio: 0.9 },
+      constraints: {},
+      confidenceLevel: 0.95
+    },
+    {
+      scenarioName: '基准场景',
+      scenarioType: 'baseline',
+      scenarioDescription: '基于当前数据的预期情况',
+      isBaseline: true,
+      parameterAdjustments: { variableCostRatio: 0.65 },
+      constraints: {},
+      confidenceLevel: 0.95
+    },
+    {
+      scenarioName: '乐观场景',
+      scenarioType: 'optimistic',
+      scenarioDescription: '乐观估计的市场情况',
+      isBaseline: false,
+      parameterAdjustments: { variableCostRatio: 0.35 },
+      constraints: {},
+      confidenceLevel: 0.95
+    }
+  ];
+
   return request(`${API_PREFIX}/analysis`, {
     method: 'POST',
     data: {
       analysisName: data.analysisName,
       analysisType: data.analysisType || 'monthly',
-      period: data.analysisPeriod,
-      parameters: {
-        currentTotalRevenue: data.currentRevenue,
-        currentGrossMargin: data.grossMargin,
-        fixedOperatingCost: data.fixedCost,
-        variableOperatingCost: data.variableCost,
-        totalEmployees: data.totalEmployees,
-        avgBaseSalary: data.avgSalary,
-        avgPerformanceRatio: data.avgPerformanceRatio || 0.8
+      analysisPeriod: data.analysisPeriod,
+      isRealTime: data.isRealTime || false,
+      autoRecalculation: data.autoRecalculation || true,
+      calculationParameters: calculationParameters,
+      scenarioConfigs: scenarioConfigs,
+      sensitivityConfig: {
+        enabled: true,
+        parameters: [
+          {
+            parameterName: 'baseRevenue',
+            parameterLabel: '基准营收',
+            parameterCategory: 'revenue',
+            enabled: true,
+            weight: 1.0
+          },
+          {
+            parameterName: 'fixedCost',
+            parameterLabel: '固定成本',
+            parameterCategory: 'cost',
+            enabled: true,
+            weight: 1.0
+          },
+          {
+            parameterName: 'variableCostRatio',
+            parameterLabel: '变动成本率',
+            parameterCategory: 'cost',
+            enabled: true,
+            weight: 1.0
+          }
+        ],
+        variationRange: 0.1,
+        stepSize: 0.01,
+        confidenceLevel: 0.95
       },
-      scenarios: data.scenarios || [
-        { name: '保守场景', grossMargin: 0.1 },
-        { name: '基准场景', grossMargin: 0.3 },
-        { name: '乐观场景', grossMargin: 0.65 }
-      ],
-      description: data.description
+      forecastConfig: {
+        enabled: false,
+        forecastType: 'short_term',
+        forecastPeriods: 12,
+        modelType: 'linear_regression',
+        historicalWindow: 24,
+        confidenceLevel: 0.95,
+        seasonalAdjustment: true,
+        trendAdjustment: true,
+        externalFactors: {}
+      },
+      alertSettings: {
+        enabled: false,
+        breakevenThreshold: 0.05,
+        marginSafetyThreshold: 0.1,
+        costVariationThreshold: 0.15,
+        revenueVariationThreshold: 0.15,
+        recipients: [],
+        alertMethods: [],
+        customRules: {}
+      }
     }
   });
 }
@@ -333,6 +435,24 @@ export async function saveAnalysisTemplate(templateName: string, data: any) {
 export async function getUserTemplates() {
   return request(`${API_PREFIX}/templates/user`, {
     method: 'GET'
+  });
+}
+
+/**
+ * 根据ID获取模板详情
+ */
+export async function getTemplateById(templateId: string) {
+  return request(`${API_PREFIX}/templates/${templateId}`, {
+    method: 'GET'
+  });
+}
+
+/**
+ * 删除模板
+ */
+export async function deleteTemplate(templateId: string) {
+  return request(`${API_PREFIX}/templates/${templateId}`, {
+    method: 'DELETE'
   });
 }
 

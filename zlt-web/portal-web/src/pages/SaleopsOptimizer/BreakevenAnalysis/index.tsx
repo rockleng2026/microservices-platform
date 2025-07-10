@@ -14,7 +14,9 @@ import {
   sendRealtimeParameterChange,
   saveAnalysisTemplate,
   exportAnalysisReport,
-  createAnalysis
+  createAnalysis,
+  getUserTemplates,
+  recalculateAnalysis
 } from '@/services/saleops/breakeven';
 
 const { Option } = Select;
@@ -489,6 +491,143 @@ const BreakevenAnalysis: React.FC = () => {
     }
   };
 
+  // ==================== 模板管理功能 ====================
+
+  const handleLoadTemplate = async () => {
+    try {
+      const response = await getUserTemplates();
+      if (response.success && response.data?.length > 0) {
+        // 显示模板选择弹窗
+        Modal.confirm({
+          title: '选择模板',
+          content: (
+            <div>
+              <p>请选择要加载的模板：</p>
+              <Select
+                style={{ width: '100%' }}
+                placeholder="选择模板"
+                options={response.data.map((template: any) => ({
+                  label: template.templateName,
+                  value: template.id
+                }))}
+                onChange={(templateId) => {
+                  const selectedTemplate = response.data.find((t: any) => t.id === templateId);
+                  if (selectedTemplate?.templateData?.parameters) {
+                    setParameters(selectedTemplate.templateData.parameters);
+                    message.success('模板加载成功');
+                  }
+                }}
+              />
+            </div>
+          ),
+          okText: '确定',
+          cancelText: '取消'
+        });
+      } else {
+        message.warning('暂无可用模板');
+      }
+    } catch (error) {
+      message.error('加载模板列表失败');
+    }
+  };
+
+  // ==================== 分析执行功能 ====================
+
+  const handleExecuteAnalysis = async () => {
+    try {
+      setIsCalculating(true);
+      
+      // 创建新的分析
+      const response = await createAnalysis({
+        analysisName: `盈亏平衡分析_${new Date().toISOString().slice(0, 19).replace('T', '_')}`,
+        analysisType: 'monthly',
+        analysisPeriod: new Date().toISOString().slice(0, 7),
+        ...parameters,
+        description: '用户手动执行的盈亏平衡分析'
+      });
+
+      if (response.success || response.resp_code === 0) {
+        const analysisData = response.data || response.datas;
+        setCurrentAnalysisId(analysisData.analysisId);
+        
+        // 根据后端返回的数据结构构建结果
+        const calculationResults = {
+          breakevenPoint: analysisData.breakevenPoint || 0,
+          totalFixedCost: analysisData.totalFixedCost || 0,
+          variableCostRatio: analysisData.variableCostRatio || 0,
+          marginSafety: analysisData.marginSafety || 0,
+          marginSafetyRatio: analysisData.marginSafetyRatio || 0,
+          scenarios: JSON.parse(analysisData.scenarioResults || '[]'),
+          calculationTime: analysisData.calculationDuration || 0,
+          reasonabilityScore: analysisData.reasonabilityScore || 1
+        };
+        
+        setResults(calculationResults);
+        setScenarios(calculationResults.scenarios);
+        
+        // 更新图表
+        setTimeout(() => {
+          updateBreakevenChart();
+          updateScenarioChart(calculationResults.scenarios);
+        }, 100);
+        
+        message.success('分析执行成功！');
+      } else {
+        message.error('分析执行失败：' + (response.resp_msg || response.message || '未知错误'));
+      }
+    } catch (error) {
+      console.error('执行分析失败:', error);
+      message.error('分析执行失败，请检查参数设置');
+    } finally {
+      setIsCalculating(false);
+    }
+  };
+
+  const handleRecalculate = async () => {
+    if (!currentAnalysisId) {
+      message.warning('请先执行分析');
+      return;
+    }
+
+    try {
+      setIsCalculating(true);
+      
+      // 先更新参数
+      const updateResponse = await batchUpdateParameters(currentAnalysisId, parameters);
+      
+      if (updateResponse.success) {
+        // 然后重新计算
+        const recalcResponse = await recalculateAnalysis(currentAnalysisId, {
+          type: 'full',
+          cascadeLevel: 'full',
+          updateForecast: true
+        });
+        
+        if (recalcResponse.success) {
+          // 获取最新结果
+          const resultResponse = await getRealTimeResults(currentAnalysisId);
+          if (resultResponse.success) {
+            setResults(resultResponse.data);
+            await refreshScenarios();
+            
+            // 更新图表
+            setTimeout(() => {
+              updateBreakevenChart();
+              updateScenarioChart(scenarios);
+            }, 100);
+            
+            message.success('重新计算完成！');
+          }
+        }
+      }
+    } catch (error) {
+      console.error('重新计算失败:', error);
+      message.error('重新计算失败');
+    } finally {
+      setIsCalculating(false);
+    }
+  };
+
   // ==================== 初始化和生命周期 ====================
 
   useEffect(() => {
@@ -796,18 +935,52 @@ const BreakevenAnalysis: React.FC = () => {
               <div className={styles.quickActions}>
                 <Button 
                   type="primary" 
-                  icon={<ReloadOutlined />}
-                  onClick={runSensitivityAnalysisAction}
+                  icon={<PlayCircleOutlined />}
+                  onClick={handleExecuteAnalysis}
                   loading={isCalculating}
                   block
+                  size="large"
+                >
+                  执行分析
+                </Button>
+                <Button 
+                  icon={<ReloadOutlined />}
+                  onClick={handleRecalculate}
+                  loading={isCalculating}
+                  block
+                  style={{ marginTop: 12 }}
+                  disabled={!currentAnalysisId}
                 >
                   重新计算
                 </Button>
+                <Row gutter={8} style={{ marginTop: 12 }}>
+                  <Col span={12}>
+                    <Button 
+                      icon={<SettingOutlined />}
+                      onClick={() => setIsTemplateModalVisible(true)}
+                      block
+                      size="small"
+                    >
+                      保存模板
+                    </Button>
+                  </Col>
+                  <Col span={12}>
+                    <Button 
+                      icon={<CloudDownloadOutlined />}
+                      onClick={handleLoadTemplate}
+                      block
+                      size="small"
+                    >
+                      加载模板
+                    </Button>
+                  </Col>
+                </Row>
                 <Button 
                   icon={<CloudDownloadOutlined />}
                   onClick={exportReport}
                   block
                   style={{ marginTop: 8 }}
+                  disabled={!currentAnalysisId}
                 >
                   导出报告
                 </Button>

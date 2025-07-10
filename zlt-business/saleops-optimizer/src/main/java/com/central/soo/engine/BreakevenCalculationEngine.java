@@ -1,5 +1,6 @@
 package com.central.soo.engine;
 
+import com.central.common.utils.JsonUtil;
 import com.central.soo.model.dto.BreakevenAnalysisDTO;
 import com.central.soo.model.entity.BreakevenAnalysis;
 import com.central.soo.model.entity.BreakevenForecast;
@@ -12,7 +13,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 盈亏平衡计算引擎
@@ -109,9 +109,9 @@ public class BreakevenCalculationEngine {
         analysis.setCurrentParameters(convertParametersToJson(params));
         
         // 核心计算
-        BigDecimal fixedCost = params.getFixedCost();
-        BigDecimal variableCostRatio = params.getVariableCostRatio();
-        BigDecimal baseRevenue = params.getBaseRevenue();
+        BigDecimal fixedCost = params.getFixedCost(); // 固定成本
+        BigDecimal variableCostRatio = params.getVariableCostRatio(); // 变动成本率
+        BigDecimal baseRevenue = params.getBaseRevenue();  // 基准营收
         
         // 计算贡献边际率
         BigDecimal contributionMarginRatio = BigDecimal.ONE.subtract(variableCostRatio);
@@ -300,28 +300,27 @@ public class BreakevenCalculationEngine {
 
     // JSON转换方法 (实际实现中应使用JSON库)
     private String convertParametersToJson(BreakevenAnalysisDTO.CalculationParameters params) {
-        // 简化实现，实际应使用Jackson或Gson
-        return "{}";
+        return JsonUtil.toJSONString(params);
     }
 
     private String convertScenariosToJson(List<BreakevenScenario> scenarios) {
-        return "[]";
+        return JsonUtil.toJSONString(scenarios);
     }
 
     private String convertSensitivitiesToJson(List<BreakevenSensitivity> sensitivities) {
-        return "[]";
+        return JsonUtil.toJSONString(sensitivities);
     }
 
     private String convertForecastToJson(BreakevenForecast forecast) {
-        return "{}";
+        return JsonUtil.toJSONString(forecast);
     }
 
     private String convertAdjustmentsToJson(Map<String, BigDecimal> adjustments) {
-        return "{}";
+        return JsonUtil.toJSONString(adjustments);
     }
 
     private String convertObjectToJson(Object obj) {
-        return "{}";
+        return JsonUtil.toJSONString(obj);
     }
 
     // 其他辅助计算方法...

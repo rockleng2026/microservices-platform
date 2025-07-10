@@ -1,6 +1,7 @@
 package com.central.soo.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.central.common.model.BaseEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -14,7 +15,7 @@ import java.time.LocalDateTime;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("soo_breakeven_analysis")
-public class BreakevenAnalysis {
+public class BreakevenAnalysis extends BaseEntity {
 
     /**
      * 主键ID
@@ -207,18 +208,6 @@ public class BreakevenAnalysis {
      */
     @TableField("alert_settings")
     private String alertSettings;
-
-    /**
-     * 创建时间
-     */
-    @TableField(value = "created_at", fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
-
-    /**
-     * 更新时间
-     */
-    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
 
     /**
      * 版本号

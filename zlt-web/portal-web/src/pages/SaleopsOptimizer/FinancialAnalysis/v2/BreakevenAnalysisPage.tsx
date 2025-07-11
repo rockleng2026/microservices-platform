@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   Row,
@@ -15,7 +15,8 @@ import {
   Table,
   Tooltip,
   Spin,
-  Empty
+  Empty,
+  List
 } from 'antd';
 import {
   PlayCircleOutlined,
@@ -140,7 +141,7 @@ class CalculatorEngine {
 
   // 词法分析器 - 将表达式分解为token
   private tokenize(expression: string): string[] {
-    // 匹配数字、变量名、运算符、括号、逗号等
+    // 匹配数字、变量名（包含下划线）、运算符、括号、逗号等
     const regex = /(\d+\.?\d*)|([a-zA-Z_][a-zA-Z0-9_]*)|([+\-*/()])|,|\s+/g;
     const tokens: string[] = [];
     let match;
@@ -148,7 +149,7 @@ class CalculatorEngine {
     while ((match = regex.exec(expression)) !== null) {
       const token = match[0];
       if (token.trim()) { // 跳过空白
-        tokens.push(token);
+        tokens.push(token.trim());
       }
     }
     
@@ -349,6 +350,35 @@ const BreakevenAnalysisPageV2: React.FC = () => {
   // 表单
   const [form] = Form.useForm();
 
+  // 计算变量值
+  const calculateVariable = useCallback((variable: any, currentValues: Record<string, any>) => {
+    if (variable.variableType !== 'CALC' || !variable.calculationFormula) {
+      return variable.defaultValue || '';
+    }
+
+    try {
+      // 构建计算上下文
+      const context: Record<string, {value: any, type: string}> = {};
+      
+      // 添加所有变量到上下文
+      variables.forEach(v => {
+        const value = currentValues[v.variableCode] || v.defaultValue || 0;
+        context[v.variableCode] = {
+          value: value,
+          type: v.dataType
+        };
+      });
+
+      // 使用计算引擎计算
+      const result = calculatorEngine.evaluate(variable.calculationFormula, context);
+      
+      return result;
+    } catch (error) {
+      console.error('计算失败:', error);
+      return 0;
+    }
+  }, [variables]);
+
   // 监听表单值变化，实时计算
   const handleFormValuesChange = (changedValues: any, allValues: any) => {
     console.log('表单值变化:', changedValues, allValues);
@@ -502,11 +532,16 @@ const BreakevenAnalysisPageV2: React.FC = () => {
       
       const variableData = Array.isArray(response) ? response : (response?.datas || []);
       
-      // 为CALC类型变量添加示例公式（如果没有的话）
-      const exampleFormulas = getExampleFormulas();
+      // 为计算类型变量创建公式（如果没有的话）
+      const formulaMap: Record<string, string> = {
+        'total_fixed_cost': 'salary + social_insurance + fixed_cost',
+        'net_profits': 'revenue * gross_margin - total_fixed_cost - revenue * variable_cost_rate', 
+        'break_even_revenue': 'total_fixed_cost / (gross_margin - variable_cost_rate)'
+      };
+
       const processedVariables = variableData.map((variable: any) => ({
         ...variable,
-        calculationFormula: variable.calculationFormula || exampleFormulas[variable.variableCode] || ''
+        calculationFormula: variable.calculationFormula || formulaMap[variable.variableCode] || ''
       }));
       
       // 按显示顺序排序

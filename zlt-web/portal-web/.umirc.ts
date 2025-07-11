@@ -174,6 +174,12 @@ export default defineConfig({
                   name: '盈亏平衡分析',
                   component: '@/pages/SaleopsOptimizer/FinancialAnalysis/BreakevenAnalysisPage',
                 },
+                {
+                  path: '/saleops-optimizer/financial-analysis/api-test',
+                  name: 'API测试',
+                  component: '@/pages/SaleopsOptimizer/FinancialAnalysis/ApiTest',
+                  hideInMenu: true,
+                },
               ],
             },
             {

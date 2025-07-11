@@ -24,6 +24,12 @@ zlt:
       - soo_social_security_base
       - soo_regional_salary_coefficient
       - soo_kpi_definition
+      - soo_model_variable
+      - soo_chart_analysis_model
+      - soo_chart_simulation
+      - soo_chart_series
+    ignoreSqls:
+      - com.central.soo.mapper.FinancialModelMapper.selectPageModels
 
 #swagger配置
 springdoc:

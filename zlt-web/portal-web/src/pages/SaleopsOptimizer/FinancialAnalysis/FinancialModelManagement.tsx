@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Card,
   Table,
@@ -29,34 +29,16 @@ import {
   UploadOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { 
+  FinancialModelAPI, 
+  type FinancialModel, 
+  type ModelFormData,
+  type PageParams 
+} from '@/services/financialModel';
 
 const { Search } = Input;
 const { Option } = Select;
 const { TextArea } = Input;
-
-interface FinancialModel {
-  id: number;
-  modelName: string;
-  modelCode: string;
-  modelCategory: string;
-  modelType: string;
-  description?: string;
-  isActive: boolean;
-  variableCount: number;
-  chartCount: number;
-  createdAt: string;
-  updatedAt: string;
-  createdBy: string;
-}
-
-interface ModelFormData {
-  modelName: string;
-  modelCode: string;
-  modelCategory: string;
-  modelType: string;
-  description?: string;
-  isActive: boolean;
-}
 
 const FinancialModelManagement: React.FC = () => {
   // 状态管理
@@ -79,51 +61,48 @@ const FinancialModelManagement: React.FC = () => {
   
   // 表单
   const [form] = Form.useForm();
+  
+  // 标记是否是首次渲染
+  const isFirstRender = useRef(true);
 
-  // 模拟数据
-  const mockData: FinancialModel[] = [
-    {
-      id: 1,
-      modelName: '盈亏平衡分析模型',
-      modelCode: 'BREAKEVEN_001',
-      modelCategory: '财务分析',
-      modelType: 'breakeven',
-      description: '用于计算企业盈亏平衡点的财务分析模型',
-      isActive: true,
-      variableCount: 8,
-      chartCount: 3,
-      createdAt: '2024-01-15 10:30:00',
-      updatedAt: '2024-01-15 14:20:00',
-      createdBy: '张三'
-    },
-    {
-      id: 2,
-      modelName: '成本分析模型',
-      modelCode: 'COST_001',
-      modelCategory: '成本管理',
-      modelType: 'cost',
-      description: '企业成本结构分析和优化模型',
-      isActive: true,
-      variableCount: 12,
-      chartCount: 5,
-      createdAt: '2024-01-14 09:15:00',
-      updatedAt: '2024-01-15 11:30:00',
-      createdBy: '李四'
-    },
-    {
-      id: 3,
-      modelName: '敏感性分析模型',
-      modelCode: 'SENSITIVITY_001',
-      modelCategory: '风险分析',
-      modelType: 'sensitivity',
-      description: '分析关键参数变化对财务指标的影响',
-      isActive: false,
-      variableCount: 6,
-      chartCount: 2,
-      createdAt: '2024-01-13 16:45:00',
-      updatedAt: '2024-01-14 10:20:00',
-      createdBy: '王五'
-    }
+  // 模型分类枚举（英文值 -> 中文显示）
+  const MODEL_CATEGORIES = {
+    BREAKEVEN_ANALYSIS: 'breakeven_analysis',
+    COST_BENEFIT: 'cost_benefit', 
+    SENSITIVITY_ANALYSIS: 'sensitivity_analysis',
+    CASHFLOW_FORECAST: 'cashflow_forecast',
+    INVESTMENT_DECISION: 'investment_decision',
+    BUDGET_MANAGEMENT: 'budget_management'
+  } as const;
+
+  // 分类显示映射（英文值 -> 中文名称）
+  const categoryDisplayMap: Record<string, string> = {
+    [MODEL_CATEGORIES.BREAKEVEN_ANALYSIS]: '盈亏平衡分析',
+    [MODEL_CATEGORIES.COST_BENEFIT]: '成本效益分析',
+    [MODEL_CATEGORIES.SENSITIVITY_ANALYSIS]: '敏感性分析', 
+    [MODEL_CATEGORIES.CASHFLOW_FORECAST]: '现金流预测',
+    [MODEL_CATEGORIES.INVESTMENT_DECISION]: '投资决策',
+    [MODEL_CATEGORIES.BUDGET_MANAGEMENT]: '预算管理',
+    // 兼容其他可能的值
+    'financial_analysis': '财务分析',
+    'cost_management': '成本管理',
+    'risk_analysis': '风险分析',
+    // 兼容旧数据的中文值
+    '财务分析': '财务分析',
+    '成本管理': '成本管理',
+    '风险分析': '风险分析',
+    '投资决策': '投资决策',
+    '预算管理': '预算管理'
+  };
+
+  // 分类选项（用于表单选择）
+  const categoryOptions = [
+    { value: MODEL_CATEGORIES.BREAKEVEN_ANALYSIS, label: '盈亏平衡分析' },
+    { value: MODEL_CATEGORIES.COST_BENEFIT, label: '成本效益分析' },
+    { value: MODEL_CATEGORIES.SENSITIVITY_ANALYSIS, label: '敏感性分析' },
+    { value: MODEL_CATEGORIES.CASHFLOW_FORECAST, label: '现金流预测' },
+    { value: MODEL_CATEGORIES.INVESTMENT_DECISION, label: '投资决策' },
+    { value: MODEL_CATEGORIES.BUDGET_MANAGEMENT, label: '预算管理' }
   ];
 
   // 表格列配置
@@ -140,29 +119,39 @@ const FinancialModelManagement: React.FC = () => {
           <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
             编码: {record.modelCode}
           </div>
-          <Space>
-            <Tag color="blue">{record.modelCategory}</Tag>
-            <Badge
-              status={record.isActive ? 'success' : 'default'}
-              text={record.isActive ? '启用' : '禁用'}
-            />
-          </Space>
+          <Badge
+            status={record.isActive ? 'success' : 'default'}
+            text={record.isActive ? '启用' : '禁用'}
+          />
         </div>
       ),
     },
     {
-      title: '模型类型',
-      dataIndex: 'modelType',
-      key: 'modelType',
+      title: '模型分类',
+      dataIndex: 'modelCategory',
+      key: 'modelCategory',
       width: 120,
-      render: (type) => {
-        const typeMap: Record<string, { color: string; text: string }> = {
-          breakeven: { color: 'green', text: '盈亏平衡' },
-          cost: { color: 'blue', text: '成本分析' },
-          sensitivity: { color: 'orange', text: '敏感性分析' },
+      render: (category) => {
+        const categoryConfig: Record<string, { color: string }> = {
+          [MODEL_CATEGORIES.BREAKEVEN_ANALYSIS]: { color: 'blue' },
+          [MODEL_CATEGORIES.COST_BENEFIT]: { color: 'green' },
+          [MODEL_CATEGORIES.SENSITIVITY_ANALYSIS]: { color: 'orange' },
+          [MODEL_CATEGORIES.CASHFLOW_FORECAST]: { color: 'purple' },
+          [MODEL_CATEGORIES.INVESTMENT_DECISION]: { color: 'cyan' },
+          [MODEL_CATEGORIES.BUDGET_MANAGEMENT]: { color: 'magenta' },
+          // 兼容其他可能的值
+          'financial_analysis': { color: 'blue' },
+          'cost_management': { color: 'green' },
+          'risk_analysis': { color: 'orange' },
+          // 兼容旧数据的中文值
+          '财务分析': { color: 'blue' },
+          '成本管理': { color: 'green' },
+          '风险分析': { color: 'orange' },
+          '投资决策': { color: 'cyan' },
+          '预算管理': { color: 'magenta' },
         };
-        const config = typeMap[type] || { color: 'default', text: type };
-        return <Tag color={config.color}>{config.text}</Tag>;
+        const config = categoryConfig[category] || { color: 'default' };
+        return <Tag color={config.color}>{categoryDisplayMap[category] || category}</Tag>;
       },
     },
     {
@@ -198,57 +187,62 @@ const FinancialModelManagement: React.FC = () => {
     },
     {
       title: '操作',
-      key: 'actions',
-      width: 280,
+      key: 'action',
+      width: 220,
       fixed: 'right',
       render: (_, record) => (
-        <Space size="small">
+        <Space size="middle">
           <Tooltip title="查看详情">
-            <Button
-              size="small"
+            <Button 
+              type="link" 
+              size="small" 
               icon={<EyeOutlined />}
               onClick={() => handleViewDetail(record)}
             />
           </Tooltip>
-          <Tooltip title="编辑模型">
-            <Button
-              size="small"
+          <Tooltip title="编辑">
+            <Button 
+              type="link" 
+              size="small" 
               icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
             />
           </Tooltip>
           <Tooltip title="变量管理">
-            <Button
-              size="small"
+            <Button 
+              type="link" 
+              size="small" 
               icon={<SettingOutlined />}
               onClick={() => handleVariableManagement(record)}
             />
           </Tooltip>
-          <Tooltip title="复制模型">
-            <Button
-              size="small"
+          <Tooltip title="复制">
+            <Button 
+              type="link" 
+              size="small" 
               icon={<CopyOutlined />}
               onClick={() => handleCopy(record)}
             />
           </Tooltip>
-          <Tooltip title="导出配置">
-            <Button
-              size="small"
+          <Tooltip title="导出">
+            <Button 
+              type="link" 
+              size="small" 
               icon={<DownloadOutlined />}
               onClick={() => handleExport(record)}
             />
           </Tooltip>
           <Popconfirm
             title="确定要删除这个财务模型吗？"
-            description="删除后将无法恢复，相关的图表配置也会被删除。"
             onConfirm={() => handleDelete(record.id)}
             okText="确定"
             cancelText="取消"
           >
             <Tooltip title="删除">
-              <Button
-                size="small"
-                danger
+              <Button 
+                type="link" 
+                danger 
+                size="small" 
                 icon={<DeleteOutlined />}
               />
             </Tooltip>
@@ -259,34 +253,29 @@ const FinancialModelManagement: React.FC = () => {
   ];
 
   // 获取模型列表
-  const fetchModels = () => {
-    setLoading(true);
-    // 模拟API调用
-    setTimeout(() => {
-      let filteredData = [...mockData];
+  const fetchModels = async () => {
+    try {
+      setLoading(true);
       
-      if (searchKeyword) {
-        filteredData = filteredData.filter(
-          item => 
-            item.modelName.includes(searchKeyword) ||
-            item.modelCode.includes(searchKeyword) ||
-            item.description?.includes(searchKeyword)
-        );
-      }
+      const params: PageParams = {
+        current: currentPage,
+        pageSize: pageSize,
+        keyword: searchKeyword || undefined,
+        category: selectedCategory,
+        status: selectedStatus,
+      };
       
-      if (selectedCategory) {
-        filteredData = filteredData.filter(item => item.modelCategory === selectedCategory);
-      }
-      
-      if (selectedStatus !== undefined) {
-        const isActive = selectedStatus === 'active';
-        filteredData = filteredData.filter(item => item.isActive === isActive);
-      }
-      
-      setModels(filteredData);
-      setTotal(filteredData.length);
+      const result = await FinancialModelAPI.getModels(params);
+      setModels(result.data);
+      setTotal(result.count);
+    } catch (error) {
+      console.error('获取模型列表失败:', error);
+      message.error(error instanceof Error ? error.message : '获取模型列表失败');
+      setModels([]);
+      setTotal(0);
+    } finally {
       setLoading(false);
-    }, 800);
+    }
   };
 
   // 处理搜索
@@ -321,8 +310,7 @@ const FinancialModelManagement: React.FC = () => {
       modelName: record.modelName,
       modelCode: record.modelCode,
       modelCategory: record.modelCategory,
-      modelType: record.modelType,
-      description: record.description,
+      modelDescription: record.modelDescription,
       isActive: record.isActive,
     });
     setIsModalVisible(true);
@@ -336,46 +324,95 @@ const FinancialModelManagement: React.FC = () => {
 
   // 处理变量管理
   const handleVariableManagement = (record: FinancialModel) => {
-    message.info(`打开模型 ${record.modelName} 的变量管理页面`);
-    // TODO: 跳转到变量管理页面
+    // 跳转到变量管理页面
+    window.location.href = `/saleops-optimizer/financial-analysis/variable-management/${record.id}`;
   };
 
   // 处理复制
   const handleCopy = (record: FinancialModel) => {
     Modal.confirm({
       title: '复制财务模型',
-      content: `确定要复制模型 "${record.modelName}" 吗？`,
-      onOk: () => {
-        message.success('模型复制成功');
-        fetchModels();
+      content: (
+        <div>
+          <p>确定要复制模型 "{record.modelName}" 吗？</p>
+          <Form layout="vertical">
+            <Form.Item label="新模型编码" name="newModelCode">
+              <Input placeholder="请输入新模型编码" />
+            </Form.Item>
+            <Form.Item label="新模型名称" name="newModelName">
+              <Input placeholder="请输入新模型名称" />
+            </Form.Item>
+          </Form>
+        </div>
+      ),
+      onOk: async () => {
+        try {
+          const newModelCode = `${record.modelCode}_COPY_${Date.now()}`;
+          const newModelName = `${record.modelName}_副本`;
+          
+          await FinancialModelAPI.cloneModel(record.id, newModelCode, newModelName, true);
+          message.success('模型复制成功');
+          fetchModels();
+        } catch (error) {
+          console.error('复制模型失败:', error);
+          message.error(error instanceof Error ? error.message : '复制模型失败');
+        }
       },
     });
   };
 
   // 处理导出
-  const handleExport = (record: FinancialModel) => {
-    message.info(`导出模型 ${record.modelName} 的配置`);
-    // TODO: 实现导出功能
+  const handleExport = async (record: FinancialModel) => {
+    try {
+      const configJson = await FinancialModelAPI.exportModelConfig(record.id);
+      
+      // 创建下载链接
+      const blob = new Blob([configJson], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${record.modelCode}_config.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      message.success('模型配置导出成功');
+    } catch (error) {
+      console.error('导出模型配置失败:', error);
+      message.error(error instanceof Error ? error.message : '导出模型配置失败');
+    }
   };
 
   // 处理删除
-  const handleDelete = (id: number) => {
-    message.success('删除成功');
-    fetchModels();
+  const handleDelete = async (id: number) => {
+    try {
+      await FinancialModelAPI.deleteModel(id);
+      message.success('删除成功');
+      fetchModels();
+    } catch (error) {
+      console.error('删除模型失败:', error);
+      message.error(error instanceof Error ? error.message : '删除模型失败');
+    }
   };
 
   // 处理表单提交
-  const handleFormSubmit = (values: ModelFormData) => {
-    console.log('表单数据:', values);
-    
-    if (editingModel) {
-      message.success('更新成功');
-    } else {
-      message.success('创建成功');
+  const handleFormSubmit = async (values: ModelFormData) => {
+    try {
+      if (editingModel) {
+        await FinancialModelAPI.updateModel(editingModel.id, values);
+        message.success('更新成功');
+      } else {
+        await FinancialModelAPI.createModel(values);
+        message.success('创建成功');
+      }
+      
+      setIsModalVisible(false);
+      fetchModels();
+    } catch (error) {
+      console.error('保存模型失败:', error);
+      message.error(error instanceof Error ? error.message : '保存模型失败');
     }
-    
-    setIsModalVisible(false);
-    fetchModels();
   };
 
   // 处理导入
@@ -383,23 +420,40 @@ const FinancialModelManagement: React.FC = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (file) {
-        message.success('导入成功');
-        fetchModels();
+        try {
+          const text = await file.text();
+          await FinancialModelAPI.importModelConfig(text);
+          message.success('导入成功');
+          fetchModels();
+        } catch (error) {
+          console.error('导入模型失败:', error);
+          message.error(error instanceof Error ? error.message : '导入模型失败');
+        }
       }
     };
     input.click();
   };
 
-  // 初始化
+  // 处理分页变化
   useEffect(() => {
     fetchModels();
-  }, []);
+  }, [currentPage, pageSize]);
 
+  // 处理搜索条件变化，重置到第1页
   useEffect(() => {
-    fetchModels();
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    
+    if (currentPage === 1) {
+      fetchModels();
+    } else {
+      setCurrentPage(1);
+    }
   }, [searchKeyword, selectedCategory, selectedStatus]);
 
   return (
@@ -451,14 +505,17 @@ const FinancialModelManagement: React.FC = () => {
                 value={selectedCategory}
                 onChange={setSelectedCategory}
               >
-                <Option value="财务分析">财务分析</Option>
-                <Option value="成本管理">成本管理</Option>
-                <Option value="风险分析">风险分析</Option>
+                <Option value={MODEL_CATEGORIES.BREAKEVEN_ANALYSIS}>盈亏平衡分析</Option>
+                <Option value={MODEL_CATEGORIES.COST_BENEFIT}>成本效益分析</Option>
+                <Option value={MODEL_CATEGORIES.SENSITIVITY_ANALYSIS}>敏感性分析</Option>
+                <Option value={MODEL_CATEGORIES.CASHFLOW_FORECAST}>现金流预测</Option>
+                <Option value={MODEL_CATEGORIES.INVESTMENT_DECISION}>投资决策</Option>
+                <Option value={MODEL_CATEGORIES.BUDGET_MANAGEMENT}>预算管理</Option>
               </Select>
             </Col>
             <Col span={4}>
               <Select
-                placeholder="状态"
+                placeholder="选择状态"
                 allowClear
                 style={{ width: '100%' }}
                 value={selectedStatus}
@@ -469,35 +526,33 @@ const FinancialModelManagement: React.FC = () => {
               </Select>
             </Col>
             <Col span={4}>
-              <Button type="primary" onClick={handleFilter}>
-                查询
-              </Button>
+              <Button onClick={handleFilter}>搜索</Button>
             </Col>
           </Row>
         </div>
 
         {/* 数据表格 */}
-        <Table
+        <Table<FinancialModel>
           columns={columns}
           dataSource={models}
-          loading={loading}
           rowKey="id"
-          scroll={{ x: 1200 }}
+          loading={loading}
           pagination={{
             current: currentPage,
             pageSize: pageSize,
             total: total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) =>
+            showTotal: (total, range) => 
               `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
             onChange: handleTableChange,
             onShowSizeChange: handleTableChange,
           }}
+          scroll={{ x: 1200 }}
         />
       </Card>
 
-      {/* 新增/编辑弹窗 */}
+      {/* 新增/编辑模型弹窗 */}
       <Modal
         title={editingModel ? '编辑财务模型' : '新增财务模型'}
         open={isModalVisible}
@@ -513,8 +568,8 @@ const FinancialModelManagement: React.FC = () => {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                label="模型名称"
                 name="modelName"
+                label="模型名称"
                 rules={[{ required: true, message: '请输入模型名称' }]}
               >
                 <Input placeholder="请输入模型名称" />
@@ -522,72 +577,51 @@ const FinancialModelManagement: React.FC = () => {
             </Col>
             <Col span={12}>
               <Form.Item
-                label="模型编码"
                 name="modelCode"
-                rules={[
-                  { required: true, message: '请输入模型编码' },
-                  { pattern: /^[A-Z0-9_]+$/, message: '编码只能包含大写字母、数字和下划线' }
-                ]}
+                label="模型编码"
+                rules={[{ required: true, message: '请输入模型编码' }]}
               >
-                <Input placeholder="请输入模型编码" />
+                <Input placeholder="请输入模型编码" disabled={!!editingModel} />
               </Form.Item>
             </Col>
           </Row>
           
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                label="模型分类"
-                name="modelCategory"
-                rules={[{ required: true, message: '请选择模型分类' }]}
-              >
-                <Select placeholder="请选择模型分类">
-                  <Option value="财务分析">财务分析</Option>
-                  <Option value="成本管理">成本管理</Option>
-                  <Option value="风险分析">风险分析</Option>
-                  <Option value="投资决策">投资决策</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                label="模型类型"
-                name="modelType"
-                rules={[{ required: true, message: '请选择模型类型' }]}
-              >
-                <Select placeholder="请选择模型类型">
-                  <Option value="breakeven">盈亏平衡</Option>
-                  <Option value="cost">成本分析</Option>
-                  <Option value="sensitivity">敏感性分析</Option>
-                  <Option value="roi">投资回报</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
+          <Form.Item
+            name="modelCategory"
+            label="模型分类"
+            rules={[{ required: true, message: '请选择模型分类' }]}
+          >
+            <Select placeholder="请选择模型分类">
+              <Option value={MODEL_CATEGORIES.BREAKEVEN_ANALYSIS}>盈亏平衡分析</Option>
+              <Option value={MODEL_CATEGORIES.COST_BENEFIT}>成本效益分析</Option>
+              <Option value={MODEL_CATEGORIES.SENSITIVITY_ANALYSIS}>敏感性分析</Option>
+              <Option value={MODEL_CATEGORIES.CASHFLOW_FORECAST}>现金流预测</Option>
+              <Option value={MODEL_CATEGORIES.INVESTMENT_DECISION}>投资决策</Option>
+              <Option value={MODEL_CATEGORIES.BUDGET_MANAGEMENT}>预算管理</Option>
+            </Select>
+          </Form.Item>
 
           <Form.Item
+            name="modelDescription"
             label="模型描述"
-            name="description"
           >
-            <TextArea
-              rows={4}
-              placeholder="请输入模型描述"
+            <TextArea 
+              rows={3} 
+              placeholder="请输入模型描述（可选）" 
             />
           </Form.Item>
 
           <Form.Item
-            label="状态"
             name="isActive"
             valuePropName="checked"
             initialValue={true}
           >
-            <Select>
-              <Option value={true}>启用</Option>
-              <Option value={false}>禁用</Option>
-            </Select>
+            <Space>
+              <span>启用模型</span>
+            </Space>
           </Form.Item>
 
-          <Form.Item style={{ marginBottom: 0, textAlign: 'right' }}>
+          <Form.Item style={{ textAlign: 'right', marginBottom: 0 }}>
             <Space>
               <Button onClick={() => setIsModalVisible(false)}>
                 取消
@@ -600,7 +634,7 @@ const FinancialModelManagement: React.FC = () => {
         </Form>
       </Modal>
 
-      {/* 详情弹窗 */}
+      {/* 模型详情弹窗 */}
       <Modal
         title="财务模型详情"
         open={isDetailVisible}
@@ -621,10 +655,7 @@ const FinancialModelManagement: React.FC = () => {
               {detailModel.modelCode}
             </Descriptions.Item>
             <Descriptions.Item label="模型分类">
-              <Tag color="blue">{detailModel.modelCategory}</Tag>
-            </Descriptions.Item>
-            <Descriptions.Item label="模型类型">
-              <Tag color="green">{detailModel.modelType}</Tag>
+              <Tag color="blue">{categoryDisplayMap[detailModel.modelCategory] || detailModel.modelCategory}</Tag>
             </Descriptions.Item>
             <Descriptions.Item label="状态">
               <Badge
@@ -633,10 +664,10 @@ const FinancialModelManagement: React.FC = () => {
               />
             </Descriptions.Item>
             <Descriptions.Item label="变量数量">
-              {detailModel.variableCount} 个
+              {detailModel.variableCount}
             </Descriptions.Item>
             <Descriptions.Item label="图表数量">
-              {detailModel.chartCount} 个
+              {detailModel.chartCount}
             </Descriptions.Item>
             <Descriptions.Item label="创建时间">
               {detailModel.createdAt}
@@ -648,7 +679,7 @@ const FinancialModelManagement: React.FC = () => {
               {detailModel.createdBy}
             </Descriptions.Item>
             <Descriptions.Item label="模型描述" span={2}>
-              {detailModel.description || '暂无描述'}
+              {detailModel.modelDescription || '暂无描述'}
             </Descriptions.Item>
           </Descriptions>
         )}

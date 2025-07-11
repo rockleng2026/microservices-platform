@@ -30,6 +30,7 @@ import {
 } from '@ant-design/icons';
 import * as echarts from 'echarts';
 import type { EChartsOption } from 'echarts';
+import { BreakevenAnalysisV2API } from '@/services/breakevenAnalysisV2';
 
 const { Option } = Select;
 const { TabPane } = Tabs;
@@ -38,52 +39,54 @@ interface FinancialModel {
   id: number;
   modelName: string;
   modelCode: string;
-  variables: ModelVariable[];
+  category: string;
+  description: string;
+  status: string;
+  variableCount: number;
 }
 
 interface ModelVariable {
   id: number;
   variableName: string;
   variableCode: string;
-  variableType: 'input' | 'calculated' | 'constant';
-  dataType: 'number' | 'string' | 'boolean' | 'date';
+  variableType: 'INPUT' | 'CALC' | 'API';
+  dataType: 'NUMBER' | 'DECIMAL' | 'PERCENTAGE' | 'CURRENCY' | 'STRING' | 'BOOLEAN';
   defaultValue?: string | number;
   unit?: string;
   description?: string;
   isRequired: boolean;
   validationRules?: string;
   displayOrder: number;
-  isVisible: boolean;
+  minValue?: number;
+  maxValue?: number;
 }
 
 interface AnalysisResult {
   // 关键指标
-  breakevenPoint: number;
+  breakevenQuantity: number;
   breakevenRevenue: number;
-  maxProfit: number;
-  marginRate: number;
+  targetQuantity: number;
+  targetRevenue: number;
+  unitContribution: number;
+  contributionMargin: number;
   safetyMargin: number;
-  
-  // 周期分析
-  periods: {
-    monthly: PeriodResult;
-    quarterly: PeriodResult;
-    halfYear: PeriodResult;
-    yearly: PeriodResult;
-  };
   
   // 图表数据
   chartData: ChartDataPoint[];
-}
-
-interface PeriodResult {
-  totalFixedCost: number;
-  netProfit: number;
-  breakevenRevenue: number;
+  
+  // 汇总信息
+  summary: {
+    fixedCost: number;
+    unitPrice: number;
+    variableCost: number;
+    unitContribution: number;
+    breakevenPoint: number;
+    breakevenRevenue: number;
+  };
 }
 
 interface ChartDataPoint {
-  salesVolume: number;
+  quantity: number;
   revenue: number;
   totalCost: number;
   profit: number;
@@ -111,6 +114,7 @@ const BreakevenAnalysisPage: React.FC = () => {
   const [models, setModels] = useState<FinancialModel[]>([]);
   const [selectedModelId, setSelectedModelId] = useState<number | undefined>();
   const [selectedModel, setSelectedModel] = useState<FinancialModel | null>(null);
+  const [variables, setVariables] = useState<ModelVariable[]>([]);
   const [formValues, setFormValues] = useState<Record<string, any>>({});
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [chartConfig, setChartConfig] = useState<ChartConfig | null>(null);
@@ -231,62 +235,99 @@ const BreakevenAnalysisPage: React.FC = () => {
     chartData: []
   };
 
-  // 获取财务模型列表
-  const fetchModels = () => {
-    setLoading(true);
-    setTimeout(() => {
-      setModels(mockModels);
+  // 获取模型列表
+  const fetchModels = async () => {
+    try {
+      setLoading(true);
+      const response = await BreakevenAnalysisV2API.getAvailableModels();
+      if (response.resp_code === 0) {
+        setModels(response.datas);
+      } else {
+        message.error('获取模型列表失败');
+      }
+    } catch (error) {
+      console.error('获取模型列表失败:', error);
+      message.error('获取模型列表失败');
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   };
 
-  // 选择模型
+  // 获取模型变量
+  const fetchModelVariables = async (modelId: number) => {
+    try {
+      const response = await BreakevenAnalysisV2API.getModelVariables(modelId);
+      if (response.resp_code === 0) {
+        setVariables(response.datas);
+        
+        // 设置表单默认值
+        const defaultValues: Record<string, any> = {};
+        response.datas.forEach((variable: ModelVariable) => {
+          if (variable.defaultValue !== undefined && variable.defaultValue !== null) {
+            defaultValues[variable.variableCode] = variable.defaultValue;
+          }
+        });
+        setFormValues(defaultValues);
+        form.setFieldsValue(defaultValues);
+      } else {
+        message.error('获取模型变量失败');
+      }
+    } catch (error) {
+      console.error('获取模型变量失败:', error);
+      message.error('获取模型变量失败');
+    }
+  };
+
+  // 模型选择改变
   const handleModelChange = (modelId: number) => {
+    setSelectedModelId(modelId);
     const model = models.find(m => m.id === modelId);
     setSelectedModel(model || null);
     
     if (model) {
-      // 设置默认值
-      const defaultValues: Record<string, any> = {};
-      model.variables
-        .filter(v => v.variableType === 'input' && v.isVisible)
-        .forEach(variable => {
-          defaultValues[variable.variableCode] = variable.defaultValue;
-        });
-      
-      form.setFieldsValue(defaultValues);
-      setFormValues(defaultValues);
+      fetchModelVariables(modelId);
     }
+    
+    // 清空之前的分析结果
+    setAnalysisResult(null);
+    setFormValues({});
+    form.resetFields();
   };
 
-  // 表单值变化
+  // 表单值改变
   const handleValuesChange = (changedValues: any, allValues: any) => {
     setFormValues(allValues);
   };
 
   // 执行分析
   const handleAnalyze = async () => {
+    if (!selectedModelId) {
+      message.warning('请先选择财务模型');
+      return;
+    }
+
     try {
-      await form.validateFields();
       setAnalyzing(true);
+      const response = await BreakevenAnalysisV2API.calculateBreakeven({
+        modelId: selectedModelId,
+        variableValues: formValues
+      });
       
-      // 模拟分析过程
-      setTimeout(() => {
-        // 计算盈亏平衡分析
-        const result = calculateBreakeven(formValues);
-        setAnalysisResult(result);
+      if (response.resp_code === 0) {
+        setAnalysisResult(response.datas);
+        message.success('分析计算完成');
         
-        // 生成图表数据
-        generateChartData(formValues);
-        
-        setAnalyzing(false);
-        setActiveTab('result');
-        message.success('分析完成');
-      }, 2000);
-      
+        // 更新图表
+        if (response.datas.chartData) {
+          updateChart(response.datas.chartData, response.datas.breakevenQuantity);
+        }
+      } else {
+        message.error(response.resp_msg || '分析计算失败');
+      }
     } catch (error) {
-      console.error('分析失败:', error);
-      message.error('请完整填写必填参数');
+      console.error('分析计算失败:', error);
+      message.error('分析计算失败');
+    } finally {
       setAnalyzing(false);
     }
   };
@@ -541,17 +582,24 @@ const BreakevenAnalysisPage: React.FC = () => {
     }
   ] : [];
 
-  // 初始化
+  // 初始化数据获取
   useEffect(() => {
     fetchModels();
   }, []);
 
+  // 图表响应式调整
   useEffect(() => {
-    if (mockModels.length > 0) {
-      setSelectedModelId(mockModels[0].id);
-      handleModelChange(mockModels[0].id);
-    }
-  }, [mockModels]);
+    const handleResize = () => {
+      if (chartInstance.current) {
+        chartInstance.current.resize();
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
 
   // 清理图表实例
   useEffect(() => {
@@ -560,18 +608,6 @@ const BreakevenAnalysisPage: React.FC = () => {
         chartInstance.current.dispose();
       }
     };
-  }, []);
-
-  // 窗口大小变化时重新调整图表
-  useEffect(() => {
-    const handleResize = () => {
-      if (chartInstance.current) {
-        chartInstance.current.resize();
-      }
-    };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
   }, []);
 
   return (
@@ -642,7 +678,7 @@ const BreakevenAnalysisPage: React.FC = () => {
                     {selectedModel && (
                       <>
                         <Divider orientation="left">模型参数</Divider>
-                        {selectedModel.variables
+                        {variables
                           .filter(v => v.variableType === 'input' && v.isVisible)
                           .sort((a, b) => a.displayOrder - b.displayOrder)
                           .map(variable => (
@@ -753,7 +789,7 @@ const BreakevenAnalysisPage: React.FC = () => {
                     <Card>
                       <Statistic
                         title="盈亏平衡点"
-                        value={analysisResult.breakevenPoint}
+                        value={analysisResult.breakevenQuantity}
                         suffix="件"
                         valueStyle={{ color: '#1890ff' }}
                         prefix={<BarChartOutlined />}
@@ -775,7 +811,7 @@ const BreakevenAnalysisPage: React.FC = () => {
                     <Card>
                       <Statistic
                         title="边际贡献率"
-                        value={analysisResult.marginRate * 100}
+                        value={analysisResult.contributionMargin * 100}
                         suffix="%"
                         precision={1}
                         valueStyle={{ color: '#faad14' }}
@@ -831,13 +867,13 @@ const BreakevenAnalysisPage: React.FC = () => {
                   <h3>一、分析概要</h3>
                   <p>
                     基于您提供的参数，本次盈亏平衡分析结果显示：
-                    企业需要销售 <strong>{analysisResult.breakevenPoint}</strong> 件产品才能达到盈亏平衡点，
+                    企业需要销售 <strong>{analysisResult.breakevenQuantity}</strong> 件产品才能达到盈亏平衡点，
                     对应的营业收入为 <strong>{analysisResult.breakevenRevenue.toLocaleString()}</strong> 元。
                   </p>
                   
                   <h3>二、关键发现</h3>
                   <ul>
-                    <li>边际贡献率为 {(analysisResult.marginRate * 100).toFixed(1)}%，表明每销售1元产品可贡献 {(analysisResult.marginRate).toFixed(2)} 元用于覆盖固定成本和创造利润。</li>
+                    <li>边际贡献率为 {(analysisResult.contributionMargin * 100).toFixed(1)}%，表明每销售1元产品可贡献 {(analysisResult.contributionMargin).toFixed(2)} 元用于覆盖固定成本和创造利润。</li>
                     <li>安全边际为 {analysisResult.safetyMargin} 件，说明企业在达到预期销量后还有一定的安全缓冲。</li>
                     <li>当前成本结构下，固定成本占比较高，建议关注成本控制。</li>
                   </ul>

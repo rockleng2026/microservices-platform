@@ -180,6 +180,37 @@ export default defineConfig({
                   component: '@/pages/SaleopsOptimizer/FinancialAnalysis/ApiTest',
                   hideInMenu: true,
                 },
+                // V2版本路由
+                {
+                  path: '/saleops-optimizer/financial-analysis/v2/financial-models',
+                  name: '财务模型管理V2',
+                  component: '@/pages/SaleopsOptimizer/FinancialAnalysis/v2/FinancialModelManagement',
+                  hideInMenu: true,
+                },
+                {
+                  path: '/saleops-optimizer/financial-analysis/v2/variable-management',
+                  name: '变量管理V2',
+                  component: '@/pages/SaleopsOptimizer/FinancialAnalysis/v2/VariableManagement',
+                  hideInMenu: true,
+                },
+                {
+                  path: '/saleops-optimizer/financial-analysis/v2/chart-management',
+                  name: '图表管理V2',
+                  component: '@/pages/SaleopsOptimizer/FinancialAnalysis/v2/ChartManagement',
+                  hideInMenu: true,
+                },
+                {
+                  path: '/saleops-optimizer/financial-analysis/v2/breakeven-analysis',
+                  name: '盈亏平衡分析V2',
+                  component: '@/pages/SaleopsOptimizer/FinancialAnalysis/v2/BreakevenAnalysisPage',
+                  hideInMenu: true,
+                },
+                {
+                  path: '/saleops-optimizer/financial-analysis/v2/api-test',
+                  name: 'API测试V2',
+                  component: '@/pages/SaleopsOptimizer/FinancialAnalysis/v2/ApiTestPage',
+                  hideInMenu: true,
+                },
               ],
             },
             {

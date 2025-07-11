@@ -8,16 +8,21 @@ export interface ModelVariable {
   modelId: number;
   variableName: string;
   variableCode: string;
-  variableType: 'INPUT' | 'CALC' | 'API'; // 匹配数据库enum
-  dataType: 'NUMBER' | 'DECIMAL' | 'PERCENTAGE' | 'CURRENCY' | 'BOOLEAN' | 'STRING'; // 匹配数据库enum
-  defaultValue?: string | number;
+  variableType: 'INPUT' | 'CALC' | 'API';
+  dataType: 'NUMBER' | 'DECIMAL' | 'PERCENTAGE' | 'CURRENCY' | 'BOOLEAN' | 'STRING';
+  defaultValue?: number;
+  minValue?: number;
+  maxValue?: number;
   unit?: string;
   description?: string;
-  formulaExpression?: string;
+  calculationFormula?: string; // 匹配后端字段名
+  apiConfig?: string; // 匹配后端字段名
   isRequired: boolean;
+  isKeyIndicator?: boolean;
+  isVisible: boolean;
   validationRules?: string;
   displayOrder: number;
-  isVisible: boolean;
+  helpText?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -26,16 +31,19 @@ export interface VariableFormData {
   modelId: number;
   variableName: string;
   variableCode: string;
-  variableType: 'input' | 'calculated' | 'constant'; // 前端使用的类型
-  dataType: 'number' | 'string' | 'boolean' | 'date' | 'decimal' | 'percentage' | 'currency'; // 前端使用的类型
-  defaultValue?: string | number;
+  variableType: 'INPUT' | 'CALC' | 'API';
+  dataType: 'NUMBER' | 'DECIMAL' | 'PERCENTAGE' | 'CURRENCY' | 'BOOLEAN' | 'STRING';
+  defaultValue?: number;
+  minValue?: number;
+  maxValue?: number;
   unit?: string;
   description?: string;
-  formulaExpression?: string;
+  formulaExpression?: string; // 前端表单字段名，会映射到calculationFormula
+  apiUrl?: string; // 前端表单字段名，会映射到apiConfig
   isRequired: boolean;
-  validationRules?: string;
-  displayOrder: number;
   isVisible: boolean;
+  displayOrder: number;
+  validationRules?: string;
 }
 
 export interface PageParams {

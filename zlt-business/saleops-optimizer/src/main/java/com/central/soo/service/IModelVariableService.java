@@ -98,6 +98,14 @@ public interface IModelVariableService extends IService<ModelVariable> {
     Map<String, Object> getVariableStatistics(Long modelId);
 
     /**
+     * 获取模型的变量数量
+     * 
+     * @param modelId 模型ID
+     * @return 变量数量
+     */
+    int getVariableCountByModelId(Long modelId);
+
+    /**
      * 验证公式表达式
      * 
      * @param modelId 模型ID

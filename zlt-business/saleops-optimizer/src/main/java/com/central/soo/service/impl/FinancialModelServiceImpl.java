@@ -1,6 +1,5 @@
 package com.central.soo.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.central.soo.mapper.FinancialModelMapper;
@@ -22,6 +21,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
 /**
  * 财务模型服务实现
@@ -323,5 +323,22 @@ public class FinancialModelServiceImpl
             log.error("导入模型配置失败", e);
             throw new RuntimeException("导入失败: " + e.getMessage(), e);
         }
+    }
+
+    @Override
+    public List<FinancialModel> getBreakevenModels() {
+        // 获取盈亏平衡分析相关的模型（根据分类或特定标识）
+        return financialModelMapper.selectList(
+            Wrappers.<FinancialModel>lambdaQuery()
+                .eq(FinancialModel::getIsActive, true)
+                .and(wrapper -> wrapper
+                    .eq(FinancialModel::getModelCategory, "盈亏平衡分析")
+                    .or()
+                    .like(FinancialModel::getModelName, "盈亏平衡")
+                    .or()
+                    .like(FinancialModel::getModelCode, "BREAKEVEN")
+                )
+                .orderByDesc(FinancialModel::getUpdatedAt)
+        );
     }
 } 

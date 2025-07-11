@@ -19,6 +19,7 @@ import javax.annotation.Resource;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 
 /**
  * 模型变量服务实现类
@@ -269,6 +270,14 @@ public class ModelVariableServiceImpl extends ServiceImpl<ModelVariableMapper, M
         } catch (JsonProcessingException e) {
             throw new RuntimeException("导入变量配置失败: " + e.getMessage());
         }
+    }
+
+    @Override
+    public int getVariableCountByModelId(Long modelId) {
+        return Math.toIntExact(modelVariableMapper.selectCount(
+            Wrappers.<ModelVariable>lambdaQuery()
+                .eq(ModelVariable::getModelId, modelId)
+        ));
     }
 
     /**

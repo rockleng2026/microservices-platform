@@ -139,4 +139,11 @@ public interface FinancialModelService extends IService<FinancialModel> {
      * @return 导入的模型
      */
     FinancialModel importModelConfig(String configJson, String tenantId);
+
+    /**
+     * 获取盈亏平衡分析专用的财务模型列表
+     * 
+     * @return 盈亏平衡分析模型列表
+     */
+    List<FinancialModel> getBreakevenModels();
 } 

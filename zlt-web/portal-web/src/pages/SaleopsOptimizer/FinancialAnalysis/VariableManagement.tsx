@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 import {
   Card,
   Table,
@@ -30,19 +31,27 @@ import {
   DatabaseOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import { 
+  ModelVariableAPI, 
+  VariableFormData, 
+  PageParams,
+  ModelVariable
+} from '@/services/modelVariable';
+import { FinancialModelAPI, FinancialModel } from '@/services/financialModel';
 
 const { Search } = Input;
 const { Option } = Select;
 const { TextArea } = Input;
 const { TabPane } = Tabs;
 
-interface ModelVariable {
+// 前端专用的变量接口
+interface FrontendModelVariable {
   id: number;
   modelId: number;
   variableName: string;
   variableCode: string;
-  variableType: 'input' | 'calculated' | 'constant';
-  dataType: 'number' | 'string' | 'boolean' | 'date';
+  variableType: 'INPUT' | 'CALC' | 'API';
+  dataType: 'NUMBER' | 'DECIMAL' | 'PERCENTAGE' | 'CURRENCY' | 'STRING' | 'BOOLEAN';
   defaultValue?: string | number;
   unit?: string;
   description?: string;
@@ -55,31 +64,16 @@ interface ModelVariable {
   updatedAt: string;
 }
 
-interface FinancialModel {
-  id: number;
-  modelName: string;
-  modelCode: string;
-}
-
-interface VariableFormData {
-  variableName: string;
-  variableCode: string;
-  variableType: 'input' | 'calculated' | 'constant';
-  dataType: 'number' | 'string' | 'boolean' | 'date';
-  defaultValue?: string | number;
-  unit?: string;
-  description?: string;
-  formulaExpression?: string;
-  isRequired: boolean;
-  validationRules?: string;
-  displayOrder: number;
-  isVisible: boolean;
-}
-
 const VariableManagement: React.FC = () => {
+  const params = useParams<{ modelId?: string }>();
+  const [searchParams] = useSearchParams();
+  
+  // 标记是否已经初始化过
+  const isInitialized = useRef(false);
+  
   // 状态管理
   const [loading, setLoading] = useState(false);
-  const [variables, setVariables] = useState<ModelVariable[]>([]);
+  const [variables, setVariables] = useState<FrontendModelVariable[]>([]);
   const [models, setModels] = useState<FinancialModel[]>([]);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
@@ -93,124 +87,27 @@ const VariableManagement: React.FC = () => {
   
   // 弹窗状态
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [editingVariable, setEditingVariable] = useState<ModelVariable | null>(null);
+  const [editingVariable, setEditingVariable] = useState<FrontendModelVariable | null>(null);
   const [activeTab, setActiveTab] = useState('basic');
   
   // 表单
   const [form] = Form.useForm();
 
-  // 模拟数据
-  const mockModels: FinancialModel[] = [
-    { id: 1, modelName: '盈亏平衡分析模型', modelCode: 'BREAKEVEN_001' },
-    { id: 2, modelName: '成本分析模型', modelCode: 'COST_001' },
-    { id: 3, modelName: '敏感性分析模型', modelCode: 'SENSITIVITY_001' }
-  ];
-
-  const mockVariables: ModelVariable[] = [
-    {
-      id: 1,
-      modelId: 1,
-      variableName: '销售数量',
-      variableCode: 'sales_volume',
-      variableType: 'input',
-      dataType: 'number',
-      defaultValue: 0,
-      unit: '件',
-      description: '产品销售数量',
-      isRequired: true,
-      validationRules: 'min:0',
-      displayOrder: 1,
-      isVisible: true,
-      createdAt: '2024-01-15 10:30:00',
-      updatedAt: '2024-01-15 14:20:00'
-    },
-    {
-      id: 2,
-      modelId: 1,
-      variableName: '单价',
-      variableCode: 'unit_price',
-      variableType: 'input',
-      dataType: 'number',
-      defaultValue: 100,
-      unit: '元',
-      description: '产品单位售价',
-      isRequired: true,
-      validationRules: 'min:0',
-      displayOrder: 2,
-      isVisible: true,
-      createdAt: '2024-01-15 10:30:00',
-      updatedAt: '2024-01-15 14:20:00'
-    },
-    {
-      id: 3,
-      modelId: 1,
-      variableName: '固定成本',
-      variableCode: 'fixed_cost',
-      variableType: 'input',
-      dataType: 'number',
-      defaultValue: 10000,
-      unit: '元',
-      description: '固定成本总额',
-      isRequired: true,
-      validationRules: 'min:0',
-      displayOrder: 3,
-      isVisible: true,
-      createdAt: '2024-01-15 10:30:00',
-      updatedAt: '2024-01-15 14:20:00'
-    },
-    {
-      id: 4,
-      modelId: 1,
-      variableName: '变动成本',
-      variableCode: 'variable_cost',
-      variableType: 'input',
-      dataType: 'number',
-      defaultValue: 50,
-      unit: '元',
-      description: '单位变动成本',
-      isRequired: true,
-      validationRules: 'min:0',
-      displayOrder: 4,
-      isVisible: true,
-      createdAt: '2024-01-15 10:30:00',
-      updatedAt: '2024-01-15 14:20:00'
-    },
-    {
-      id: 5,
-      modelId: 1,
-      variableName: '利润',
-      variableCode: 'profit',
-      variableType: 'calculated',
-      dataType: 'number',
-      unit: '元',
-      description: '计算利润',
-      formulaExpression: 'sales_volume * unit_price - fixed_cost - sales_volume * variable_cost',
-      isRequired: false,
-      displayOrder: 5,
-      isVisible: true,
-      createdAt: '2024-01-15 10:30:00',
-      updatedAt: '2024-01-15 14:20:00'
-    },
-    {
-      id: 6,
-      modelId: 1,
-      variableName: '盈亏平衡点',
-      variableCode: 'breakeven_point',
-      variableType: 'calculated',
-      dataType: 'number',
-      unit: '件',
-      description: '盈亏平衡点数量',
-      formulaExpression: 'fixed_cost / (unit_price - variable_cost)',
-      isRequired: false,
-      displayOrder: 6,
-      isVisible: true,
-      createdAt: '2024-01-15 10:30:00',
-      updatedAt: '2024-01-15 14:20:00'
-    }
-  ];
+  // 数据类型映射
+  const getDataTypeLabel = (dataType: string) => {
+    const typeMap: Record<string, string> = {
+      'NUMBER': '数字',
+      'DECIMAL': '小数',
+      'PERCENTAGE': '百分比',
+      'CURRENCY': '货币',
+      'STRING': '文本',
+      'BOOLEAN': '布尔'
+    };
+    return typeMap[dataType] || dataType;
+  };
 
   // 表格列配置
-  const columns: ColumnsType<ModelVariable> = [
+  const columns: ColumnsType<FrontendModelVariable> = [
     {
       title: '变量信息',
       key: 'variableInfo',
@@ -225,13 +122,13 @@ const VariableManagement: React.FC = () => {
           </div>
           <Space>
             <Tag 
-              color={record.variableType === 'input' ? 'blue' : 
-                     record.variableType === 'calculated' ? 'green' : 'orange'}
+              color={record.variableType === 'INPUT' ? 'blue' : 
+                     record.variableType === 'CALC' ? 'green' : 'orange'}
             >
-              {record.variableType === 'input' ? '输入变量' : 
-               record.variableType === 'calculated' ? '计算变量' : '常量'}
+              {record.variableType === 'INPUT' ? '输入' : 
+               record.variableType === 'CALC' ? '计算' : 'API'}
             </Tag>
-            <Tag color="default">{record.dataType}</Tag>
+            <Tag color="default">{getDataTypeLabel(record.dataType)}</Tag>
           </Space>
         </div>
       ),
@@ -242,7 +139,7 @@ const VariableManagement: React.FC = () => {
       width: 200,
       render: (_, record) => (
         <div>
-          {record.variableType === 'calculated' ? (
+          {record.variableType === 'CALC' ? (
             <div>
               <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
                 公式表达式:
@@ -330,7 +227,7 @@ const VariableManagement: React.FC = () => {
             <Button
               size="small"
               icon={<FunctionOutlined />}
-              disabled={record.variableType !== 'calculated'}
+              disabled={record.variableType !== 'CALC'}
               onClick={() => handleTestFormula(record)}
             />
           </Tooltip>
@@ -354,36 +251,91 @@ const VariableManagement: React.FC = () => {
   ];
 
   // 获取变量列表
-  const fetchVariables = () => {
-    setLoading(true);
-    setTimeout(() => {
-      let filteredData = [...mockVariables];
+  const fetchVariables = async () => {
+    if (!selectedModelId) {
+      setVariables([]);
+      setTotal(0);
+      return;
+    }
+
+    try {
+      setLoading(true);
       
-      if (selectedModelId) {
-        filteredData = filteredData.filter(item => item.modelId === selectedModelId);
-      }
+      const params: PageParams = {
+        current: currentPage,
+        pageSize: pageSize,
+        modelId: selectedModelId,
+        keyword: searchKeyword || undefined,
+        variableType: selectedType,
+        dataType: selectedDataType,
+      };
       
-      if (searchKeyword) {
-        filteredData = filteredData.filter(
-          item => 
-            item.variableName.includes(searchKeyword) ||
-            item.variableCode.includes(searchKeyword) ||
-            item.description?.includes(searchKeyword)
-        );
-      }
-      
-      if (selectedType) {
-        filteredData = filteredData.filter(item => item.variableType === selectedType);
-      }
-      
-      if (selectedDataType) {
-        filteredData = filteredData.filter(item => item.dataType === selectedDataType);
-      }
-      
-      setVariables(filteredData);
-      setTotal(filteredData.length);
+      const result = await ModelVariableAPI.getVariables(params);
+      setVariables(result.data);
+      setTotal(result.count);
+    } catch (error) {
+      console.error('获取变量列表失败:', error);
+      message.error(error instanceof Error ? error.message : '获取变量列表失败');
+      setVariables([]);
+      setTotal(0);
+    } finally {
       setLoading(false);
-    }, 500);
+    }
+  };
+
+  // 获取模型列表
+  const fetchModels = async () => {
+    try {
+      const result = await FinancialModelAPI.getModels({
+        current: 1,
+        pageSize: 100,
+      });
+      setModels(result.data);
+      
+      // 如果还没有选中模型且有可用模型，选择第一个
+      if (result.data.length > 0 && !selectedModelId) {
+        setSelectedModelId(result.data[0].id);
+      }
+    } catch (error) {
+      console.error('获取模型列表失败:', error);
+      message.error('获取模型列表失败');
+      // 使用模拟数据作为后备
+      const mockModels: FinancialModel[] = [
+        { 
+          id: 1, 
+          modelName: '盈亏平衡分析模型', 
+          modelCode: 'BREAKEVEN_001',
+          modelCategory: 'breakeven_analysis',
+          isActive: true,
+          createdAt: '2024-01-15 10:30:00',
+          updatedAt: '2024-01-15 14:20:00'
+        },
+        { 
+          id: 2, 
+          modelName: '成本分析模型', 
+          modelCode: 'COST_001',
+          modelCategory: 'cost_benefit',
+          isActive: true,
+          createdAt: '2024-01-15 10:30:00',
+          updatedAt: '2024-01-15 14:20:00'
+        },
+        { 
+          id: 3, 
+          modelName: '敏感性分析模型', 
+          modelCode: 'SENSITIVITY_001',
+          modelCategory: 'sensitivity_analysis',
+          isActive: true,
+          createdAt: '2024-01-15 10:30:00',
+          updatedAt: '2024-01-15 14:20:00'
+        }
+      ];
+      setModels(mockModels);
+      
+      // 如果还没有选中模型且有可用模型，选择第一个
+      if (mockModels.length > 0 && !selectedModelId) {
+        setSelectedModelId(mockModels[0].id);
+      }
+    }
   };
 
   // 处理搜索
@@ -416,15 +368,15 @@ const VariableManagement: React.FC = () => {
       isRequired: false,
       isVisible: true,
       displayOrder: variables.length + 1,
-      variableType: 'input',
-      dataType: 'number'
+      variableType: 'INPUT',
+      dataType: 'NUMBER'
     });
     setActiveTab('basic');
     setIsModalVisible(true);
   };
 
   // 处理编辑
-  const handleEdit = (record: ModelVariable) => {
+  const handleEdit = (record: FrontendModelVariable) => {
     setEditingVariable(record);
     form.setFieldsValue({
       variableName: record.variableName,
@@ -445,7 +397,7 @@ const VariableManagement: React.FC = () => {
   };
 
   // 处理复制
-  const handleCopy = (record: ModelVariable) => {
+  const handleCopy = (record: FrontendModelVariable) => {
     Modal.confirm({
       title: '复制变量',
       content: `确定要复制变量 "${record.variableName}" 吗？`,
@@ -457,7 +409,7 @@ const VariableManagement: React.FC = () => {
   };
 
   // 处理测试公式
-  const handleTestFormula = (record: ModelVariable) => {
+  const handleTestFormula = (record: FrontendModelVariable) => {
     if (!record.formulaExpression) {
       message.warning('该变量没有公式表达式');
       return;
@@ -480,28 +432,55 @@ const VariableManagement: React.FC = () => {
   };
 
   // 处理删除
-  const handleDelete = (id: number) => {
-    message.success('删除成功');
-    fetchVariables();
+  const handleDelete = async (id: number) => {
+    try {
+      await ModelVariableAPI.deleteVariable(id);
+      message.success('删除成功');
+      fetchVariables();
+    } catch (error) {
+      console.error('删除变量失败:', error);
+      message.error(error instanceof Error ? error.message : '删除变量失败');
+    }
   };
 
   // 处理表单提交
-  const handleFormSubmit = (values: VariableFormData) => {
+  const handleFormSubmit = async (values: VariableFormData) => {
     console.log('表单数据:', values);
     
-    if (editingVariable) {
-      message.success('更新成功');
-    } else {
-      message.success('创建成功');
+    if (!selectedModelId) {
+      message.error('请先选择财务模型');
+      return;
     }
     
-    setIsModalVisible(false);
-    fetchVariables();
+    try {
+      setLoading(true);
+      
+      const formData = {
+        ...values,
+        modelId: selectedModelId,
+      };
+      
+      if (editingVariable) {
+        await ModelVariableAPI.updateVariable(editingVariable.id, formData);
+        message.success('更新成功');
+      } else {
+        await ModelVariableAPI.createVariable(formData);
+        message.success('创建成功');
+      }
+      
+      setIsModalVisible(false);
+      fetchVariables();
+    } catch (error) {
+      console.error('提交表单失败:', error);
+      message.error(error instanceof Error ? error.message : '提交表单失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
   // 变量类型改变时的处理
   const handleVariableTypeChange = (type: string) => {
-    if (type === 'calculated') {
+    if (type === 'CALC') {
       form.setFieldsValue({ isRequired: false });
     }
   };
@@ -513,21 +492,43 @@ const VariableManagement: React.FC = () => {
 
   // 初始化
   useEffect(() => {
-    setModels(mockModels);
-    if (mockModels.length > 0) {
-      setSelectedModelId(mockModels[0].id);
+    if (!isInitialized.current) {
+      isInitialized.current = true;
+      
+      // 检查URL参数中是否有模型ID
+      const urlModelId = params.modelId || searchParams.get('modelId');
+      if (urlModelId) {
+        // 如果URL中有模型ID，直接设置并跳过模型列表请求
+        setSelectedModelId(Number(urlModelId));
+      } else {
+        // 如果没有模型ID，才请求模型列表
+        fetchModels();
+      }
     }
   }, []);
 
+  // 当选中的模型ID改变时，重置分页并获取变量列表
   useEffect(() => {
     if (selectedModelId) {
+      setCurrentPage(1); // 重置分页
       fetchVariables();
     }
   }, [selectedModelId]);
 
+  // 当搜索条件改变时，重置分页并获取变量列表
   useEffect(() => {
-    fetchVariables();
+    if (selectedModelId) { // 只有在选中模型的情况下才执行搜索
+      setCurrentPage(1); // 重置分页
+      fetchVariables();
+    }
   }, [searchKeyword, selectedType, selectedDataType]);
+
+  // 当分页参数改变时，获取变量列表
+  useEffect(() => {
+    if (selectedModelId) {
+      fetchVariables();
+    }
+  }, [currentPage, pageSize]);
 
   return (
     <div className="variable-management">
@@ -536,7 +537,7 @@ const VariableManagement: React.FC = () => {
           <div>
             <h2 style={{ margin: 0, marginBottom: 8 }}>变量配置管理</h2>
             <span style={{ color: '#666', fontSize: '14px' }}>
-              管理财务模型中的输入变量、计算变量和常量
+              管理财务模型中的输入变量、计算变量和API
             </span>
           </div>
           <Space>
@@ -593,9 +594,9 @@ const VariableManagement: React.FC = () => {
                 value={selectedType}
                 onChange={setSelectedType}
               >
-                <Option value="input">输入变量</Option>
-                <Option value="calculated">计算变量</Option>
-                <Option value="constant">常量</Option>
+                <Option value="INPUT">输入</Option>
+                <Option value="CALC">计算</Option>
+                <Option value="API">API</Option>
               </Select>
             </Col>
             <Col span={3}>
@@ -606,10 +607,12 @@ const VariableManagement: React.FC = () => {
                 value={selectedDataType}
                 onChange={setSelectedDataType}
               >
-                <Option value="number">数字</Option>
-                <Option value="string">文本</Option>
-                <Option value="boolean">布尔</Option>
-                <Option value="date">日期</Option>
+                <Option value="NUMBER">数字</Option>
+                <Option value="DECIMAL">小数</Option>
+                <Option value="PERCENTAGE">百分比</Option>
+                <Option value="CURRENCY">货币</Option>
+                <Option value="BOOLEAN">布尔</Option>
+                <Option value="STRING">文本</Option>
               </Select>
             </Col>
             <Col span={3}>
@@ -626,25 +629,25 @@ const VariableManagement: React.FC = () => {
             <Col span={6}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '20px', fontWeight: 600, color: '#1890ff' }}>
-                  {variables.filter(v => v.variableType === 'input').length}
+                  {variables.filter(v => v.variableType === 'INPUT').length}
                 </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>输入变量</div>
+                <div style={{ fontSize: '12px', color: '#666' }}>输入</div>
               </div>
             </Col>
             <Col span={6}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '20px', fontWeight: 600, color: '#52c41a' }}>
-                  {variables.filter(v => v.variableType === 'calculated').length}
+                  {variables.filter(v => v.variableType === 'CALC').length}
                 </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>计算变量</div>
+                <div style={{ fontSize: '12px', color: '#666' }}>计算</div>
               </div>
             </Col>
             <Col span={6}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '20px', fontWeight: 600, color: '#faad14' }}>
-                  {variables.filter(v => v.variableType === 'constant').length}
+                  {variables.filter(v => v.variableType === 'API').length}
                 </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>常量</div>
+                <div style={{ fontSize: '12px', color: '#666' }}>API</div>
               </div>
             </Col>
             <Col span={6}>
@@ -652,7 +655,7 @@ const VariableManagement: React.FC = () => {
                 <div style={{ fontSize: '20px', fontWeight: 600, color: '#f5222d' }}>
                   {variables.filter(v => v.isRequired).length}
                 </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>必填变量</div>
+                <div style={{ fontSize: '12px', color: '#666' }}>必填</div>
               </div>
             </Col>
           </Row>
@@ -726,9 +729,9 @@ const VariableManagement: React.FC = () => {
                     rules={[{ required: true, message: '请选择变量类型' }]}
                   >
                     <Select placeholder="请选择变量类型" onChange={handleVariableTypeChange}>
-                      <Option value="input">输入变量</Option>
-                      <Option value="calculated">计算变量</Option>
-                      <Option value="constant">常量</Option>
+                      <Option value="INPUT">输入</Option>
+                      <Option value="CALC">计算</Option>
+                      <Option value="API">API</Option>
                     </Select>
                   </Form.Item>
                 </Col>
@@ -739,10 +742,12 @@ const VariableManagement: React.FC = () => {
                     rules={[{ required: true, message: '请选择数据类型' }]}
                   >
                     <Select placeholder="请选择数据类型">
-                      <Option value="number">数字</Option>
-                      <Option value="string">文本</Option>
-                      <Option value="boolean">布尔</Option>
-                      <Option value="date">日期</Option>
+                      <Option value="NUMBER">数字</Option>
+                      <Option value="DECIMAL">小数</Option>
+                      <Option value="PERCENTAGE">百分比</Option>
+                      <Option value="CURRENCY">货币</Option>
+                      <Option value="BOOLEAN">布尔</Option>
+                      <Option value="STRING">文本</Option>
                     </Select>
                   </Form.Item>
                 </Col>
@@ -765,7 +770,7 @@ const VariableManagement: React.FC = () => {
                 {({ getFieldValue }) => {
                   const variableType = getFieldValue('variableType');
                   
-                  if (variableType === 'calculated') {
+                  if (variableType === 'CALC') {
                     return (
                       <Form.Item
                         label="公式表达式"

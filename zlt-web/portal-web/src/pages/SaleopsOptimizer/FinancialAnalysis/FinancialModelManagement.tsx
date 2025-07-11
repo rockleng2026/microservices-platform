@@ -26,7 +26,8 @@ import {
   SettingOutlined,
   EyeOutlined,
   DownloadOutlined,
-  UploadOutlined
+  UploadOutlined,
+  BarChartOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { 
@@ -188,7 +189,7 @@ const FinancialModelManagement: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 220,
+      width: 260,
       fixed: 'right',
       render: (_, record) => (
         <Space size="middle">
@@ -214,6 +215,14 @@ const FinancialModelManagement: React.FC = () => {
               size="small" 
               icon={<SettingOutlined />}
               onClick={() => handleVariableManagement(record)}
+            />
+          </Tooltip>
+          <Tooltip title="图表配置">
+            <Button 
+              type="link" 
+              size="small" 
+              icon={<BarChartOutlined />}
+              onClick={() => handleChartManagement(record)}
             />
           </Tooltip>
           <Tooltip title="复制">
@@ -326,6 +335,12 @@ const FinancialModelManagement: React.FC = () => {
   const handleVariableManagement = (record: FinancialModel) => {
     // 跳转到变量管理页面
     window.location.href = `/saleops-optimizer/financial-analysis/variable-management/${record.id}`;
+  };
+
+  // 处理图表配置
+  const handleChartManagement = (record: FinancialModel) => {
+    // 跳转到图表管理页面
+    window.location.href = `/saleops-optimizer/financial-analysis/chart-management?modelId=${record.id}`;
   };
 
   // 处理复制

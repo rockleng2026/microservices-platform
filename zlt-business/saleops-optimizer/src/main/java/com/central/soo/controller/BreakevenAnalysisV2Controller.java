@@ -1,6 +1,5 @@
 package com.central.soo.controller;
 
-import com.central.common.model.PageResult;
 import com.central.common.model.Result;
 import com.central.soo.model.entity.FinancialModel;
 import com.central.soo.model.entity.ModelVariable;
@@ -44,22 +43,10 @@ public class BreakevenAnalysisV2Controller {
      */
     @Operation(summary = "获取可用的财务模型列表")
     @GetMapping("/models")
-    public Result<List<Map<String, Object>>> getAvailableModels() {
+    public Result<List<FinancialModel>> getAvailableModels() {
         try {
             List<FinancialModel> models = financialModelService.getBreakevenModels();
-            List<Map<String, Object>> result = models.stream().map(model -> {
-                Map<String, Object> modelMap = new HashMap<>();
-                modelMap.put("id", model.getId());
-                modelMap.put("modelName", model.getModelName());
-                modelMap.put("modelCode", model.getModelCode());
-                modelMap.put("category", model.getModelCategory());
-                modelMap.put("description", model.getModelDescription());
-                modelMap.put("status", model.getIsActive() ? "active" : "inactive");
-                modelMap.put("variableCount", modelVariableService.getVariableCountByModelId(model.getId()));
-                return modelMap;
-            }).toList();
-            
-            return Result.succeed(result);
+            return Result.succeed(models);
         } catch (Exception e) {
             log.error("获取财务模型列表失败", e);
             return Result.failed("获取模型列表失败: " + e.getMessage());
@@ -71,30 +58,12 @@ public class BreakevenAnalysisV2Controller {
      */
     @Operation(summary = "获取模型的变量列表")
     @GetMapping("/models/{modelId}/variables")
-    public Result<List<Map<String, Object>>> getModelVariables(
+    public Result<List<ModelVariable>> getModelVariables(
             @Parameter(description = "模型ID") @PathVariable Long modelId
     ) {
         try {
             List<ModelVariable> variables = modelVariableService.getVariablesByModelId(modelId);
-            List<Map<String, Object>> result = variables.stream().map(variable -> {
-                Map<String, Object> varMap = new HashMap<>();
-                varMap.put("id", variable.getId());
-                varMap.put("variableName", variable.getVariableName());
-                varMap.put("variableCode", variable.getVariableCode());
-                varMap.put("variableType", variable.getVariableType());
-                varMap.put("dataType", variable.getDataType());
-                varMap.put("defaultValue", variable.getDefaultValue());
-                varMap.put("unit", variable.getUnit());
-                varMap.put("description", variable.getDescription());
-                varMap.put("isRequired", variable.getIsRequired());
-                varMap.put("displayOrder", variable.getDisplayOrder());
-                varMap.put("validationRules", variable.getValidationRules());
-                varMap.put("minValue", variable.getMinValue());
-                varMap.put("maxValue", variable.getMaxValue());
-                return varMap;
-            }).toList();
-            
-            return Result.succeed(result);
+            return Result.succeed(variables);
         } catch (Exception e) {
             log.error("获取模型变量失败", e);
             return Result.failed("获取模型变量失败: " + e.getMessage());

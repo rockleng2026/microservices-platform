@@ -118,24 +118,38 @@ interface BreakevenResult {
 // 计算引擎类
 class CalculatorEngine {
   // 将变量值根据数据类型转换为数值
-  private convertToNumber(value: any, dataType: string): number {
+  private convertToNumber(value: any, dataType: string, varName?: string, context?: any): number {
+    if (value === undefined || value === null || value === '') {
+      console.error(`变量值缺失: 变量名=${varName}, 类型=${dataType}, 当前上下文=`, context);
+      throw new Error(`变量值缺失，无法转换为数字，变量名: ${varName}, 类型: ${dataType}`);
+    }
     switch (dataType) {
       case 'NUMBER':
       case 'DECIMAL':
-      case 'CURRENCY':
-        return Number(value) || 0;
-      case 'PERCENTAGE':
-        return (Number(value) || 0) / 100;
+      case 'CURRENCY': {
+        const num = Number(value);
+        if (isNaN(num)) throw new Error(`变量值 ${value} 不是有效数字, 变量名: ${varName}`);
+        return num;
+      }
+      case 'PERCENTAGE': {
+        const num = Number(value);
+        if (isNaN(num)) throw new Error(`百分比变量值 ${value} 不是有效数字, 变量名: ${varName}`);
+        return num / 100;
+      }
       case 'BOOLEAN':
         return value === true || value === 'true' ? 1 : 0;
-      case 'STRING':
+      case 'STRING': {
         const numValue = Number(value);
         if (isNaN(numValue)) {
-          throw new Error(`无法将字符串 "${value}" 转换为数字`);
+          throw new Error(`无法将字符串 "${value}" 转换为数字, 变量名: ${varName}`);
         }
         return numValue;
-      default:
-        return Number(value) || 0;
+      }
+      default: {
+        const num = Number(value);
+        if (isNaN(num)) throw new Error(`变量值 ${value} 不是有效数字, 变量名: ${varName}`);
+        return num;
+      }
     }
   }
 
@@ -246,7 +260,7 @@ class CalculatorEngine {
     }
     
     const tokens = this.tokenize(expression);
-    
+    console.log('【表达式解析】原始:', expression, 'tokens:', [...tokens], 'context:', context);
     // 处理函数调用
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
@@ -261,23 +275,38 @@ class CalculatorEngine {
         i--; // 重新检查当前位置
       }
     }
-    
+    console.log('【表达式解析】函数处理后 tokens:', [...tokens]);
     // 替换变量
     for (let i = 0; i < tokens.length; i++) {
       const token = tokens[i];
-      if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(token) && context[token]) {
-        const variable = context[token];
-        const numValue = this.convertToNumber(variable.value, variable.type);
-        tokens[i] = numValue.toString();
+      if (/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(token)) {
+        if (!context[token]) {
+          throw new Error(`表达式中变量 ${token} 未定义`);
+        }
+        // 查找变量定义
+        const variableDef = (this as any).variablesArray?.find?.((v: any) => v.variableCode === token);
+        if (variableDef && variableDef.variableType === 'CALC' && variableDef.calculationFormula) {
+          // 递归计算
+          const calcValue = this.evaluate(variableDef.calculationFormula, context);
+          tokens[i] = calcValue.toString();
+        } else {
+          const variable = context[token];
+          const numValue = this.convertToNumber(variable.value, variable.type, token, context);
+          if (isNaN(numValue)) {
+            throw new Error(`变量 ${token} 的值无法转换为数字: ${variable.value}`);
+          }
+          tokens[i] = numValue.toString();
+        }
       }
     }
-    
+    console.log('【表达式解析】变量替换后 tokens:', [...tokens]);
     // 计算表达式 (简单的左到右计算，支持运算符优先级)
     return this.calculateTokens(tokens);
   }
 
   // 计算token数组
   private calculateTokens(tokens: string[]): number {
+    console.log('【表达式求值】计算前 tokens:', [...tokens]);
     // 先处理乘除法
     for (let i = 1; i < tokens.length - 1; i++) {
       if (tokens[i] === '*' || tokens[i] === '/') {
@@ -296,6 +325,7 @@ class CalculatorEngine {
         
         tokens.splice(i - 1, 3, result.toString());
         i--; // 重新检查当前位置
+        console.log('【表达式求值】乘除处理后 tokens:', [...tokens]);
       }
     }
     
@@ -314,9 +344,10 @@ class CalculatorEngine {
         
         tokens.splice(i - 1, 3, result.toString());
         i--; // 重新检查当前位置
+        console.log('【表达式求值】加减处理后 tokens:', [...tokens]);
       }
     }
-    
+    console.log('【表达式求值】最终结果 tokens:', [...tokens]);
     return tokens.length === 1 ? Number(tokens[0]) : 0;
   }
 
@@ -362,13 +393,19 @@ const BreakevenAnalysisPageV2: React.FC = () => {
       
       // 添加所有变量到上下文
       variables.forEach(v => {
-        const value = currentValues[v.variableCode] || v.defaultValue || 0;
+        let value = currentValues[v.variableCode];
+        if (value === undefined || value === null || value === '') {
+          value = v.defaultValue !== undefined && v.defaultValue !== null && v.defaultValue !== '' ? v.defaultValue : 0;
+        }
         context[v.variableCode] = {
           value: value,
-          type: v.dataType
+          type: v.dataType // 始终用变量定义的类型
         };
       });
+      console.log('构建的 context:', context);
 
+      // 让计算引擎能访问变量定义
+      (calculatorEngine as any).variablesArray = variables;
       // 使用计算引擎计算
       const result = calculatorEngine.evaluate(variable.calculationFormula, context);
       
@@ -392,8 +429,23 @@ const BreakevenAnalysisPageV2: React.FC = () => {
         
         if (variable.calculationFormula) {
           try {
+            // 构建 context，保证 type 字段
+            const context: Record<string, {value: any, type: string}> = {};
+            variables.forEach(v => {
+              let value = allValues[v.variableCode];
+              if (value === undefined || value === null || value === '') {
+                value = v.defaultValue !== undefined && v.defaultValue !== null && v.defaultValue !== '' ? v.defaultValue : 0;
+              }
+              context[v.variableCode] = {
+                value: value,
+                type: v.dataType
+              };
+            });
+            console.log('handleFormValuesChange context:', context);
+            // 让计算引擎能访问变量定义
+            (calculatorEngine as any).variablesArray = variables;
             // 解析计算公式并计算结果
-            const result = calculatorEngine.evaluate(variable.calculationFormula, allValues);
+            const result = calculatorEngine.evaluate(variable.calculationFormula, context);
             console.log(`计算结果 ${variable.variableCode}:`, result);
             
             if (!isNaN(result) && isFinite(result)) {
@@ -408,7 +460,22 @@ const BreakevenAnalysisPageV2: React.FC = () => {
           if (dynamicFormula) {
             console.log(`生成动态公式 ${variable.variableCode}:`, dynamicFormula);
             try {
-              const result = calculatorEngine.evaluate(dynamicFormula, allValues);
+              // 构建 context，保证 type 字段
+              const context: Record<string, {value: any, type: string}> = {};
+              variables.forEach(v => {
+                let value = allValues[v.variableCode];
+                if (value === undefined || value === null || value === '') {
+                  value = v.defaultValue !== undefined && v.defaultValue !== null && v.defaultValue !== '' ? v.defaultValue : 0;
+                }
+                context[v.variableCode] = {
+                  value: value,
+                  type: v.dataType
+                };
+              });
+              console.log('handleFormValuesChange context:', context);
+              // 让计算引擎能访问变量定义
+              (calculatorEngine as any).variablesArray = variables;
+              const result = calculatorEngine.evaluate(dynamicFormula, context);
               console.log(`动态计算结果 ${variable.variableCode}:`, result);
               
               if (!isNaN(result) && isFinite(result)) {

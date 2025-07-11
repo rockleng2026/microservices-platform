@@ -211,7 +211,7 @@ CREATE TABLE soo_model_variable (
 ## 4. 数据库设计
 
 ### 4.1 核心表结构
-
+@database_design.sql
 ```
 
 ## 5. API接口设计

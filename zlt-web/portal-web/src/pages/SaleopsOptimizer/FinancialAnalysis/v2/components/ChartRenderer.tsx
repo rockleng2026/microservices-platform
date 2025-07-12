@@ -68,9 +68,11 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
   const seriesData = useMemo(() => {
     if (!seriesList || seriesList.length === 0) {
       // 如果没有系列配置，使用单系列数据
+      // 对于柱状图，需要过滤掉盈亏平衡点数据
+      const regularData = data.filter(d => !d.isBreakevenPoint);
       return [{
         seriesName: chartName || '数据',
-        data: data,
+        data: regularData,
         color: '#1890ff'
       }];
     }
@@ -253,71 +255,165 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
   };
 
   // 渲染柱状图
-  const renderBarChart = () => (
-    <ResponsiveContainer width="100%" height={400}>
-      <BarChart margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis 
-          dataKey="x" 
-          name={xAxisName}
-          type="number"
-          domain={['dataMin', 'dataMax']}
-          tickFormatter={(value) => value.toLocaleString()}
-          label={{ value: `${xAxisName}${xAxisUnit ? ` (${xAxisUnit})` : ''}`, position: 'bottom' }}
-          xAxisId={0}
-        />
-        <YAxis 
-          name={yAxisName}
-          type="number"
-          tickFormatter={(value) => value.toLocaleString()}
-          label={{ 
-            value: `${yAxisName}${yAxisUnit ? ` (${yAxisUnit})` : ''}`, 
-            angle: -90, 
-            position: 'insideLeft' 
-          }}
-          yAxisId={0}
-        />
-        <Tooltip content={<CustomTooltip />} />
-        <Legend 
-          wrapperStyle={{ paddingTop: '10px' }}
-          layout="horizontal"
-          verticalAlign="top"
-          align="center"
-          iconType="rect"
-          iconSize={12}
-        />
-        {seriesData.map((series, index) => (
-          <Bar
-            key={series.seriesName}
-            dataKey="y"
-            name={series.seriesName}
-            data={series.data}
-            fill={series.color}
+  const renderBarChart = () => {
+    // 验证X轴坐标数量，柱状图建议控制在8个坐标内
+    const uniqueXValues = [...new Set(data.filter(d => !d.isBreakevenPoint).map(d => d.x))];
+    console.log('柱状图调试信息:', {
+      totalDataPoints: data.length,
+      regularDataPoints: data.filter(d => !d.isBreakevenPoint).length,
+      breakevenPoints: data.filter(d => d.isBreakevenPoint).length,
+      uniqueXValues: uniqueXValues.length,
+      seriesData: seriesData,
+      seriesDataLength: seriesData.length,
+      seriesDataDetails: seriesData.map(s => ({
+        name: s.seriesName,
+        dataLength: s.data.length,
+        firstFewData: s.data.slice(0, 3)
+      }))
+    });
+    
+    if (uniqueXValues.length > 8) {
+      return (
+        <div style={{ 
+          height: 400, 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          flexDirection: 'column'
+        }}>
+          <Text type="warning" style={{ fontSize: 16, marginBottom: 8 }}>
+            ⚠️ X轴坐标过多
+          </Text>
+          <Text type="secondary" style={{ textAlign: 'center' }}>
+            柱状图建议控制在8个X轴坐标以内，当前有 {uniqueXValues.length} 个坐标<br/>
+            请切换到折线图或散点图以获得更好的显示效果
+          </Text>
+        </div>
+      );
+    }
+
+    // 为柱状图准备数据 - 按X轴值分组，只使用普通数据点
+    const regularData = data.filter(d => !d.isBreakevenPoint);
+    const groupedByX = regularData.reduce((acc, point) => {
+      if (!acc[point.x]) {
+        acc[point.x] = {};
+      }
+      acc[point.x][point.seriesName || 'default'] = point.y;
+      return acc;
+    }, {} as { [key: number]: { [key: string]: number } });
+
+    const barChartData = Object.keys(groupedByX).map(x => ({
+      x: parseFloat(x),
+      ...groupedByX[parseFloat(x)]
+    }));
+
+    console.log('柱状图数据:', barChartData);
+
+    return (
+      <ResponsiveContainer width="100%" height={400}>
+        <BarChart 
+          margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
+          data={barChartData}
+        >
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis 
+            dataKey="x" 
+            name={xAxisName}
+            type="number"
+            domain={['dataMin', 'dataMax']}
+            tickFormatter={(value) => value.toLocaleString()}
+            label={{ value: `${xAxisName}${xAxisUnit ? ` (${xAxisUnit})` : ''}`, position: 'bottom' }}
+            xAxisId={0}
           />
-        ))}
-        {/* 盈亏平衡点参考线 */}
-        {data.some(d => d.isBreakevenPoint) && (() => {
-          const breakevenPoint = data.find(d => d.isBreakevenPoint);
-          return breakevenPoint ? (
-            <ReferenceLine
-              x={breakevenPoint.x}
-              stroke="red"
-              strokeDasharray="3 3"
-              label={{ 
-                value: '盈亏平衡点', 
-                position: 'insideBottom', 
-                offset: 15,
-                fill: 'red',
-                fontSize: 11,
-                fontWeight: 'bold',
-                textAnchor: 'middle'
-              }}
+          <YAxis 
+            name={yAxisName}
+            type="number"
+            tickFormatter={(value) => value.toLocaleString()}
+            label={{ 
+              value: `${yAxisName}${yAxisUnit ? ` (${yAxisUnit})` : ''}`, 
+              angle: -90, 
+              position: 'insideLeft' 
+            }}
+            yAxisId={0}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend 
+            wrapperStyle={{ paddingTop: '10px' }}
+            layout="horizontal"
+            verticalAlign="top"
+            align="center"
+            iconType="rect"
+            iconSize={12}
+          />
+          {seriesData.map((series, index) => (
+            <Bar
+              key={series.seriesName}
+              dataKey={series.seriesName}
+              name={series.seriesName}
+              fill={series.color}
+              xAxisId={0}
+              yAxisId={0}
             />
-          ) : null;
-        })()}
-      </BarChart>
-    </ResponsiveContainer>
-  );
+          ))}
+          {/* 盈亏平衡点标记 */}
+          {data.some(d => d.isBreakevenPoint) && (() => {
+            const breakevenPoints = data.filter(d => d.isBreakevenPoint);
+            return (
+              <>
+                {/* 垂直参考线 */}
+                {breakevenPoints.map((point, index) => (
+                  <ReferenceLine
+                    key={`breakeven-line-${index}`}
+                    x={point.x}
+                    stroke="red"
+                    strokeDasharray="3 3"
+                    strokeOpacity={0.7}
+                  />
+                ))}
+                {/* 盈亏平衡点散点标记 */}
+                <Scatter
+                  data={breakevenPoints}
+                  dataKey="y"
+                  xAxisId={0}
+                  yAxisId={0}
+                  shape="diamond"
+                  r={6}
+                  fill="red"
+                  stroke="white"
+                  strokeWidth={2}
+                  name="盈亏平衡点"
+                  isAnimationActive={false}
+                />
+                {/* 盈亏平衡点标签 */}
+                {breakevenPoints.map((point, index) => {
+                  const maxY = Math.max(...barChartData.map(d => Math.max(...Object.values(d).filter(v => typeof v === 'number'))));
+                  const labelPosition = point.y > maxY * 0.7 ? 'insideBottom' : 'insideTop';
+                  const labelOffset = point.y > maxY * 0.7 ? 20 : -20;
+                  
+                  return (
+                    <ReferenceLine
+                      key={`breakeven-label-${index}`}
+                      x={point.x}
+                      stroke="transparent"
+                      label={{ 
+                        value: '盈亏平衡点', 
+                        position: labelPosition, 
+                        offset: labelOffset,
+                        fill: 'red',
+                        fontSize: 11,
+                        fontWeight: 'bold',
+                        textAnchor: 'middle'
+                      }}
+                    />
+                  );
+                })}
+              </>
+            );
+          })()}
+        </BarChart>
+      </ResponsiveContainer>
+    );
+  };
 
   // 渲染散点图
   const renderScatterChart = () => {
@@ -443,19 +539,31 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
 
   // 渲染饼图（需要特殊处理数据格式）
   const renderPieChart = () => {
-    // 饼图需要聚合数据
+    // 饼图需要聚合数据 - 按系列聚合
     const pieData = useMemo(() => {
       const aggregated: { [key: string]: number } = {};
-      data.forEach(point => {
-        const key = point.seriesName || '数据';
-        aggregated[key] = (aggregated[key] || 0) + point.y;
+      
+      // 按系列聚合数据
+      seriesData.forEach(series => {
+        const seriesTotal = series.data.reduce((sum, point) => sum + point.y, 0);
+        aggregated[series.seriesName] = seriesTotal;
       });
+      
+      // 如果没有系列数据，则按单个数据点聚合
+      if (Object.keys(aggregated).length === 0) {
+        data.forEach(point => {
+          const key = point.seriesName || '数据';
+          aggregated[key] = (aggregated[key] || 0) + point.y;
+        });
+      }
       
       return Object.entries(aggregated).map(([name, value]) => ({
         name,
         value: Math.abs(value) // 饼图通常显示绝对值
       }));
-    }, [data]);
+    }, [data, seriesData]);
+
+    console.log('饼图聚合数据:', pieData);
 
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
 
@@ -524,6 +632,12 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                               chartType === 'pie' ? '饼图' : '散点图'}</Tag>
           <Text type="secondary">数据点: {data.length}</Text>
           <Text type="secondary">系列数: {seriesData.length}</Text>
+          {data.length > 20 && (
+            <Tag color="orange">建议使用折线图或散点图</Tag>
+          )}
+          {chartType === 'bar' && [...new Set(data.filter(d => !d.isBreakevenPoint).map(d => d.x))].length > 8 && (
+            <Tag color="red">X轴坐标过多，建议切换图表类型</Tag>
+          )}
         </Space>
       </div>
       

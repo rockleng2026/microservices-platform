@@ -894,13 +894,17 @@ const BreakevenAnalysisPageV2: React.FC = () => {
       
       console.log('所有变量值:', allVariableValues);
       
-      // 计算默认X轴最大值
-      let defaultMaxX = chartMaxX;
-      if (chart.xAxisField && allVariableValues[chart.xAxisField] !== undefined) {
-        const xAxisValue = allVariableValues[chart.xAxisField];
-        defaultMaxX = Math.max(xAxisValue * 3, 100); // 改为3倍
-        // 更新chartMaxX状态
-        setChartMaxX(defaultMaxX);
+      // 使用当前配置的最大值，而不是重新计算默认值
+      let maxX = chartMaxX;
+      
+      // 只有在chartMaxX为默认值时才重新计算
+      if (chartMaxX === 1000) {
+        if (chart.xAxisField && allVariableValues[chart.xAxisField] !== undefined) {
+          const xAxisValue = allVariableValues[chart.xAxisField];
+          maxX = Math.max(xAxisValue * 3, 100); // 改为3倍
+          // 更新chartMaxX状态
+          setChartMaxX(maxX);
+        }
       }
       
       // 获取盈亏平衡点数据
@@ -913,7 +917,7 @@ const BreakevenAnalysisPageV2: React.FC = () => {
         method: 'POST',
         data: {
           variableValues: allVariableValues,
-          maxX: defaultMaxX,
+          maxX: maxX,
           totalPoints: chartTotalPoints,
           breakevenPoint: breakevenPoint
         }
@@ -1629,7 +1633,7 @@ const BreakevenAnalysisPageV2: React.FC = () => {
     }
 
     const xAxisName = selectedChart?.xAxisName || selectedChart?.xAxisField || 'x';
-    const yAxisName = selectedChart?.yAxisName || selectedChart?.yAxisField || 'y';
+    const yAxisName = selectedChart?.yAxisName || 'y';
     const xAxisUnit = selectedChart?.xAxisUnit || '';
     const yAxisUnit = selectedChart?.yAxisUnit || '';
 
@@ -1648,11 +1652,11 @@ const BreakevenAnalysisPageV2: React.FC = () => {
             <div>
               <Text style={{ fontSize: 12 }}>数据点数:</Text>
               <InputNumber
-                min={10}
+                min={2}
                 max={1000}
                 value={chartTotalPoints}
                 onChange={(value) => {
-                  if (value && value >= 10 && value <= 1000) {
+                  if (value && value >= 2 && value <= 1000) {
                     setChartTotalPoints(value);
                   }
                 }}

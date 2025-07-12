@@ -402,8 +402,8 @@ public class ChartAnalysisModelServiceImpl
 
     @Override
     public Map<String, Object> generateChartData(Long chartId, Map<String, Object> variableValues, 
-                                                Double maxX, Integer totalPoints) {
-        log.info("生成图表数据: chartId={}, maxX={}, totalPoints={}", chartId, maxX, totalPoints);
+                                                Double maxX, Integer totalPoints, Map<String, Object> breakevenPoint) {
+        log.info("生成图表数据: chartId={}, maxX={}, totalPoints={}, breakevenPoint={}", chartId, maxX, totalPoints, breakevenPoint);
         
         // 获取图表配置
         ChartAnalysisModel chartModel = getChartModelWithSeries(chartId);
@@ -476,6 +476,50 @@ public class ChartAnalysisModelServiceImpl
             }
         }
         
+        // 处理盈亏平衡点数据
+        List<Map<String, Object>> breakevenData = new ArrayList<>();
+        if (breakevenPoint != null) {
+            Object breakevenX = breakevenPoint.get("x");
+            if (breakevenX != null) {
+                BigDecimal breakevenXValue = new BigDecimal(breakevenX.toString());
+                
+                // 为每个系列计算盈亏平衡点的Y值
+                for (ChartSeries series : seriesList) {
+                    try {
+                        // 构建计算上下文
+                        Map<String, Object> context = new HashMap<>(variableValues);
+                        context.put("x", breakevenXValue);
+                        context.put(chartModel.getXAxisField(), breakevenXValue);
+                        
+                        // 获取变量数据类型映射
+                        Map<String, String> variableDataTypes = getVariableDataTypes(chartModel.getModelId());
+                        
+                        // 计算系列值
+                        Object seriesValue = parseSeriesValue(series.getSeriesValue(), context, variableDataTypes);
+                        
+                        // 构建盈亏平衡点数据
+                        Map<String, Object> breakevenPointData = new HashMap<>();
+                        breakevenPointData.put("x", breakevenXValue.doubleValue());
+                        breakevenPointData.put("y", new BigDecimal(seriesValue.toString()).doubleValue());
+                        breakevenPointData.put("seriesName", series.getSeriesName());
+                        breakevenPointData.put("seriesId", series.getId());
+                        breakevenPointData.put("seriesColor", series.getColor());
+                        breakevenPointData.put("seriesField", series.getSeriesField());
+                        breakevenPointData.put("label", "盈亏平衡点");
+                        breakevenPointData.put("isBreakevenPoint", true);
+                        
+                        breakevenData.add(breakevenPointData);
+                        
+                    } catch (Exception e) {
+                        log.error("计算盈亏平衡点系列值失败: seriesId={}, xValue={}, error={}", 
+                                 series.getId(), breakevenXValue, e.getMessage());
+                    }
+                }
+                
+                log.info("生成盈亏平衡点数据: x={}, 系列数量={}", breakevenXValue, breakevenData.size());
+            }
+        }
+        
         // 构建返回结果
         Map<String, Object> result = new HashMap<>();
         result.put("chartId", chartId);
@@ -491,6 +535,7 @@ public class ChartAnalysisModelServiceImpl
         result.put("stepSize", stepSize.doubleValue());
         result.put("seriesList", seriesList);
         result.put("data", chartData);
+        result.put("breakevenData", breakevenData);
         
         log.info("图表数据生成完成: chartId={}, 数据点数量={}", chartId, chartData.size());
         return result;

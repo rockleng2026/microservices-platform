@@ -128,10 +128,11 @@ public interface ChartAnalysisModelService extends IService<ChartAnalysisModel> 
      * @param variableValues 变量值映射
      * @param maxX X轴最大值（可选）
      * @param totalPoints 数据点总数
+     * @param breakevenPoint 盈亏平衡点数据（可选）
      * @return 图表数据
      */
     Map<String, Object> generateChartData(Long chartId, Map<String, Object> variableValues, 
-                                         Double maxX, Integer totalPoints);
+                                         Double maxX, Integer totalPoints, Map<String, Object> breakevenPoint);
 
     /**
      * 更新图表的模拟步数

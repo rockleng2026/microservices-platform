@@ -300,8 +300,17 @@ public class ChartAnalysisModelController {
                 totalPoints = 1000;
             }
             
+            // 获取盈亏平衡点数据（可选）
+            Map<String, Object> breakevenPoint = null;
+            Object breakevenPointObj = requestData.get("breakevenPoint");
+            if (breakevenPointObj instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> point = (Map<String, Object>) breakevenPointObj;
+                breakevenPoint = point;
+            }
+            
             Map<String, Object> chartData = chartAnalysisModelService.generateChartData(
-                    chartId, variableValues, maxX, totalPoints);
+                    chartId, variableValues, maxX, totalPoints, breakevenPoint);
             
             log.info("图表数据生成完成: chartId={}, 数据点数量={}", 
                      chartId, chartData.get("dataPoints"));

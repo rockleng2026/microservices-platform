@@ -401,6 +401,102 @@ public class ChartAnalysisModelServiceImpl
     }
 
     @Override
+    public Map<String, Object> generateChartData(Long chartId, Map<String, Object> variableValues, 
+                                                Double maxX, Integer totalPoints) {
+        log.info("生成图表数据: chartId={}, maxX={}, totalPoints={}", chartId, maxX, totalPoints);
+        
+        // 获取图表配置
+        ChartAnalysisModel chartModel = getChartModelWithSeries(chartId);
+        if (chartModel == null) {
+            throw new RuntimeException("图表模型不存在: " + chartId);
+        }
+        
+        // 获取系列配置
+        List<ChartSeries> seriesList = chartModel.getChartSeriesList();
+        if (seriesList.isEmpty()) {
+            throw new RuntimeException("图表系列配置为空: " + chartId);
+        }
+        
+        // 计算X轴最大值
+        BigDecimal xMax;
+        if (maxX != null && maxX > 0) {
+            xMax = BigDecimal.valueOf(maxX);
+        } else {
+            // 从变量值中获取X轴字段的值，然后乘以10
+            Object xAxisValue = variableValues.get(chartModel.getXAxisField());
+            if (xAxisValue != null) {
+                BigDecimal baseValue = new BigDecimal(xAxisValue.toString());
+                xMax = baseValue.multiply(BigDecimal.valueOf(10));
+                log.info("从变量值计算X轴最大值: {} * 10 = {}", baseValue, xMax);
+            } else {
+                xMax = BigDecimal.valueOf(1000); // 默认值
+                log.info("使用默认X轴最大值: {}", xMax);
+            }
+        }
+        
+        // 计算步长
+        BigDecimal stepSize = xMax.divide(BigDecimal.valueOf(totalPoints), 10, RoundingMode.HALF_UP);
+        
+        log.info("图表数据生成参数: xMax={}, totalPoints={}, stepSize={}", xMax, totalPoints, stepSize);
+        
+        // 生成数据点
+        List<Map<String, Object>> chartData = new ArrayList<>();
+        for (int i = 0; i <= totalPoints; i++) {
+            BigDecimal xValue = stepSize.multiply(BigDecimal.valueOf(i));
+            
+            for (ChartSeries series : seriesList) {
+                try {
+                    // 构建计算上下文
+                    Map<String, Object> context = new HashMap<>(variableValues);
+                    context.put("x", xValue);
+                    context.put(chartModel.getXAxisField(), xValue);
+                    
+                    // 获取变量数据类型映射
+                    Map<String, String> variableDataTypes = getVariableDataTypes(chartModel.getModelId());
+                    
+                    // 计算系列值
+                    Object seriesValue = parseSeriesValue(series.getSeriesValue(), context, variableDataTypes);
+                    
+                    // 构建数据点
+                    Map<String, Object> dataPoint = new HashMap<>();
+                    dataPoint.put("x", xValue.doubleValue());
+                    dataPoint.put("y", new BigDecimal(seriesValue.toString()).doubleValue());
+                    dataPoint.put("seriesName", series.getSeriesName());
+                    dataPoint.put("seriesId", series.getId());
+                    dataPoint.put("seriesColor", series.getColor());
+                    dataPoint.put("seriesField", series.getSeriesField());
+                    dataPoint.put("label", xValue.toString());
+                    
+                    chartData.add(dataPoint);
+                    
+                } catch (Exception e) {
+                    log.error("计算系列值失败: seriesId={}, xValue={}, error={}", 
+                             series.getId(), xValue, e.getMessage());
+                }
+            }
+        }
+        
+        // 构建返回结果
+        Map<String, Object> result = new HashMap<>();
+        result.put("chartId", chartId);
+        result.put("chartName", chartModel.getChartName());
+        result.put("chartType", chartModel.getChartType());
+        result.put("xAxisName", chartModel.getXAxisName());
+        result.put("xAxisField", chartModel.getXAxisField());
+        result.put("xAxisUnit", chartModel.getXAxisUnit());
+        result.put("yAxisName", chartModel.getYAxisName());
+        result.put("yAxisUnit", chartModel.getYAxisUnit());
+        result.put("dataPoints", chartData.size());
+        result.put("maxX", xMax.doubleValue());
+        result.put("stepSize", stepSize.doubleValue());
+        result.put("seriesList", seriesList);
+        result.put("data", chartData);
+        
+        log.info("图表数据生成完成: chartId={}, 数据点数量={}", chartId, chartData.size());
+        return result;
+    }
+
+    @Override
     public boolean updateSimulationSteps(List<Long> chartIds, Integer simulationSteps) {
         log.info("更新图表模拟步数: chartIds={}, steps={}", chartIds, simulationSteps);
         
@@ -624,8 +720,12 @@ public class ChartAnalysisModelServiceImpl
     }
 
     private Object parseSeriesValue(String seriesValue, Map<String, Object> context) {
+        return parseSeriesValue(seriesValue, context, null);
+    }
+
+    private Object parseSeriesValue(String seriesValue, Map<String, Object> context, Map<String, String> variableDataTypes) {
         if (!StringUtils.hasText(seriesValue)) {
-            return null;
+            return BigDecimal.ZERO;
         }
         
         // 简单的表达式解析，支持基础运算
@@ -636,17 +736,72 @@ public class ChartAnalysisModelServiceImpl
         }
         
         try {
-            // 使用公式引擎计算
-            DynamicFormulaEngine.CalculationResult calcResult = formulaEngine.executeFormula(seriesValue, context);
-            return calcResult.isSuccess() ? calcResult.getValue() : null;
-        } catch (Exception e) {
-            // 如果计算失败，尝试作为数值解析
-            try {
-                return new BigDecimal(seriesValue);
-            } catch (NumberFormatException ne) {
-                return seriesValue;
+            // 使用公式引擎计算（支持变量数据类型）
+            DynamicFormulaEngine.CalculationResult calcResult = formulaEngine.executeFormula(seriesValue, context, variableDataTypes);
+            if (calcResult.isSuccess()) {
+                return calcResult.getValue();
+            } else {
+                log.warn("公式计算失败: {}, 错误: {}", seriesValue, calcResult.getErrors());
+                // 如果公式计算失败，尝试作为数值解析
+                return parseAsNumber(seriesValue);
             }
+        } catch (Exception e) {
+            log.warn("公式引擎异常: {}, 错误: {}", seriesValue, e.getMessage());
+            // 如果计算失败，尝试作为数值解析
+            return parseAsNumber(seriesValue);
         }
+    }
+    
+    /**
+     * 尝试将字符串解析为数字
+     */
+    private BigDecimal parseAsNumber(String value) {
+        try {
+            // 移除所有空格
+            value = value.trim();
+            
+            // 如果是纯数字，直接解析
+            if (value.matches("-?\\d+(\\.\\d+)?")) {
+                return new BigDecimal(value);
+            }
+            
+            // 如果是变量引用，尝试从上下文中获取
+            if (value.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
+                // 这里可以添加变量查找逻辑
+                log.warn("未找到变量: {}", value);
+                return BigDecimal.ZERO;
+            }
+            
+            // 如果都失败，返回0
+            log.warn("无法解析数值: {}", value);
+            return BigDecimal.ZERO;
+            
+        } catch (NumberFormatException e) {
+            log.warn("数值解析失败: {}", value);
+            return BigDecimal.ZERO;
+        }
+    }
+
+    /**
+     * 获取财务模型变量的数据类型映射
+     */
+    private Map<String, String> getVariableDataTypes(Long modelId) {
+        Map<String, String> variableDataTypes = new HashMap<>();
+        
+        // 根据已知的变量名判断数据类型
+        // 这里可以根据实际业务需求扩展
+        String[] percentageVariables = {
+            "variable_cost_rate", "gross_margin", "profit_margin", "tax_rate", 
+            "discount_rate", "inflation_rate", "growth_rate"
+        };
+        
+        for (String varName : percentageVariables) {
+            variableDataTypes.put(varName, "percentage");
+        }
+        
+        log.debug("设置变量数据类型映射: modelId={}, types={}", modelId, variableDataTypes);
+        
+        return variableDataTypes;
     }
 
     private Map<String, Object> formatChartData(List<ChartSimulation> simulationResults, ChartAnalysisModel chartModel) {

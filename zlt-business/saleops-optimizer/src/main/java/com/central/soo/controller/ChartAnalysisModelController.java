@@ -259,6 +259,60 @@ public class ChartAnalysisModelController {
     }
 
     /**
+     * 生成图表数据
+     */
+    @PostMapping("/{chartId}/generate-data")
+    @Operation(summary = "生成图表数据", description = "根据图表配置和变量值生成图表数据点")
+    public Result<Map<String, Object>> generateChartData(
+            @PathVariable @NotNull Long chartId,
+            @RequestBody Map<String, Object> requestData,
+            @LoginUser SysUser user) {
+        
+        log.info("用户[{}]生成图表数据: chartId={}", user.getId(), chartId);
+        
+        try {
+            // 获取变量值
+            @SuppressWarnings("unchecked")
+            Map<String, Object> variableValues = (Map<String, Object>) requestData.get("variableValues");
+            
+            // 获取X轴最大值（可选）
+            Double maxX = null;
+            Object maxXObj = requestData.get("maxX");
+            if (maxXObj != null) {
+                if (maxXObj instanceof Double) {
+                    maxX = (Double) maxXObj;
+                } else if (maxXObj instanceof Integer) {
+                    maxX = ((Integer) maxXObj).doubleValue();
+                } else if (maxXObj instanceof Number) {
+                    maxX = ((Number) maxXObj).doubleValue();
+                } else {
+                    try {
+                        maxX = Double.parseDouble(maxXObj.toString());
+                    } catch (NumberFormatException e) {
+                        log.warn("无法解析maxX值: {}", maxXObj);
+                    }
+                }
+            }
+            
+            // 获取数据点数量（可选，默认1000）
+            Integer totalPoints = (Integer) requestData.get("totalPoints");
+            if (totalPoints == null || totalPoints <= 0) {
+                totalPoints = 1000;
+            }
+            
+            Map<String, Object> chartData = chartAnalysisModelService.generateChartData(
+                    chartId, variableValues, maxX, totalPoints);
+            
+            log.info("图表数据生成完成: chartId={}, 数据点数量={}", 
+                     chartId, chartData.get("dataPoints"));
+            return Result.succeed(chartData);
+        } catch (Exception e) {
+            log.error("生成图表数据失败", e);
+            return Result.failed("生成失败: " + e.getMessage());
+        }
+    }
+
+    /**
      * 生成预设图表配置
      */
     @PostMapping("/preset")

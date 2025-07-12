@@ -45,11 +45,6 @@ public class ChartAnalysisModel extends BaseEntity {
     @TableField("y_axis_name")
     private String yAxisName;
 
-    @JsonProperty("yAxisField")
-    @Schema(description = "Y轴对应字段标识")
-    @TableField("y_axis_field")
-    private String yAxisField;
-
     @JsonProperty("yAxisUnit")
     @Schema(description = "Y轴单位")
     @TableField("y_axis_unit")

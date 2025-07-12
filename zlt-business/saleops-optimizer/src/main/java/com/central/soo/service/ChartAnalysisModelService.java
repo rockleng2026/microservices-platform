@@ -122,6 +122,18 @@ public interface ChartAnalysisModelService extends IService<ChartAnalysisModel> 
     Map<String, Object> simulateChartData(Long chartId, Map<String, Object> parameters);
 
     /**
+     * 生成图表数据
+     * 
+     * @param chartId 图表ID
+     * @param variableValues 变量值映射
+     * @param maxX X轴最大值（可选）
+     * @param totalPoints 数据点总数
+     * @return 图表数据
+     */
+    Map<String, Object> generateChartData(Long chartId, Map<String, Object> variableValues, 
+                                         Double maxX, Integer totalPoints);
+
+    /**
      * 更新图表的模拟步数
      * 
      * @param chartIds 图表ID列表

@@ -1,28 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { Modal, Form, Input, Select, Button, message, Space, Divider, Typography } from 'antd';
+import { 
+  Modal, 
+  Form, 
+  Input, 
+  Select, 
+  InputNumber, 
+  Button, 
+  message, 
+  Space, 
+  Card,
+  Divider,
+  Typography
+} from 'antd';
+
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
 import { request } from '@/utils/request';
 
+const { Option } = Select;
 const { Text } = Typography;
-
-interface ChartSeries {
-  id?: number;
-  chartId: number;
-  seriesName: string;
-  seriesField: string;
-  seriesType: 'fixed' | 'variable' | 'formula';
-  seriesValue?: string;
-  color?: string;
-  sortOrder?: number;
-}
 
 interface SeriesConfigModalProps {
   visible: boolean;
   onCancel: () => void;
   onSuccess: () => void;
   chartId?: number;
-  seriesList: ChartSeries[];
   variables: any[];
+  existingSeries?: any[];
+}
+
+interface SeriesFormData {
+  seriesName: string;
+  seriesField: string;
+  seriesType: 'fixed' | 'variable' | 'formula';
+  seriesValue?: string;
+  color?: string;
+  sortOrder: number;
 }
 
 const SeriesConfigModal: React.FC<SeriesConfigModalProps> = ({
@@ -30,78 +42,63 @@ const SeriesConfigModal: React.FC<SeriesConfigModalProps> = ({
   onCancel,
   onSuccess,
   chartId,
-  seriesList,
-  variables
+  variables,
+  existingSeries = []
 }) => {
-  const [series, setSeries] = useState<ChartSeries[]>([]);
+  const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [seriesList, setSeriesList] = useState<SeriesFormData[]>([]);
 
   useEffect(() => {
-    if (visible && seriesList) {
-      setSeries([...seriesList]);
-    }
-  }, [visible, seriesList]);
-
-  const seriesTypeOptions = [
-    { label: '固定值', value: 'fixed' },
-    { label: '变量', value: 'variable' },
-    { label: '公式', value: 'formula' }
-  ];
-
-  const presetColors = [
-    '#FF5733', '#33FF57', '#3357FF', '#F333FF', '#FF33A1',
-    '#33FFF5', '#FFD633', '#8E33FF', '#FF8E33', '#33FF8E'
-  ];
-
-  const variableOptions = variables.map(v => ({
-    label: `${v.variableName} [${v.variableCode}]`,
-    value: v.variableCode
-  }));
-
-  const handleAddSeries = () => {
-    const newSeries: ChartSeries = {
-      chartId: chartId || 0,
-      seriesName: `系列${series.length + 1}`,
-      seriesField: '',
-      seriesType: 'fixed',
-      seriesValue: '',
-      color: presetColors[series.length % presetColors.length],
-      sortOrder: series.length + 1
-    };
-    setSeries([...series, newSeries]);
-  };
-
-  const handleDeleteSeries = (index: number) => {
-    const newSeries = series.filter((_, i) => i !== index);
-    setSeries(newSeries);
-  };
-
-  const handleUpdateSeries = (index: number, field: string, value: any) => {
-    const newSeries = [...series];
-    newSeries[index] = { ...newSeries[index], [field]: value };
-    setSeries(newSeries);
-  };
-
-  const handleSave = async () => {
-    if (!chartId) {
-      message.error('图表ID不能为空');
-      return;
-    }
-
-    // 验证必填字段
-    for (let i = 0; i < series.length; i++) {
-      const s = series[i];
-      if (!s.seriesName || !s.seriesField) {
-        message.error(`第${i + 1}行的系列名称和字段标识不能为空`);
-        return;
+    if (visible) {
+      // 初始化系列列表
+      if (existingSeries.length > 0) {
+        setSeriesList(existingSeries.map(series => ({
+          seriesName: series.seriesName,
+          seriesField: series.seriesField,
+          seriesType: series.seriesType,
+          seriesValue: series.seriesValue,
+          color: series.color,
+          sortOrder: series.sortOrder || 0
+        })));
+      } else {
+        // 默认添加一个系列
+        setSeriesList([{
+          seriesName: '系列1',
+          seriesField: 'net_profits',
+          seriesType: 'formula',
+          seriesValue: 'x * 0.1 - total_fixed_cost',
+          color: '#1890ff',
+          sortOrder: 0
+        }]);
       }
     }
+  }, [visible, existingSeries]);
 
-    setLoading(true);
+  const handleSubmit = async () => {
     try {
+      setLoading(true);
+      
+      // 验证系列列表
+      if (seriesList.length === 0) {
+        message.error('请至少添加一个系列');
+        return;
+      }
+
+      // 构建提交数据
+      const submitData = seriesList.map((series, index) => ({
+        chartId,
+        seriesName: series.seriesName,
+        seriesField: series.seriesField,
+        seriesType: series.seriesType,
+        seriesValue: series.seriesValue,
+        color: series.color,
+        sortOrder: series.sortOrder || index
+      }));
+
       await request(`/api-soo/api/soo/v2/chart-series/chart/${chartId}`, {
         method: 'POST',
-        data: series
+        data: submitData
       });
 
       message.success('系列配置保存成功');
@@ -115,139 +112,193 @@ const SeriesConfigModal: React.FC<SeriesConfigModalProps> = ({
     }
   };
 
+  const addSeries = () => {
+    const newSeries: SeriesFormData = {
+      seriesName: `系列${seriesList.length + 1}`,
+      seriesField: 'net_profits',
+      seriesType: 'formula',
+      seriesValue: 'x * 0.1 - total_fixed_cost',
+      color: `#${Math.floor(Math.random()*16777215).toString(16)}`,
+      sortOrder: seriesList.length
+    };
+    setSeriesList([...seriesList, newSeries]);
+  };
+
+  const removeSeries = (index: number) => {
+    const newList = seriesList.filter((_, i) => i !== index);
+    setSeriesList(newList);
+  };
+
+  const updateSeries = (index: number, field: keyof SeriesFormData, value: any) => {
+    const newList = [...seriesList];
+    newList[index] = { ...newList[index], [field]: value };
+    setSeriesList(newList);
+  };
+
+  const seriesTypeOptions = [
+    { label: '固定值', value: 'fixed', description: '固定数值，与X轴无关' },
+    { label: '变量值', value: 'variable', description: '使用模型变量的值' },
+    { label: '公式计算', value: 'formula', description: '基于公式动态计算，支持x变量' }
+  ];
+
+  const variableOptions = variables.map(v => ({
+    label: `${v.variableName} [${v.variableCode}]`,
+    value: v.variableCode
+  }));
+
+  const renderSeriesForm = (series: SeriesFormData, index: number) => (
+    <Card 
+      key={index} 
+      size="small" 
+      style={{ marginBottom: 16 }}
+      title={`系列 ${index + 1}`}
+      extra={
+        <Button 
+          type="text" 
+          danger 
+          icon={<DeleteOutlined />}
+          onClick={() => removeSeries(index)}
+          disabled={seriesList.length === 1}
+        />
+      }
+    >
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+        <Form.Item label="系列名称" required>
+          <Input
+            value={series.seriesName}
+            onChange={(e) => updateSeries(index, 'seriesName', e.target.value)}
+            placeholder="请输入系列名称"
+          />
+        </Form.Item>
+
+        <Form.Item label="系列字段" required>
+          <Select
+            value={series.seriesField}
+            onChange={(value) => updateSeries(index, 'seriesField', value)}
+            placeholder="请选择系列字段"
+            options={variableOptions}
+          />
+        </Form.Item>
+
+        <Form.Item label="系列类型" required>
+          <Select
+            value={series.seriesType}
+            onChange={(value) => updateSeries(index, 'seriesType', value)}
+            placeholder="请选择系列类型"
+            options={seriesTypeOptions}
+          />
+        </Form.Item>
+
+        <Form.Item label="系列颜色">
+          <Input
+            value={series.color}
+            onChange={(e) => updateSeries(index, 'color', e.target.value)}
+            placeholder="#1890ff"
+            addonBefore={
+              <div
+                style={{
+                  width: 16,
+                  height: 16,
+                  backgroundColor: series.color || '#1890ff',
+                  border: '1px solid #d9d9d9',
+                  borderRadius: 2,
+                }}
+              />
+            }
+          />
+        </Form.Item>
+
+        <Form.Item label="排序">
+          <InputNumber
+            value={series.sortOrder}
+            onChange={(value) => updateSeries(index, 'sortOrder', value)}
+            min={0}
+            style={{ width: '100%' }}
+          />
+        </Form.Item>
+      </div>
+
+      <Form.Item label="系列值" required>
+        {series.seriesType === 'fixed' && (
+          <InputNumber
+            value={series.seriesValue}
+            onChange={(value) => updateSeries(index, 'seriesValue', value?.toString())}
+            placeholder="请输入固定数值"
+            style={{ width: '100%' }}
+          />
+        )}
+        
+        {series.seriesType === 'variable' && (
+          <Select
+            value={series.seriesValue}
+            onChange={(value) => updateSeries(index, 'seriesValue', value)}
+            placeholder="请选择变量"
+            options={variableOptions}
+            style={{ width: '100%' }}
+          />
+        )}
+        
+        {series.seriesType === 'formula' && (
+          <div>
+            <Input.TextArea
+              value={series.seriesValue}
+              onChange={(e) => updateSeries(index, 'seriesValue', e.target.value)}
+              placeholder="请输入计算公式，支持x变量"
+              rows={3}
+              style={{ marginBottom: 8 }}
+            />
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              支持变量: x(当前X轴值), {variables.map(v => v.variableCode).join(', ')}
+              <br />
+              示例: x * 0.1 - total_fixed_cost (X轴值乘以0.1减去固定成本)
+            </Text>
+          </div>
+        )}
+      </Form.Item>
+    </Card>
+  );
+
   return (
     <Modal
-      title="系列配置"
+      title="配置图表系列"
       open={visible}
       onCancel={onCancel}
+      onOk={handleSubmit}
+      confirmLoading={loading}
       width={800}
-      footer={[
-        <Button key="cancel" onClick={onCancel}>
-          取消
-        </Button>,
-        <Button key="save" type="primary" loading={loading} onClick={handleSave}>
-          保存
-        </Button>
-      ]}
+      bodyStyle={{ maxHeight: '70vh', overflow: 'auto' }}
     >
+      <div style={{ marginBottom: 16 }}>
+        <Text type="secondary">
+          配置图表的系列数据。每个系列代表图表中的一条线或一组数据。
+        </Text>
+      </div>
+
       <div style={{ marginBottom: 16 }}>
         <Button 
           type="dashed" 
           icon={<PlusOutlined />} 
-          onClick={handleAddSeries}
+          onClick={addSeries}
           style={{ width: '100%' }}
         >
           添加系列
         </Button>
       </div>
 
-      <div style={{ maxHeight: 400, overflow: 'auto' }}>
-        {series.map((item, index) => (
-          <div key={index} style={{ 
-            border: '1px solid #d9d9d9', 
-            borderRadius: 6, 
-            padding: 16, 
-            marginBottom: 12,
-            background: '#fafafa'
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <Text strong>系列 {index + 1}</Text>
-              <Button 
-                type="text" 
-                danger 
-                icon={<DeleteOutlined />} 
-                onClick={() => handleDeleteSeries(index)}
-              />
-            </div>
+      {seriesList.map((series, index) => renderSeriesForm(series, index))}
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <Form.Item label="系列名称" style={{ margin: 0 }}>
-                <Input
-                  value={item.seriesName}
-                  onChange={(e) => handleUpdateSeries(index, 'seriesName', e.target.value)}
-                  placeholder="请输入系列名称"
-                />
-              </Form.Item>
+      <Divider />
 
-              <Form.Item label="字段标识" style={{ margin: 0 }}>
-                <Input
-                  value={item.seriesField}
-                  onChange={(e) => handleUpdateSeries(index, 'seriesField', e.target.value)}
-                  placeholder="请输入字段标识"
-                />
-              </Form.Item>
-
-              <Form.Item label="系列类型" style={{ margin: 0 }}>
-                <Select
-                  value={item.seriesType}
-                  onChange={(value) => handleUpdateSeries(index, 'seriesType', value)}
-                  options={seriesTypeOptions}
-                />
-              </Form.Item>
-
-              <Form.Item label="排序" style={{ margin: 0 }}>
-                <Input
-                  type="number"
-                  value={item.sortOrder}
-                  onChange={(e) => handleUpdateSeries(index, 'sortOrder', Number(e.target.value))}
-                  placeholder="排序号"
-                />
-              </Form.Item>
-
-              <Form.Item label="系列值" style={{ margin: 0, gridColumn: 'span 2' }}>
-                {item.seriesType === 'variable' ? (
-                  <Select
-                    value={item.seriesValue}
-                    onChange={(value) => handleUpdateSeries(index, 'seriesValue', value)}
-                    options={variableOptions}
-                    placeholder="请选择变量"
-                  />
-                ) : (
-                  <Input
-                    value={item.seriesValue}
-                    onChange={(e) => handleUpdateSeries(index, 'seriesValue', e.target.value)}
-                    placeholder={
-                      item.seriesType === 'fixed' ? '如: 100' : '如: revenue * 0.1 + x * 100'
-                    }
-                  />
-                )}
-              </Form.Item>
-
-              <Form.Item label="颜色" style={{ margin: 0 }}>
-                <Select
-                  value={item.color}
-                  onChange={(value) => handleUpdateSeries(index, 'color', value)}
-                  placeholder="请选择颜色"
-                >
-                  {presetColors.map(color => (
-                    <Select.Option key={color} value={color}>
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <div
-                          style={{
-                            width: 16,
-                            height: 16,
-                            backgroundColor: color,
-                            marginRight: 8,
-                            border: '1px solid #d9d9d9',
-                            borderRadius: 2,
-                          }}
-                        />
-                        {color}
-                      </div>
-                    </Select.Option>
-                  ))}
-                </Select>
-              </Form.Item>
-            </div>
-          </div>
-        ))}
+      <div style={{ background: '#f5f5f5', padding: 12, borderRadius: 6 }}>
+        <Text strong>配置说明:</Text>
+        <ul style={{ margin: '8px 0 0 0', paddingLeft: 20 }}>
+          <li><Text>固定值: 在图表中显示为水平直线</Text></li>
+          <li><Text>变量值: 使用模型变量的当前值</Text></li>
+          <li><Text>公式计算: 支持包含x变量的表达式，x代表当前X轴值</Text></li>
+          <li><Text>系列颜色: 用于区分不同的数据系列</Text></li>
+          <li><Text>排序: 控制系列在图例中的显示顺序</Text></li>
+        </ul>
       </div>
-
-      {series.length === 0 && (
-        <div style={{ textAlign: 'center', padding: '40px 0', color: '#999' }}>
-          暂无系列配置，请点击上方按钮添加
-        </div>
-      )}
     </Modal>
   );
 };

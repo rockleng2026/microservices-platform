@@ -39,6 +39,8 @@ import {
 import { BreakevenAnalysisV2API } from '@/services/breakevenAnalysisV2';
 import { request } from '@/utils/request';
 import ChartConfigModal from './components/ChartConfigModal';
+import SeriesConfigModal from './components/SeriesConfigModal';
+import ChartRenderer from './components/ChartRenderer';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -453,6 +455,8 @@ const BreakevenAnalysisPageV2: React.FC = () => {
   const [chartConfigVisible, setChartConfigVisible] = useState(false);
   const [seriesConfigVisible, setSeriesConfigVisible] = useState(false);
   const [currentChartType, setCurrentChartType] = useState<'line' | 'bar' | 'pie' | 'scatter'>('line');
+  const [chartMaxX, setChartMaxX] = useState<number>(1000);
+  const [chartTotalPoints, setChartTotalPoints] = useState<number>(100);
   
   // 表单
   const [form] = Form.useForm();
@@ -857,35 +861,155 @@ const BreakevenAnalysisPageV2: React.FC = () => {
 
   // 生成图表数据
   const generateChartData = async (chart: ChartAnalysisModel) => {
-    if (!chart || !calculatedValues) return;
+    if (!chart) return;
     
     setChartLoading(true);
     try {
-      // 计算X轴最大值：当前X轴字段变量值的10倍
-      let maxX = 1000; // 默认值
-      if (chart.xAxisField && calculatedValues[chart.xAxisField] !== undefined) {
-        maxX = Math.max(calculatedValues[chart.xAxisField] * 10, 100); // 至少100
+      // 获取所有变量的值（包括INPUT、CALC、API类型）
+      const allVariableValues: Record<string, number> = {};
+      
+      // 从表单获取所有变量的当前值
+      const formValues = form.getFieldsValue();
+      
+      variables.forEach(variable => {
+        let value = formValues[variable.variableCode];
+        
+        // 如果表单中没有值，使用默认值或计算值
+        if (value === undefined || value === null || value === '') {
+          if (variable.variableType === 'CALC') {
+            value = calculatedValues[variable.variableCode] || 0;
+          } else {
+            value = variable.defaultValue || 0;
+          }
+        }
+        
+        // 转换为数字
+        const numValue = Number(value);
+        if (!isNaN(numValue) && isFinite(numValue)) {
+          allVariableValues[variable.variableCode] = numValue;
+        } else {
+          allVariableValues[variable.variableCode] = 0;
+        }
+      });
+      
+      console.log('所有变量值:', allVariableValues);
+      
+      // 计算默认X轴最大值
+      let defaultMaxX = chartMaxX;
+      if (chart.xAxisField && allVariableValues[chart.xAxisField] !== undefined) {
+        const xAxisValue = allVariableValues[chart.xAxisField];
+        defaultMaxX = Math.max(xAxisValue * 3, 100); // 改为3倍
+        // 更新chartMaxX状态
+        setChartMaxX(defaultMaxX);
       }
       
-      // 默认1000个数据点
-      const totalPoints = 1000;
-      const stepSize = Math.floor(maxX / totalPoints); // 步长取整
+      // 调用后端API生成图表数据
+      const response = await request(`/api-soo/api/soo/v2/chart-models/${chart.id}/generate-data`, {
+        method: 'POST',
+        data: {
+          variableValues: allVariableValues,
+          maxX: defaultMaxX,
+          totalPoints: chartTotalPoints
+        }
+      });
+      
+      const result = response.datas || response.data || response;
+      console.log('后端图表数据生成结果:', result);
+      
+      if (result.data && Array.isArray(result.data)) {
+        // 转换数据格式
+        const data: ChartDataPoint[] = result.data.map((item: any) => ({
+          x: item.x,
+          y: item.y,
+          label: item.label,
+          seriesName: item.seriesName,
+          seriesId: item.seriesId,
+          seriesColor: item.seriesColor,
+          seriesField: item.seriesField
+        }));
+        
+        setChartData(data);
+        setSelectedChart(chart);
+        setCurrentChartType(chart.chartType);
+        
+        console.log(`图表数据生成完成: ${data.length} 个数据点, X轴范围: 0-${result.maxX}`);
+        message.success(`图表数据生成成功，共 ${data.length} 个数据点`);
+      } else {
+        throw new Error('后端返回的数据格式不正确');
+      }
+    } catch (error) {
+      console.error('生成图表数据失败:', error);
+      message.error('生成图表数据失败');
+      
+      // 如果后端API失败，使用前端计算作为备选方案
+      console.log('使用前端计算作为备选方案');
+      await generateChartDataFallback(chart);
+    } finally {
+      setChartLoading(false);
+    }
+  };
+
+  // 前端备选计算方案
+  const generateChartDataFallback = async (chart: ChartAnalysisModel) => {
+    if (!chart) return;
+    
+    try {
+      // 获取所有变量的值（包括INPUT、CALC、API类型）
+      const allVariableValues: Record<string, number> = {};
+      
+      // 从表单获取所有变量的当前值
+      const formValues = form.getFieldsValue();
+      
+      variables.forEach(variable => {
+        let value = formValues[variable.variableCode];
+        
+        // 如果表单中没有值，使用默认值或计算值
+        if (value === undefined || value === null || value === '') {
+          if (variable.variableType === 'CALC') {
+            value = calculatedValues[variable.variableCode] || 0;
+          } else {
+            value = variable.defaultValue || 0;
+          }
+        }
+        
+        // 转换为数字
+        const numValue = Number(value);
+        if (!isNaN(numValue) && isFinite(numValue)) {
+          allVariableValues[variable.variableCode] = numValue;
+        } else {
+          allVariableValues[variable.variableCode] = 0;
+        }
+      });
+      
+      console.log('前端备选方案 - 所有变量值:', allVariableValues);
+      
+      // 计算X轴最大值：当前X轴字段变量值的3倍
+      let maxX = 1000; // 默认值
+      if (chart.xAxisField && allVariableValues[chart.xAxisField] !== undefined) {
+        const xAxisValue = allVariableValues[chart.xAxisField];
+        maxX = Math.max(xAxisValue * 3, 100); // 改为3倍
+        console.log(`X轴字段 ${chart.xAxisField} 当前值: ${xAxisValue}, 计算最大X值: ${maxX}`);
+      }
+      
+      // 使用状态中的数据点数量
+      const totalPoints = chartTotalPoints;
+      const stepSize = maxX / totalPoints; // 使用浮点数步长，避免取整导致的精度问题
       
       const data: ChartDataPoint[] = [];
       
       // 如果有系列配置，为每个系列生成数据
       if (chart.seriesList && chart.seriesList.length > 0) {
-        for (let i = 0; i < totalPoints; i++) {
+        for (let i = 0; i <= totalPoints; i++) {
           const xValue = i * stepSize; // X轴值
           
           // 为每个系列计算Y值
           chart.seriesList.forEach((series, seriesIndex) => {
-            const yValue = calculateSeriesValue(series, xValue, calculatedValues);
+            const yValue = calculateSeriesValue(series, xValue, allVariableValues, variables);
             
             data.push({
               x: xValue,
               y: yValue,
-              label: `${xValue}`,
+              label: `${xValue.toFixed(2)}`,
               seriesName: series.seriesName,
               seriesId: series.id,
               seriesColor: series.color,
@@ -895,18 +1019,16 @@ const BreakevenAnalysisPageV2: React.FC = () => {
         }
       } else {
         // 默认计算方式
-        for (let i = 0; i < totalPoints; i++) {
+        for (let i = 0; i <= totalPoints; i++) {
           const xValue = i * stepSize; // X轴值
           let yValue = 0;
           
-          if (chart.yAxisField === 'revenue') {
-            yValue = calculatedValues.revenue || 0;
-          } else if (chart.yAxisField === 'profit') {
-            yValue = calculatedValues.net_profits || 0;
-          } else if (chart.yAxisField === 'cost') {
-            yValue = calculatedValues.total_fixed_cost || 0;
+          // 根据Y轴字段计算值
+          if (chart.yAxisName && allVariableValues[chart.yAxisName] !== undefined) {
+            yValue = allVariableValues[chart.yAxisName];
           } else {
-            yValue = calculatedValues[chart.yAxisField] || 0;
+            // 尝试从常见字段获取值
+            yValue = allVariableValues.net_profits || allVariableValues.revenue || 0;
           }
           
           // 添加一些变化以模拟趋势
@@ -915,7 +1037,181 @@ const BreakevenAnalysisPageV2: React.FC = () => {
           data.push({
             x: xValue,
             y: yValue,
-            label: `${xValue}`,
+            label: `${xValue.toFixed(2)}`,
+            seriesName: chart.chartName
+          });
+        }
+      }
+      
+      setChartData(data);
+      setSelectedChart(chart);
+      setCurrentChartType(chart.chartType);
+      
+      console.log(`前端备选方案图表数据生成完成: ${data.length} 个数据点, X轴范围: 0-${maxX.toFixed(2)}`);
+    } catch (error) {
+      console.error('前端备选方案生成图表数据失败:', error);
+      message.error('图表数据生成失败');
+    }
+  };
+
+  // 根据X轴最大值生成图表数据
+  const generateChartDataWithMaxX = async (chart: ChartAnalysisModel, maxX: number) => {
+    if (!chart) return;
+    
+    setChartLoading(true);
+    try {
+      // 获取所有变量的值（包括INPUT、CALC、API类型）
+      const allVariableValues: Record<string, number> = {};
+      
+      // 从表单获取所有变量的当前值
+      const formValues = form.getFieldsValue();
+      
+      variables.forEach(variable => {
+        let value = formValues[variable.variableCode];
+        
+        // 如果表单中没有值，使用默认值或计算值
+        if (value === undefined || value === null || value === '') {
+          if (variable.variableType === 'CALC') {
+            value = calculatedValues[variable.variableCode] || 0;
+          } else {
+            value = variable.defaultValue || 0;
+          }
+        }
+        
+        // 转换为数字
+        const numValue = Number(value);
+        if (!isNaN(numValue) && isFinite(numValue)) {
+          allVariableValues[variable.variableCode] = numValue;
+        } else {
+          allVariableValues[variable.variableCode] = 0;
+        }
+      });
+      
+      console.log('generateChartDataWithMaxX - 所有变量值:', allVariableValues);
+      
+      // 更新chartMaxX状态
+      setChartMaxX(maxX);
+      
+      // 调用后端API生成图表数据
+      const response = await request(`/api-soo/api/soo/v2/chart-models/${chart.id}/generate-data`, {
+        method: 'POST',
+        data: {
+          variableValues: allVariableValues,
+          maxX: maxX,
+          totalPoints: chartTotalPoints
+        }
+      });
+      
+      const result = response.datas || response.data || response;
+      console.log('后端图表数据生成结果:', result);
+      
+      if (result.data && Array.isArray(result.data)) {
+        // 转换数据格式
+        const data: ChartDataPoint[] = result.data.map((item: any) => ({
+          x: item.x,
+          y: item.y,
+          label: item.label,
+          seriesName: item.seriesName,
+          seriesId: item.seriesId,
+          seriesColor: item.seriesColor,
+          seriesField: item.seriesField
+        }));
+        
+        setChartData(data);
+        setSelectedChart(chart);
+        setCurrentChartType(chart.chartType);
+        
+        console.log(`图表数据生成完成: ${data.length} 个数据点, X轴范围: 0-${result.maxX}`);
+        message.success(`图表数据生成成功，共 ${data.length} 个数据点`);
+      } else {
+        throw new Error('后端返回的数据格式不正确');
+      }
+    } catch (error) {
+      console.error('生成图表数据失败:', error);
+      message.error('生成图表数据失败');
+      
+      // 如果后端API失败，使用前端计算作为备选方案
+      console.log('使用前端计算作为备选方案');
+      await generateChartDataWithMaxXFallback(chart, maxX);
+    } finally {
+      setChartLoading(false);
+    }
+  };
+
+  // 前端备选计算方案 - 指定最大X值
+  const generateChartDataWithMaxXFallback = async (chart: ChartAnalysisModel, maxX: number) => {
+    if (!chart) return;
+    
+    try {
+      // 获取所有变量的值（包括INPUT、CALC、API类型）
+      const allVariableValues: Record<string, number> = {};
+      
+      // 从表单获取所有变量的当前值
+      const formValues = form.getFieldsValue();
+      
+      variables.forEach(variable => {
+        let value = formValues[variable.variableCode];
+        
+        // 如果表单中没有值，使用默认值或计算值
+        if (value === undefined || value === null || value === '') {
+          if (variable.variableType === 'CALC') {
+            value = calculatedValues[variable.variableCode] || 0;
+          } else {
+            value = variable.defaultValue || 0;
+          }
+        }
+        
+        // 转换为数字
+        const numValue = Number(value);
+        if (!isNaN(numValue) && isFinite(numValue)) {
+          allVariableValues[variable.variableCode] = numValue;
+        } else {
+          allVariableValues[variable.variableCode] = 0;
+        }
+      });
+      
+      console.log('generateChartDataWithMaxXFallback - 所有变量值:', allVariableValues);
+      
+      const totalPoints = chartTotalPoints; // 使用状态中的数据点数量
+      const stepSize = maxX / totalPoints; // 使用浮点数步长
+      
+      const data: ChartDataPoint[] = [];
+      
+      for (let i = 0; i <= totalPoints; i++) {
+        const xValue = i * stepSize; // X轴值
+        
+        // 根据系列配置计算Y值
+        if (chart.seriesList && chart.seriesList.length > 0) {
+          // 为每个系列计算Y值
+          chart.seriesList.forEach((series, seriesIndex) => {
+            const yValue = calculateSeriesValue(series, xValue, allVariableValues, variables);
+            
+            data.push({
+              x: xValue,
+              y: yValue,
+              label: `${xValue.toFixed(2)}`,
+              seriesName: series.seriesName,
+              seriesId: series.id,
+              seriesColor: series.color,
+              seriesField: series.seriesField
+            });
+          });
+        } else {
+          // 默认计算方式
+          let yValue = 0;
+          if (chart.yAxisName && allVariableValues[chart.yAxisName] !== undefined) {
+            yValue = allVariableValues[chart.yAxisName];
+          } else {
+            yValue = allVariableValues.net_profits || allVariableValues.revenue || 0;
+          }
+          
+          // 添加一些变化以模拟趋势
+          yValue = yValue * (1 + (i * 0.001));
+          
+          data.push({
+            x: xValue,
+            y: yValue,
+            label: `${xValue.toFixed(2)}`,
             seriesName: chart.chartName
           });
         }
@@ -925,101 +1221,88 @@ const BreakevenAnalysisPageV2: React.FC = () => {
       setSelectedChart(chart);
       setCurrentChartType(chart.chartType);
     } catch (error) {
-      console.error('生成图表数据失败:', error);
-      message.error('生成图表数据失败');
-    } finally {
-      setChartLoading(false);
+      console.error('前端备选方案生成图表数据失败:', error);
+      message.error('图表数据生成失败');
     }
   };
 
-  // 根据X轴最大值生成图表数据
-  const generateChartDataWithMaxX = async (chart: ChartAnalysisModel, maxX: number) => {
-    if (!chart || !calculatedValues) return;
-    
-    setChartLoading(true);
+  // 计算系列值 - 完善的图表序列计算引擎
+  const calculateSeriesValue = (
+    series: ChartSeries, 
+    xValue: number, 
+    context: Record<string, number>,
+    allVariables: ModelVariable[]
+  ): number => {
     try {
-      const totalPoints = 1000; // 固定1000个数据点
-      const stepSize = Math.floor(maxX / totalPoints); // 步长取整
+      console.log(`计算系列值: ${series.seriesName}, 类型: ${series.seriesType}, 值: ${series.seriesValue}, X值: ${xValue}`);
       
-      const data: ChartDataPoint[] = [];
-      
-      for (let i = 0; i < totalPoints; i++) {
-        const xValue = i * stepSize; // X轴值
-        let yValue = 0;
-        
-        // 根据系列配置计算Y值
-        if (chart.seriesList && chart.seriesList.length > 0) {
-          // 如果有系列配置，使用系列配置的公式
-          const series = chart.seriesList[0]; // 使用第一个系列
-          yValue = calculateSeriesValue(series, xValue, calculatedValues);
-        } else {
-          // 默认计算方式
-          if (chart.yAxisField === 'revenue') {
-            yValue = calculatedValues.revenue || 0;
-          } else if (chart.yAxisField === 'profit') {
-            yValue = calculatedValues.net_profits || 0;
-          } else if (chart.yAxisField === 'cost') {
-            yValue = calculatedValues.total_fixed_cost || 0;
-          } else {
-            yValue = calculatedValues[chart.yAxisField] || 0;
-          }
-          
-          // 添加一些变化以模拟趋势
-          yValue = yValue * (1 + (i * 0.001));
-        }
-        
-        data.push({
-          x: xValue,
-          y: yValue,
-          label: `${xValue}`,
-          seriesName: chart.chartName
-        });
-      }
-      
-      setChartData(data);
-      setSelectedChart(chart);
-      setCurrentChartType(chart.chartType);
-    } catch (error) {
-      console.error('生成图表数据失败:', error);
-      message.error('生成图表数据失败');
-    } finally {
-      setChartLoading(false);
-    }
-  };
-
-  // 计算系列值
-  const calculateSeriesValue = (series: ChartSeries, xValue: number, context: Record<string, number>): number => {
-    try {
       if (series.seriesType === 'fixed') {
-        // 固定值
-        return Number(series.seriesValue) || 0;
+        // 固定值：直接返回数值
+        const fixedValue = Number(series.seriesValue);
+        console.log(`固定值计算结果: ${fixedValue}`);
+        return isNaN(fixedValue) ? 0 : fixedValue;
+        
       } else if (series.seriesType === 'variable') {
-        // 变量值
+        // 变量值：从上下文中获取变量值
         const variableCode = series.seriesValue;
         if (variableCode && context[variableCode] !== undefined) {
+          console.log(`变量值计算结果: ${context[variableCode]}`);
           return context[variableCode];
         }
+        console.log(`变量 ${variableCode} 未找到，返回0`);
         return 0;
+        
       } else if (series.seriesType === 'formula') {
-        // 公式计算
+        // 公式计算：支持包含x变量的表达式
         if (series.seriesValue) {
-          // 构建计算上下文，包含X轴值
-          const formulaContext: Record<string, {value: any, type: string}> = {
-            ...Object.entries(context).reduce((acc, [key, value]) => {
-              acc[key] = { value, type: 'NUMBER' };
-              return acc;
-            }, {} as Record<string, {value: any, type: string}>),
-            x: { value: xValue, type: 'NUMBER' },
-            step: { value: xValue, type: 'NUMBER' }
-          };
+          // 构建计算上下文，包含所有变量和X轴值
+          const formulaContext: Record<string, {value: any, type: string}> = {};
           
-          return calculatorEngine.evaluate(series.seriesValue, formulaContext);
+          // 添加所有模型变量到上下文
+          allVariables.forEach(variable => {
+            let value = context[variable.variableCode];
+            if (value === undefined || value === null) {
+              value = variable.defaultValue !== undefined ? Number(variable.defaultValue) : 0;
+            }
+            formulaContext[variable.variableCode] = {
+              value: value,
+              type: variable.dataType
+            };
+          });
+          
+          // 添加X轴变量（特殊变量x）
+          formulaContext['x'] = { value: xValue, type: 'NUMBER' };
+          
+          // 检查series_value是否包含x变量
+          const containsX = series.seriesValue.includes('x');
+          if (containsX) {
+            console.log(`公式包含X变量，X值: ${xValue}`);
+            // 如果包含x，说明这个系列与X轴联动
+            // 将X轴字段的值设置为当前X值
+            if (selectedChart?.xAxisField) {
+              formulaContext[selectedChart.xAxisField] = { value: xValue, type: 'NUMBER' };
+            }
+          } else {
+            console.log(`公式不包含X变量，使用固定值计算`);
+            // 如果不包含x，说明这个系列是常量，与X轴无关
+          }
+          
+          console.log(`公式计算上下文:`, formulaContext);
+          console.log(`计算公式: ${series.seriesValue}`);
+          
+          // 让计算引擎能访问变量定义
+          (calculatorEngine as any).variablesArray = allVariables;
+          
+          const result = calculatorEngine.evaluate(series.seriesValue, formulaContext);
+          console.log(`公式计算结果: ${result}`);
+          return result;
         }
         return 0;
       }
+      
       return 0;
     } catch (error) {
-      console.error('计算系列值失败:', error);
+      console.error(`计算系列值失败: ${series.seriesName}`, error);
       return 0;
     }
   };
@@ -1128,7 +1411,7 @@ const BreakevenAnalysisPageV2: React.FC = () => {
           {isCalc ? (
             <>
               <Input
-                value={calculatedValue !== undefined ? calculatedValue.toFixed(2) : ''}
+                value={calculatedValue !== undefined ? formatNumber(calculatedValue) : ''}
                 disabled
                 style={{ 
                   backgroundColor: '#f5f5f5',
@@ -1161,8 +1444,13 @@ const BreakevenAnalysisPageV2: React.FC = () => {
                   style={{ width: '100%' }}
                   placeholder={`请输入${variable.variableName}`}
                   precision={variable.dataType === 'DECIMAL' ? 2 : 0}
-                  formatter={variable.dataType === 'CURRENCY' ? (value) => `¥ ${value}` : undefined}
-                  parser={variable.dataType === 'CURRENCY' ? (value) => value!.replace(/¥\s?|(,*)/g, '') : undefined}
+                  formatter={(value) => {
+                    if (variable.dataType === 'CURRENCY') {
+                      return `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                    }
+                    return `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                  }}
+                  parser={(value) => value!.replace(/¥\s?|(,*)/g, '')}
                 />
               </Form.Item>
               {variable.dataType === 'CURRENCY' && currentValue > 0 && (
@@ -1199,31 +1487,40 @@ const BreakevenAnalysisPageV2: React.FC = () => {
     );
   };
 
+  // 格式化数字为千分位显示
+  const formatNumber = (value: number | undefined): string => {
+    if (value === undefined || value === null) return 'N/A';
+    return value.toLocaleString('zh-CN', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
+  };
+
   // 盈亏平衡试算表格数据
   const breakevenTableData = calculatedValues ? [
     {
       key: 'fixedCost',
       indicator: '总固定成本',
-      monthly: calculatedValues.total_fixed_cost?.toFixed(2) || 'N/A',
-      quarterly: calculatedValues.total_fixed_cost !== undefined ? (calculatedValues.total_fixed_cost * 3).toFixed(2) : 'N/A',
-      halfYear: calculatedValues.total_fixed_cost !== undefined ? (calculatedValues.total_fixed_cost * 6).toFixed(2) : 'N/A',
-      annual: calculatedValues.total_fixed_cost !== undefined ? (calculatedValues.total_fixed_cost * 12).toFixed(2) : 'N/A'
+      monthly: formatNumber(calculatedValues.total_fixed_cost),
+      quarterly: formatNumber(calculatedValues.total_fixed_cost !== undefined ? calculatedValues.total_fixed_cost * 3 : undefined),
+      halfYear: formatNumber(calculatedValues.total_fixed_cost !== undefined ? calculatedValues.total_fixed_cost * 6 : undefined),
+      annual: formatNumber(calculatedValues.total_fixed_cost !== undefined ? calculatedValues.total_fixed_cost * 12 : undefined)
     },
     {
       key: 'netProfit',
       indicator: '当月净利润',
-      monthly: calculatedValues.net_profits?.toFixed(2) || 'N/A',
-      quarterly: calculatedValues.net_profits !== undefined ? (calculatedValues.net_profits * 3).toFixed(2) : 'N/A',
-      halfYear: calculatedValues.net_profits !== undefined ? (calculatedValues.net_profits * 6).toFixed(2) : 'N/A',
-      annual: calculatedValues.net_profits !== undefined ? (calculatedValues.net_profits * 12).toFixed(2) : 'N/A'
+      monthly: formatNumber(calculatedValues.net_profits),
+      quarterly: formatNumber(calculatedValues.net_profits !== undefined ? calculatedValues.net_profits * 3 : undefined),
+      halfYear: formatNumber(calculatedValues.net_profits !== undefined ? calculatedValues.net_profits * 6 : undefined),
+      annual: formatNumber(calculatedValues.net_profits !== undefined ? calculatedValues.net_profits * 12 : undefined)
     },
     {
       key: 'breakevenRevenue',
       indicator: '盈亏平衡点 (营业额)',
-      monthly: calculatedValues.break_even_revenue?.toFixed(2) || 'N/A',
-      quarterly: calculatedValues.break_even_revenue !== undefined ? (calculatedValues.break_even_revenue * 3).toFixed(2) : 'N/A',
-      halfYear: calculatedValues.break_even_revenue !== undefined ? (calculatedValues.break_even_revenue * 6).toFixed(2) : 'N/A',
-      annual: calculatedValues.break_even_revenue !== undefined ? (calculatedValues.break_even_revenue * 12).toFixed(2) : 'N/A'
+      monthly: formatNumber(calculatedValues.break_even_revenue),
+      quarterly: formatNumber(calculatedValues.break_even_revenue !== undefined ? calculatedValues.break_even_revenue * 3 : undefined),
+      halfYear: formatNumber(calculatedValues.break_even_revenue !== undefined ? calculatedValues.break_even_revenue * 6 : undefined),
+      annual: formatNumber(calculatedValues.break_even_revenue !== undefined ? calculatedValues.break_even_revenue * 12 : undefined)
     }
   ] : [];
 
@@ -1239,25 +1536,29 @@ const BreakevenAnalysisPageV2: React.FC = () => {
       title: '当月',
       dataIndex: 'monthly',
       key: 'monthly',
-      align: 'right' as const
+      align: 'right' as const,
+      render: (text: string) => text === 'N/A' ? text : `¥ ${text}`
     },
     {
       title: '当季',
       dataIndex: 'quarterly',
       key: 'quarterly',
-      align: 'right' as const
+      align: 'right' as const,
+      render: (text: string) => text === 'N/A' ? text : `¥ ${text}`
     },
     {
       title: '半年',
       dataIndex: 'halfYear',
       key: 'halfYear',
-      align: 'right' as const
+      align: 'right' as const,
+      render: (text: string) => text === 'N/A' ? text : `¥ ${text}`
     },
     {
       title: '年度',
       dataIndex: 'annual',
       key: 'annual',
-      align: 'right' as const
+      align: 'right' as const,
+      render: (text: string) => text === 'N/A' ? text : `¥ ${text}`
     }
   ];
 
@@ -1274,98 +1575,7 @@ const BreakevenAnalysisPageV2: React.FC = () => {
 
     return (
       <div style={{ padding: 20 }}>
-        {/* 图表标题和轴信息 */}
-        <div style={{ marginBottom: 16 }}>
-          <Title level={5}>{selectedChart?.chartName}</Title>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <Text type="secondary">
-              {currentChartType === 'line' ? '折线图' : 
-               currentChartType === 'bar' ? '柱状图' : 
-               currentChartType === 'pie' ? '饼图' : '散点图'}
-            </Text>
-            <div style={{ display: 'flex', gap: 16 }}>
-              <Text type="secondary">
-                X轴: {xAxisName} {xAxisUnit && `(${xAxisUnit})`}
-              </Text>
-              <Text type="secondary">
-                Y轴: {yAxisName} {yAxisUnit && `(${yAxisUnit})`}
-              </Text>
-            </div>
-          </div>
-        </div>
-        
-        {/* 图表渲染区域 */}
-        <div style={{ 
-          height: 300, 
-          border: '1px solid #d9d9d9', 
-          borderRadius: 6,
-          padding: 16,
-          background: '#fafafa',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          marginBottom: 16
-        }}>
-          <div style={{ textAlign: 'center' }}>
-            <Text type="secondary">
-              图表数据: {chartData.length} 个数据点
-            </Text>
-            <br />
-            <Text type="secondary">
-              图表类型: {currentChartType}
-            </Text>
-            <br />
-            <Text type="secondary">
-              X轴范围: 0 - {chartData.length > 0 ? Math.max(...chartData.map(d => d.x)) : 0}
-            </Text>
-            <br />
-            <Text type="secondary">
-              步长: {chartData.length > 0 ? Math.floor(Math.max(...chartData.map(d => d.x)) / 1000) : 1}
-            </Text>
-          </div>
-        </div>
-
-        {/* 系列图例 */}
-        {selectedChart?.seriesList && selectedChart.seriesList.length > 0 && (
-          <div style={{ marginBottom: 16 }}>
-            <Text strong style={{ marginBottom: 8, display: 'block' }}>系列图例:</Text>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
-              {selectedChart.seriesList
-                .sort((a, b) => (a.sortOrder || 0) - (b.sortOrder || 0))
-                .map((series, index) => (
-                <div 
-                  key={series.id || index}
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    padding: '4px 8px',
-                    border: '1px solid #d9d9d9',
-                    borderRadius: 4,
-                    background: '#fff'
-                  }}
-                >
-                  {series.color && (
-                    <div
-                      style={{
-                        width: 12,
-                        height: 12,
-                        backgroundColor: series.color,
-                        marginRight: 6,
-                        border: '1px solid #d9d9d9',
-                        borderRadius: 2,
-                      }}
-                    />
-                  )}
-                  <Text style={{ fontSize: 12 }}>
-                    {series.seriesName} ({series.seriesField})
-                  </Text>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* 步长和X轴最大值配置 */}
+        {/* 图表配置区域 */}
         <div style={{ 
           border: '1px solid #d9d9d9', 
           borderRadius: 6, 
@@ -1374,33 +1584,96 @@ const BreakevenAnalysisPageV2: React.FC = () => {
           marginBottom: 16
         }}>
           <Text strong style={{ marginBottom: 12, display: 'block' }}>图表配置:</Text>
-          <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 12 }}>
+          <div style={{ display: 'flex', gap: 16, alignItems: 'center', marginBottom: 12, flexWrap: 'wrap' }}>
             <div>
               <Text style={{ fontSize: 12 }}>数据点数:</Text>
-              <Text strong style={{ marginLeft: 8 }}>1000</Text>
+              <InputNumber
+                min={10}
+                max={1000}
+                value={chartTotalPoints}
+                onChange={(value) => {
+                  if (value && value >= 10 && value <= 1000) {
+                    setChartTotalPoints(value);
+                  }
+                }}
+                style={{ width: 80, marginLeft: 8 }}
+              />
             </div>
             <div>
               <Text style={{ fontSize: 12 }}>步长:</Text>
               <Text strong style={{ marginLeft: 8 }}>
-                {chartData.length > 0 ? Math.floor(Math.max(...chartData.map(d => d.x)) / 1000) : 1}
+                {chartData.length > 0 ? (Math.max(...chartData.map(d => d.x)) / 1000).toFixed(2) : 1}
               </Text>
             </div>
             <div>
               <Text style={{ fontSize: 12 }}>X轴最大值:</Text>
               <InputNumber
                 min={1}
-                value={chartData.length > 0 ? Math.max(...chartData.map(d => d.x)) : 1000}
+                value={chartMaxX}
                 onChange={(value) => {
                   if (value && selectedChart) {
                     generateChartDataWithMaxX(selectedChart, value);
                   }
                 }}
                 style={{ width: 120, marginLeft: 8 }}
+                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
               />
+            </div>
+            <div>
+              <Text style={{ fontSize: 12 }}>当前X轴变量值:</Text>
+              <Text strong style={{ marginLeft: 8 }}>
+                {selectedChart?.xAxisField && (() => {
+                  // 从表单获取当前值
+                  const formValues = form.getFieldsValue();
+                  let value = formValues[selectedChart.xAxisField];
+                  
+                  // 如果表单中没有值，使用默认值或计算值
+                  if (value === undefined || value === null || value === '') {
+                    const variable = variables.find(v => v.variableCode === selectedChart.xAxisField);
+                    if (variable?.variableType === 'CALC') {
+                      value = calculatedValues[selectedChart.xAxisField] || 0;
+                    } else {
+                      value = variable?.defaultValue || 0;
+                    }
+                  }
+                  
+                  return Number(value).toFixed(2);
+                })()}
+              </Text>
             </div>
             <Button 
               size="small" 
               type="primary"
+              onClick={() => {
+                if (selectedChart) {
+                  // 重置为默认值（X轴变量值的10倍）
+                  const formValues = form.getFieldsValue();
+                  let xAxisValue = formValues[selectedChart.xAxisField];
+                  
+                  // 如果表单中没有值，使用默认值或计算值
+                  if (xAxisValue === undefined || xAxisValue === null || xAxisValue === '') {
+                    const variable = variables.find(v => v.variableCode === selectedChart.xAxisField);
+                    if (variable?.variableType === 'CALC') {
+                      xAxisValue = calculatedValues[selectedChart.xAxisField] || 0;
+                    } else {
+                      xAxisValue = variable?.defaultValue || 0;
+                    }
+                  }
+                  
+                  if (xAxisValue) {
+                    const defaultMaxX = Math.max(Number(xAxisValue) * 3, 100);
+                    generateChartDataWithMaxX(selectedChart, defaultMaxX);
+                  } else {
+                    generateChartData(selectedChart);
+                  }
+                }
+              }}
+            >
+              重置为默认值
+            </Button>
+            <Button 
+              size="small" 
               onClick={() => {
                 if (selectedChart) {
                   generateChartData(selectedChart);
@@ -1411,12 +1684,24 @@ const BreakevenAnalysisPageV2: React.FC = () => {
             </Button>
           </div>
           <div style={{ fontSize: 12, color: '#666' }}>
-            <Text>说明: X轴最大值默认为"{selectedChart?.xAxisField}"变量值的10倍，共生成1000个数据点</Text>
+            <Text>说明: X轴最大值默认为"{selectedChart?.xAxisField}"变量值的3倍，可手动调整</Text>
           </div>
         </div>
+
+        {/* 使用ChartRenderer组件渲染图表 */}
+        <ChartRenderer
+          chartType={currentChartType}
+          data={chartData}
+          xAxisName={xAxisName}
+          yAxisName={yAxisName}
+          xAxisUnit={xAxisUnit}
+          yAxisUnit={yAxisUnit}
+          seriesList={selectedChart?.seriesList}
+          chartName={selectedChart?.chartName}
+        />
         
-        {/* 数据点列表 */}
-        <div>
+        {/* 数据点详情 */}
+        <div style={{ marginTop: 16 }}>
           <Text strong>数据点详情:</Text>
           {selectedChart?.seriesList && selectedChart.seriesList.length > 0 ? (
             // 多系列数据
@@ -1453,7 +1738,7 @@ const BreakevenAnalysisPageV2: React.FC = () => {
                       dataSource={seriesData}
                       renderItem={(item) => (
                         <List.Item>
-                          <Text>X: {item.x}</Text>
+                          <Text>X: {item.x.toFixed(2)}</Text>
                           <Text>Y: {item.y.toFixed(2)}</Text>
                           <Text type="secondary">{item.label}</Text>
                         </List.Item>
@@ -1469,7 +1754,7 @@ const BreakevenAnalysisPageV2: React.FC = () => {
               dataSource={chartData.slice(0, 10)} // 只显示前10个
               renderItem={(item) => (
                 <List.Item>
-                  <Text>X: {item.x}</Text>
+                  <Text>X: {item.x.toFixed(2)}</Text>
                   <Text>Y: {item.y.toFixed(2)}</Text>
                   <Text type="secondary">{item.label}</Text>
                 </List.Item>
@@ -1792,6 +2077,22 @@ const BreakevenAnalysisPageV2: React.FC = () => {
         }}
         modelId={selectedModelId}
         variables={variables}
+      />
+      
+      {/* 系列配置模态框 */}
+      <SeriesConfigModal
+        visible={seriesConfigVisible}
+        onCancel={() => setSeriesConfigVisible(false)}
+        onSuccess={() => {
+          if (selectedChart) {
+            fetchChartSeries(selectedChart.id);
+            generateChartData(selectedChart);
+          }
+          setSeriesConfigVisible(false);
+        }}
+        chartId={selectedChart?.id}
+        variables={variables}
+        existingSeries={selectedChart?.seriesList || []}
       />
     </div>
   );

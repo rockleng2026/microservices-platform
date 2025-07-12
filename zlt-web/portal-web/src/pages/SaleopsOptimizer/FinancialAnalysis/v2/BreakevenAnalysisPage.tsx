@@ -16,7 +16,12 @@ import {
   Tooltip,
   Spin,
   Empty,
-  List
+  List,
+  Modal,
+  Drawer,
+  Tag,
+  Slider,
+  InputNumber as AntInputNumber
 } from 'antd';
 import {
   PlayCircleOutlined,
@@ -24,9 +29,16 @@ import {
   CalculatorOutlined,
   ApiOutlined,
   BarChartOutlined,
-  LineChartOutlined
+  LineChartOutlined,
+  PieChartOutlined,
+  SettingOutlined,
+  DownloadOutlined,
+  EyeOutlined,
+  EditOutlined
 } from '@ant-design/icons';
 import { BreakevenAnalysisV2API } from '@/services/breakevenAnalysisV2';
+import { request } from '@/utils/request';
+import ChartConfigModal from './components/ChartConfigModal';
 
 const { Option } = Select;
 const { Title, Text } = Typography;
@@ -113,6 +125,54 @@ interface BreakevenResult {
     annual: number;
   };
   additionalMetrics?: Record<string, any>;
+}
+
+// 图表分析模型接口
+interface ChartAnalysisModel {
+  id: number;
+  modelId: number;
+  chartName: string;
+  chartType: 'line' | 'bar' | 'pie' | 'scatter';
+  simulationSteps: number;
+  createdAt: string;
+  updatedAt: string;
+  xAxisField: string;
+  yAxisField: string;
+  xAxisUnit?: string;
+  yAxisUnit?: string;
+  seriesList?: ChartSeries[]; // 添加系列列表
+}
+
+// 图表系列配置接口
+interface ChartSeries {
+  id?: number;
+  chartId: number;
+  seriesName: string;
+  seriesField: string;
+  seriesType: 'fixed' | 'variable' | 'formula';
+  seriesValue?: string;
+  color?: string;
+  sortOrder?: number;
+}
+
+// 图表数据点接口
+interface ChartDataPoint {
+  x: number;
+  y: number;
+  label?: string;
+  seriesName?: string;
+  [key: string]: any; // 添加索引签名
+}
+
+// 图表配置接口
+interface ChartConfig {
+  chartType: 'line' | 'bar' | 'pie' | 'scatter';
+  xAxisField: string;
+  yAxisField: string;
+  xAxisUnit?: string;
+  yAxisUnit?: string;
+  simulationSteps: number;
+  series: ChartSeries[];
 }
 
 // 计算引擎类
@@ -377,6 +437,17 @@ const BreakevenAnalysisPageV2: React.FC = () => {
   const [variables, setVariables] = useState<ModelVariable[]>([]);
   const [breakevenResult, setBreakevenResult] = useState<BreakevenResult | null>(null);
   const [calculatedValues, setCalculatedValues] = useState<Record<string, number>>({});
+  
+  // 图表相关状态
+  const [charts, setCharts] = useState<ChartAnalysisModel[]>([]);
+  const [selectedChart, setSelectedChart] = useState<ChartAnalysisModel | null>(null);
+  const [chartSeries, setChartSeries] = useState<ChartSeries[]>([]);
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([]);
+  const [chartConfig, setChartConfig] = useState<ChartConfig | null>(null);
+  const [chartLoading, setChartLoading] = useState(false);
+  const [chartConfigVisible, setChartConfigVisible] = useState(false);
+  const [seriesConfigVisible, setSeriesConfigVisible] = useState(false);
+  const [currentChartType, setCurrentChartType] = useState<'line' | 'bar' | 'pie' | 'scatter'>('line');
   
   // 表单
   const [form] = Form.useForm();
@@ -676,6 +747,15 @@ const BreakevenAnalysisPageV2: React.FC = () => {
       const resultData = response?.datas || response;
       setBreakevenResult(resultData);
       message.success('分析计算完成');
+      
+      // 分析完成后自动加载图表
+      await fetchCharts();
+      
+      // 如果有图表，自动选择第一个并生成数据
+      if (charts.length > 0) {
+        const firstChart = charts[0];
+        await generateChartData(firstChart);
+      }
     } catch (error) {
       console.error('分析计算失败:', error);
       message.error('分析计算失败');
@@ -724,6 +804,165 @@ const BreakevenAnalysisPageV2: React.FC = () => {
     } catch (error) {
       console.error('API调用失败:', error);
       message.error('API调用失败');
+    }
+  };
+
+  // 获取图表列表
+  const fetchCharts = async () => {
+    if (!selectedModelId) return;
+    
+    setChartLoading(true);
+    try {
+      // 使用新的完整配置接口
+      const response = await request(`/api-soo/api/soo/v2/chart-models/model/${selectedModelId}/complete`);
+      const data = response.datas || response.data || [];
+      
+      // 处理完整配置数据
+      const chartsWithSeries = data.map((item: any) => ({
+        ...item.chartModel,
+        seriesList: item.seriesList || []
+      }));
+      
+      setCharts(chartsWithSeries);
+      
+      // 如果有图表，自动选择第一个并生成数据
+      if (chartsWithSeries.length > 0 && breakevenResult) {
+        const firstChart = chartsWithSeries[0];
+        await generateChartData(firstChart);
+      }
+    } catch (error) {
+      console.error('获取图表列表失败:', error);
+      message.error('获取图表列表失败');
+    } finally {
+      setChartLoading(false);
+    }
+  };
+
+  // 获取图表系列配置
+  const fetchChartSeries = async (chartId: number) => {
+    try {
+      const response = await request(`/api-soo/api/soo/v2/chart-series/chart/${chartId}`);
+      const data = response.datas || response.data || [];
+      setChartSeries(data);
+    } catch (error) {
+      console.error('获取图表系列配置失败:', error);
+      message.error('获取图表系列配置失败');
+    }
+  };
+
+  // 生成图表数据
+  const generateChartData = async (chart: ChartAnalysisModel) => {
+    if (!chart || !calculatedValues) return;
+    
+    setChartLoading(true);
+    try {
+      // 根据图表配置生成模拟数据
+      const data: ChartDataPoint[] = [];
+      const steps = chart.simulationSteps || 10;
+      
+      for (let i = 0; i < steps; i++) {
+        const xValue = i + 1; // X轴值（步数）
+        let yValue = 0;
+        
+        // 根据Y轴字段计算值
+        if (chart.yAxisField === 'revenue') {
+          yValue = calculatedValues.revenue || 0;
+        } else if (chart.yAxisField === 'profit') {
+          yValue = calculatedValues.net_profits || 0;
+        } else if (chart.yAxisField === 'cost') {
+          yValue = calculatedValues.total_fixed_cost || 0;
+        } else {
+          yValue = calculatedValues[chart.yAxisField] || 0;
+        }
+        
+        // 添加一些变化以模拟趋势
+        yValue = yValue * (1 + (i * 0.1));
+        
+        data.push({
+          x: xValue,
+          y: yValue,
+          label: `第${xValue}步`,
+          seriesName: chart.chartName
+        });
+      }
+      
+      setChartData(data);
+      setSelectedChart(chart);
+      setCurrentChartType(chart.chartType);
+    } catch (error) {
+      console.error('生成图表数据失败:', error);
+      message.error('生成图表数据失败');
+    } finally {
+      setChartLoading(false);
+    }
+  };
+
+  // 处理图表类型切换
+  const handleChartTypeChange = (type: 'line' | 'bar' | 'pie' | 'scatter') => {
+    setCurrentChartType(type);
+    if (selectedChart) {
+      generateChartData({ ...selectedChart, chartType: type });
+    }
+  };
+
+  // 处理图表配置
+  const handleChartConfig = () => {
+    setChartConfigVisible(true);
+  };
+
+  // 处理系列配置
+  const handleSeriesConfig = () => {
+    if (!selectedChart) {
+      message.warning('请先选择图表');
+      return;
+    }
+    setSeriesConfigVisible(true);
+  };
+
+  // 保存图表配置
+  const handleSaveChartConfig = async (config: ChartConfig) => {
+    try {
+      const chartData = {
+        modelId: selectedModelId,
+        chartName: `盈亏平衡分析图表`,
+        chartType: config.chartType,
+        simulationSteps: config.simulationSteps,
+        xAxisField: config.xAxisField,
+        yAxisField: config.yAxisField,
+        xAxisUnit: config.xAxisUnit,
+        yAxisUnit: config.yAxisUnit
+      };
+      
+      const response = await request('/api-soo/api/soo/v2/chart-models', {
+        method: 'POST',
+        data: chartData
+      });
+      
+      message.success('图表配置保存成功');
+      setChartConfigVisible(false);
+      fetchCharts();
+    } catch (error) {
+      console.error('保存图表配置失败:', error);
+      message.error('保存图表配置失败');
+    }
+  };
+
+  // 保存系列配置
+  const handleSaveSeriesConfig = async (series: ChartSeries[]) => {
+    if (!selectedChart) return;
+    
+    try {
+      await request(`/api-soo/api/soo/v2/chart-series/chart/${selectedChart.id}`, {
+        method: 'POST',
+        data: series
+      });
+      
+      message.success('系列配置保存成功');
+      setSeriesConfigVisible(false);
+      fetchChartSeries(selectedChart.id);
+    } catch (error) {
+      console.error('保存系列配置失败:', error);
+      message.error('保存系列配置失败');
     }
   };
 
@@ -894,6 +1133,72 @@ const BreakevenAnalysisPageV2: React.FC = () => {
     }
   ];
 
+  // 渲染图表
+  const renderChart = () => {
+    if (!chartData || chartData.length === 0) {
+      return <Empty description="暂无图表数据" image={Empty.PRESENTED_IMAGE_SIMPLE} />;
+    }
+
+    // 简单的图表展示（实际项目中可以使用ECharts、AntV等图表库）
+    return (
+      <div style={{ padding: 20 }}>
+        <div style={{ marginBottom: 16 }}>
+          <Title level={5}>{selectedChart?.chartName}</Title>
+          <Text type="secondary">
+            {currentChartType === 'line' ? '折线图' : 
+             currentChartType === 'bar' ? '柱状图' : 
+             currentChartType === 'pie' ? '饼图' : '散点图'}
+          </Text>
+        </div>
+        
+        <div style={{ 
+          height: 300, 
+          border: '1px solid #d9d9d9', 
+          borderRadius: 6,
+          padding: 16,
+          background: '#fafafa',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <Text type="secondary">
+              图表数据: {chartData.length} 个数据点
+            </Text>
+            <br />
+            <Text type="secondary">
+              X轴: {selectedChart?.xAxisField} {selectedChart?.xAxisUnit && `(${selectedChart.xAxisUnit})`}
+            </Text>
+            <br />
+            <Text type="secondary">
+              Y轴: {selectedChart?.yAxisField} {selectedChart?.yAxisUnit && `(${selectedChart.yAxisUnit})`}
+            </Text>
+            <br />
+            <Text type="secondary">
+              图表类型: {currentChartType}
+            </Text>
+          </div>
+        </div>
+        
+        {/* 数据点列表 */}
+        <div style={{ marginTop: 16 }}>
+          <Text strong>数据点详情:</Text>
+          <List
+            size="small"
+            dataSource={chartData.slice(0, 10)} // 只显示前10个
+            renderItem={(item) => (
+              <List.Item>
+                <Text>X: {item.x}</Text>
+                <Text>Y: {item.y.toFixed(2)}</Text>
+                <Text type="secondary">{item.label}</Text>
+              </List.Item>
+            )}
+          />
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="breakeven-analysis-v2" style={{ height: '100vh', overflow: 'hidden' }}>
       {/* 页面标题 */}
@@ -1010,21 +1315,176 @@ const BreakevenAnalysisPageV2: React.FC = () => {
                     <Space>
                       <BarChartOutlined />
                       <span>图表分析</span>
+                      {charts.length > 0 && (
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          ({charts.length} 个图表)
+                        </Text>
+                      )}
                     </Space>
                   }
                   extra={
                     <Space>
-                      <Button size="small" icon={<BarChartOutlined />}>柱状图</Button>
-                      <Button size="small" icon={<LineChartOutlined />}>趋势图</Button>
+                      <Select
+                        placeholder="选择图表"
+                        style={{ width: 200 }}
+                        value={selectedChart?.id}
+                        onChange={(chartId) => {
+                          const chart = charts.find(c => c.id === chartId);
+                          if (chart) {
+                            generateChartData(chart);
+                          }
+                        }}
+                        loading={chartLoading}
+                      >
+                        {charts.map(chart => (
+                          <Option key={chart.id} value={chart.id}>
+                            {chart.chartName}
+                          </Option>
+                        ))}
+                      </Select>
+                      <Button 
+                        size="small" 
+                        type={currentChartType === 'line' ? 'primary' : 'default'}
+                        icon={<LineChartOutlined />}
+                        onClick={() => handleChartTypeChange('line')}
+                      >
+                        折线图
+                      </Button>
+                      <Button 
+                        size="small" 
+                        type={currentChartType === 'bar' ? 'primary' : 'default'}
+                        icon={<BarChartOutlined />}
+                        onClick={() => handleChartTypeChange('bar')}
+                      >
+                        柱状图
+                      </Button>
+                      <Button 
+                        size="small" 
+                        type={currentChartType === 'pie' ? 'primary' : 'default'}
+                        icon={<PieChartOutlined />}
+                        onClick={() => handleChartTypeChange('pie')}
+                      >
+                        饼图
+                      </Button>
+                      <Button 
+                        size="small" 
+                        icon={<SettingOutlined />}
+                        onClick={handleChartConfig}
+                      >
+                        配置
+                      </Button>
                     </Space>
                   }
                   style={{ height: '100%' }}
-                  bodyStyle={{ height: 'calc(100% - 57px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  bodyStyle={{ height: 'calc(100% - 57px)', padding: 0 }}
                 >
-                  <Empty 
-                    description="图表功能开发中"
-                    image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  />
+                  <Spin spinning={chartLoading}>
+                    {selectedChart ? (
+                      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        {/* 图表渲染区域 */}
+                        <div style={{ flex: 1, padding: 20 }}>
+                          {renderChart()}
+                        </div>
+                        
+                        {/* 系列配置区域 */}
+                        {selectedChart.seriesList && selectedChart.seriesList.length > 0 && (
+                          <div style={{ 
+                            borderTop: '1px solid #f0f0f0', 
+                            padding: 16, 
+                            background: '#fafafa',
+                            maxHeight: 200,
+                            overflow: 'auto'
+                          }}>
+                            <div style={{ marginBottom: 12 }}>
+                              <Text strong>系列配置</Text>
+                              <Button 
+                                size="small" 
+                                icon={<EditOutlined />}
+                                onClick={handleSeriesConfig}
+                                style={{ marginLeft: 8 }}
+                              >
+                                编辑
+                              </Button>
+                            </div>
+                            
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+                              {selectedChart.seriesList.map((series, index) => (
+                                <div 
+                                  key={series.id || index}
+                                  style={{ 
+                                    padding: 8, 
+                                    border: '1px solid #d9d9d9', 
+                                    borderRadius: 4,
+                                    background: '#fff',
+                                    minWidth: 150
+                                  }}
+                                >
+                                  <div style={{ marginBottom: 4 }}>
+                                    <Text strong>{series.seriesName}</Text>
+                                  </div>
+                                  <div style={{ fontSize: 12, color: '#666' }}>
+                                    <div>字段: {series.seriesField}</div>
+                                    <div>类型: {
+                                      series.seriesType === 'fixed' ? '固定值' :
+                                      series.seriesType === 'variable' ? '变量' : '公式'
+                                    }</div>
+                                    {series.seriesValue && (
+                                      <div>值: {series.seriesValue}</div>
+                                    )}
+                                    {series.color && (
+                                      <div style={{ display: 'flex', alignItems: 'center', marginTop: 4 }}>
+                                        <span>颜色: </span>
+                                        <div
+                                          style={{
+                                            width: 16,
+                                            height: 16,
+                                            backgroundColor: series.color,
+                                            marginLeft: 4,
+                                            border: '1px solid #d9d9d9',
+                                            borderRadius: 2,
+                                          }}
+                                        />
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : charts.length > 0 ? (
+                      <div style={{ 
+                        height: '100%', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        flexDirection: 'column'
+                      }}>
+                        <BarChartOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
+                        <Text type="secondary">请从上方选择要显示的图表</Text>
+                      </div>
+                    ) : (
+                      <div style={{ 
+                        height: '100%', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center',
+                        flexDirection: 'column'
+                      }}>
+                        <BarChartOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
+                        <Text type="secondary">暂无图表配置</Text>
+                        <Button 
+                          type="primary" 
+                          size="small" 
+                          onClick={handleChartConfig}
+                          style={{ marginTop: 8 }}
+                        >
+                          创建图表
+                        </Button>
+                      </div>
+                    )}
+                  </Spin>
                 </Card>
               </div>
             </>
@@ -1039,6 +1499,18 @@ const BreakevenAnalysisPageV2: React.FC = () => {
           )}
         </div>
       </div>
+      
+      {/* 图表配置模态框 */}
+      <ChartConfigModal
+        visible={chartConfigVisible}
+        onCancel={() => setChartConfigVisible(false)}
+        onSuccess={() => {
+          fetchCharts();
+          setChartConfigVisible(false);
+        }}
+        modelId={selectedModelId}
+        variables={variables}
+      />
     </div>
   );
 };

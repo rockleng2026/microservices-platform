@@ -99,6 +99,30 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
       .filter(series => series.data.length > 0);
   }, [data, seriesList, chartName]);
 
+  // 饼图数据聚合
+  const pieData = useMemo(() => {
+    const aggregated: { [key: string]: number } = {};
+    
+    // 按系列聚合数据
+    seriesData.forEach(series => {
+      const seriesTotal = series.data.reduce((sum, point) => sum + point.y, 0);
+      aggregated[series.seriesName] = seriesTotal;
+    });
+    
+    // 如果没有系列数据，则按单个数据点聚合
+    if (Object.keys(aggregated).length === 0) {
+      data.forEach(point => {
+        const key = point.seriesName || '数据';
+        aggregated[key] = (aggregated[key] || 0) + point.y;
+      });
+    }
+    
+    return Object.entries(aggregated).map(([name, value]) => ({
+      name,
+      value: Math.abs(value) // 饼图通常显示绝对值
+    }));
+  }, [data, seriesData]);
+
   // 自定义Tooltip
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
@@ -299,7 +323,7 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
       acc[point.x][point.seriesName || 'default'] = point.y;
       return acc;
     }, {} as { [key: number]: { [key: string]: number } });
-    let barChartData = Object.keys(groupedByX).map(x => ({
+    let barChartData: Array<Record<string, any>> = Object.keys(groupedByX).map(x => ({
       x: parseFloat(x),
       ...groupedByX[parseFloat(x)]
     }));
@@ -307,7 +331,7 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
     // 插入盈亏平衡点分组
     const breakevenPoints = data.filter(d => d.isBreakevenPoint);
     if (breakevenPoints.length > 0) {
-      const breakevenGroup = { x: breakevenPoints[0].x, isBreakevenPoint: true };
+      const breakevenGroup: Record<string, any> = { x: breakevenPoints[0].x, isBreakevenPoint: true };
       breakevenPoints.forEach(point => {
         breakevenGroup[point.seriesName || 'default'] = point.y;
       });
@@ -579,30 +603,6 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
 
   // 渲染饼图（需要特殊处理数据格式）
   const renderPieChart = () => {
-    // 饼图需要聚合数据 - 按系列聚合
-    const pieData = useMemo(() => {
-      const aggregated: { [key: string]: number } = {};
-      
-      // 按系列聚合数据
-      seriesData.forEach(series => {
-        const seriesTotal = series.data.reduce((sum, point) => sum + point.y, 0);
-        aggregated[series.seriesName] = seriesTotal;
-      });
-      
-      // 如果没有系列数据，则按单个数据点聚合
-      if (Object.keys(aggregated).length === 0) {
-        data.forEach(point => {
-          const key = point.seriesName || '数据';
-          aggregated[key] = (aggregated[key] || 0) + point.y;
-        });
-      }
-      
-      return Object.entries(aggregated).map(([name, value]) => ({
-        name,
-        value: Math.abs(value) // 饼图通常显示绝对值
-      }));
-    }, [data, seriesData]);
-
     console.log('饼图聚合数据:', pieData);
 
     const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];

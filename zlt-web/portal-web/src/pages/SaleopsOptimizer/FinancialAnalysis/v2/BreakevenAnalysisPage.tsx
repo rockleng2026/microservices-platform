@@ -698,17 +698,21 @@ const BreakevenAnalysisPageV2: React.FC = () => {
       
       setVariables(sortedVariables);
       
-      // 设置表单默认值
+      // 设置默认值并触发初始计算
       const defaultValues: Record<string, any> = {};
       sortedVariables.forEach((variable: ModelVariable) => {
         if (variable.defaultValue !== undefined && variable.defaultValue !== null) {
           defaultValues[variable.variableCode] = variable.defaultValue;
         }
       });
+      
+      // 设置默认值
       form.setFieldsValue(defaultValues);
       
-      // 初始计算一次
-      handleFormValuesChange({}, defaultValues);
+      // 触发初始动态计算
+      setTimeout(() => {
+        triggerDynamicCalculation();
+      }, 100);
       
       message.success(`获取到 ${sortedVariables.length} 个变量`);
     } catch (error) {
@@ -735,6 +739,12 @@ const BreakevenAnalysisPageV2: React.FC = () => {
     form.resetFields();
   };
 
+  // 触发动态计算
+  const triggerDynamicCalculation = () => {
+    const allValues = form.getFieldsValue();
+    handleFormValuesChange({}, allValues);
+  };
+
   // 执行分析
   const handleAnalyze = async () => {
     if (!selectedModelId) {
@@ -743,6 +753,12 @@ const BreakevenAnalysisPageV2: React.FC = () => {
     }
 
     try {
+      // 先触发动态计算，确保所有计算变量都有最新值
+      triggerDynamicCalculation();
+      
+      // 等待一下让计算完成
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const formValues = await form.validateFields();
       setAnalyzing(true);
       
@@ -1680,8 +1696,8 @@ const BreakevenAnalysisPageV2: React.FC = () => {
                   }
                 }}
                 style={{ width: 120, marginLeft: 8 }}
-                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
+                formatter={(value: number | undefined) => value ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',') : ''}
+                parser={(value: string | undefined) => value ? Number(value.replace(/\$\s?|(,*)/g, '')) : 0}
               />
             </div>
             <div>

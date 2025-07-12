@@ -1,7 +1,7 @@
 package com.central.soo.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.central.common.model.SuperEntity;
+import com.central.common.model.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = false)
 @TableName("soo_chart_series")
 @Schema(description = "图表指标系列配置")
-public class ChartSeries extends SuperEntity {
+public class ChartSeries extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -38,11 +38,11 @@ public class ChartSeries extends SuperEntity {
     @TableField("series_field")
     private String seriesField;
 
-    @Schema(description = "系列类型: fixed-固定值, variable-变量")
+    @Schema(description = "系列类型: fixed-固定值, variable-变量, formula-公式")
     @TableField("series_type")
     private String seriesType;
 
-    @Schema(description = "固定系列值")
+    @Schema(description = "系列值: 可以是固定值(100), 变量(a), 或变量表达式(ax+b)")
     @TableField("series_value")
     private String seriesValue;
 
@@ -54,12 +54,8 @@ public class ChartSeries extends SuperEntity {
     @TableField("sort_order")
     private Integer sortOrder;
 
-    @Schema(description = "创建时间")
-    @TableField(value = "created_at", fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
-
     // 非数据库字段
-    @Schema(description = "关联的图表分析模型")
+    @Schema(description = "关联的图表分析模型信息")
     @TableField(exist = false)
     private ChartAnalysisModel chartAnalysisModel;
 } 

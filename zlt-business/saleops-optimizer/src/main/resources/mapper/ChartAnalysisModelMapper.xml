@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.soo.mapper.ChartAnalysisModelMapper">
+
+  <!-- 批量更新图表的模拟步数 -->
+  <update id="batchUpdateSimulationSteps">
+    UPDATE soo_chart_analysis_model
+    SET simulation_steps = #{simulationSteps}
+    WHERE id IN
+    <foreach collection="chartIds" item="id" open="(" separator="," close=")">
+      #{id}
+    </foreach>
+  </update>
+
+  <!-- 查询图表配置的使用历史统计（如无日志表可返回空统计） -->
+  <select id="selectChartUsageStats" resultType="java.util.Map">
+    SELECT
+      id AS chart_id,
+      0 AS usage_count,
+      NULL AS last_access_time
+    FROM soo_chart_analysis_model
+    WHERE id = #{chartId}
+  </select>
+
+</mapper> 

@@ -1,6 +1,7 @@
 package com.central.soo.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.central.common.model.BaseEntity;
 import com.central.common.model.SuperEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -18,7 +19,7 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = false)
 @TableName("soo_chart_analysis_model")
 @Schema(description = "图表分析模型配置")
-public class ChartAnalysisModel extends SuperEntity {
+public class ChartAnalysisModel extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
 
@@ -57,14 +58,6 @@ public class ChartAnalysisModel extends SuperEntity {
     @Schema(description = "模拟步数")
     @TableField("simulation_steps")
     private Integer simulationSteps;
-
-    @Schema(description = "创建时间")
-    @TableField(value = "created_at", fill = FieldFill.INSERT)
-    private LocalDateTime createdAt;
-
-    @Schema(description = "更新时间")
-    @TableField(value = "updated_at", fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updatedAt;
 
     // 非数据库字段
     @Schema(description = "关联的财务模型信息")

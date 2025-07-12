@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.soo.mapper.ChartSeriesMapper">
+
+    <!-- 基础字段映射 -->
+    <resultMap id="BaseResultMap" type="com.central.soo.model.entity.ChartSeries">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="chart_id" property="chartId" jdbcType="BIGINT"/>
+        <result column="series_name" property="seriesName" jdbcType="VARCHAR"/>
+        <result column="series_field" property="seriesField" jdbcType="VARCHAR"/>
+        <result column="series_type" property="seriesType" jdbcType="VARCHAR"/>
+        <result column="series_value" property="seriesValue" jdbcType="VARCHAR"/>
+        <result column="color" property="color" jdbcType="VARCHAR"/>
+        <result column="sort_order" property="sortOrder" jdbcType="INTEGER"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 批量插入系列 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO soo_chart_series (
+            chart_id, series_name, series_field, series_type, 
+            series_value, color, sort_order, created_at
+        ) VALUES
+        <foreach collection="seriesList" item="item" separator=",">
+            (
+                #{item.chartId}, #{item.seriesName}, #{item.seriesField}, #{item.seriesType},
+                #{item.seriesValue}, #{item.color}, #{item.sortOrder}, NOW()
+            )
+        </foreach>
+    </insert>
+
+    <!-- 根据图表ID列表批量删除系列 -->
+    <delete id="deleteByChartIds" parameterType="java.util.List">
+        DELETE FROM soo_chart_series 
+        WHERE chart_id IN 
+        <foreach collection="chartIds" item="chartId" open="(" separator="," close=")">
+            #{chartId}
+        </foreach>
+    </delete>
+
+</mapper> 

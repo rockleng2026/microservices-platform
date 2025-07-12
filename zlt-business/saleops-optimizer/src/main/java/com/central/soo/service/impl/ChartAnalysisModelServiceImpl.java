@@ -81,8 +81,8 @@ public class ChartAnalysisModelServiceImpl
             chartModel.setChartType("line");
         }
         
-        chartModel.setCreatedAt(LocalDateTime.now());
-        chartModel.setUpdatedAt(LocalDateTime.now());
+        chartModel.setCreatedAt(new Date());
+        chartModel.setUpdatedAt(new Date());
         
         // 保存图表模型
         boolean saved = save(chartModel);
@@ -104,7 +104,7 @@ public class ChartAnalysisModelServiceImpl
             throw new RuntimeException("图表分析模型不存在: " + chartModel.getId());
         }
         
-        chartModel.setUpdatedAt(LocalDateTime.now());
+        chartModel.setUpdatedAt(new Date());
         
         boolean updated = updateById(chartModel);
         if (!updated) {
@@ -143,7 +143,9 @@ public class ChartAnalysisModelServiceImpl
         }
         
         // 删除相关的图表系列
-        chartSeriesMapper.deleteByChartIds(chartIds);
+        for (Long chartId : chartIds) {
+            chartSeriesMapper.deleteByChartId(chartId);
+        }
         
         // 删除相关的模拟结果
         for (Long chartId : chartIds) {
@@ -569,7 +571,9 @@ public class ChartAnalysisModelServiceImpl
         
         if (!chartIds.isEmpty()) {
             // 删除相关的图表系列
-            chartSeriesMapper.deleteByChartIds(chartIds);
+            for (Long chartId : chartIds) {
+                chartSeriesMapper.deleteByChartId(chartId);
+            }
             
             // 删除相关的模拟结果
             for (Long chartId : chartIds) {

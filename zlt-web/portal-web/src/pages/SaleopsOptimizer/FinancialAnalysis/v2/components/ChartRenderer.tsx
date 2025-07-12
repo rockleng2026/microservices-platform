@@ -295,19 +295,47 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
     // 为柱状图准备数据 - 按X轴值分组，只使用普通数据点
     const regularData = data.filter(d => !d.isBreakevenPoint);
     const groupedByX = regularData.reduce((acc, point) => {
-      if (!acc[point.x]) {
-        acc[point.x] = {};
-      }
+      if (!acc[point.x]) acc[point.x] = {};
       acc[point.x][point.seriesName || 'default'] = point.y;
       return acc;
     }, {} as { [key: number]: { [key: string]: number } });
-
-    const barChartData = Object.keys(groupedByX).map(x => ({
+    let barChartData = Object.keys(groupedByX).map(x => ({
       x: parseFloat(x),
       ...groupedByX[parseFloat(x)]
     }));
 
+    // 插入盈亏平衡点分组
+    const breakevenPoints = data.filter(d => d.isBreakevenPoint);
+    if (breakevenPoints.length > 0) {
+      const breakevenGroup = { x: breakevenPoints[0].x, isBreakevenPoint: true };
+      breakevenPoints.forEach(point => {
+        breakevenGroup[point.seriesName || 'default'] = point.y;
+      });
+      if (!barChartData.some(d => d.x === breakevenGroup.x)) {
+        barChartData.push(breakevenGroup);
+        barChartData = barChartData.sort((a, b) => a.x - b.x);
+      }
+    }
+
     console.log('柱状图数据:', barChartData);
+
+    // 自定义shape实现盈亏平衡点高亮
+    const getBarShape = (breakevenX: number, color: string) => (props: any) => {
+      const { x, y, width, height, payload } = props;
+      const isBreakeven = payload && payload.x === breakevenX && payload.isBreakevenPoint;
+      return (
+        <rect
+          x={x}
+          y={y}
+          width={width}
+          height={height}
+          fill={isBreakeven ? '#ff4d4f' : color}
+          stroke={isBreakeven ? '#d9d9d9' : undefined}
+          strokeWidth={isBreakeven ? 2 : 0}
+          rx={isBreakeven ? 3 : 0}
+        />
+      );
+    };
 
     return (
       <ResponsiveContainer width="100%" height={400}>
@@ -320,7 +348,16 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
             dataKey="x" 
             name={xAxisName}
             type="number"
-            domain={['dataMin', 'dataMax']}
+            domain={[
+              Math.min(
+                ...barChartData.map(d => d.x),
+                ...data.filter(d => d.isBreakevenPoint).map(d => d.x)
+              ),
+              Math.max(
+                ...barChartData.map(d => d.x),
+                ...data.filter(d => d.isBreakevenPoint).map(d => d.x)
+              )
+            ]}
             tickFormatter={(value) => value.toLocaleString()}
             label={{ value: `${xAxisName}${xAxisUnit ? ` (${xAxisUnit})` : ''}`, position: 'bottom' }}
             xAxisId={0}
@@ -353,11 +390,14 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
               fill={series.color}
               xAxisId={0}
               yAxisId={0}
+              shape={getBarShape(breakevenPoints[0]?.x, series.color)}
             />
           ))}
           {/* 盈亏平衡点标记 */}
           {data.some(d => d.isBreakevenPoint) && (() => {
             const breakevenPoints = data.filter(d => d.isBreakevenPoint);
+            console.log('柱状图中渲染盈亏平衡点:', breakevenPoints);
+            
             return (
               <>
                 {/* 垂直参考线 */}
@@ -377,10 +417,10 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                   xAxisId={0}
                   yAxisId={0}
                   shape="diamond"
-                  r={6}
+                  r={8}
                   fill="red"
                   stroke="white"
-                  strokeWidth={2}
+                  strokeWidth={3}
                   name="盈亏平衡点"
                   isAnimationActive={false}
                 />
@@ -388,7 +428,7 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                 {breakevenPoints.map((point, index) => {
                   const maxY = Math.max(...barChartData.map(d => Math.max(...Object.values(d).filter(v => typeof v === 'number'))));
                   const labelPosition = point.y > maxY * 0.7 ? 'insideBottom' : 'insideTop';
-                  const labelOffset = point.y > maxY * 0.7 ? 20 : -20;
+                  const labelOffset = point.y > maxY * 0.7 ? 25 : -25;
                   
                   return (
                     <ReferenceLine
@@ -400,7 +440,7 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
                         position: labelPosition, 
                         offset: labelOffset,
                         fill: 'red',
-                        fontSize: 11,
+                        fontSize: 12,
                         fontWeight: 'bold',
                         textAnchor: 'middle'
                       }}

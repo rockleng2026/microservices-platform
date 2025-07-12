@@ -14,7 +14,8 @@ import {
   Tooltip,
   Legend,
   ResponsiveContainer,
-  Cell
+  Cell,
+  ReferenceLine
 } from 'recharts';
 import { Card, Typography, Space, Tag } from 'antd';
 
@@ -28,6 +29,7 @@ interface ChartDataPoint {
   seriesId?: number;
   seriesColor?: string;
   seriesField?: string;
+  isBreakevenPoint?: boolean; // Added for breakeven point
 }
 
 interface ChartRendererProps {
@@ -51,6 +53,17 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
   seriesList,
   chartName
 }) => {
+  // 调试信息：检查盈亏平衡点数据
+  console.log('ChartRenderer接收到的数据:', data);
+  console.log('ChartRenderer中的盈亏平衡点:', data.filter(d => d.isBreakevenPoint));
+  console.log('盈亏平衡点数据格式检查:', data.filter(d => d.isBreakevenPoint).map(d => ({
+    x: d.x,
+    y: d.y,
+    isBreakevenPoint: d.isBreakevenPoint,
+    seriesName: d.seriesName,
+    label: d.label
+  })));
+  
   // 按系列分组数据
   const seriesData = useMemo(() => {
     if (!seriesList || seriesList.length === 0) {
@@ -114,54 +127,130 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
   };
 
   // 渲染折线图
-  const renderLineChart = () => (
-    <ResponsiveContainer width="100%" height={400}>
-      <LineChart margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis 
-          dataKey="x" 
-          name={xAxisName}
-          type="number"
-          domain={['dataMin', 'dataMax']}
-          tickFormatter={(value) => value.toLocaleString()}
-          label={{ value: `${xAxisName}${xAxisUnit ? ` (${xAxisUnit})` : ''}`, position: 'bottom' }}
-        />
-        <YAxis 
-          name={yAxisName}
-          type="number"
-          tickFormatter={(value) => value.toLocaleString()}
-          label={{ 
-            value: `${yAxisName}${yAxisUnit ? ` (${yAxisUnit})` : ''}`, 
-            angle: -90, 
-            position: 'insideLeft' 
-          }}
-        />
-        <Tooltip content={<CustomTooltip />} />
-        <Legend 
-          wrapperStyle={{ paddingTop: '10px' }}
-          layout="horizontal"
-          verticalAlign="top"
-          align="center"
-          iconType="line"
-          iconSize={12}
-        />
-        {seriesData.map((series, index) => (
-          <Line
-            key={series.seriesName}
-            type="monotone"
-            dataKey="y"
-            name={series.seriesName}
-            data={series.data}
-            stroke={series.color}
-            strokeWidth={1}
-            dot={{ r: 1, fill: 'white', stroke: series.color, strokeWidth: 1 }}
-            activeDot={{ r: 2, fill: 'white', stroke: series.color, strokeWidth: 1 }}
-            connectNulls={false}
+  const renderLineChart = () => {
+    // 盈亏平衡点数据
+    const breakevenPoints = data.filter(d => d.isBreakevenPoint);
+    console.log('折线图中的盈亏平衡点:', breakevenPoints);
+    console.log('盈亏平衡点详细数据:', JSON.stringify(breakevenPoints, null, 2));
+    return (
+      <ResponsiveContainer width="100%" height={400}>
+        <LineChart margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis 
+            dataKey="x" 
+            name={xAxisName}
+            type="number"
+            domain={['dataMin', 'dataMax']}
+            tickFormatter={(value) => value.toLocaleString()}
+            label={{ value: `${xAxisName}${xAxisUnit ? ` (${xAxisUnit})` : ''}`, position: 'bottom' }}
+            xAxisId={0}
           />
-        ))}
-      </LineChart>
-    </ResponsiveContainer>
-  );
+          <YAxis 
+            name={yAxisName}
+            type="number"
+            tickFormatter={(value) => value.toLocaleString()}
+            label={{ 
+              value: `${yAxisName}${yAxisUnit ? ` (${yAxisUnit})` : ''}`, 
+              angle: -90, 
+              position: 'insideLeft' 
+            }}
+            yAxisId={0}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend 
+            wrapperStyle={{ paddingTop: '10px' }}
+            layout="horizontal"
+            verticalAlign="top"
+            align="center"
+            iconType="line"
+            iconSize={12}
+          />
+          {seriesData.map((series, index) => (
+            <Line
+              key={series.seriesName}
+              type="monotone"
+              dataKey="y"
+              name={series.seriesName}
+              data={series.data}
+              stroke={series.color}
+              strokeWidth={1}
+              dot={{ r: 1, fill: 'white', stroke: series.color, strokeWidth: 1 }}
+              activeDot={{ r: 2, fill: 'white', stroke: series.color, strokeWidth: 1 }}
+              connectNulls={false}
+            />
+          ))}
+          {/* 盈亏平衡点高亮 */}
+          {breakevenPoints.length > 0 && (
+            <>
+              <Scatter
+                data={breakevenPoints}
+                dataKey="y"
+                xAxisId={0}
+                yAxisId={0}
+                shape="circle"
+                r={8}
+                fill="white"
+                stroke="red"
+                strokeWidth={3}
+                name="盈亏平衡点"
+                isAnimationActive={false}
+              />
+              {/* 添加垂直参考线标记盈亏平衡点 */}
+              {breakevenPoints.map((point, index) => {
+                // 智能选择标签位置，避免与图例重叠
+                const maxX = Math.max(...data.map(d => d.x));
+                const minY = Math.min(...data.map(d => d.y));
+                const maxY = Math.max(...data.map(d => d.y));
+                const yRange = maxY - minY;
+                
+                // 根据位置选择标签位置
+                let labelPosition: 'insideBottom' | 'insideTop' = 'insideBottom';
+                let labelOffset = 10;
+                
+                if (point.x > maxX * 0.8) {
+                  // 右侧位置，标签放在下方
+                  labelPosition = 'insideBottom';
+                  labelOffset = 15;
+                } else if (point.x < maxX * 0.2) {
+                  // 左侧位置，标签放在上方
+                  labelPosition = 'insideTop';
+                  labelOffset = 15;
+                } else {
+                  // 中间位置，根据Y值选择
+                  const yRatio = (point.y - minY) / yRange;
+                  if (yRatio > 0.7) {
+                    labelPosition = 'insideBottom';
+                  } else {
+                    labelPosition = 'insideTop';
+                  }
+                  labelOffset = 12;
+                }
+                
+                return (
+                  <ReferenceLine
+                    key={`breakeven-${index}`}
+                    x={point.x}
+                    stroke="red"
+                    strokeDasharray="3 3"
+                    strokeOpacity={0.5}
+                    label={{ 
+                      value: '盈亏平衡点', 
+                      position: labelPosition, 
+                      offset: labelOffset,
+                      fill: 'red',
+                      fontSize: 11,
+                      fontWeight: 'bold',
+                      textAnchor: 'middle'
+                    }}
+                  />
+                );
+              })}
+            </>
+          )}
+        </LineChart>
+      </ResponsiveContainer>
+    );
+  };
 
   // 渲染柱状图
   const renderBarChart = () => (
@@ -175,6 +264,7 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
           domain={['dataMin', 'dataMax']}
           tickFormatter={(value) => value.toLocaleString()}
           label={{ value: `${xAxisName}${xAxisUnit ? ` (${xAxisUnit})` : ''}`, position: 'bottom' }}
+          xAxisId={0}
         />
         <YAxis 
           name={yAxisName}
@@ -185,6 +275,7 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
             angle: -90, 
             position: 'insideLeft' 
           }}
+          yAxisId={0}
         />
         <Tooltip content={<CustomTooltip />} />
         <Legend 
@@ -204,57 +295,151 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
             fill={series.color}
           />
         ))}
+        {/* 盈亏平衡点参考线 */}
+        {data.some(d => d.isBreakevenPoint) && (() => {
+          const breakevenPoint = data.find(d => d.isBreakevenPoint);
+          return breakevenPoint ? (
+            <ReferenceLine
+              x={breakevenPoint.x}
+              stroke="red"
+              strokeDasharray="3 3"
+              label={{ 
+                value: '盈亏平衡点', 
+                position: 'insideBottom', 
+                offset: 15,
+                fill: 'red',
+                fontSize: 11,
+                fontWeight: 'bold',
+                textAnchor: 'middle'
+              }}
+            />
+          ) : null;
+        })()}
       </BarChart>
     </ResponsiveContainer>
   );
 
   // 渲染散点图
-  const renderScatterChart = () => (
-    <ResponsiveContainer width="100%" height={400}>
-      <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
-        <CartesianGrid strokeDasharray="3 3" />
-        <XAxis 
-          dataKey="x" 
-          name={xAxisName}
-          type="number"
-          domain={['dataMin', 'dataMax']}
-          tickFormatter={(value) => value.toLocaleString()}
-          label={{ value: `${xAxisName}${xAxisUnit ? ` (${xAxisUnit})` : ''}`, position: 'bottom' }}
-        />
-        <YAxis 
-          name={yAxisName}
-          type="number"
-          tickFormatter={(value) => value.toLocaleString()}
-          label={{ 
-            value: `${yAxisName}${yAxisUnit ? ` (${yAxisUnit})` : ''}`, 
-            angle: -90, 
-            position: 'insideLeft' 
-          }}
-        />
-        <Tooltip content={<CustomTooltip />} />
-        <Legend 
-          wrapperStyle={{ paddingTop: '10px' }}
-          layout="horizontal"
-          verticalAlign="top"
-          align="center"
-          iconType="circle"
-          iconSize={12}
-        />
-        {seriesData.map((series, index) => (
-          <Scatter
-            key={series.seriesName}
-            name={series.seriesName}
-            data={series.data}
-            fill="white"
-            stroke={series.color}
-            strokeWidth={1}
-            shape="circle"
-            r={1}
+  const renderScatterChart = () => {
+    const breakevenPoints = data.filter(d => d.isBreakevenPoint);
+    console.log('散点图中的盈亏平衡点:', breakevenPoints);
+    return (
+      <ResponsiveContainer width="100%" height={400}>
+        <ScatterChart margin={{ top: 20, right: 30, left: 20, bottom: 20 }}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis 
+            dataKey="x" 
+            name={xAxisName}
+            type="number"
+            domain={['dataMin', 'dataMax']}
+            tickFormatter={(value) => value.toLocaleString()}
+            label={{ value: `${xAxisName}${xAxisUnit ? ` (${xAxisUnit})` : ''}`, position: 'bottom' }}
+            xAxisId={0}
           />
-        ))}
-      </ScatterChart>
-    </ResponsiveContainer>
-  );
+          <YAxis 
+            name={yAxisName}
+            type="number"
+            tickFormatter={(value) => value.toLocaleString()}
+            label={{ 
+              value: `${yAxisName}${yAxisUnit ? ` (${yAxisUnit})` : ''}`, 
+              angle: -90, 
+              position: 'insideLeft' 
+            }}
+            yAxisId={0}
+          />
+          <Tooltip content={<CustomTooltip />} />
+          <Legend 
+            wrapperStyle={{ paddingTop: '10px' }}
+            layout="horizontal"
+            verticalAlign="top"
+            align="center"
+            iconType="circle"
+            iconSize={12}
+          />
+          {seriesData.map((series, index) => (
+            <Scatter
+              key={series.seriesName}
+              name={series.seriesName}
+              data={series.data}
+              fill="white"
+              stroke={series.color}
+              strokeWidth={1}
+              shape="circle"
+              r={1}
+            />
+          ))}
+          {/* 盈亏平衡点高亮 */}
+          {breakevenPoints.length > 0 && (
+            <>
+              <Scatter
+                data={breakevenPoints}
+                dataKey="y"
+                xAxisId={0}
+                yAxisId={0}
+                shape="circle"
+                r={8}
+                fill="white"
+                stroke="red"
+                strokeWidth={3}
+                name="盈亏平衡点"
+                isAnimationActive={false}
+              />
+              {/* 添加垂直参考线标记盈亏平衡点 */}
+              {breakevenPoints.map((point, index) => {
+                // 智能选择标签位置，避免与图例重叠
+                const maxX = Math.max(...data.map(d => d.x));
+                const minY = Math.min(...data.map(d => d.y));
+                const maxY = Math.max(...data.map(d => d.y));
+                const yRange = maxY - minY;
+                
+                // 根据位置选择标签位置
+                let labelPosition: 'insideBottom' | 'insideTop' = 'insideBottom';
+                let labelOffset = 10;
+                
+                if (point.x > maxX * 0.8) {
+                  // 右侧位置，标签放在下方
+                  labelPosition = 'insideBottom';
+                  labelOffset = 15;
+                } else if (point.x < maxX * 0.2) {
+                  // 左侧位置，标签放在上方
+                  labelPosition = 'insideTop';
+                  labelOffset = 15;
+                } else {
+                  // 中间位置，根据Y值选择
+                  const yRatio = (point.y - minY) / yRange;
+                  if (yRatio > 0.7) {
+                    labelPosition = 'insideBottom';
+                  } else {
+                    labelPosition = 'insideTop';
+                  }
+                  labelOffset = 12;
+                }
+                
+                return (
+                  <ReferenceLine
+                    key={`breakeven-${index}`}
+                    x={point.x}
+                    stroke="red"
+                    strokeDasharray="3 3"
+                    strokeOpacity={0.5}
+                    label={{ 
+                      value: '盈亏平衡点', 
+                      position: labelPosition, 
+                      offset: labelOffset,
+                      fill: 'red',
+                      fontSize: 11,
+                      fontWeight: 'bold',
+                      textAnchor: 'middle'
+                    }}
+                  />
+                );
+              })}
+            </>
+          )}
+        </ScatterChart>
+      </ResponsiveContainer>
+    );
+  };
 
   // 渲染饼图（需要特殊处理数据格式）
   const renderPieChart = () => {
@@ -361,4 +546,4 @@ const ChartRenderer: React.FC<ChartRendererProps> = ({
   );
 };
 
-export default ChartRenderer; 
+export default ChartRenderer;

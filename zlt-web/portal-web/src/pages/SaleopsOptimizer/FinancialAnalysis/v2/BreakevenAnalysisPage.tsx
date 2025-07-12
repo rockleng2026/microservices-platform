@@ -903,13 +903,19 @@ const BreakevenAnalysisPageV2: React.FC = () => {
         setChartMaxX(defaultMaxX);
       }
       
+      // 获取盈亏平衡点数据
+      const breakevenPoint = calculatedValues.break_even_revenue ? {
+        x: calculatedValues.break_even_revenue
+      } : null;
+      
       // 调用后端API生成图表数据
       const response = await request(`/api-soo/api/soo/v2/chart-models/${chart.id}/generate-data`, {
         method: 'POST',
         data: {
           variableValues: allVariableValues,
           maxX: defaultMaxX,
-          totalPoints: chartTotalPoints
+          totalPoints: chartTotalPoints,
+          breakevenPoint: breakevenPoint
         }
       });
       
@@ -925,14 +931,38 @@ const BreakevenAnalysisPageV2: React.FC = () => {
           seriesName: item.seriesName,
           seriesId: item.seriesId,
           seriesColor: item.seriesColor,
-          seriesField: item.seriesField
+          seriesField: item.seriesField,
+          isBreakevenPoint: item.isBreakevenPoint || false
         }));
+        
+        // 处理盈亏平衡点数据
+        if (result.breakevenData && Array.isArray(result.breakevenData)) {
+          console.log('发现盈亏平衡点数据:', result.breakevenData);
+          const breakevenData: ChartDataPoint[] = result.breakevenData.map((item: any) => ({
+            x: item.x,
+            y: item.y,
+            label: item.label,
+            seriesName: item.seriesName,
+            seriesId: item.seriesId,
+            seriesColor: item.seriesColor,
+            seriesField: item.seriesField,
+            isBreakevenPoint: true
+          }));
+          console.log('转换后的盈亏平衡点数据:', breakevenData);
+          // 合并普通数据和盈亏平衡点数据
+          data.push(...breakevenData);
+          console.log('合并后的数据中盈亏平衡点数量:', data.filter(d => d.isBreakevenPoint).length);
+          console.log('合并后的数据中盈亏平衡点详情:', data.filter(d => d.isBreakevenPoint));
+        } else {
+          console.log('未发现盈亏平衡点数据');
+        }
         
         setChartData(data);
         setSelectedChart(chart);
         setCurrentChartType(chart.chartType);
         
         console.log(`图表数据生成完成: ${data.length} 个数据点, X轴范围: 0-${result.maxX}`);
+        console.log('最终图表数据中的盈亏平衡点:', data.filter(d => d.isBreakevenPoint));
         message.success(`图表数据生成成功，共 ${data.length} 个数据点`);
       } else {
         throw new Error('后端返回的数据格式不正确');
@@ -1092,13 +1122,19 @@ const BreakevenAnalysisPageV2: React.FC = () => {
       // 更新chartMaxX状态
       setChartMaxX(maxX);
       
+      // 获取盈亏平衡点数据
+      const breakevenPoint = calculatedValues.break_even_revenue ? {
+        x: calculatedValues.break_even_revenue
+      } : null;
+      
       // 调用后端API生成图表数据
       const response = await request(`/api-soo/api/soo/v2/chart-models/${chart.id}/generate-data`, {
         method: 'POST',
         data: {
           variableValues: allVariableValues,
           maxX: maxX,
-          totalPoints: chartTotalPoints
+          totalPoints: chartTotalPoints,
+          breakevenPoint: breakevenPoint
         }
       });
       
@@ -1114,14 +1150,38 @@ const BreakevenAnalysisPageV2: React.FC = () => {
           seriesName: item.seriesName,
           seriesId: item.seriesId,
           seriesColor: item.seriesColor,
-          seriesField: item.seriesField
+          seriesField: item.seriesField,
+          isBreakevenPoint: item.isBreakevenPoint || false
         }));
+        
+        // 处理盈亏平衡点数据
+        if (result.breakevenData && Array.isArray(result.breakevenData)) {
+          console.log('发现盈亏平衡点数据:', result.breakevenData);
+          const breakevenData: ChartDataPoint[] = result.breakevenData.map((item: any) => ({
+            x: item.x,
+            y: item.y,
+            label: item.label,
+            seriesName: item.seriesName,
+            seriesId: item.seriesId,
+            seriesColor: item.seriesColor,
+            seriesField: item.seriesField,
+            isBreakevenPoint: true
+          }));
+          console.log('转换后的盈亏平衡点数据:', breakevenData);
+          // 合并普通数据和盈亏平衡点数据
+          data.push(...breakevenData);
+          console.log('合并后的数据中盈亏平衡点数量:', data.filter(d => d.isBreakevenPoint).length);
+          console.log('合并后的数据中盈亏平衡点详情:', data.filter(d => d.isBreakevenPoint));
+        } else {
+          console.log('未发现盈亏平衡点数据');
+        }
         
         setChartData(data);
         setSelectedChart(chart);
         setCurrentChartType(chart.chartType);
         
         console.log(`图表数据生成完成: ${data.length} 个数据点, X轴范围: 0-${result.maxX}`);
+        console.log('最终图表数据中的盈亏平衡点:', data.filter(d => d.isBreakevenPoint));
         message.success(`图表数据生成成功，共 ${data.length} 个数据点`);
       } else {
         throw new Error('后端返回的数据格式不正确');

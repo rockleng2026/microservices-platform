@@ -19,6 +19,10 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashMap;
+import com.central.soo.model.entity.ChartSeries;
+import com.central.soo.service.ChartSeriesService;
 
 /**
  * 图表分析模型配置控制器
@@ -35,6 +39,9 @@ public class ChartAnalysisModelController {
 
     @Autowired
     private ChartAnalysisModelService chartAnalysisModelService;
+
+    @Autowired
+    private ChartSeriesService chartSeriesService;
 
     // ==================== 基础CRUD ====================
 
@@ -312,6 +319,65 @@ public class ChartAnalysisModelController {
             return Result.succeed(charts);
         } catch (Exception e) {
             log.error("获取模型图表列表失败", e);
+            return Result.failed("获取失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取图表的完整配置（包括图表模型和系列配置）
+     */
+    @GetMapping("/{chartId}/complete")
+    @Operation(summary = "获取图表完整配置", description = "获取图表分析模型的完整配置，包括系列配置信息")
+    public Result<Map<String, Object>> getChartCompleteConfig(
+            @PathVariable @NotNull Long chartId) {
+        
+        try {
+            ChartAnalysisModel chartModel = chartAnalysisModelService.getChartModelWithSeries(chartId);
+            if (chartModel == null) {
+                return Result.failed("图表模型不存在");
+            }
+            
+            // 获取系列配置
+            List<ChartSeries> seriesList = chartSeriesService.getByChartId(chartId);
+            
+            // 构建完整配置
+            Map<String, Object> completeConfig = new HashMap<>();
+            completeConfig.put("chartModel", chartModel);
+            completeConfig.put("seriesList", seriesList);
+            
+            return Result.succeed(completeConfig);
+        } catch (Exception e) {
+            log.error("获取图表完整配置失败", e);
+            return Result.failed("获取失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取模型下所有图表的完整配置
+     */
+    @GetMapping("/model/{modelId}/complete")
+    @Operation(summary = "获取模型下所有图表完整配置", description = "获取指定财务模型下所有图表的完整配置，包括系列配置信息")
+    public Result<List<Map<String, Object>>> getModelChartsCompleteConfig(
+            @PathVariable @NotNull Long modelId) {
+        
+        try {
+            List<ChartAnalysisModel> charts = chartAnalysisModelService.getChartModelsByModelId(modelId);
+            List<Map<String, Object>> completeConfigs = new ArrayList<>();
+            
+            for (ChartAnalysisModel chart : charts) {
+                Map<String, Object> config = new HashMap<>();
+                config.put("chartModel", chart);
+                
+                // 获取每个图表的系列配置
+                List<ChartSeries> seriesList = chartSeriesService.getByChartId(chart.getId());
+                config.put("seriesList", seriesList);
+                
+                completeConfigs.add(config);
+            }
+            
+            return Result.succeed(completeConfigs);
+        } catch (Exception e) {
+            log.error("获取模型图表完整配置失败", e);
             return Result.failed("获取失败: " + e.getMessage());
         }
     }

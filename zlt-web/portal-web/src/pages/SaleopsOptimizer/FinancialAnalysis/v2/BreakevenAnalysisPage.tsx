@@ -833,30 +833,30 @@ const BreakevenAnalysisPageV2: React.FC = () => {
   };
 
   // 盈亏平衡试算表格数据
-  const breakevenTableData = breakevenResult ? [
+  const breakevenTableData = calculatedValues ? [
     {
       key: 'fixedCost',
       indicator: '总固定成本',
-      monthly: breakevenResult.totalFixedCost?.toFixed(2) || 'N/A',
-      quarterly: 'N/A',
-      halfYear: 'N/A',
-      annual: 'N/A'
+      monthly: calculatedValues.total_fixed_cost?.toFixed(2) || 'N/A',
+      quarterly: calculatedValues.total_fixed_cost !== undefined ? (calculatedValues.total_fixed_cost * 3).toFixed(2) : 'N/A',
+      halfYear: calculatedValues.total_fixed_cost !== undefined ? (calculatedValues.total_fixed_cost * 6).toFixed(2) : 'N/A',
+      annual: calculatedValues.total_fixed_cost !== undefined ? (calculatedValues.total_fixed_cost * 12).toFixed(2) : 'N/A'
     },
     {
       key: 'netProfit',
       indicator: '当月净利润',
-      monthly: breakevenResult.monthlyNetProfit?.toFixed(2) || 'N/A',
-      quarterly: 'N/A',
-      halfYear: 'N/A',
-      annual: 'N/A'
+      monthly: calculatedValues.net_profits?.toFixed(2) || 'N/A',
+      quarterly: calculatedValues.net_profits !== undefined ? (calculatedValues.net_profits * 3).toFixed(2) : 'N/A',
+      halfYear: calculatedValues.net_profits !== undefined ? (calculatedValues.net_profits * 6).toFixed(2) : 'N/A',
+      annual: calculatedValues.net_profits !== undefined ? (calculatedValues.net_profits * 12).toFixed(2) : 'N/A'
     },
     {
       key: 'breakevenRevenue',
       indicator: '盈亏平衡点 (营业额)',
-      monthly: breakevenResult.breakevenRevenue?.monthly?.toFixed(2) || 'N/A',
-      quarterly: breakevenResult.breakevenRevenue?.quarterly?.toFixed(2) || 'N/A',
-      halfYear: breakevenResult.breakevenRevenue?.halfYear?.toFixed(2) || 'N/A',
-      annual: breakevenResult.breakevenRevenue?.annual?.toFixed(2) || 'N/A'
+      monthly: calculatedValues.break_even_revenue?.toFixed(2) || 'N/A',
+      quarterly: calculatedValues.break_even_revenue !== undefined ? (calculatedValues.break_even_revenue * 3).toFixed(2) : 'N/A',
+      halfYear: calculatedValues.break_even_revenue !== undefined ? (calculatedValues.break_even_revenue * 6).toFixed(2) : 'N/A',
+      annual: calculatedValues.break_even_revenue !== undefined ? (calculatedValues.break_even_revenue * 12).toFixed(2) : 'N/A'
     }
   ] : [];
 

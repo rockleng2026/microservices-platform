@@ -1,130 +1,244 @@
-import React, { useState } from 'react';
-import {
-  Card,
-  Typography,
-  Button,
-  Space,
-  Empty,
-  Divider,
-  Row,
-  Col
-} from 'antd';
-import {
-  BarChartOutlined,
-  LineChartOutlined,
-  PieChartOutlined,
-  LeftOutlined,
-  SettingOutlined,
-  ExportOutlined,
-  EyeOutlined
-} from '@ant-design/icons';
+import React, { useState, useEffect, useCallback } from 'react';
+import { PageContainer } from '@ant-design/pro-layout';
+import ProTable, { ProColumns } from '@ant-design/pro-table';
+import { Button, message } from 'antd';
+import { useParams, useLocation } from 'umi';
+import moment from 'moment';
+import { request } from '@/utils/request';
+import ChartEditModal from './components/ChartEditModal';
+import ChartSeriesModal from './components/ChartSeriesModal';
 
-const { Title, Paragraph } = Typography;
+interface ChartAnalysisModel {
+  id: number;
+  modelId: number;
+  chartName: string;
+  chartType: string;
+  simulationSteps: number;
+  createdAt: string;
+  updatedAt: string;
+  xAxisField: string;
+  yAxisField: string;
+  xAxisUnit?: string;
+  yAxisUnit?: string;
+}
 
-const ChartManagementV2: React.FC = () => {
-  // 返回财务分析主页
-  const handleBack = () => {
-    window.location.href = '/saleops-optimizer/financial-analysis/v2/financial-models';
+const ChartManagement: React.FC = () => {
+  // 使用 useLocation 获取查询参数
+  const location = useLocation();
+  const queryParams = new URLSearchParams(location.search);
+  const modelId = queryParams.get('modelId') || useParams<{ modelId: string }>().modelId;
+  
+  const [charts, setCharts] = useState<ChartAnalysisModel[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [seriesModalVisible, setSeriesModalVisible] = useState(false);
+  const [currentChart, setCurrentChart] = useState<ChartAnalysisModel | null>(null);
+
+  // 获取图表数据
+  const fetchCharts = useCallback(async () => {
+    if (!modelId) {
+      setLoading(false);
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const response = await request(`/api-soo/api/soo/v2/chart-models/model/${modelId}`);
+      
+      // 适配新旧两种数据结构
+      const data = response.datas || response.data || [];
+      
+      setCharts(data.map((chart: any) => ({
+        ...chart,
+        // 确保字段名统一
+        xAxisField: chart.xaxisField || chart.xAxisField,
+        yAxisField: chart.yaxisField || chart.yAxisField,
+        xAxisUnit: chart.xaxisUnit || chart.xAxisUnit,
+        yAxisUnit: chart.yaxisUnit || chart.yAxisUnit,
+      })));
+    } catch (error) {
+      message.error('获取图表数据失败');
+    } finally {
+      setLoading(false);
+    }
+  }, [modelId]);
+
+  useEffect(() => {
+    if (modelId) {
+      fetchCharts();
+    } else {
+      setLoading(false);
+    }
+  }, [modelId, fetchCharts]);
+
+  // 处理编辑
+  const handleEdit = (record: ChartAnalysisModel) => {
+    setCurrentChart(record);
+    setModalVisible(true);
   };
 
-  return (
-    <div className="chart-management-v2">
-      <Card>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div>
-            <h2 style={{ margin: 0, marginBottom: 8 }}>图表管理 V2</h2>
-            <span style={{ color: '#666', fontSize: '14px' }}>
-              管理财务模型的可视化图表配置和样式
-            </span>
-          </div>
-          <Space>
-            <Button
-              icon={<LeftOutlined />}
-              onClick={handleBack}
-            >
-              返回模型管理
-            </Button>
-          </Space>
-        </div>
+  // 处理系列配置
+  const handleSeriesConfig = (record: ChartAnalysisModel) => {
+    setCurrentChart(record);
+    setSeriesModalVisible(true);
+  };
 
-        <Divider />
+  // 处理删除
+  const handleDelete = async (id: number) => {
+    try {
+      await request(`/api-soo/api/soo/v2/chart-models/${id}`, {
+        method: 'DELETE',
+      });
+      message.success('删除成功');
+      fetchCharts();
+    } catch (error) {
+      message.error('删除失败');
+    }
+  };
 
-        <div style={{ textAlign: 'center', padding: '60px 0' }}>
-          <BarChartOutlined style={{ fontSize: '72px', color: '#d9d9d9', marginBottom: '24px' }} />
-          
-          <Title level={3} style={{ color: '#595959' }}>图表管理功能</Title>
-          
-          <Paragraph style={{ fontSize: '16px', color: '#8c8c8c', marginBottom: '32px' }}>
-            图表管理功能正在开发中，即将为您提供强大的可视化配置能力
-          </Paragraph>
+  // 处理预览
+  const handlePreview = (record: ChartAnalysisModel) => {
+    message.info(`预览图表: ${record.chartName}`);
+  };
 
-          <Row gutter={[24, 16]} justify="center" style={{ marginBottom: '32px' }}>
-            <Col>
-              <Card size="small" style={{ width: 200, textAlign: 'center' }}>
-                <BarChartOutlined style={{ fontSize: '32px', color: '#1890ff', marginBottom: '8px' }} />
-                <div style={{ fontWeight: 600 }}>柱状图配置</div>
-                <div style={{ fontSize: '12px', color: '#999' }}>数据对比分析</div>
-              </Card>
-            </Col>
-            <Col>
-              <Card size="small" style={{ width: 200, textAlign: 'center' }}>
-                <LineChartOutlined style={{ fontSize: '32px', color: '#52c41a', marginBottom: '8px' }} />
-                <div style={{ fontWeight: 600 }}>折线图配置</div>
-                <div style={{ fontSize: '12px', color: '#999' }}>趋势变化分析</div>
-              </Card>
-            </Col>
-            <Col>
-              <Card size="small" style={{ width: 200, textAlign: 'center' }}>
-                <PieChartOutlined style={{ fontSize: '32px', color: '#faad14', marginBottom: '8px' }} />
-                <div style={{ fontWeight: 600 }}>饼图配置</div>
-                <div style={{ fontSize: '12px', color: '#999' }}>占比结构分析</div>
-              </Card>
-            </Col>
-          </Row>
+  // 处理保存成功后的刷新
+  const handleSaveSuccess = () => {
+    fetchCharts(); // 刷新图表列表
+  };
 
-          <div style={{ background: '#fafafa', padding: '24px', borderRadius: '8px', textAlign: 'left', maxWidth: '600px', margin: '0 auto' }}>
-            <div style={{ fontWeight: 600, marginBottom: '12px', color: '#262626' }}>
-              <SettingOutlined style={{ marginRight: '8px' }} />
-              即将支持的功能：
+  // 表格列定义
+  const columns: ProColumns<ChartAnalysisModel>[] = [
+    {
+      title: '图表名称',
+      dataIndex: 'chartName',
+      width: 200,
+    },
+    {
+      title: '图表类型',
+      dataIndex: 'chartType',
+      width: 120,
+      render: (text) => {
+        const types: Record<string, string> = {
+          line: '折线图',
+          bar: '柱状图',
+          pie: '饼图',
+          scatter: '散点图',
+        };
+        return types[text as string] || text;
+      },
+    },
+    {
+      title: 'X轴字段',
+      dataIndex: 'xAxisField',
+      width: 150,
+      render: (_, record) => (
+        <div>
+          <div>{record.xAxisField}</div>
+          {record.xAxisUnit && (
+            <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
+              单位: {record.xAxisUnit}
             </div>
-            <ul style={{ color: '#595959', lineHeight: '1.8' }}>
-              <li>图表类型配置（折线图、柱状图、饼图、散点图等）</li>
-              <li>图表样式定制（颜色主题、字体、布局设置）</li>
-              <li>数据系列配置（数据源绑定、计算字段）</li>
-              <li>交互功能设置（缩放、筛选、钻取）</li>
-              <li>图表模板管理（保存、复用、分享）</li>
-              <li>导出设置（PNG、PDF、Excel格式）</li>
-            </ul>
-          </div>
-
-          <Space size="large" style={{ marginTop: '32px' }}>
-            <Button type="primary" icon={<BarChartOutlined />} disabled>
-              柱状图配置
-            </Button>
-            <Button icon={<LineChartOutlined />} disabled>
-              折线图配置
-            </Button>
-            <Button icon={<PieChartOutlined />} disabled>
-              饼图配置
-            </Button>
-            <Button icon={<SettingOutlined />} disabled>
-              模板管理
-            </Button>
-            <Button icon={<ExportOutlined />} disabled>
-              导出设置
-            </Button>
-            <Button icon={<EyeOutlined />} disabled>
-              预览
-            </Button>
-          </Space>
-
-          <div style={{ marginTop: '24px', fontSize: '14px', color: '#bfbfbf' }}>
-            敬请期待更多精彩功能的发布 🚀
-          </div>
+          )}
         </div>
-      </Card>
-    </div>
+      ),
+    },
+    {
+      title: 'Y轴字段',
+      dataIndex: 'yAxisField',
+      width: 150,
+      render: (_, record) => (
+        <div>
+          <div>{record.yAxisField}</div>
+          {record.yAxisUnit && (
+            <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
+              单位: {record.yAxisUnit}
+            </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: '模拟步数',
+      dataIndex: 'simulationSteps',
+      width: 100,
+    },
+    {
+      title: '创建时间',
+      dataIndex: 'createdAt',
+      width: 180,
+      render: (_, record) => record.createdAt ? moment(record.createdAt).format('YYYY-MM-DD HH:mm') : '-',
+    },
+    {
+      title: '操作',
+      valueType: 'option',
+      width: 240,
+      render: (_, record) => [
+        <a key="edit" onClick={() => handleEdit(record)}>编辑</a>,
+        <a key="series" onClick={() => handleSeriesConfig(record)}>系列配置</a>,
+        <a key="delete" onClick={() => handleDelete(record.id)}>删除</a>,
+        <a key="preview" onClick={() => handlePreview(record)}>预览</a>,
+      ],
+    },
+  ];
+
+  // 添加空状态处理
+  if (!modelId) {
+    return (
+      <PageContainer>
+        <div style={{ padding: '100px', textAlign: 'center' }}>
+          <h2>缺少模型ID</h2>
+          <p>请确保URL中包含有效的modelId参数</p>
+          <p>例如: /saleops-optimizer/financial-analysis/v2/chart-management?modelId=1</p>
+        </div>
+      </PageContainer>
+    );
+  }
+
+  return (
+    <PageContainer>
+      <ProTable<ChartAnalysisModel>
+        headerTitle="图表管理"
+        rowKey="id"
+        columns={columns}
+        dataSource={charts}
+        loading={loading}
+        search={false}
+        pagination={false}
+        toolBarRender={() => [
+          <Button
+            key="add"
+            type="primary"
+            onClick={() => {
+              setCurrentChart(null);
+              setModalVisible(true);
+            }}
+          >
+            新增图表
+          </Button>,
+        ]}
+      />
+      
+      {/* 图表编辑/新增模态框 */}
+      {modalVisible && (
+        <ChartEditModal
+          visible={modalVisible}
+          onCancel={() => setModalVisible(false)}
+          onSuccess={handleSaveSuccess} // 传递成功回调
+          modelId={modelId || ''}
+          chartData={currentChart}
+        />
+      )}
+      
+      {/* 图表系列配置模态框 */}
+      {seriesModalVisible && currentChart && (
+        <ChartSeriesModal
+          visible={seriesModalVisible}
+          onCancel={() => setSeriesModalVisible(false)}
+          chartData={currentChart}
+        />
+      )}
+    </PageContainer>
   );
 };
 
-export default ChartManagementV2; 
+export default ChartManagement; 

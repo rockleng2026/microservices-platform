@@ -1,5 +1,6 @@
 package com.central.soo.controller;
 
+import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.central.common.annotation.LoginUser;
 import com.central.common.model.PageResult;
@@ -54,7 +55,7 @@ public class ChartAnalysisModelController {
             @Valid @RequestBody ChartAnalysisModel chartModel,
             @LoginUser SysUser user) {
         
-        log.info("用户[{}]创建图表分析模型: {}", user.getUsername(), chartModel.getChartName());
+        log.info("用户[{}]创建图表分析模型: {}", user.getUsername(), JSON.toJSONString(chartModel));
         
         try {
             ChartAnalysisModel createdModel = chartAnalysisModelService.createChartModel(chartModel);

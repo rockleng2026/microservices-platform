@@ -104,15 +104,29 @@ public class ChartAnalysisModelServiceImpl
             throw new RuntimeException("图表分析模型不存在: " + chartModel.getId());
         }
         
-        chartModel.setUpdatedAt(new Date());
+        // 记录更新前的数据
+        log.info("更新前数据: {}", existingModel);
+        log.info("更新数据: {}", chartModel);
         
-        boolean updated = updateById(chartModel);
+        // 确保所有字段都被正确设置
+        existingModel.setChartName(chartModel.getChartName());
+        existingModel.setChartType(chartModel.getChartType());
+        existingModel.setSimulationSteps(chartModel.getSimulationSteps());
+        existingModel.setXAxisName(chartModel.getXAxisName());
+        existingModel.setXAxisField(chartModel.getXAxisField());
+        existingModel.setXAxisUnit(chartModel.getXAxisUnit());
+        existingModel.setYAxisName(chartModel.getYAxisName());
+        existingModel.setYAxisUnit(chartModel.getYAxisUnit());
+        existingModel.setModelId(chartModel.getModelId());
+        existingModel.setUpdatedAt(new Date());
+        
+        boolean updated = updateById(existingModel);
         if (!updated) {
             throw new RuntimeException("更新图表分析模型失败");
         }
         
-        log.info("图表分析模型更新成功，ID: {}", chartModel.getId());
-        return chartModel;
+        log.info("图表分析模型更新成功，ID: {}", existingModel.getId());
+        return existingModel;
     }
 
     @Override
@@ -261,8 +275,12 @@ public class ChartAnalysisModelServiceImpl
         if (!StringUtils.hasText(chartModel.getXAxisField())) {
             errors.add("X轴字段未配置");
         }
-        if (!StringUtils.hasText(chartModel.getYAxisField())) {
-            errors.add("Y轴字段未配置");
+        // 验证轴字段配置
+        if (!StringUtils.hasText(chartModel.getXAxisName())) {
+            errors.add("X轴字段名称未配置");
+        }
+        if (!StringUtils.hasText(chartModel.getYAxisName())) {
+            errors.add("Y轴字段名称未配置");
         }
         
         // 验证图表系列
@@ -408,27 +426,27 @@ public class ChartAnalysisModelServiceImpl
                 preset.setChartName("盈亏平衡分析图");
                 preset.setXAxisField("revenue");
                 preset.setXAxisUnit("元");
-                preset.setYAxisField("net_profit");
+                preset.setYAxisName("net_profit");
                 preset.setYAxisUnit("元");
                 break;
             case "bar":
                 preset.setChartName("成本结构分析图");
                 preset.setXAxisField("period");
                 preset.setXAxisUnit("月");
-                preset.setYAxisField("cost");
+                preset.setYAxisName("cost");
                 preset.setYAxisUnit("元");
                 break;
             case "scatter":
                 preset.setChartName("敏感性分析图");
                 preset.setXAxisField("parameter_value");
                 preset.setXAxisUnit("%");
-                preset.setYAxisField("result_change");
+                preset.setYAxisName("result_change");
                 preset.setYAxisUnit("%");
                 break;
             default:
                 preset.setChartName("自定义分析图");
                 preset.setXAxisField("x_field");
-                preset.setYAxisField("y_field");
+                preset.setYAxisName("y_field");
         }
         
         return preset;

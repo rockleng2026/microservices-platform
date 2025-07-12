@@ -37,11 +37,20 @@ const ChartEditModal: React.FC<ChartEditModalProps> = ({
       const values = await form.validateFields();
       setConfirmLoading(true);
       
-      // 准备API请求数据
+      // 准备API请求数据，确保字段名正确
       const requestData = {
-        ...values,
+        chartName: values.chartName,
+        chartType: values.chartType,
+        simulationSteps: values.simulationSteps || 1000, // 确保字段名正确
+        xAxisName: values.xAxisName,
+        xAxisField: values.xAxisField,
+        xAxisUnit: values.xAxisUnit,
+        yAxisName: values.yAxisName,
+        yAxisUnit: values.yAxisUnit,
         modelId: parseInt(modelId, 10),
       };
+
+      console.log('发送的请求数据:', requestData);
 
       // 根据是新增还是编辑调用不同API
       const url = chartData 
@@ -54,6 +63,8 @@ const ChartEditModal: React.FC<ChartEditModalProps> = ({
         method,
         data: requestData,
       });
+
+      console.log('API响应:', response);
 
       if (response.resp_code === 0) {
         message.success(chartData ? '图表更新成功' : '图表创建成功');
@@ -78,6 +89,7 @@ const ChartEditModal: React.FC<ChartEditModalProps> = ({
       onOk={handleSave} // 绑定保存处理函数
       confirmLoading={confirmLoading}
       destroyOnClose
+      width={600}
     >
       <Form form={form} layout="vertical">
         <Form.Item
@@ -87,6 +99,7 @@ const ChartEditModal: React.FC<ChartEditModalProps> = ({
         >
           <Input placeholder="请输入图表名称" />
         </Form.Item>
+        
         <Form.Item
           name="chartType"
           label="图表类型"
@@ -95,42 +108,63 @@ const ChartEditModal: React.FC<ChartEditModalProps> = ({
           <Select placeholder="请选择图表类型">
             <Option value="line">折线图</Option>
             <Option value="bar">柱状图</Option>
-            <Option value="pie">饼图</Option>
+            <Option value="scatter">散点图</Option>
           </Select>
         </Form.Item>
+        
         <Form.Item
           name="simulationSteps"
           label="模拟步数"
           rules={[{ required: true, message: '请输入模拟步数' }]}
         >
-          <InputNumber min={1} max={1000} style={{ width: '100%' }} />
+          <InputNumber min={1} max={1000} style={{ width: '100%' }} placeholder="默认1000" />
         </Form.Item>
-        <Form.Item
-          name="xaxisField"
-          label="X轴字段"
-          rules={[{ required: true, message: '请输入X轴字段' }]}
-        >
-          <Input placeholder="请输入X轴字段" />
-        </Form.Item>
-        <Form.Item
-          name="xaxisUnit"
-          label="X轴单位"
-        >
-          <Input placeholder="请输入X轴单位" />
-        </Form.Item>
-        <Form.Item
-          name="yaxisField"
-          label="Y轴字段"
-          rules={[{ required: true, message: '请输入Y轴字段' }]}
-        >
-          <Input placeholder="请输入Y轴字段" />
-        </Form.Item>
-        <Form.Item
-          name="yaxisUnit"
-          label="Y轴单位"
-        >
-          <Input placeholder="请输入Y轴单位" />
-        </Form.Item>
+        
+        {/* X轴配置 */}
+        <div style={{ border: '1px solid #d9d9d9', borderRadius: 6, padding: 16, marginBottom: 16 }}>
+          <h4 style={{ marginBottom: 16, color: '#1890ff' }}>X轴配置</h4>
+          <Form.Item
+            name="xAxisName"
+            label="X轴名称"
+            rules={[{ required: true, message: '请输入X轴名称' }]}
+          >
+            <Input placeholder="如：时间、月份、销售量" />
+          </Form.Item>
+          
+          <Form.Item
+            name="xAxisField"
+            label="X轴字段"
+            rules={[{ required: true, message: '请输入X轴字段' }]}
+          >
+            <Input placeholder="如：time、month、sales_volume" />
+          </Form.Item>
+          
+          <Form.Item
+            name="xAxisUnit"
+            label="X轴单位"
+          >
+            <Input placeholder="如：月、件、%" />
+          </Form.Item>
+        </div>
+        
+        {/* Y轴配置 */}
+        <div style={{ border: '1px solid #d9d9d9', borderRadius: 6, padding: 16 }}>
+          <h4 style={{ marginBottom: 16, color: '#1890ff' }}>Y轴配置</h4>
+          <Form.Item
+            name="yAxisName"
+            label="Y轴名称"
+            rules={[{ required: true, message: '请输入Y轴名称' }]}
+          >
+            <Input placeholder="如：营业额、净利润、成本" />
+          </Form.Item>
+          
+          <Form.Item
+            name="yAxisUnit"
+            label="Y轴单位"
+          >
+            <Input placeholder="如：万元、元、%" />
+          </Form.Item>
+        </div>
       </Form>
     </Modal>
   );

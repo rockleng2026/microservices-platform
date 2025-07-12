@@ -16,9 +16,10 @@ interface ChartAnalysisModel {
   simulationSteps: number;
   createdAt: string;
   updatedAt: string;
+  xAxisName: string;
   xAxisField: string;
-  yAxisField: string;
   xAxisUnit?: string;
+  yAxisName: string;
   yAxisUnit?: string;
 }
 
@@ -51,10 +52,11 @@ const ChartManagement: React.FC = () => {
       setCharts(data.map((chart: any) => ({
         ...chart,
         // 确保字段名统一
-        xAxisField: chart.xaxisField || chart.xAxisField,
-        yAxisField: chart.yaxisField || chart.yAxisField,
-        xAxisUnit: chart.xaxisUnit || chart.xAxisUnit,
-        yAxisUnit: chart.yaxisUnit || chart.yAxisUnit,
+        xAxisName: chart.xAxisName || chart.xaxisName || '',
+        xAxisField: chart.xAxisField || chart.xaxisField || '',
+        xAxisUnit: chart.xAxisUnit || chart.xaxisUnit || '',
+        yAxisName: chart.yAxisName || chart.yaxisName || '',
+        yAxisUnit: chart.yAxisUnit || chart.yaxisUnit || '',
       })));
     } catch (error) {
       message.error('获取图表数据失败');
@@ -128,34 +130,39 @@ const ChartManagement: React.FC = () => {
       },
     },
     {
-      title: 'X轴字段',
-      dataIndex: 'xAxisField',
-      width: 150,
-      render: (_, record) => (
-        <div>
-          <div>{record.xAxisField}</div>
-          {record.xAxisUnit && (
-            <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
-              单位: {record.xAxisUnit}
-            </div>
-          )}
-        </div>
-      ),
+      title: 'X轴',
+      children: [
+        {
+          title: '名称',
+          dataIndex: 'xAxisName',
+          width: 120,
+        },
+        {
+          title: '字段',
+          dataIndex: 'xAxisField',
+          width: 120,
+        },
+        {
+          title: '单位',
+          dataIndex: 'xAxisUnit',
+          width: 80,
+        },
+      ],
     },
     {
-      title: 'Y轴字段',
-      dataIndex: 'yAxisField',
-      width: 150,
-      render: (_, record) => (
-        <div>
-          <div>{record.yAxisField}</div>
-          {record.yAxisUnit && (
-            <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>
-              单位: {record.yAxisUnit}
-            </div>
-          )}
-        </div>
-      ),
+      title: 'Y轴',
+      children: [
+        {
+          title: '名称',
+          dataIndex: 'yAxisName',
+          width: 120,
+        },
+        {
+          title: '单位',
+          dataIndex: 'yAxisUnit',
+          width: 80,
+        },
+      ],
     },
     {
       title: '模拟步数',

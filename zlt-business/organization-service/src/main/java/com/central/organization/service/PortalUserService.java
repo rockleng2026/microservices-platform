@@ -6,6 +6,7 @@ import com.central.organization.model.PortalUser;
 import com.central.organization.model.UserPersonalConfig;
 import com.central.organization.model.Workposition;
 import com.central.common.model.PageResult;
+import com.central.organization.model.vo.AccountUserVO;
 
 import java.util.List;
 import java.util.Map;
@@ -121,7 +122,7 @@ public interface PortalUserService {
     /**
      * 账号分页查询
      */
-    PageResult<PortalUser> pageAccount(String keyword, Integer status, Integer page, Integer size);
+    PageResult<AccountUserVO> pageAccount(String keyword, Integer status, Integer page, Integer size);
 
     /**
      * 账号详情

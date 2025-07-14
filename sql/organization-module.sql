@@ -312,6 +312,7 @@ CREATE TABLE `users` (
   `nickname` varchar(255) DEFAULT NULL,
   `head_img_url` varchar(1024) DEFAULT NULL,
   `mobile` varchar(11) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL,
   `sex` tinyint(1) DEFAULT NULL,
   `enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '状态(1正常,0禁用)',
   `type` varchar(16) NOT NULL COMMENT '用户类型',

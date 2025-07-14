@@ -7,7 +7,7 @@ import ResetPasswordModal from './ResetPasswordModal';
 import { getAccountList, disableAccount, enableAccount, cancelAccount, batchCancelAccount } from './service';
 import type { AccountItem } from './types';
 
-const statusMap = {
+const statusMap: Record<number, React.ReactNode> = {
   1: <Tag color="blue">正常</Tag>,
   0: <Tag color="orange">停用</Tag>,
   2: <Tag color="red">注销</Tag>,
@@ -53,25 +53,64 @@ const AccountTable: React.FC = () => {
           selectedRowKeys,
           onChange: setSelectedRowKeys,
         }}
+        search={{
+          labelWidth: 0,
+          span: 6,
+          optionRender: (searchConfig, formProps, dom) => [
+            <Button type="primary" key="search" htmlType="submit" style={{ marginLeft: 8 }}>
+              搜索
+            </Button>,
+            <Button key="reset" onClick={() => {
+              formProps?.form?.resetFields?.();
+              (actionRef.current as ActionType | undefined)?.reset?.(); // 类型断言，防止类型报错
+            }} style={{ marginLeft: 8 }}>
+              重置
+            </Button>
+          ],
+          filterType: 'query',
+          searchText: '搜索',
+          resetText: '重置',
+          defaultCollapsed: false,
+          style: { marginBottom: 16 },
+        }}
+        form={{
+          syncToUrl: false,
+          layout: 'inline',
+          style: { display: 'flex', alignItems: 'center', gap: 0 },
+        }}
         columns={[
-          { title: '员工姓名', dataIndex: 'employeeName', width: 120 },
-          { title: '账号', dataIndex: 'username', width: 120 },
-          { title: '手机号', dataIndex: 'mobile', width: 120 },
-          { title: '邮箱', dataIndex: 'email', width: 180 },
-          { title: '状态', dataIndex: 'status', width: 80, render: (_, r) => statusMap[r.status] },
-          { title: '创建时间', dataIndex: 'createdAt', width: 160 },
           {
-            title: '操作', valueType: 'option', width: 200, render: (_, record) => (
+            title: '',
+            dataIndex: 'keyword',
+            hideInTable: true,
+            order: 1,
+            fieldProps: {
+              placeholder: '请输入用户名、姓名、手机号或工号进行搜索',
+              allowClear: true,
+              style: { width: 320, verticalAlign: 'middle' },
+            },
+          },
+          { title: '员工姓名', dataIndex: 'employeeName', width: 120, search: false },
+          { title: '账号', dataIndex: 'username', width: 120, search: false },
+          { title: '账号手机号', dataIndex: 'userMobile', width: 120, search: false },
+          { title: '账号邮箱', dataIndex: 'userEmail', width: 180, search: false },
+          { title: '员工手机号', dataIndex: 'employeeMobile', width: 120, search: false },
+          { title: '员工邮箱', dataIndex: 'employeeEmail', width: 180, search: false },
+          { title: '部门', dataIndex: 'departmentName', width: 120, search: false },
+          { title: '状态', dataIndex: 'enabled', width: 80, render: (_, r) => statusMap[r.enabled], search: false },
+          { title: '创建时间', dataIndex: 'createTime', width: 160, search: false },
+          {
+            title: '操作', valueType: 'option', width: 200, search: false, render: (_, record) => (
               <Dropdown
                 overlay={
                   <Menu>
                     <Menu.Item icon={<EditOutlined />} onClick={() => { setCurrent(record); setModalVisible(true); }}>编辑</Menu.Item>
                     <Menu.Item icon={<KeyOutlined />} onClick={() => { setCurrent(record); setResetPwdVisible(true); }}>重置密码</Menu.Item>
-                    {record.status === 1
-                      ? <Menu.Item icon={<StopOutlined />} onClick={() => handleDisable(record.id)}>停用</Menu.Item>
-                      : <Menu.Item icon={<CheckOutlined />} onClick={() => handleEnable(record.id)}>启用</Menu.Item>
+                    {record.enabled === 1
+                      ? <Menu.Item icon={<StopOutlined />} onClick={() => handleDisable(record.userId)}>停用</Menu.Item>
+                      : <Menu.Item icon={<CheckOutlined />} onClick={() => handleEnable(record.userId)}>启用</Menu.Item>
                     }
-                    <Menu.Item icon={<DeleteOutlined />} danger onClick={() => handleCancel(record.id)}>注销</Menu.Item>
+                    <Menu.Item icon={<DeleteOutlined />} danger onClick={() => handleCancel(record.userId)}>注销</Menu.Item>
                   </Menu>
                 }
                 trigger={['click']}
@@ -81,13 +120,20 @@ const AccountTable: React.FC = () => {
             )
           }
         ]}
-        search={{ labelWidth: 80, span: 6 }}
         toolBarRender={() => [
           <Button type="primary" icon={<PlusOutlined />} onClick={() => { setCurrent(null); setModalVisible(true); }}>开通账号</Button>,
           <Button danger disabled={selectedRowKeys.length === 0} onClick={handleBatchCancel}>批量注销</Button>,
         ]}
         request={async (params) => {
-          const res = await getAccountList(params);
+          // 适配查询参数
+          const keyword = params.keyword || '';
+          const query = {
+            keyword,
+            status: params.enabled,
+            page: params.current || 1,
+            size: params.pageSize || 20,
+          };
+          const res = await getAccountList(query);
           return {
             data: res.data,
             success: true,

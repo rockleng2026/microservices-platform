@@ -35,7 +35,7 @@ public class TenantSqlInterceptor implements Interceptor {
     // 需要自动添加租户条件的表
     private static final List<String> TENANT_TABLES = List.of(
         "department", "employee", "workposition", "employee_grade",
-        "field_config", "employee_extend_data", "employee_attachment"
+        "field_config", "employee_extend_data", "employee_attachment", "users"
     );
     
     @Override
@@ -197,56 +197,44 @@ public class TenantSqlInterceptor implements Interceptor {
     }
 
     /**
-     * 获取租户条件，尝试识别表别名
+     * 获取租户条件，尝试识别主表别名
      */
     private String getTenantCondition(String sql, String tenantId) {
         String lowerSql = sql.toLowerCase();
-        
-        // 尝试从SQL中识别主表和别名
-        for (String table : TENANT_TABLES) {
-            // 查找 "FROM table alias" 或 "FROM table AS alias" 模式
-            String fromPattern1 = " from " + table + " ";
-            String fromPattern2 = " from " + table + " as ";
-            
-            int fromIndex1 = lowerSql.indexOf(fromPattern1);
-            int fromIndex2 = lowerSql.indexOf(fromPattern2);
-            
-            if (fromIndex1 > 0 || fromIndex2 > 0) {
-                int fromIndex = Math.max(fromIndex1, fromIndex2);
-                String pattern = fromIndex1 > fromIndex2 ? fromPattern1 : fromPattern2;
-                
-                // 查找别名
-                int aliasStart = fromIndex + pattern.length();
-                int aliasEnd = aliasStart;
-                
-                // 跳过AS关键字
-                if (pattern.contains(" as ")) {
-                    while (aliasEnd < sql.length() && Character.isWhitespace(sql.charAt(aliasEnd))) {
-                        aliasEnd++;
-                    }
-                }
-                
-                // 提取别名
-                while (aliasEnd < sql.length() && 
-                       (Character.isLetterOrDigit(sql.charAt(aliasEnd)) || sql.charAt(aliasEnd) == '_')) {
-                    aliasEnd++;
-                }
-                
-                if (aliasEnd > aliasStart) {
-                    String alias = sql.substring(aliasStart, aliasEnd).trim();
-                    if (!alias.isEmpty() && !alias.toLowerCase().startsWith("left") && 
-                        !alias.toLowerCase().startsWith("right") && !alias.toLowerCase().startsWith("inner")) {
-                        return alias + ".tenant_id = '" + tenantId + "'";
-                    }
-                }
-                
-                // 如果没有找到别名，直接使用表名
-                return table + ".tenant_id = '" + tenantId + "'";
-            }
+        // 只对主表加租户条件，避免歧义
+        int fromIdx = lowerSql.indexOf(" from ");
+        if (fromIdx < 0) return "tenant_id = '" + tenantId + "'";
+        int tableStart = fromIdx + 6;
+        while (tableStart < sql.length() && Character.isWhitespace(sql.charAt(tableStart))) tableStart++;
+        int tableEnd = tableStart;
+        while (tableEnd < sql.length() && (Character.isLetterOrDigit(sql.charAt(tableEnd)) || sql.charAt(tableEnd) == '_')) tableEnd++;
+        String mainTable = sql.substring(tableStart, tableEnd).trim();
+        // 查找别名
+        int aliasStart = tableEnd;
+        while (aliasStart < sql.length() && Character.isWhitespace(sql.charAt(aliasStart))) aliasStart++;
+        // 跳过 as 关键字
+        if (aliasStart + 2 < sql.length() && sql.substring(aliasStart, aliasStart + 2).equalsIgnoreCase("as")) {
+            aliasStart += 2;
+            while (aliasStart < sql.length() && Character.isWhitespace(sql.charAt(aliasStart))) aliasStart++;
         }
-        
-        // 默认情况，不使用别名
-        return "tenant_id = '" + tenantId + "'";
+        int aliasEnd = aliasStart;
+        while (aliasEnd < sql.length() && (Character.isLetterOrDigit(sql.charAt(aliasEnd)) || sql.charAt(aliasEnd) == '_')) aliasEnd++;
+        String alias = sql.substring(aliasStart, aliasEnd).trim();
+        // 判断别名有效性
+        if (!alias.isEmpty() 
+            && !alias.equalsIgnoreCase("left") 
+            && !alias.equalsIgnoreCase("right") 
+            && !alias.equalsIgnoreCase("inner") 
+            && !alias.equalsIgnoreCase("join")
+            && !alias.equalsIgnoreCase("where")
+            && !alias.equalsIgnoreCase("order")
+            && !alias.equalsIgnoreCase("group")
+            && !alias.equalsIgnoreCase("having")
+            && !alias.equalsIgnoreCase("limit")) {
+            return alias + ".tenant_id = '" + tenantId + "'";
+        } else {
+            return mainTable + ".tenant_id = '" + tenantId + "'";
+        }
     }
     
     /**

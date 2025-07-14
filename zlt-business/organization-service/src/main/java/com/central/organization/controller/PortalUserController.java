@@ -7,6 +7,7 @@ import com.central.organization.model.MenuPermission;
 import com.central.organization.model.PortalUser;
 import com.central.organization.model.UserPersonalConfig;
 import com.central.organization.model.Workposition;
+import com.central.organization.model.vo.AccountUserVO;
 import com.central.organization.service.PortalUserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -264,14 +265,14 @@ public class PortalUserController {
      */
     @Operation(summary = "账号分页查询", description = "分页查询当前租户下所有员工账号")
     @GetMapping("/account/page")
-    public PageResult<PortalUser> pageAccount(
+    public PageResult<AccountUserVO> pageAccount(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Integer status,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "20") Integer size) {
-        PageResult<PortalUser> portalUserPageResult = portalUserService.pageAccount(keyword, status, page, size);
-        portalUserPageResult.setResp_code(0);
-        return portalUserPageResult;
+        PageResult<AccountUserVO> result = portalUserService.pageAccount(keyword, status, page, size);
+        result.setResp_code(0);
+        return result;
     }
 
     /**

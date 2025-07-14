@@ -55,11 +55,11 @@
 
     <insert id="insert" parameterType="com.central.common.model.SysUser">
         INSERT INTO users (
-            username, password, employee_id, nickname, head_img_url, mobile, sex, enabled, type,
+            username, password, employee_id, nickname, head_img_url, mobile, email, sex, enabled, type,
             create_time, update_time, company, open_id, is_del, creator_id, tenant_id
         ) VALUES (
             #{username,jdbcType=VARCHAR}, #{password,jdbcType=VARCHAR}, #{employeeId,jdbcType=INTEGER}, 
-            #{nickname,jdbcType=VARCHAR}, #{headImgUrl,jdbcType=VARCHAR}, #{mobile,jdbcType=VARCHAR}, 
+            #{nickname,jdbcType=VARCHAR}, #{headImgUrl,jdbcType=VARCHAR}, #{mobile,jdbcType=VARCHAR}, #{email,jdbcType=VARCHAR},
             #{sex,jdbcType=TINYINT}, #{enabled,jdbcType=TINYINT}, #{type,jdbcType=VARCHAR},
             #{createTime,jdbcType=TIMESTAMP}, #{updateTime,jdbcType=TIMESTAMP}, #{company,jdbcType=VARCHAR}, 
             #{openId,jdbcType=VARCHAR}, #{del,jdbcType=TINYINT}, #{creatorId,jdbcType=INTEGER}, 
@@ -151,6 +151,40 @@
         FROM users
         WHERE employee_id = #{employeeId}
         AND is_del = 0
+    </select>
+
+    <!-- 联合员工和部门信息的账号分页查询 -->
+    <select id="selectAccountUserPage" resultType="com.central.organization.model.vo.AccountUserVO">
+        SELECT
+            u.id AS userId,
+            u.username,
+            u.type,
+            u.enabled,
+            u.mobile AS userMobile,
+            u.email AS userEmail,
+            u.employee_id AS employeeId,
+            e.name AS employeeName,
+            e.mobile AS employeeMobile,
+            e.email AS employeeEmail,
+            e.department_id AS departmentId,
+            d.name AS departmentName,
+            u.create_time AS createTime,
+            u.update_time AS updateTime
+        FROM users as u
+        LEFT JOIN employee as e ON u.employee_id = e.id
+        LEFT JOIN department as d ON e.department_id = d.id
+        WHERE u.is_del = 0
+        <if test="keyword != null and keyword != ''">
+            AND (u.username LIKE CONCAT('%', #{keyword}, '%')
+                 OR u.mobile LIKE CONCAT('%', #{keyword}, '%')
+                 OR e.name LIKE CONCAT('%', #{keyword}, '%')
+                 OR e.emp_no LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="status != null">
+            AND u.enabled = #{status}
+        </if>
+        ORDER BY u.id DESC
+        LIMIT #{offset}, #{size}
     </select>
 
 </mapper> 

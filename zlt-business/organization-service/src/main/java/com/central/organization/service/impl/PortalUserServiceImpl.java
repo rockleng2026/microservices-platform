@@ -1,5 +1,6 @@
 package com.central.organization.service.impl;
 
+import com.central.common.context.TenantContextHolder;
 import com.central.common.model.SysUser;
 import com.central.organization.mapper.EmployeeMapper;
 import com.central.organization.mapper.UsersMapper;
@@ -13,6 +14,7 @@ import com.central.organization.model.UserPersonalConfig;
 import com.central.organization.model.Workposition;
 import com.central.organization.model.Department;
 import com.central.organization.model.vo.WorkpositionVO;
+import com.central.organization.model.vo.AccountUserVO;
 import com.central.organization.service.MenuPermissionService;
 import com.central.organization.service.PortalUserService;
 import lombok.extern.slf4j.Slf4j;
@@ -443,11 +445,20 @@ public class PortalUserServiceImpl implements PortalUserService {
     // ================== 账号管理接口 ==================
 
     @Override
-    public PageResult<PortalUser> pageAccount(String keyword, Integer status, Integer page, Integer size) {
-        // 简单分页查询实现，实际可用MyBatis-Plus或自定义SQL优化
-        List<PortalUser> list = usersMapper.selectPage(keyword, status, (page-1)*size, size);
+    public PageResult<AccountUserVO> pageAccount(String keyword, Integer status, Integer page, Integer size) {
+        int offset = (page - 1) * size;
+        List<AccountUserVO> list = usersMapper.selectAccountUserPage(keyword, status, offset, size, TenantContextHolder.getTenant());
         long total = usersMapper.countPage(keyword, status);
-        return PageResult.<PortalUser>builder().data(list).code(0).resp_code(0).count(total).build();
+        int pages = (int) ((total + size - 1) / size);
+        return PageResult.<AccountUserVO>builder()
+                .data(list)
+                .code(0)
+                .resp_code(0)
+                .count(total)
+                .page(page)
+                .size(size)
+                .pages(pages)
+                .build();
     }
 
     @Override
@@ -458,6 +469,12 @@ public class PortalUserServiceImpl implements PortalUserService {
     @Override
     @Transactional
     public void createAccount(PortalUser user) {
+        // 兼容前端字段 userMobile/userEmail
+        // 自动写入租户ID
+        String tenantId = TenantContextHolder.getTenant();
+        if (tenantId != null && !tenantId.isEmpty()) {
+            user.setTenantId(tenantId);
+        }
         // 校验employeeId唯一
         PortalUser exist = usersMapper.selectByEmployeeId(user.getEmployeeId());
         if (exist != null) throw new RuntimeException("该员工已开通账号");

@@ -2,6 +2,7 @@ package com.central.organization.mapper;
 
 import com.central.common.model.SysUser;
 import com.central.organization.model.PortalUser;
+import com.central.organization.model.vo.AccountUserVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
@@ -59,4 +60,9 @@ public interface UsersMapper {
      * 根据员工ID查找账号
      */
     PortalUser selectByEmployeeId(@Param("employeeId") Long employeeId);
+
+    /**
+     * 联合员工和部门信息的账号分页查询
+     */
+    List<AccountUserVO> selectAccountUserPage(@Param("keyword") String keyword, @Param("status") Integer status, @Param("offset") int offset, @Param("size") Integer size, @Param("tenantId") String tenantId);
 } 

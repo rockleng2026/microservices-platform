@@ -63,6 +63,8 @@ management:
 tenant:
   enable: true
   default-tenant-id: default
+  ignoreSqls:
+    - com.central.organization.mapper.UsersMapper.selectAccountUserPage
   
 # 文件上传配置  
 file:

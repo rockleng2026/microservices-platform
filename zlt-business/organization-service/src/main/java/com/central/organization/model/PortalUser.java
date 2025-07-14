@@ -32,6 +32,20 @@ public class PortalUser extends SysUser {
      */
     private String company;
 
+    /**
+     * 关联员工姓名
+     */
+    private String employeeName;
+    /**
+     * 关联员工邮箱
+     */
+    private String employeeEmail;
+
+    /**
+     * 邮箱
+     */
+    private String email;
+
     // ===== 扩展字段：员工信息 =====
     
     /**

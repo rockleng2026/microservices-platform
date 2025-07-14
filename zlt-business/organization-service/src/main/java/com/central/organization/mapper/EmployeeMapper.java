@@ -286,4 +286,9 @@ public interface EmployeeMapper {
      * @return 员工详细信息列表
      */
     List<EmployeeVO> selectDetailByIds(@Param("ids") List<Long> ids);
+
+    /**
+     * 批量查员工
+     */
+    List<Employee> selectBatchIds(@Param("ids") List<Long> ids);
 } 

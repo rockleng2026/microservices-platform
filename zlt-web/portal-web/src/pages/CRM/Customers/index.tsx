@@ -115,14 +115,12 @@ const Customers: React.FC = () => {
   const loadEmployees = async (keyword?: string) => {
     try {
       setEmployeeLoading(true);
-      
       // 检查员工列表缓存
       const cacheKey = `employees_${keyword || ''}`;
       if (cacheRef.current.has(cacheKey)) {
         setEmployees(cacheRef.current.get(cacheKey));
         return;
       }
-      
       // 使用统一的请求方法调用组织模块的员工列表接口
       const response = await request(`/api-portal/api/organization/employee/page`, {
         method: 'GET',
@@ -132,29 +130,14 @@ const Customers: React.FC = () => {
           size: 100
         }
       });
-      
-      if (response.success || response.resp_code === 0) {
-        const data = response.data || response.datas;
-        // 处理员工数据结构
-        let employeeList: any[] = [];
-        if (data && data.data && Array.isArray(data.data)) {
-          // 根据用户提供的数据结构
-          employeeList = data.data;
-        } else if (Array.isArray(data)) {
-          employeeList = data;
-        } else if (data?.content) {
-          employeeList = data.content;
-        } else if (data?.records) {
-          employeeList = data.records;
-        } else if (data) {
-          employeeList = [data];
-        }
-        
-        setEmployees(employeeList);
-        
-        // 缓存员工列表
-        cacheRef.current.set(cacheKey, employeeList);
+      // 适配新分页结构
+      let employeeList: any[] = [];
+      if (response && (response.success || response.resp_code === 0 || response.code === 0)) {
+        employeeList = response.data ?? [];
       }
+      setEmployees(employeeList);
+      // 缓存员工列表
+      cacheRef.current.set(cacheKey, employeeList);
     } catch (error) {
       console.error('获取员工列表失败:', error);
     } finally {

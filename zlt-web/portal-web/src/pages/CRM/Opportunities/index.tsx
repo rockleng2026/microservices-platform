@@ -212,26 +212,11 @@ const OpportunityList: React.FC = () => {
   const loadEmployees = async () => {
     try {
       // 调用分页接口获取员工列表
-      const response = await getEmployeeList({ pageNum: 1, pageSize: 1000 });
+      const response = await getEmployeeList({ page: 1, size: 1000 });
       console.log('员工列表响应:', response);
-      
-      if (response.success || response.resp_code === 0) {
-        const data = response.data || response.datas;
-        console.log('原始数据:', data);
-        
-        // 处理不同的数据结构
-        let employees: any[] = [];
-        
-        if (Array.isArray(data)) {
-          // 直接是数组
-          employees = data;
-        } else if (data && typeof data === 'object') {
-          // 是对象，尝试获取数据数组
-          const dataObj = data as any;
-          employees = dataObj.data || dataObj.records || dataObj.list || [];
-        }
-        
-        console.log('处理后的员工列表:', employees);
+      if (response.code === 0) {
+        // 适配新分页结构
+        const employees = response.data ?? [];
         setEmployeeList(Array.isArray(employees) ? employees : []);
       }
     } catch (error) {

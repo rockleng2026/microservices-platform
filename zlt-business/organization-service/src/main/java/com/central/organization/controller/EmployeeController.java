@@ -37,7 +37,7 @@ public class EmployeeController {
      * @return 员工分页列表
      */
     @GetMapping("/page")
-    public Result<PageResult<EmployeeVO>> getEmployeePage(EmployeeQueryDTO query) {
+    public PageResult<EmployeeVO> getEmployeePage(EmployeeQueryDTO query) {
         // ID转换处理
         if (query.getDepartmentId() != null) {
             query.setDepartmentId(IdUtils.stringToLong(query.getDepartmentId().toString()));
@@ -51,18 +51,20 @@ public class EmployeeController {
 
         try{
             IEmployeeService.PageResult<EmployeeVO> servicePageResult = employeeService.getPageList(query);
-            
             // 转换为统一的PageResult格式
             PageResult<EmployeeVO> pageResult = PageResult.<EmployeeVO>builder()
                 .count(servicePageResult.getTotal())
-                .code(0)
                 .data(servicePageResult.getRecords())
+                .page(query.getPage())
+                .size(query.getSize())
+                .pages((int) Math.ceil((double)servicePageResult.getTotal() / query.getSize()))
+                .resp_code(0)
+                .resp_msg("成功")
                 .build();
-                
-            return Result.succeed(pageResult, "success");
+            return pageResult;
         } catch (Exception ex) {
             log.error("分页查询员工列表失败", ex);
-            return Result.failed("查询失败");
+            return PageResult.<EmployeeVO>builder().resp_code(-1).resp_msg("查询失败").build();
         }
     }
 

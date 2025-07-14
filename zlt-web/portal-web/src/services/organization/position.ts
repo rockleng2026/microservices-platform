@@ -70,13 +70,24 @@ export interface WorkPositionSaveDTO {
 }
 
 /**
- * 分页查询岗位列表
+ * 分页查询岗位列表（适配后端新分页结构）
  */
 export async function getWorkPositionPage(params: WorkPositionPageParams) {
-  return request(`${API_PREFIX}/page`, {
+  const res = await request(`${API_PREFIX}/page`, {
     method: 'GET',
     params,
   });
+  // 适配后端分页结构
+  return {
+    code: res.resp_code ?? res.code,
+    msg: res.resp_msg ?? res.msg,
+    data: res.data ?? [],
+    total: res.count ?? 0,
+    page: res.page ?? params.current ?? 1,
+    size: res.size ?? params.size ?? 10,
+    pages: res.pages ?? Math.ceil((res.count ?? 0) / (params.size ?? 10)),
+    raw: res,
+  };
 }
 
 /**

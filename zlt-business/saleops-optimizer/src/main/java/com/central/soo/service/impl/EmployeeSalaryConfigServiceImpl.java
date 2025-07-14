@@ -38,16 +38,19 @@ public class EmployeeSalaryConfigServiceImpl extends com.baomidou.mybatisplus.ex
     public IPage<EmployeeSalaryVO> pageEmployeeSalary(EmployeeSalaryQueryDTO query) {
         try {
             // 1. 调用组织服务获取员工列表
-            Result<PageResult<Map<String, Object>>> employeeResult = employeeFeignClient.getEmployeePage(
+            PageResult<Map<String, Object>> employeePageResult = employeeFeignClient.getEmployeePage(
                 query.getPageNum(), query.getPageSize(), 
                 query.getEmployeeName(), query.getEmployeeNo(), 
                 query.getDepartmentId(), 1); // 1表示在职状态
 
-            if (employeeResult == null || employeeResult.getDatas() == null) {
+            if (employeePageResult == null || employeePageResult.getData() == null) {
                 return new Page<>(query.getPageNum(), query.getPageSize());
             }
 
-            PageResult<Map<String, Object>> employeePageResult = employeeResult.getDatas();
+            // 新增：判断resp_code是否为0
+            if (employeePageResult.getResp_code() != null && employeePageResult.getResp_code() != 0) {
+                return new Page<>(query.getPageNum(), query.getPageSize());
+            }
             List<Map<String, Object>> employees = employeePageResult.getData();
             
             if (employees == null || employees.isEmpty()) {

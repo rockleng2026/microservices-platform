@@ -27,10 +27,10 @@ public interface EmployeeFeignClient {
      * @param empNo    员工编号
      * @param departmentId 部门ID
      * @param status   员工状态
-     * @return 员工分页列表
+     * @return 员工分页列表，PageResult结构包含resp_code、resp_msg、count、data、page、size、pages等字段
      */
     @GetMapping("/api/organization/employee/page")
-    Result<PageResult<Map<String, Object>>> getEmployeePage(
+    PageResult<Map<String, Object>> getEmployeePage(
             @RequestParam(value = "page", defaultValue = "1") Integer pageNum,
             @RequestParam(value = "size", defaultValue = "20") Integer pageSize,
             @RequestParam(value = "name", required = false) String name,

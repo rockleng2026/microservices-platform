@@ -4,6 +4,7 @@ import com.central.common.model.PageResult;
 import com.central.common.model.Result;
 import com.central.organization.model.dto.WorkpositionQueryDTO;
 import com.central.organization.model.dto.WorkpositionSaveDTO;
+import com.central.organization.model.vo.EmployeeVO;
 import com.central.organization.model.vo.WorkpositionVO;
 import com.central.organization.service.IWorkpositionService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -34,14 +35,17 @@ public class WorkpositionController {
 
     @Operation(summary = "分页查询岗位列表", description = "分页查询岗位列表")
     @GetMapping("/page")
-    public Result<PageResult<WorkpositionVO>> queryPage(WorkpositionQueryDTO queryDTO) {
+    public PageResult<WorkpositionVO> queryPage(WorkpositionQueryDTO queryDTO) {
         log.info("分页查询岗位列表，参数：{}", queryDTO);
         try {
             PageResult<WorkpositionVO> result = workpositionService.queryPage(queryDTO);
-            return Result.succeed(result);
+            // 确保PageResult已设置resp_code和resp_msg
+            result.setResp_code(0);
+            result.setResp_msg("成功");
+            return result;
         } catch (Exception e) {
             log.error("分页查询岗位列表失败", e);
-            return Result.failed(e.getMessage());
+            return PageResult.<WorkpositionVO>builder().resp_code(1).resp_msg(e.getMessage()).build();
         }
     }
 

@@ -964,15 +964,11 @@ const Employees: React.FC = () => {
             console.log('员工列表响应:', response);
             
             if (response && response.success) {
-              const records = response.data?.records || [];
-              const total = response.data?.total || 0;
-              
-              console.log('处理后的数据:', { records, total });
-              
+              // 直接用data和total
               return {
-                data: records,
+                data: response.data,
                 success: true,
-                total: total,
+                total: response.total,
               };
             }
             

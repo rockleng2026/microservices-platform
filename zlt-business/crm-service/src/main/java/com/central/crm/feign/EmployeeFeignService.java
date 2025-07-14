@@ -31,7 +31,7 @@ public interface EmployeeFeignService {
      * @return 员工分页列表
      */
     @GetMapping("/api/organization/employee/page")
-    Result<Map<String, Object>> getEmployeePage(
+    Map<String, Object> getEmployeePage(
             @RequestParam(value = "pageNum", defaultValue = "1") Integer pageNum,
             @RequestParam(value = "pageSize", defaultValue = "20") Integer pageSize,
             @RequestParam(value = "name", required = false) String name,

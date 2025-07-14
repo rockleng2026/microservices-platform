@@ -91,27 +91,24 @@ export interface EmployeeImportData {
 }
 
 /**
- * 分页查询员工列表
+ * 分页查询员工列表（适配ProTable/Antd Table数据结构）
  */
 export async function getEmployeePage(params: EmployeePageParams) {
   return request(`${API_PREFIX}/page`, {
     method: 'GET',
     params,
   }).then(response => {
-    // 适配新的Result<PageResult<EmployeeVO>>格式
-    if (response && response.resp_code === 0 && response.datas) {
-      const pageResult = response.datas;
-      return {
-        success: true,
-        data: {
-          records: pageResult.data || [],
-          total: pageResult.count || 0,
-          current: params.page || 1,
-          size: params.size || 20
-        }
-      };
-    }
-    return response;
+    return {
+      data: response.data ?? [],
+      total: response.count ?? 0,
+      success: (response.resp_code ?? response.code) === 0,
+      code: response.resp_code ?? response.code,
+      msg: response.resp_msg ?? response.msg,
+      page: response.page ?? params.page ?? 1,
+      size: response.size ?? params.size ?? 20,
+      pages: response.pages ?? Math.ceil((response.count ?? 0) / (params.size ?? 20)),
+      raw: response,
+    };
   });
 }
 

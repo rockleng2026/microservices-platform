@@ -408,9 +408,9 @@ public class SalaryCalculationServiceImpl extends ServiceImpl<SalaryCalculationT
                 // 全员计算：获取所有在职员工
                 log.info("全员计算，获取所有在职员工");
                 try {
-                    Result<PageResult<Map<String, Object>>> result = employeeFeignClient.getEmployeePage(1, 1000, null, null, null, 1);
-                                         if (result != null && result.getDatas() != null && result.getDatas().getData() != null) {
-                         for (Map<String, Object> empData : result.getDatas().getData()) {
+                    PageResult<Map<String, Object>> result = employeeFeignClient.getEmployeePage(1, 1000, null, null, null, 1);
+                    if (result != null && result.getData() != null && result.getResp_code() != null && result.getResp_code() == 0) {
+                        for (Map<String, Object> empData : result.getData()) {
                             EmployeeBasicInfo employee = convertToEmployeeBasicInfo(empData);
                             if (employee != null) {
                                 employees.add(employee);

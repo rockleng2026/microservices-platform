@@ -56,12 +56,25 @@ export async function deleteDepartment(id: number) {
  * 员工管理API
  */
 
-// 获取员工列表
+/**
+ * 获取员工分页列表（适配后端新分页结构）
+ */
 export async function getEmployeeList(params?: any) {
-  return request<ApiResponse<Employee[]>>(getApiUrl('/api/organization/employee/page', 'PORTAL'), {
+  const res = await request(getApiUrl('/api/organization/employee/page', 'PORTAL'), {
     method: 'GET',
     params,
   });
+  // 适配后端分页结构
+  return {
+    code: res.resp_code ?? res.code,
+    msg: res.resp_msg ?? res.message ?? res.msg,
+    data: res.data ?? [],
+    total: res.count ?? 0,
+    page: res.page ?? params?.current ?? 1,
+    size: res.size ?? params?.size ?? 10,
+    pages: res.pages ?? Math.ceil((res.count ?? 0) / (params?.size ?? 10)),
+    raw: res,
+  };
 }
 
 // 获取员工详情

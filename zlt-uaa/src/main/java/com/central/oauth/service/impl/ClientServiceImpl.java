@@ -58,7 +58,7 @@ public class ClientServiceImpl extends SuperServiceImpl<ClientMapper, Client> im
         }
         List<Client> list = baseMapper.findList(page, params);
         page.setRecords(list);
-        return PageResult.<Client>builder().data(list).code(0).count(page.getTotal()).build();
+        return PageResult.<Client>builder().data(list).code(0).resp_code(0).count(page.getTotal()).build();
     }
 
     @Override

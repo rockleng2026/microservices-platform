@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
+import com.central.common.model.PageResult;
 
 /**
  * Portal用户控制器
@@ -254,5 +255,113 @@ public class PortalUserController {
             log.error("更新用户默认岗位失败，用户ID: {}, 岗位ID: {}", userId, positionId, e);
             return Result.failed("默认岗位更新失败: " + e.getMessage());
         }
+    }
+
+    // ================== 账号管理接口 ==================
+
+    /**
+     * 账号分页查询
+     */
+    @Operation(summary = "账号分页查询", description = "分页查询当前租户下所有员工账号")
+    @GetMapping("/account/page")
+    public PageResult<PortalUser> pageAccount(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) Integer status,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "20") Integer size) {
+        PageResult<PortalUser> portalUserPageResult = portalUserService.pageAccount(keyword, status, page, size);
+        portalUserPageResult.setResp_code(0);
+        return portalUserPageResult;
+    }
+
+    /**
+     * 账号详情
+     */
+    @Operation(summary = "账号详情", description = "根据账号ID获取账号详细信息")
+    @GetMapping("/account/{id}")
+    public Result<PortalUser> getAccount(@PathVariable Long id) {
+        return Result.succeed(portalUserService.getAccount(id));
+    }
+
+    /**
+     * 开通账号
+     */
+    @Operation(summary = "开通账号", description = "为员工开通账号")
+    @PostMapping("/account/create")
+    public Result<Void> createAccount(@RequestBody @Valid PortalUser user) {
+        portalUserService.createAccount(user);
+        return Result.succeed("ok");
+    }
+
+    /**
+     * 编辑账号
+     */
+    @Operation(summary = "编辑账号", description = "编辑账号基础信息")
+    @PutMapping("/account/{id}")
+    public Result<Void> updateAccount(@PathVariable Long id, @RequestBody PortalUser user) {
+        user.setId(id);
+        portalUserService.updateAccount(user);
+        return Result.succeed("ok");
+    }
+
+    /**
+     * 停用账号
+     */
+    @Operation(summary = "停用账号", description = "停用账号，账号不可登录")
+    @PostMapping("/account/{id}/disable")
+    public Result<Void> disableAccount(@PathVariable Long id) {
+        portalUserService.disableAccount(id);
+        return Result.succeed("ok");
+    }
+
+    /**
+     * 启用账号
+     */
+    @Operation(summary = "启用账号", description = "启用账号，恢复登录")
+    @PostMapping("/account/{id}/enable")
+    public Result<Void> enableAccount(@PathVariable Long id) {
+        portalUserService.enableAccount(id);
+        return Result.succeed("ok");
+    }
+
+    /**
+     * 注销账号
+     */
+    @Operation(summary = "注销账号", description = "注销账号，彻底禁用")
+    @PostMapping("/account/{id}/cancel")
+    public Result<Void> cancelAccount(@PathVariable Long id) {
+        portalUserService.cancelAccount(id);
+        return Result.succeed("ok");
+    }
+
+    /**
+     * 批量注销账号
+     */
+    @Operation(summary = "批量注销账号", description = "批量注销账号，彻底禁用")
+    @PostMapping("/account/batch-cancel")
+    public Result<Void> batchCancelAccount(@RequestBody List<Long> ids) {
+        portalUserService.batchCancelAccount(ids);
+        return Result.succeed("ok");
+    }
+
+    /**
+     * 重置密码
+     */
+    @Operation(summary = "重置密码", description = "管理员重置账号密码")
+    @PostMapping("/account/{id}/reset-password")
+    public Result<Void> resetPassword(@PathVariable Long id, @RequestParam String newPassword) {
+        portalUserService.resetPassword(id, newPassword);
+        return Result.succeed("ok");
+    }
+
+    /**
+     * 本人修改密码
+     */
+    @Operation(summary = "修改密码", description = "用户本人修改密码")
+    @PostMapping("/account/change-password")
+    public Result<Void> changePassword(@LoginUser SysUser currentUser, @RequestParam String oldPassword, @RequestParam String newPassword) {
+        Long userId = getUserId(currentUser);
+        portalUserService.changePassword(userId, oldPassword, newPassword);
+        return Result.succeed("ok");
     }
 } 

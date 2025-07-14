@@ -33,6 +33,7 @@ public class PageResult<T> implements Serializable {
      * 业务系统响应错误码使用这个，废弃code code为原框架系统使用 0-成功 其他-失败
      */
     private Integer resp_code;
+
     private String resp_msg;
 
     /**

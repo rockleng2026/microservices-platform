@@ -38,7 +38,7 @@
 - **数据库**: MySQL 8.0 + Redis
 - **ORM框架**: MyBatis-Plus
 - **前端技术**: React 18 + TypeScript + Ant Design Pro
-- **图表库**: Ant Design Charts + ECharts
+- **图表库**: Ant Design Charts + Recharts
 - **认证方式**: OAuth2 + JWT
 
 ### 2.3 数据库设计

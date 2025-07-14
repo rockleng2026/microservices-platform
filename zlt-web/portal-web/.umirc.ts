@@ -250,6 +250,11 @@ export default defineConfig({
               name: '字典配置',
               component: '@/pages/System/DictConfig',
             },
+            {
+              path: '/system/account',
+              name: '账号管理',
+              component: '@/pages/System/Account/index',
+            },
           ],
         },
       ],

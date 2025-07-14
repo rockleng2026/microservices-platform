@@ -5,6 +5,8 @@ import com.central.organization.model.PortalUser;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.util.List;
+
 /**
  * 用户数据访问接口
  * 
@@ -42,4 +44,19 @@ public interface UsersMapper {
      * 根据主键删除用户
      */
     int deleteByPrimaryKey(@Param("id") Long id);
+
+    /**
+     * 分页查询账号
+     */
+    List<PortalUser> selectPage(@Param("keyword") String keyword, @Param("status") Integer status, @Param("offset") int offset, @Param("size") Integer size);
+
+    /**
+     * 统计账号总数
+     */
+    long countPage(@Param("keyword") String keyword, @Param("status") Integer status);
+
+    /**
+     * 根据员工ID查找账号
+     */
+    PortalUser selectByEmployeeId(@Param("employeeId") Long employeeId);
 } 

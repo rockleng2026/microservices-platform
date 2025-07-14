@@ -35,7 +35,7 @@
 - **数据存储**: MySQL 8.0 + Redis缓存
 - **实时计算**: 基于观察者模式的响应式计算
 - **API集成**: 支持RESTful API和GraphQL查询
-- **前端展示**: React + Ant Design + ECharts
+- **前端展示**: React + Ant Design + Recharts
 
 ## 3. 功能模块详细设计
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Row, Col, Typography, Button } from 'antd';
-import { UserOutlined, TeamOutlined, SettingOutlined, HistoryOutlined, BookOutlined } from '@ant-design/icons';
+import { UserOutlined, TeamOutlined, SettingOutlined, HistoryOutlined, BookOutlined, KeyOutlined } from '@ant-design/icons';
 import { history } from 'umi';
 import './index.less';
 
@@ -45,6 +45,13 @@ const SystemIndex: React.FC = () => {
       description: '查看系统操作日志，追踪用户行为，监控系统安全',
       path: '/system/log',
       color: '#f5222d'
+    },
+    {
+      title: '账号管理',
+      icon: <KeyOutlined />,
+      description: '管理系统账号，支持员工账号的开通、停用、重置密码等操作',
+      path: '/system/account',
+      color: '#1890ff'
     }
   ];
 

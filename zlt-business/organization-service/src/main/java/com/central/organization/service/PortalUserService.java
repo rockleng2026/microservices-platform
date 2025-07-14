@@ -5,6 +5,7 @@ import com.central.organization.model.MenuPermission;
 import com.central.organization.model.PortalUser;
 import com.central.organization.model.UserPersonalConfig;
 import com.central.organization.model.Workposition;
+import com.central.common.model.PageResult;
 
 import java.util.List;
 import java.util.Map;
@@ -114,4 +115,56 @@ public interface PortalUserService {
      * @return 是否成功
      */
     boolean initUserDefaultConfig(Long userId, Long defaultPositionId);
+
+    // ================== 账号管理接口 ==================
+
+    /**
+     * 账号分页查询
+     */
+    PageResult<PortalUser> pageAccount(String keyword, Integer status, Integer page, Integer size);
+
+    /**
+     * 账号详情
+     */
+    PortalUser getAccount(Long id);
+
+    /**
+     * 开通账号
+     */
+    void createAccount(PortalUser user);
+
+    /**
+     * 编辑账号
+     */
+    void updateAccount(PortalUser user);
+
+    /**
+     * 停用账号
+     */
+    void disableAccount(Long id);
+
+    /**
+     * 启用账号
+     */
+    void enableAccount(Long id);
+
+    /**
+     * 注销账号
+     */
+    void cancelAccount(Long id);
+
+    /**
+     * 批量注销账号
+     */
+    void batchCancelAccount(List<Long> ids);
+
+    /**
+     * 重置密码
+     */
+    void resetPassword(Long id, String newPassword);
+
+    /**
+     * 修改密码
+     */
+    void changePassword(Long id, String oldPassword, String newPassword);
 } 

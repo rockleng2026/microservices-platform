@@ -111,4 +111,46 @@
         UPDATE users SET is_del = 1 WHERE id = #{id,jdbcType=INTEGER}
     </delete>
 
+    <!-- 分页查询账号 -->
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM users
+        WHERE is_del = 0
+        <if test="keyword != null and keyword != ''">
+            AND (username LIKE CONCAT('%', #{keyword}, '%')
+                 OR mobile LIKE CONCAT('%', #{keyword}, '%')
+                 OR nickname LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="status != null">
+            AND enabled = #{status}
+        </if>
+        ORDER BY id DESC
+        LIMIT #{offset}, #{size}
+    </select>
+
+    <!-- 统计账号总数 -->
+    <select id="countPage" resultType="long">
+        SELECT COUNT(1)
+        FROM users
+        WHERE is_del = 0
+        <if test="keyword != null and keyword != ''">
+            AND (username LIKE CONCAT('%', #{keyword}, '%')
+                 OR mobile LIKE CONCAT('%', #{keyword}, '%')
+                 OR nickname LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        <if test="status != null">
+            AND enabled = #{status}
+        </if>
+    </select>
+
+    <!-- 根据员工ID查找账号 -->
+    <select id="selectByEmployeeId" parameterType="java.lang.Long" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List" />
+        FROM users
+        WHERE employee_id = #{employeeId}
+        AND is_del = 0
+    </select>
+
 </mapper> 

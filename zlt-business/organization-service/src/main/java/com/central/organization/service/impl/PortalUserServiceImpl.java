@@ -19,6 +19,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import com.central.common.model.PageResult;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -49,6 +51,9 @@ public class PortalUserServiceImpl implements PortalUserService {
 
     @Autowired
     private MenuPermissionService menuPermissionService;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public SysUser findByUsername(String username) {
@@ -432,6 +437,100 @@ public class PortalUserServiceImpl implements PortalUserService {
         } catch (Exception e) {
             log.error("岗位切换失败: userId={}, positionId={}", userId, positionId, e);
             throw new RuntimeException("岗位切换失败: " + e.getMessage());
+        }
+    }
+
+    // ================== 账号管理接口 ==================
+
+    @Override
+    public PageResult<PortalUser> pageAccount(String keyword, Integer status, Integer page, Integer size) {
+        // 简单分页查询实现，实际可用MyBatis-Plus或自定义SQL优化
+        List<PortalUser> list = usersMapper.selectPage(keyword, status, (page-1)*size, size);
+        long total = usersMapper.countPage(keyword, status);
+        return PageResult.<PortalUser>builder().data(list).code(0).resp_code(0).count(total).build();
+    }
+
+    @Override
+    public PortalUser getAccount(Long id) {
+        return usersMapper.selectByPrimaryKey(id);
+    }
+
+    @Override
+    @Transactional
+    public void createAccount(PortalUser user) {
+        // 校验employeeId唯一
+        PortalUser exist = usersMapper.selectByEmployeeId(user.getEmployeeId());
+        if (exist != null) throw new RuntimeException("该员工已开通账号");
+        // 校验用户名唯一
+        if (usersMapper.selectByUsername(user.getUsername()) != null) throw new RuntimeException("用户名已存在");
+        // 密码加密
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        user.setEnabled(true);
+        user.setType("portal");
+        usersMapper.insert(user);
+        // 可扩展：同步更新员工loginAccountFlag=1
+    }
+
+    @Override
+    @Transactional
+    public void updateAccount(PortalUser user) {
+        usersMapper.updateByPrimaryKeySelective(user);
+    }
+
+    @Override
+    @Transactional
+    public void disableAccount(Long id) {
+        PortalUser user = usersMapper.selectByPrimaryKey(id);
+        if (user == null) throw new RuntimeException("账号不存在");
+        user.setEnabled(false);
+        usersMapper.updateByPrimaryKeySelective(user);
+    }
+
+    @Override
+    @Transactional
+    public void enableAccount(Long id) {
+        PortalUser user = usersMapper.selectByPrimaryKey(id);
+        if (user == null) throw new RuntimeException("账号不存在");
+        user.setEnabled(true);
+        usersMapper.updateByPrimaryKeySelective(user);
+    }
+
+    @Override
+    @Transactional
+    public void cancelAccount(Long id) {
+        PortalUser user = usersMapper.selectByPrimaryKey(id);
+        if (user == null) throw new RuntimeException("账号不存在");
+        user.setEnabled(false);
+        user.setDel(true);
+        usersMapper.updateByPrimaryKeySelective(user);
+        // 可扩展：同步更新员工loginAccountFlag=0
+    }
+
+    @Override
+    @Transactional
+    public void resetPassword(Long id, String newPassword) {
+        PortalUser user = usersMapper.selectByPrimaryKey(id);
+        if (user == null) throw new RuntimeException("账号不存在");
+        user.setPassword(passwordEncoder.encode(newPassword));
+        usersMapper.updateByPrimaryKeySelective(user);
+    }
+
+    @Override
+    @Transactional
+    public void changePassword(Long id, String oldPassword, String newPassword) {
+        PortalUser user = usersMapper.selectByPrimaryKey(id);
+        if (user == null) throw new RuntimeException("账号不存在");
+        if (!passwordEncoder.matches(oldPassword, user.getPassword())) throw new RuntimeException("旧密码错误");
+        user.setPassword(passwordEncoder.encode(newPassword));
+        usersMapper.updateByPrimaryKeySelective(user);
+    }
+
+    @Override
+    @Transactional
+    public void batchCancelAccount(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return;
+        for (Long id : ids) {
+            cancelAccount(id);
         }
     }
 

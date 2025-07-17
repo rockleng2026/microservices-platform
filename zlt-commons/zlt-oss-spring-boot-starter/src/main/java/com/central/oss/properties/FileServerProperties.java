@@ -16,6 +16,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = FileServerProperties.PREFIX)
 public class FileServerProperties {
     public static final String PREFIX = "zlt.file-server";
+    public static final String TYPE_LOCAL = "local";
     public static final String TYPE_FDFS = "fastdfs";
     public static final String TYPE_S3 = "s3";
 

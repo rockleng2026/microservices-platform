@@ -13,6 +13,18 @@ export const financialAnalysisV2Routes = [
     access: 'canSaleopsOptimizer',
   },
   {
+    path: '/saleops-optimizer/financial-analysis/v2/model-instances',
+    name: '模型实例管理V2',
+    component: './SaleopsOptimizer/FinancialAnalysis/v2/ModelInstanceManagement',
+    access: 'canSaleopsOptimizer',
+  },
+  {
+    path: '/saleops-optimizer/financial-analysis/v2/model-instance-variables',
+    name: '模型实例变量管理V2',
+    component: './SaleopsOptimizer/FinancialAnalysis/v2/ModelInstanceVariableManagement',
+    access: 'canSaleopsOptimizer',
+  },
+  {
     path: '/saleops-optimizer/financial-analysis/v2/chart-management',
     name: '图表管理V2',
     component: './SaleopsOptimizer/FinancialAnalysis/v2/ChartManagement',

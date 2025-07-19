@@ -55,6 +55,32 @@ export interface ApiResponse<T = any> {
   resp_msg: string;
 }
 
+export interface ModelVariable {
+  id: number;
+  modelId: number;
+  variableCode: string;
+  variableName: string;
+  variableType: 'INPUT' | 'CALC' | 'API';
+  dataType: 'NUMBER' | 'DECIMAL' | 'PERCENTAGE' | 'CURRENCY' | 'BOOLEAN' | 'STRING';
+  unit?: string;
+  parentId?: number;
+  defaultValue?: string;
+  minValue?: number;
+  maxValue?: number;
+  calculationFormula?: string;
+  constraintFormula?: string;
+  apiConfig?: any;
+  displayOrder: number;
+  isRequired: boolean;
+  isKeyIndicator: boolean;
+  isVisible: boolean;
+  validationRules?: any;
+  description?: string;
+  helpText?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 /**
  * 财务模型管理API服务
  */
@@ -387,5 +413,19 @@ export class FinancialModelAPI {
       return response.datas;
     }
     throw new Error(response.resp_msg || '根据编码获取模型失败');
+  }
+
+  /**
+   * 获取模型变量列表
+   */
+  static async getModelVariables(modelId: number): Promise<ModelVariable[]> {
+    const response = await request<ApiResponse<ModelVariable[]>>(`${API_ENDPOINTS.SOO}/api/soo/v2/variables/model/${modelId}`, {
+      method: 'GET',
+    });
+
+    if (response.resp_code === 0) {
+      return response.datas;
+    }
+    throw new Error(response.resp_msg || '获取模型变量失败');
   }
 } 

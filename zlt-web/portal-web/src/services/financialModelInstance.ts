@@ -252,16 +252,64 @@ export class FinancialModelInstanceAPI {
     if (response.resp_code === 0) {
       return response.datas;
     }
-    throw new Error(response.resp_msg || '获取实例变量列表失败');
+    throw new Error(response.resp_msg || '获取实例变量失败');
   }
 
   /**
-   * 更新实例变量值
+   * 创建实例变量
    */
-  static async updateInstanceVariables(instanceId: number, variables: ModelInstanceVariable[]): Promise<boolean> {
-    const response = await request<ApiResponse<boolean>>(`${API_BASE}/${instanceId}/variables`, {
+  static async createInstanceVariables(data: {
+    instanceId: number;
+    variables: Array<{
+      instanceId: number;
+      variableId: number;
+      variableValue?: string;
+    }>;
+  }): Promise<boolean> {
+    const response = await request<ApiResponse<boolean>>(`${API_BASE}/${data.instanceId}/variables`, {
+      method: 'POST',
+      data: { variables: data.variables },
+    });
+
+    if (response.resp_code === 0) {
+      return response.datas;
+    }
+    throw new Error(response.resp_msg || '创建实例变量失败');
+  }
+
+  /**
+   * 更新实例变量列表
+   */
+  static async updateInstanceVariables(data: {
+    instanceId: number;
+    variables: Array<{
+      instanceId: number;
+      variableId: number;
+      variableValue?: string;
+    }>;
+  }): Promise<boolean> {
+    const response = await request<ApiResponse<boolean>>(`${API_BASE}/${data.instanceId}/variables`, {
       method: 'PUT',
-      data: { variables },
+      data: { variables: data.variables },
+    });
+
+    if (response.resp_code === 0) {
+      return response.datas;
+    }
+    throw new Error(response.resp_msg || '更新实例变量失败');
+  }
+
+  /**
+   * 更新单个实例变量
+   */
+  static async updateInstanceVariable(data: {
+    instanceId: number;
+    variableId: number;
+    variableValue: string;
+  }): Promise<boolean> {
+    const response = await request<ApiResponse<boolean>>(`${API_BASE}/${data.instanceId}/variables/${data.variableId}`, {
+      method: 'PUT',
+      data: { variableValue: data.variableValue },
     });
 
     if (response.resp_code === 0) {

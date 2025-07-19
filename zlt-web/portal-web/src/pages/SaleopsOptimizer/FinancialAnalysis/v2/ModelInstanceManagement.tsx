@@ -207,8 +207,8 @@ const ModelInstanceManagement: React.FC<ModelInstanceManagementProps> = ({
 
   // 编辑变量
   const handleEditVariables = (record: financialModelInstanceAPI.FinancialModelInstance) => {
-    setSelectedInstance(record);
-    setVariableEditorVisible(true);
+    // 跳转到新的变量管理页面
+    window.open(`/saleops-optimizer/financial-analysis/v2/model-instance-variables?instanceId=${record.id}&modelId=${record.modelId}`, '_blank');
   };
 
   // 查看计算历史

@@ -217,6 +217,12 @@ export default defineConfig({
                   hideInMenu: true,
                 },
                 {
+                  path: '/saleops-optimizer/financial-analysis/v2/model-instance-variables',
+                  name: '模型实例变量管理V2',
+                  component: '@/pages/SaleopsOptimizer/FinancialAnalysis/v2/ModelInstanceVariableManagement',
+                  hideInMenu: true,
+                },
+                {
                   path: '/saleops-optimizer/financial-analysis/v2/api-test',
                   name: 'API测试V2',
                   component: '@/pages/SaleopsOptimizer/FinancialAnalysis/v2/ApiTestPage',

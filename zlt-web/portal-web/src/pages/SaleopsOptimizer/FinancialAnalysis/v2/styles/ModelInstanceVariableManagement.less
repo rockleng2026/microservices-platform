@@ -1,0 +1,220 @@
+.model-instance-variable-management {
+  height: 100%;
+  
+  .ant-card {
+    height: 100%;
+    
+    .ant-card-body {
+      height: 100%;
+    }
+  }
+  
+  .ant-table {
+    .ant-table-row-selected {
+      background-color: #e6f7ff;
+    }
+    
+    .ant-table-tbody > tr:hover > td {
+      background-color: #f5f5f5;
+    }
+  }
+  
+  .ant-list-item {
+    padding: 16px;
+    border-bottom: 1px solid #f0f0f0;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    &:hover {
+      background-color: #fafafa;
+    }
+  }
+  
+  .variable-input-group {
+    .ant-input-number {
+      width: 100%;
+    }
+    
+    .ant-switch {
+      min-width: 60px;
+    }
+  }
+  
+  .variable-info {
+    .ant-tag {
+      margin-right: 4px;
+    }
+    
+    .variable-description {
+      color: #8c8c8c;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+  }
+  
+  .variable-value {
+    .calculated-value {
+      color: #52c41a;
+      font-weight: 500;
+    }
+    
+    .calculation-error {
+      color: #ff4d4f;
+      font-size: 12px;
+    }
+  }
+  
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    
+    .ant-empty-description {
+      color: #8c8c8c;
+    }
+  }
+  
+  .loading-state {
+    text-align: center;
+    padding: 50px 20px;
+    
+    .loading-text {
+      margin-top: 16px;
+      color: #8c8c8c;
+    }
+  }
+  
+  .instance-header {
+    .instance-name {
+      font-weight: 500;
+      color: #1890ff;
+    }
+    
+    .instance-status {
+      margin-left: 8px;
+    }
+  }
+  
+  .variable-form-modal {
+    .ant-form-item-label {
+      font-weight: 500;
+    }
+    
+    .variable-type-tags {
+      margin-left: 8px;
+      
+      .ant-tag {
+        margin-right: 4px;
+      }
+    }
+    
+    .variable-description {
+      color: #8c8c8c;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+  }
+  
+  .search-filter-bar {
+    margin-bottom: 16px;
+    
+    .ant-input-search {
+      width: 200px;
+    }
+    
+    .ant-select {
+      width: 120px;
+    }
+  }
+  
+  .action-bar {
+    margin-bottom: 16px;
+    
+    .ant-btn {
+      margin-right: 8px;
+    }
+  }
+  
+  .variable-list {
+    .variable-item {
+      border: 1px solid #f0f0f0;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      padding: 16px;
+      
+      &:hover {
+        border-color: #1890ff;
+        box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+      }
+      
+      .variable-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        
+        .variable-title {
+          font-weight: 500;
+          font-size: 14px;
+          
+          .required-mark {
+            color: #ff4d4f;
+            margin-left: 4px;
+          }
+        }
+        
+        .variable-tags {
+          .ant-tag {
+            margin-left: 4px;
+          }
+        }
+      }
+      
+      .variable-content {
+        display: flex;
+        align-items: center;
+        
+        .variable-input {
+          flex: 1;
+          margin-right: 16px;
+        }
+        
+        .variable-info {
+          width: 200px;
+          text-align: right;
+          
+          .info-item {
+            margin-bottom: 4px;
+            font-size: 12px;
+            
+            .label {
+              color: #8c8c8c;
+            }
+            
+            .value {
+              color: #262626;
+              font-weight: 500;
+            }
+          }
+        }
+      }
+      
+      .variable-description {
+        margin-top: 8px;
+        color: #8c8c8c;
+        font-size: 12px;
+        line-height: 1.4;
+      }
+    }
+  }
+  
+  .responsive-layout {
+    @media (max-width: 1200px) {
+      .ant-col {
+        width: 100% !important;
+        margin-bottom: 16px;
+      }
+    }
+  }
+} 

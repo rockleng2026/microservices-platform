@@ -4,8 +4,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.central.soo.mapper.FinancialModelMapper;
 import com.central.soo.mapper.ModelVariableMapper;
+import com.central.soo.mapper.ChartAnalysisModelMapper;
+import com.central.soo.mapper.ChartSeriesMapper;
 import com.central.soo.model.entity.FinancialModel;
 import com.central.soo.model.entity.ModelVariable;
+import com.central.soo.model.entity.ChartAnalysisModel;
+import com.central.soo.model.entity.ChartSeries;
 import com.central.soo.service.FinancialModelService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -40,6 +45,12 @@ public class FinancialModelServiceImpl
 
     @Autowired
     private ModelVariableMapper modelVariableMapper;
+
+    @Autowired
+    private ChartAnalysisModelMapper chartAnalysisModelMapper;
+
+    @Autowired
+    private ChartSeriesMapper chartSeriesMapper;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -128,9 +139,29 @@ public class FinancialModelServiceImpl
                 newVariable.setModelId(createdModel.getId());
                 modelVariableMapper.insert(newVariable);
             }
+            
+            // 复制图表配置
+            List<ChartAnalysisModel> charts = chartAnalysisModelMapper.selectByModelId(sourceModelId);
+            for (ChartAnalysisModel chart : charts) {
+                ChartAnalysisModel newChart = new ChartAnalysisModel();
+                BeanUtils.copyProperties(chart, newChart, "id", "createdTime", "updatedTime");
+                newChart.setModelId(createdModel.getId());
+                newChart.setChartName(chart.getChartName() + " - 副本");
+                chartAnalysisModelMapper.insert(newChart);
+                
+                // 复制图表系列
+                List<ChartSeries> seriesList = chartSeriesMapper.selectByChartId(chart.getId());
+                for (ChartSeries series : seriesList) {
+                    ChartSeries newSeries = new ChartSeries();
+                    BeanUtils.copyProperties(series, newSeries, "id", "createdTime", "updatedTime");
+                    newSeries.setChartId(newChart.getId());
+                    chartSeriesMapper.insert(newSeries);
+                }
+            }
         }
         
-        log.info("财务模型克隆成功，新模型ID: {}", createdModel.getId());
+        log.info("财务模型克隆成功，新模型ID: {}, 包含变量: {}, 包含图表: {}", 
+                createdModel.getId(), includeVariables, includeVariables);
         return createdModel;
     }
 
@@ -165,12 +196,27 @@ public class FinancialModelServiceImpl
         // 获取模型变量
         List<ModelVariable> variables = modelVariableMapper.selectByModelId(modelId);
         
+        // 获取图表配置
+        List<ChartAnalysisModel> charts = chartAnalysisModelMapper.selectByModelId(modelId);
+        
+        // 获取图表系列数据
+        List<Map<String, Object>> chartsWithSeries = new ArrayList<>();
+        for (ChartAnalysisModel chart : charts) {
+            List<ChartSeries> series = chartSeriesMapper.selectByChartId(chart.getId());
+            
+            Map<String, Object> chartWithSeries = new HashMap<>();
+            chartWithSeries.put("chart", chart);
+            chartWithSeries.put("series", series);
+            chartsWithSeries.add(chartWithSeries);
+        }
+        
         // 获取统计信息
         Map<String, Object> statistics = getModelStatistics(modelId);
         
         Map<String, Object> detail = new HashMap<>();
         detail.put("model", model);
         detail.put("variables", variables);
+        detail.put("charts", chartsWithSeries);
         detail.put("statistics", statistics);
         
         return detail;
@@ -196,17 +242,55 @@ public class FinancialModelServiceImpl
     public boolean deleteModel(Long modelId) {
         log.info("删除财务模型: {}", modelId);
         
-        // 软删除：更新删除标志
+        // 检查模型是否存在
         FinancialModel model = getById(modelId);
         if (model == null) {
+            log.warn("财务模型不存在: {}", modelId);
             return false;
         }
         
-        // 更新时间由MyBatis自动填充
-        boolean deleted = removeById(modelId);
-        
-        log.info("财务模型删除结果: {}", deleted);
-        return deleted;
+        try {
+            // 1. 删除模型变量（级联删除依赖关系）
+            log.info("删除模型变量: modelId={}", modelId);
+            int deletedVariables = modelVariableMapper.deleteByModelId(modelId);
+            log.info("删除变量数量: {}", deletedVariables);
+            
+            // 2. 删除图表配置和系列数据
+            log.info("删除图表配置: modelId={}", modelId);
+            List<ChartAnalysisModel> charts = chartAnalysisModelMapper.selectByModelId(modelId);
+            int deletedCharts = 0;
+            int deletedSeries = 0;
+            
+            if (!charts.isEmpty()) {
+                // 删除每个图表的相关系列
+                for (ChartAnalysisModel chart : charts) {
+                    int seriesCount = chartSeriesMapper.deleteByChartId(chart.getId());
+                    deletedSeries += seriesCount;
+                    log.info("删除图表[{}]的系列数量: {}", chart.getId(), seriesCount);
+                }
+                
+                // 删除图表配置
+                deletedCharts = chartAnalysisModelMapper.deleteByModelId(modelId);
+                log.info("删除图表数量: {}", deletedCharts);
+            }
+            
+            // 3. 删除模型本身
+            log.info("删除财务模型: modelId={}", modelId);
+            boolean deleted = removeById(modelId);
+            
+            if (deleted) {
+                log.info("财务模型删除成功: modelId={}, 删除变量: {}, 删除图表: {}, 删除系列: {}", 
+                        modelId, deletedVariables, deletedCharts, deletedSeries);
+            } else {
+                log.error("财务模型删除失败: modelId={}", modelId);
+            }
+            
+            return deleted;
+            
+        } catch (Exception e) {
+            log.error("删除财务模型时发生错误: modelId={}, error={}", modelId, e.getMessage(), e);
+            throw new RuntimeException("删除财务模型失败: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -297,6 +381,8 @@ public class FinancialModelServiceImpl
             Map<String, Object> modelData = (Map<String, Object>) config.get("model");
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> variablesData = (List<Map<String, Object>>) config.get("variables");
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> chartsData = (List<Map<String, Object>>) config.get("charts");
             
             // 创建模型
             FinancialModel model = objectMapper.convertValue(modelData, FinancialModel.class);
@@ -316,6 +402,33 @@ public class FinancialModelServiceImpl
                 }
             }
             
+            // 导入图表配置和系列数据
+            if (chartsData != null) {
+                for (Map<String, Object> chartData : chartsData) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> chartModelData = (Map<String, Object>) chartData.get("chart");
+                    @SuppressWarnings("unchecked")
+                    List<Map<String, Object>> seriesData = (List<Map<String, Object>>) chartData.get("series");
+                    
+                    // 创建图表配置
+                    ChartAnalysisModel chartModel = objectMapper.convertValue(chartModelData, ChartAnalysisModel.class);
+                    chartModel.setId(null);
+                    chartModel.setModelId(createdModel.getId());
+                    chartModel.setChartName(chartModel.getChartName() + "_导入");
+                    chartAnalysisModelMapper.insert(chartModel);
+                    
+                    // 导入图表系列
+                    if (seriesData != null) {
+                        for (Map<String, Object> seriesItem : seriesData) {
+                            ChartSeries series = objectMapper.convertValue(seriesItem, ChartSeries.class);
+                            series.setId(null);
+                            series.setChartId(chartModel.getId());
+                            chartSeriesMapper.insert(series);
+                        }
+                    }
+                }
+            }
+            
             log.info("模型配置导入完成，模型ID: {}", createdModel.getId());
             return createdModel;
             
@@ -332,7 +445,7 @@ public class FinancialModelServiceImpl
             Wrappers.<FinancialModel>lambdaQuery()
                 .eq(FinancialModel::getIsActive, true)
                 .and(wrapper -> wrapper
-                    .eq(FinancialModel::getModelCategory, "盈亏平衡分析")
+                    .eq(FinancialModel::getModelCategory, "breakeven_analysis")
                     .or()
                     .like(FinancialModel::getModelName, "盈亏平衡")
                     .or()

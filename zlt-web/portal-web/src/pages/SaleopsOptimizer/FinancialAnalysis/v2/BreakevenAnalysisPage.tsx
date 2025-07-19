@@ -1287,13 +1287,13 @@ const BreakevenAnalysisPageV2: React.FC = () => {
           
           // 添加一些变化以模拟趋势
           yValue = yValue * (1 + (i * 0.001));
-          
-          data.push({
-            x: xValue,
-            y: yValue,
+        
+        data.push({
+          x: xValue,
+          y: yValue,
             label: `${xValue.toFixed(2)}`,
-            seriesName: chart.chartName
-          });
+          seriesName: chart.chartName
+        });
         }
       }
       
@@ -1767,7 +1767,7 @@ const BreakevenAnalysisPageV2: React.FC = () => {
             <Text>说明: X轴最大值默认为"{selectedChart?.xAxisField}"变量值的3倍，可手动调整</Text>
           </div>
         </div>
-
+        
         {/* 使用ChartRenderer组件渲染图表 */}
         <ChartRenderer
           chartType={currentChartType}

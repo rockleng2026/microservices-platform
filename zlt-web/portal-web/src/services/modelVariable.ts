@@ -23,6 +23,12 @@ export interface ModelVariable {
   validationRules?: string;
   displayOrder: number;
   helpText?: string;
+  parentId?: number; // 新增：父级变量ID，支持树形结构
+  constraintFormula?: string; // 新增：约束条件公式
+  children?: ModelVariable[]; // 新增：子变量列表，用于树形展示
+  level?: number; // 新增：层级深度
+  isLeaf?: boolean; // 新增：是否为叶子节点
+  expanded?: boolean; // 新增：是否展开（前端状态）
   createdAt: string;
   updatedAt: string;
 }
@@ -44,6 +50,8 @@ export interface VariableFormData {
   isVisible: boolean;
   displayOrder: number;
   validationRules?: string;
+  parentId?: number; // 新增：父级变量ID
+  constraintFormula?: string; // 新增：约束条件公式
 }
 
 export interface PageParams {
@@ -248,6 +256,84 @@ export class ModelVariableAPI {
     }
     throw new Error(response.resp_msg || '获取变量统计失败');
   }
+
+  /**
+   * 获取变量树形结构
+   */
+  static async getVariableTree(modelId: number): Promise<ModelVariable[]> {
+    const response = await request<ApiResponse<ModelVariable[]>>(`${API_BASE}/tree/${modelId}`, {
+      method: 'GET',
+    });
+
+    if (response.resp_code === 0) {
+      return response.datas;
+    }
+    throw new Error(response.resp_msg || '获取变量树失败');
+  }
+
+  /**
+   * 验证约束条件
+   */
+  static async validateConstraint(
+    modelId: number, 
+    parentId: number, 
+    constraintFormula: string
+  ): Promise<any> {
+    const response = await request<ApiResponse<any>>(`${API_BASE}/validate-constraint`, {
+      method: 'POST',
+      data: { modelId, parentId, constraintFormula },
+    });
+
+    if (response.resp_code === 0) {
+      return response.datas;
+    }
+    throw new Error(response.resp_msg || '验证约束条件失败');
+  }
+
+  /**
+   * 获取变量的子变量列表
+   */
+  static async getChildVariables(parentId: number): Promise<ModelVariable[]> {
+    const response = await request<ApiResponse<ModelVariable[]>>(`${API_BASE}/children/${parentId}`, {
+      method: 'GET',
+    });
+
+    if (response.resp_code === 0) {
+      return response.datas;
+    }
+    throw new Error(response.resp_msg || '获取子变量失败');
+  }
+
+  /**
+   * 移动变量到新的父级
+   */
+  static async moveVariable(id: number, newParentId: number | null): Promise<boolean> {
+    const response = await request<ApiResponse<boolean>>(`${API_BASE}/${id}/move`, {
+      method: 'PUT',
+      data: { parentId: newParentId },
+    });
+
+    if (response.resp_code === 0) {
+      return response.datas;
+    }
+    throw new Error(response.resp_msg || '移动变量失败');
+  }
+
+  /**
+   * 获取变量依赖关系
+   */
+  static async getVariableDependencies(variableId: number): Promise<any[]> {
+    const response = await request<ApiResponse<any[]>>(`${API_BASE}/${variableId}/dependencies`, {
+      method: 'GET',
+    });
+
+    if (response.resp_code === 0) {
+      return response.datas;
+    }
+    throw new Error(response.resp_msg || '获取变量依赖关系失败');
+  }
+
+
 
   /**
    * 导出变量配置

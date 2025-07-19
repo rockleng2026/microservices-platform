@@ -140,13 +140,108 @@ export class FinancialModelAPI {
   }
 
   /**
+   * 导出单个财务模型到Excel
+   */
+  static async exportModelToExcel(id: number): Promise<void> {
+    const token = localStorage.getItem('access_token');
+    const tenant = localStorage.getItem('tenant_id') || 'default';
+    
+    const response = await fetch(`${API_BASE}/${id}/export/excel`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'x-tenant-header': tenant,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('导出失败');
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `财务模型_${id}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+  /**
+   * 批量导出财务模型到Excel
+   */
+  static async exportModelsToExcel(modelIds: number[]): Promise<void> {
+    const token = localStorage.getItem('access_token');
+    const tenant = localStorage.getItem('tenant_id') || 'default';
+    
+    const response = await fetch(`${API_BASE}/export/excel/batch`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'x-tenant-header': tenant,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(modelIds),
+    });
+
+    if (!response.ok) {
+      throw new Error('批量导出失败');
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `财务模型批量导出_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+  /**
+   * 导出所有财务模型到Excel
+   */
+  static async exportAllModelsToExcel(): Promise<void> {
+    const token = localStorage.getItem('access_token');
+    const tenant = localStorage.getItem('tenant_id') || 'default';
+    
+    const response = await fetch(`${API_BASE}/export/excel/all`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'x-tenant-header': tenant,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error('导出失败');
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `财务模型全量导出_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  }
+
+  /**
    * 克隆财务模型
    */
   static async cloneModel(
     id: number, 
     newModelCode: string, 
     newModelName: string, 
-    includeVariables: boolean = true
+    includeVariables: boolean = true,
+    includeCharts: boolean = true
   ): Promise<FinancialModel> {
     const response = await request<ApiResponse<FinancialModel>>(`${API_BASE}/${id}/clone`, {
       method: 'POST',
@@ -154,6 +249,7 @@ export class FinancialModelAPI {
         newModelCode,
         newModelName,
         includeVariables,
+        includeCharts,
       },
     });
 
@@ -209,15 +305,32 @@ export class FinancialModelAPI {
   /**
    * 导出模型配置
    */
-  static async exportModelConfig(id: number): Promise<string> {
-    const response = await request<ApiResponse<string>>(`${API_BASE}/${id}/export`, {
+  static async exportModelConfig(id: number): Promise<void> {
+    const token = localStorage.getItem('access_token');
+    const tenant = localStorage.getItem('tenant_id') || 'default';
+    
+    const response = await fetch(`${API_BASE}/${id}/export`, {
       method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'x-tenant-header': tenant,
+        'Content-Type': 'application/json',
+      },
     });
 
-    if (response.resp_code === 0) {
-      return response.datas;
+    if (!response.ok) {
+      throw new Error('导出失败');
     }
-    throw new Error(response.resp_msg || '导出模型配置失败');
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `财务模型配置_${id}_${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
   }
 
   /**

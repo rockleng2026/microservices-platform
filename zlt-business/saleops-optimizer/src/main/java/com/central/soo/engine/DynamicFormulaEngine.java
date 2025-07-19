@@ -29,7 +29,7 @@ public class DynamicFormulaEngine {
     
     // 变量模式匹配
     private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\b([a-zA-Z_][a-zA-Z0-9_]*)\\b");
-    
+
     private final ScriptEngineManager scriptEngineManager;
 
     public DynamicFormulaEngine() {
@@ -119,14 +119,14 @@ public class DynamicFormulaEngine {
             }
             
             foundVariables.add(variable);
-        }
-        
+    }
+
         // 检查变量是否在上下文中存在
         for (String variable : foundVariables) {
             if (!variables.containsKey(variable)) {
                 missingVariables.add(variable);
+                }
             }
-        }
         
         return missingVariables;
     }
@@ -151,8 +151,8 @@ public class DynamicFormulaEngine {
         }
         
         try {
-            // 设置变量值
-            for (Map.Entry<String, Object> entry : variables.entrySet()) {
+        // 设置变量值
+        for (Map.Entry<String, Object> entry : variables.entrySet()) {
                 String key = entry.getKey();
                 Object value = entry.getValue();
                 
@@ -172,28 +172,28 @@ public class DynamicFormulaEngine {
                 } else {
                     log.warn("跳过无效的JavaScript标识符: {}", key);
                 }
-            }
-            
-            Object result = engine.eval(expression);
-            
-            if (result instanceof Number) {
-                return new BigDecimal(result.toString()).setScale(RESULT_SCALE, RoundingMode.HALF_UP);
-            } else {
-                throw new IllegalArgumentException("表达式结果不是数值类型: " + result);
+        }
+        
+        Object result = engine.eval(expression);
+        
+        if (result instanceof Number) {
+            return new BigDecimal(result.toString()).setScale(RESULT_SCALE, RoundingMode.HALF_UP);
+        } else {
+            throw new IllegalArgumentException("表达式结果不是数值类型: " + result);
             }
         } catch (Exception e) {
             log.warn("JavaScript引擎计算失败，使用备用计算方案: {}", e.getMessage());
             return evaluateExpressionFallback(expression, variables, variableDataTypes);
         }
     }
-    
+
     /**
      * 备用表达式计算方案
      */
     private BigDecimal evaluateExpressionFallback(String expression, Map<String, Object> variables) {
         return evaluateExpressionFallback(expression, variables, null);
-    }
-
+        }
+        
     /**
      * 备用表达式计算方案（支持变量数据类型）
      */
@@ -235,7 +235,7 @@ public class DynamicFormulaEngine {
                     double percentageValue = ((Number) value).doubleValue() / 100.0;
                     value = percentageValue;
                     log.debug("备用方案中百分比变量 {} 转换: {} -> {}", varName, entry.getValue(), percentageValue);
-                }
+            }
                 
                 // 使用正则表达式替换变量，确保只替换完整的变量名
                 String regex = "\\b" + Pattern.quote(varName) + "\\b";
@@ -245,7 +245,7 @@ public class DynamicFormulaEngine {
         
         return result;
     }
-    
+
     /**
      * 简单的数学表达式计算
      */
@@ -257,8 +257,8 @@ public class DynamicFormulaEngine {
             // 先处理括号
             while (expression.contains("(")) {
                 expression = processParentheses(expression);
-            }
-            
+        }
+        
             // 处理乘除
             expression = processMultiplicationDivision(expression);
             
@@ -268,7 +268,7 @@ public class DynamicFormulaEngine {
         } catch (Exception e) {
             log.error("简单表达式计算失败: {}", expression, e);
             throw new RuntimeException("表达式计算失败: " + expression, e);
-        }
+    }
     }
     
     private String processParentheses(String expression) {
@@ -311,7 +311,7 @@ public class DynamicFormulaEngine {
         
         return expression;
     }
-    
+
     private BigDecimal processAdditionSubtraction(String expression) {
         // 处理加法和减法
         Pattern pattern = Pattern.compile("(-?\\d+(?:\\.\\d+)?)([+-])(-?\\d+(?:\\.\\d+)?)");
@@ -327,8 +327,8 @@ public class DynamicFormulaEngine {
                 result = left.add(right);
             } else {
                 result = left.subtract(right);
-            }
-            
+        }
+        
             expression = expression.substring(0, matcher.start()) + result.toString() + expression.substring(matcher.end());
             matcher = pattern.matcher(expression);
         }
@@ -341,7 +341,7 @@ public class DynamicFormulaEngine {
         String[] reserved = {"if", "else", "for", "while", "function", "var", "let", "const", "return", "true", "false", "null", "undefined"};
         return Arrays.asList(reserved).contains(word.toLowerCase());
     }
-    
+
     private boolean isNumber(String str) {
         try {
             Double.parseDouble(str);
@@ -350,7 +350,7 @@ public class DynamicFormulaEngine {
             return false;
         }
     }
-    
+
     private boolean isValidJavaScriptIdentifier(String identifier) {
         // 简单的JavaScript标识符验证
         return identifier.matches("^[a-zA-Z_$][a-zA-Z0-9_$]*$");

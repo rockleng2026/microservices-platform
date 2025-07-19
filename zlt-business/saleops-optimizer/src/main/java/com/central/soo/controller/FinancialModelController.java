@@ -10,6 +10,7 @@ import com.central.common.model.SysUser;
 import com.central.common.utils.LoginUserUtils;
 import com.central.soo.model.entity.FinancialModel;
 import com.central.soo.service.FinancialModelService;
+import com.central.soo.service.FinancialModelExportService;
 import com.central.soo.utils.PageResultUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -19,8 +20,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -39,6 +46,9 @@ public class FinancialModelController {
 
     @Autowired
     private FinancialModelService financialModelService;
+
+    @Autowired
+    private FinancialModelExportService financialModelExportService;
 
     /**
      * 创建财务模型
@@ -140,7 +150,7 @@ public class FinancialModelController {
      * 克隆财务模型
      */
     @PostMapping("/{id}/clone")
-    @Operation(summary = "克隆财务模型", description = "基于现有模型创建新模型")
+    @Operation(summary = "克隆财务模型", description = "基于现有模型创建新模型，包括变量、图表和系列配置")
     public Result<FinancialModel> cloneModel(
             @PathVariable @NotNull Long id,
             @RequestBody Map<String, Object> cloneRequest) {
@@ -148,11 +158,13 @@ public class FinancialModelController {
         String newModelCode = (String) cloneRequest.get("newModelCode");
         String newModelName = (String) cloneRequest.get("newModelName");
         Boolean includeVariables = (Boolean) cloneRequest.getOrDefault("includeVariables", true);
+        Boolean includeCharts = (Boolean) cloneRequest.getOrDefault("includeCharts", true);
         
-        log.info("克隆财务模型[{}]为: {}", id, newModelName);
+        log.info("克隆财务模型[{}]为: {}, 包含变量: {}, 包含图表: {}", 
+                id, newModelName, includeVariables, includeCharts);
 
         FinancialModel clonedModel = financialModelService.cloneModel(
-            id, newModelCode, newModelName, includeVariables);
+            id, newModelCode, newModelName, includeVariables && includeCharts);
         
         // 设置克隆模型的创建人信息
         clonedModel.setCreatorId(LoginUserUtils.getCurrentSysUser().getCreatorId());
@@ -207,11 +219,32 @@ public class FinancialModelController {
      */
     @GetMapping("/{id}/export")
     @Operation(summary = "导出模型配置", description = "导出模型配置为JSON格式")
-    public Result<String> exportModelConfig(
-            @PathVariable @NotNull Long id) {
+    public void exportModelConfig(
+            @PathVariable @NotNull Long id,
+            HttpServletResponse response,
+            @LoginUser SysUser user) throws IOException {
         
-        String configJson = financialModelService.exportModelConfig(id);
-        return Result.succeed(configJson);
+        log.info("用户[{}]导出财务模型配置: {}", user.getUsername(), id);
+        
+        try {
+            String configJson = financialModelService.exportModelConfig(id);
+            
+            // 设置响应头
+            String fileName = URLEncoder.encode("财务模型配置_" + id + "_" + 
+                    LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")), 
+                    StandardCharsets.UTF_8);
+            response.setContentType("application/json");
+            response.setCharacterEncoding("utf-8");
+            response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".json");
+            
+            // 写入响应体
+            response.getWriter().write(configJson);
+            
+            log.info("财务模型配置导出成功，ID: {}", id);
+        } catch (Exception e) {
+            log.error("财务模型配置导出失败，ID: {}, 错误: {}", id, e.getMessage(), e);
+            throw e;
+        }
     }
 
     /**
@@ -269,5 +302,67 @@ public class FinancialModelController {
         
         FinancialModel model = financialModelService.getByModelCode(modelCode, TenantContextHolder.getTenant());
         return Result.succeed(model);
+    }
+
+    /**
+     * 导出单个财务模型到Excel
+     */
+    @GetMapping("/{id}/export/excel")
+    @Operation(summary = "导出模型到Excel", description = "将财务模型及其相关数据导出到Excel文件")
+    public void exportModelToExcel(
+            @PathVariable @NotNull Long id,
+            HttpServletResponse response,
+            @LoginUser SysUser user) throws IOException {
+        
+        log.info("用户[{}]导出财务模型到Excel: {}", user.getUsername(), id);
+        
+        try {
+            financialModelExportService.exportModelToExcel(id, response);
+            log.info("财务模型Excel导出成功，ID: {}", id);
+        } catch (Exception e) {
+            log.error("财务模型Excel导出失败，ID: {}, 错误: {}", id, e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * 批量导出财务模型到Excel
+     */
+    @PostMapping("/export/excel/batch")
+    @Operation(summary = "批量导出模型到Excel", description = "将多个财务模型及其相关数据导出到Excel文件")
+    public void exportModelsToExcel(
+            @RequestBody List<Long> modelIds,
+            HttpServletResponse response,
+            @LoginUser SysUser user) throws IOException {
+        
+        log.info("用户[{}]批量导出财务模型到Excel: {}", user.getUsername(), modelIds);
+        
+        try {
+            financialModelExportService.exportModelsToExcel(modelIds, response);
+            log.info("财务模型批量Excel导出成功，共导出 {} 个模型", modelIds.size());
+        } catch (Exception e) {
+            log.error("财务模型批量Excel导出失败，错误: {}", e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * 导出所有财务模型到Excel
+     */
+    @GetMapping("/export/excel/all")
+    @Operation(summary = "导出所有模型到Excel", description = "将所有财务模型及其相关数据导出到Excel文件")
+    public void exportAllModelsToExcel(
+            HttpServletResponse response,
+            @LoginUser SysUser user) throws IOException {
+        
+        log.info("用户[{}]导出所有财务模型到Excel", user.getUsername());
+        
+        try {
+            financialModelExportService.exportAllModelsToExcel(response);
+            log.info("所有财务模型Excel导出成功");
+        } catch (Exception e) {
+            log.error("所有财务模型Excel导出失败，错误: {}", e.getMessage(), e);
+            throw e;
+        }
     }
 } 

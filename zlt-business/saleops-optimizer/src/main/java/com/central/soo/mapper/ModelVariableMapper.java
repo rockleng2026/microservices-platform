@@ -8,6 +8,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,69 @@ public interface ModelVariableMapper extends BaseMapper<ModelVariable> {
     List<ModelVariable> selectByModelId(@Param("modelId") Long modelId);
 
     /**
+     * 根据模型ID查询变量树形结构（根节点）
+     * 
+     * @param modelId 模型ID
+     * @return 根变量列表
+     */
+    @Select("SELECT * FROM soo_model_variable WHERE model_id = #{modelId} AND (parent_id IS NULL OR parent_id = 0) ORDER BY display_order ASC")
+    List<ModelVariable> selectRootVariablesByModelId(@Param("modelId") Long modelId);
+
+    /**
+     * 根据父变量ID查询子变量列表
+     * 
+     * @param parentId 父变量ID
+     * @return 子变量列表
+     */
+    @Select("SELECT * FROM soo_model_variable WHERE parent_id = #{parentId} ORDER BY display_order ASC")
+    List<ModelVariable> selectChildrenByParentId(@Param("parentId") Long parentId);
+
+    /**
+     * 根据变量ID查询父变量
+     * 
+     * @param id 变量ID
+     * @return 父变量
+     */
+    @Select("SELECT p.* FROM soo_model_variable p " +
+            "INNER JOIN soo_model_variable c ON p.id = c.parent_id " +
+            "WHERE c.id = #{id}")
+    ModelVariable selectParentById(@Param("id") Long id);
+
+    /**
+     * 查询变量的所有子变量（递归）
+     * 
+     * @param parentId 父变量ID
+     * @return 所有子变量列表
+     */
+    @Select("WITH RECURSIVE variable_tree AS (" +
+            "SELECT id, parent_id, variable_name, variable_code, variable_type, data_type, display_order, 1 as level " +
+            "FROM soo_model_variable WHERE parent_id = #{parentId} " +
+            "UNION ALL " +
+            "SELECT v.id, v.parent_id, v.variable_name, v.variable_code, v.variable_type, v.data_type, v.display_order, vt.level + 1 " +
+            "FROM soo_model_variable v " +
+            "INNER JOIN variable_tree vt ON v.parent_id = vt.id" +
+            ") " +
+            "SELECT * FROM variable_tree ORDER BY level, display_order")
+    List<ModelVariable> selectAllChildrenRecursive(@Param("parentId") Long parentId);
+
+    /**
+     * 查询变量的所有父变量（递归）
+     * 
+     * @param id 变量ID
+     * @return 所有父变量列表
+     */
+    @Select("WITH RECURSIVE variable_tree AS (" +
+            "SELECT id, parent_id, variable_name, variable_code, variable_type, data_type, display_order, 1 as level " +
+            "FROM soo_model_variable WHERE id = #{id} " +
+            "UNION ALL " +
+            "SELECT v.id, v.parent_id, v.variable_name, v.variable_code, v.variable_type, v.data_type, v.display_order, vt.level + 1 " +
+            "FROM soo_model_variable v " +
+            "INNER JOIN variable_tree vt ON v.id = vt.parent_id" +
+            ") " +
+            "SELECT * FROM variable_tree ORDER BY level DESC")
+    List<ModelVariable> selectAllParentsRecursive(@Param("id") Long id);
+
+    /**
      * 根据变量编码查询变量
      * 
      * @param modelId 模型ID
@@ -87,7 +151,8 @@ public interface ModelVariableMapper extends BaseMapper<ModelVariable> {
             "SUM(CASE WHEN variable_type = 'API' THEN 1 ELSE 0 END) as api_count, " +
             "SUM(CASE WHEN is_required = 1 THEN 1 ELSE 0 END) as required_count, " +
             "SUM(CASE WHEN is_visible = 1 THEN 1 ELSE 0 END) as visible_count, " +
-            "SUM(CASE WHEN is_key_indicator = 1 THEN 1 ELSE 0 END) as key_indicator_count " +
+            "SUM(CASE WHEN is_key_indicator = 1 THEN 1 ELSE 0 END) as key_indicator_count, " +
+            "SUM(CASE WHEN parent_id IS NOT NULL AND parent_id > 0 THEN 1 ELSE 0 END) as tree_variable_count " +
             "FROM soo_model_variable WHERE model_id = #{modelId}" +
             "</script>")
     Map<String, Object> selectVariableStatistics(@Param("modelId") Long modelId);
@@ -141,9 +206,63 @@ public interface ModelVariableMapper extends BaseMapper<ModelVariable> {
      * @param displayOrder 显示顺序
      * @return 更新行数
      */
-    @Select("UPDATE soo_model_variable SET display_order = #{displayOrder} WHERE id = #{id}")
+    @Update("UPDATE soo_model_variable SET display_order = #{displayOrder} WHERE id = #{id}")
     int updateDisplayOrder(
             @Param("id") Long id,
             @Param("displayOrder") Integer displayOrder
     );
+
+    /**
+     * 更新变量父级ID
+     * 
+     * @param id 变量ID
+     * @param parentId 父级ID
+     * @return 更新行数
+     */
+    @Update("UPDATE soo_model_variable SET parent_id = #{parentId} WHERE id = #{id}")
+    int updateParentId(
+            @Param("id") Long id,
+            @Param("parentId") Long parentId
+    );
+
+    /**
+     * 检查是否存在循环引用
+     * 
+     * @param id 变量ID
+     * @param newParentId 新的父级ID
+     * @return 是否存在循环引用
+     */
+    @Select("WITH RECURSIVE variable_tree AS (" +
+            "SELECT id, parent_id FROM soo_model_variable WHERE id = #{newParentId} " +
+            "UNION ALL " +
+            "SELECT v.id, v.parent_id FROM soo_model_variable v " +
+            "INNER JOIN variable_tree vt ON v.id = vt.parent_id" +
+            ") " +
+            "SELECT COUNT(*) FROM variable_tree WHERE id = #{id}")
+    int checkCircularReference(
+            @Param("id") Long id,
+            @Param("newParentId") Long newParentId
+    );
+
+    /**
+     * 获取变量的依赖关系
+     * 
+     * @param variableId 变量ID
+     * @return 依赖的变量列表
+     */
+    @Select("SELECT DISTINCT v.* FROM soo_model_variable v " +
+            "WHERE v.calculation_formula LIKE CONCAT('%', " +
+            "(SELECT variable_code FROM soo_model_variable WHERE id = #{variableId}), '%') " +
+            "OR v.constraint_formula LIKE CONCAT('%', " +
+            "(SELECT variable_code FROM soo_model_variable WHERE id = #{variableId}), '%')")
+    List<ModelVariable> selectDependencies(@Param("variableId") Long variableId);
+
+    /**
+     * 根据模型ID删除所有变量
+     * 
+     * @param modelId 模型ID
+     * @return 删除行数
+     */
+    @Delete("DELETE FROM soo_model_variable WHERE model_id = #{modelId}")
+    int deleteByModelId(@Param("modelId") Long modelId);
 } 

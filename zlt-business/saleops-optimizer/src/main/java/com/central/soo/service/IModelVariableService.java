@@ -37,6 +37,46 @@ public interface IModelVariableService extends IService<ModelVariable> {
     List<ModelVariable> getVariablesByModelId(Long modelId);
 
     /**
+     * 根据模型ID查询变量树形结构
+     * 
+     * @param modelId 模型ID
+     * @return 变量树形结构
+     */
+    List<ModelVariable> getVariableTree(Long modelId);
+
+    /**
+     * 根据父变量ID查询子变量列表
+     * 
+     * @param parentId 父变量ID
+     * @return 子变量列表
+     */
+    List<ModelVariable> getChildVariables(Long parentId);
+
+    /**
+     * 根据变量ID查询父变量
+     * 
+     * @param id 变量ID
+     * @return 父变量
+     */
+    ModelVariable getParentVariable(Long id);
+
+    /**
+     * 查询变量的所有子变量（递归）
+     * 
+     * @param parentId 父变量ID
+     * @return 所有子变量列表
+     */
+    List<ModelVariable> getAllChildrenRecursive(Long parentId);
+
+    /**
+     * 查询变量的所有父变量（递归）
+     * 
+     * @param id 变量ID
+     * @return 所有父变量列表
+     */
+    List<ModelVariable> getAllParentsRecursive(Long id);
+
+    /**
      * 创建模型变量
      * 
      * @param variable 变量信息
@@ -68,6 +108,15 @@ public interface IModelVariableService extends IService<ModelVariable> {
      * @return 是否删除成功
      */
     boolean batchDeleteVariables(List<Long> ids);
+
+    /**
+     * 移动变量到新的父级
+     * 
+     * @param id 变量ID
+     * @param newParentId 新的父级ID
+     * @return 是否移动成功
+     */
+    boolean moveVariable(Long id, Long newParentId);
 
     /**
      * 复制变量
@@ -115,12 +164,56 @@ public interface IModelVariableService extends IService<ModelVariable> {
     Map<String, Object> validateFormula(Long modelId, String formula);
 
     /**
+     * 验证约束条件
+     * 
+     * @param modelId 模型ID
+     * @param parentId 父变量ID
+     * @param constraintFormula 约束条件公式
+     * @return 验证结果
+     */
+    Map<String, Object> validateConstraint(Long modelId, Long parentId, String constraintFormula);
+
+    /**
      * 更新变量显示顺序
      * 
      * @param variables 变量ID和显示顺序映射
      * @return 是否更新成功
      */
     boolean updateVariableOrder(List<Map<String, Object>> variables);
+
+    /**
+     * 更新变量顺序（上下移动）
+     * 
+     * @param id 变量ID
+     * @param direction 移动方向（up/down）
+     * @return 是否更新成功
+     */
+    boolean updateVariableOrder(Long id, String direction);
+
+    /**
+     * 获取变量依赖关系
+     * 
+     * @param variableId 变量ID
+     * @return 依赖的变量列表
+     */
+    List<ModelVariable> getVariableDependencies(Long variableId);
+
+    /**
+     * 检查是否存在循环引用
+     * 
+     * @param id 变量ID
+     * @param newParentId 新的父级ID
+     * @return 是否存在循环引用
+     */
+    boolean checkCircularReference(Long id, Long newParentId);
+
+    /**
+     * 构建变量树形结构
+     * 
+     * @param variables 变量列表
+     * @return 树形结构
+     */
+    List<ModelVariable> buildVariableTree(List<ModelVariable> variables);
 
     /**
      * 导出变量配置

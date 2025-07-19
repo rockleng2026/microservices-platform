@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /**
  * 模型变量实体
@@ -62,6 +63,12 @@ public class ModelVariable extends BaseEntity {
     private String unit;
 
     /**
+     * 父级变量ID，支持树形结构
+     */
+    @TableField("parent_id")
+    private Long parentId;
+
+    /**
      * 默认值
      */
     @TableField("default_value")
@@ -90,6 +97,12 @@ public class ModelVariable extends BaseEntity {
      */
     @TableField("api_config")
     private String apiConfig;
+
+    /**
+     * 约束条件公式
+     */
+    @TableField("constraint_formula")
+    private String constraintFormula;
 
     /**
      * 显示顺序
@@ -133,6 +146,37 @@ public class ModelVariable extends BaseEntity {
     @TableField("help_text")
     private String helpText;
 
+    // 非数据库字段 - 用于树形结构展示
+    /**
+     * 子变量列表
+     */
+    @TableField(exist = false)
+    private List<ModelVariable> children;
+
+    /**
+     * 层级深度
+     */
+    @TableField(exist = false)
+    private Integer level;
+
+    /**
+     * 是否为叶子节点
+     */
+    @TableField(exist = false)
+    private Boolean isLeaf;
+
+    /**
+     * 父变量名称
+     */
+    @TableField(exist = false)
+    private String parentName;
+
+    /**
+     * 子变量数量
+     */
+    @TableField(exist = false)
+    private Integer childrenCount;
+
     // 变量类型常量
     public static final String TYPE_INPUT = "INPUT";
     public static final String TYPE_CALC = "CALC";
@@ -145,4 +189,56 @@ public class ModelVariable extends BaseEntity {
     public static final String DATA_TYPE_CURRENCY = "CURRENCY";
     public static final String DATA_TYPE_BOOLEAN = "BOOLEAN";
     public static final String DATA_TYPE_STRING = "STRING";
+
+    /**
+     * 判断是否为根节点
+     */
+    public boolean isRoot() {
+        return parentId == null || parentId == 0;
+    }
+
+    /**
+     * 判断是否为叶子节点
+     */
+    public boolean isLeafNode() {
+        return children == null || children.isEmpty();
+    }
+
+    /**
+     * 获取变量类型显示名称
+     */
+    public String getVariableTypeDisplayName() {
+        switch (variableType) {
+            case TYPE_INPUT:
+                return "输入";
+            case TYPE_CALC:
+                return "计算";
+            case TYPE_API:
+                return "API";
+            default:
+                return variableType;
+        }
+    }
+
+    /**
+     * 获取数据类型显示名称
+     */
+    public String getDataTypeDisplayName() {
+        switch (dataType) {
+            case DATA_TYPE_NUMBER:
+                return "数字";
+            case DATA_TYPE_DECIMAL:
+                return "小数";
+            case DATA_TYPE_PERCENTAGE:
+                return "百分比";
+            case DATA_TYPE_CURRENCY:
+                return "货币";
+            case DATA_TYPE_BOOLEAN:
+                return "布尔值";
+            case DATA_TYPE_STRING:
+                return "字符串";
+            default:
+                return dataType;
+        }
+    }
 } 

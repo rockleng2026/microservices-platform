@@ -169,6 +169,118 @@ public class ModelVariableController {
     }
 
     /**
+     * 根据模型ID获取变量树形结构
+     */
+    @Operation(summary = "根据模型ID获取变量树形结构")
+    @GetMapping("/tree/{modelId}")
+    public Result<List<ModelVariable>> getVariableTree(
+            @Parameter(description = "模型ID") @PathVariable Long modelId
+    ) {
+        try {
+            List<ModelVariable> variableTree = modelVariableService.getVariableTree(modelId);
+            return Result.succeed(variableTree);
+        } catch (Exception e) {
+            log.error("获取变量树失败", e);
+            return Result.failed("获取变量树失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 根据父变量ID获取子变量列表
+     */
+    @Operation(summary = "根据父变量ID获取子变量列表")
+    @GetMapping("/children/{parentId}")
+    public Result<List<ModelVariable>> getChildVariables(
+            @Parameter(description = "父变量ID") @PathVariable Long parentId
+    ) {
+        try {
+            List<ModelVariable> children = modelVariableService.getChildVariables(parentId);
+            return Result.succeed(children);
+        } catch (Exception e) {
+            log.error("获取子变量失败", e);
+            return Result.failed("获取子变量失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 移动变量到新的父级
+     */
+    @Operation(summary = "移动变量到新的父级")
+    @PutMapping("/{id}/move")
+    public Result<Boolean> moveVariable(
+            @Parameter(description = "变量ID") @PathVariable Long id,
+            @Parameter(description = "移动参数") @RequestBody Map<String, Object> request
+    ) {
+        try {
+            Long newParentId = request.get("parentId") != null ? 
+                    Long.valueOf(request.get("parentId").toString()) : null;
+            
+            boolean result = modelVariableService.moveVariable(id, newParentId);
+            return Result.succeed(result);
+        } catch (Exception e) {
+            log.error("移动变量失败", e);
+            return Result.failed("移动变量失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 验证约束条件
+     */
+    @Operation(summary = "验证约束条件")
+    @PostMapping("/validate-constraint")
+    public Result<Map<String, Object>> validateConstraint(
+            @Parameter(description = "验证请求") @RequestBody Map<String, Object> request
+    ) {
+        try {
+            Long modelId = Long.valueOf(request.get("modelId").toString());
+            Long parentId = Long.valueOf(request.get("parentId").toString());
+            String constraintFormula = request.get("constraintFormula").toString();
+            
+            Map<String, Object> result = modelVariableService.validateConstraint(modelId, parentId, constraintFormula);
+            return Result.succeed(result);
+        } catch (Exception e) {
+            log.error("验证约束条件失败", e);
+            return Result.failed("验证约束条件失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取变量依赖关系
+     */
+    @Operation(summary = "获取变量依赖关系")
+    @GetMapping("/{variableId}/dependencies")
+    public Result<List<ModelVariable>> getVariableDependencies(
+            @Parameter(description = "变量ID") @PathVariable Long variableId
+    ) {
+        try {
+            List<ModelVariable> dependencies = modelVariableService.getVariableDependencies(variableId);
+            return Result.succeed(dependencies);
+        } catch (Exception e) {
+            log.error("获取变量依赖关系失败", e);
+            return Result.failed("获取变量依赖关系失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新变量顺序（上下移动）
+     */
+    @Operation(summary = "更新变量顺序（上下移动）")
+    @PutMapping("/{id}/order")
+    public Result<Boolean> updateVariableOrder(
+            @Parameter(description = "变量ID") @PathVariable Long id,
+            @Parameter(description = "移动参数") @RequestBody Map<String, String> request
+    ) {
+        try {
+            String direction = request.get("direction");
+            boolean result = modelVariableService.updateVariableOrder(id, direction);
+            return Result.succeed(result);
+        } catch (Exception e) {
+            log.error("更新变量顺序失败", e);
+            return Result.failed("更新变量顺序失败: " + e.getMessage());
+        }
+    }
+
+    /**
      * 验证变量公式
      */
     @Operation(summary = "验证变量公式")

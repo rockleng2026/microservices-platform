@@ -18,7 +18,12 @@ import {
   Descriptions,
   Tooltip,
   Divider,
-  Badge
+  Badge,
+  Tree,
+  Tabs,
+  Drawer,
+  Alert,
+  Typography
 } from 'antd';
 import {
   PlusOutlined,
@@ -27,14 +32,22 @@ import {
   ArrowUpOutlined,
   ArrowDownOutlined,
   LeftOutlined,
-  SettingOutlined
+  SettingOutlined,
+  BranchesOutlined,
+  ApartmentOutlined,
+  NodeIndexOutlined,
+  LinkOutlined,
+  ExclamationCircleOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
+import type { DataNode } from 'antd/es/tree';
 import { ModelVariableAPI, ModelVariable, VariableFormData } from '@/services/modelVariable';
 import { FinancialModelAPI } from '@/services/financialModel';
 
 const { Option } = Select;
 const { TextArea } = Input;
+const { Title, Text } = Typography;
+const { TabPane } = Tabs;
 
 const VariableManagementV2: React.FC = () => {
   // 从URL获取modelId参数
@@ -44,12 +57,20 @@ const VariableManagementV2: React.FC = () => {
   // 状态管理
   const [loading, setLoading] = useState(false);
   const [variables, setVariables] = useState<ModelVariable[]>([]);
+  const [variableTree, setVariableTree] = useState<ModelVariable[]>([]);
   const [modelInfo, setModelInfo] = useState<any>(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingVariable, setEditingVariable] = useState<ModelVariable | null>(null);
+  const [viewMode, setViewMode] = useState<'list' | 'tree'>('list');
+  const [constraintDrawerVisible, setConstraintDrawerVisible] = useState(false);
+  const [selectedParentVariable, setSelectedParentVariable] = useState<ModelVariable | null>(null);
+  const [constraintFormula, setConstraintFormula] = useState('');
+  const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
+  const [autoExpandParent, setAutoExpandParent] = useState(true);
   
   // 表单
   const [form] = Form.useForm();
+  const [constraintForm] = Form.useForm();
   const firstRenderRef = useRef(true);
 
   // 变量类型选项
@@ -81,6 +102,7 @@ const VariableManagementV2: React.FC = () => {
       firstRenderRef.current = false;
       fetchModelInfo();
       fetchVariables();
+      fetchVariableTree();
     }
   }, [modelId]);
 
@@ -90,7 +112,6 @@ const VariableManagementV2: React.FC = () => {
     
     try {
       const response = await FinancialModelAPI.getModelById(parseInt(modelId));
-      // 直接使用response，API已经处理了错误情况
       setModelInfo(response);
     } catch (error) {
       console.error('获取模型信息失败:', error);
@@ -104,8 +125,6 @@ const VariableManagementV2: React.FC = () => {
     try {
       setLoading(true);
       const response = await ModelVariableAPI.getVariablesByModelId(parseInt(modelId));
-      
-      // 直接使用response，API已经处理了错误情况
       setVariables(response || []);
     } catch (error) {
       console.error('获取变量列表失败:', error);
@@ -115,15 +134,80 @@ const VariableManagementV2: React.FC = () => {
     }
   };
 
+  // 获取变量树形结构
+  const fetchVariableTree = async () => {
+    if (!modelId) return;
+
+    try {
+      const response = await ModelVariableAPI.getVariableTree(parseInt(modelId));
+      setVariableTree(response || []);
+      // 设置默认展开所有节点
+      const allKeys = getAllKeys(response || []);
+      setExpandedKeys(allKeys);
+    } catch (error) {
+      console.error('获取变量树失败:', error);
+      // 如果树形API不存在，使用列表数据构建树形结构
+      const response = await ModelVariableAPI.getVariablesByModelId(parseInt(modelId));
+      const treeData = buildTreeFromList(response || []);
+      setVariableTree(treeData);
+      // 设置默认展开所有节点
+      const allKeys = getAllKeys(treeData);
+      setExpandedKeys(allKeys);
+    }
+  };
+
+  // 获取所有节点的key
+  const getAllKeys = (nodes: ModelVariable[]): React.Key[] => {
+    const keys: React.Key[] = [];
+    const traverse = (nodeList: ModelVariable[]) => {
+      nodeList.forEach(node => {
+        keys.push(node.id);
+        if (node.children && node.children.length > 0) {
+          traverse(node.children);
+        }
+      });
+    };
+    traverse(nodes);
+    return keys;
+  };
+
+  // 从列表数据构建树形结构
+  const buildTreeFromList = (list: ModelVariable[]): ModelVariable[] => {
+    const map = new Map<number, ModelVariable>();
+    const roots: ModelVariable[] = [];
+
+    // 创建映射
+    list.forEach(item => {
+      map.set(item.id, { ...item, children: [], level: 0, isLeaf: true, expanded: false });
+    });
+
+    // 构建树形结构
+    list.forEach(item => {
+      const node = map.get(item.id)!;
+      if (item.parentId && map.has(item.parentId)) {
+        const parent = map.get(item.parentId)!;
+        parent.children = parent.children || [];
+        parent.children.push(node);
+        parent.isLeaf = false;
+        node.level = (parent.level || 0) + 1;
+      } else {
+        roots.push(node);
+      }
+    });
+
+    return roots;
+  };
+
   // 新增变量
-  const handleAdd = () => {
+  const handleAdd = (parentId?: number) => {
     setEditingVariable(null);
     form.resetFields();
     form.setFieldsValue({
       variableType: 'INPUT',
       dataType: 'NUMBER',
       isRequired: false,
-      displayOrder: variables.length + 1
+      displayOrder: variables.length + 1,
+      parentId: parentId || null
     });
     setModalVisible(true);
   };
@@ -144,8 +228,10 @@ const VariableManagementV2: React.FC = () => {
       description: record.description,
       isRequired: record.isRequired,
       displayOrder: record.displayOrder,
-      calculationFormula: record.calculationFormula, // 直接使用后端字段名
-      apiConfig: record.apiConfig // 直接使用后端字段名
+      calculationFormula: record.calculationFormula,
+      apiConfig: record.apiConfig,
+      parentId: record.parentId,
+      constraintFormula: record.constraintFormula
     });
     setModalVisible(true);
   };
@@ -162,12 +248,9 @@ const VariableManagementV2: React.FC = () => {
       let processedApiConfig = values.apiConfig;
       if (values.variableType === 'API' && values.apiConfig) {
         try {
-          // 检查是否已经是有效的JSON
           JSON.parse(values.apiConfig);
-          // 如果是有效JSON，直接使用
           processedApiConfig = values.apiConfig;
         } catch (error) {
-          // 如果不是有效JSON，包装为{url: "用户输入的值"}格式
           processedApiConfig = JSON.stringify({ url: values.apiConfig });
         }
       }
@@ -187,7 +270,9 @@ const VariableManagementV2: React.FC = () => {
         displayOrder: values.displayOrder ?? 1,
         isVisible: true,
         calculationFormula: values.calculationFormula,
-        apiConfig: processedApiConfig
+        apiConfig: processedApiConfig,
+        parentId: values.parentId,
+        constraintFormula: values.constraintFormula
       };
 
       console.log('传递给后端的数据:', formData);
@@ -204,6 +289,7 @@ const VariableManagementV2: React.FC = () => {
       message.success(editingVariable ? '更新成功' : '创建成功');
       setModalVisible(false);
       fetchVariables();
+      fetchVariableTree();
 
     } catch (error) {
       console.error('保存失败:', error);
@@ -218,10 +304,9 @@ const VariableManagementV2: React.FC = () => {
     try {
       setLoading(true);
       const response = await ModelVariableAPI.deleteVariable(id);
-      
-      // 直接使用response，API已经处理了错误情况
       message.success('删除成功');
       fetchVariables();
+      fetchVariableTree();
     } catch (error) {
       console.error('删除失败:', error);
       message.error('删除失败');
@@ -234,9 +319,31 @@ const VariableManagementV2: React.FC = () => {
   const handleMoveOrder = async (id: number, direction: 'up' | 'down') => {
     try {
       setLoading(true);
-      const response = await ModelVariableAPI.updateVariableOrder(id, direction);
+      // 找到当前变量和相邻变量
+      const currentIndex = variables.findIndex(v => v.id === id);
+      if (currentIndex === -1) return;
       
-      // 直接使用response，API已经处理了错误情况
+      const currentVariable = variables[currentIndex];
+      let targetVariable: ModelVariable | null = null;
+      
+      if (direction === 'up' && currentIndex > 0) {
+        targetVariable = variables[currentIndex - 1];
+      } else if (direction === 'down' && currentIndex < variables.length - 1) {
+        targetVariable = variables[currentIndex + 1];
+      }
+      
+      if (!targetVariable) {
+        message.warning('无法调整顺序');
+        return;
+      }
+      
+      // 交换顺序
+      const variablesToUpdate = [
+        { id: currentVariable.id, displayOrder: targetVariable.displayOrder },
+        { id: targetVariable.id, displayOrder: currentVariable.displayOrder }
+      ];
+      
+      const response = await ModelVariableAPI.updateVariableOrder(variablesToUpdate);
       message.success('顺序调整成功');
       fetchVariables();
     } catch (error) {
@@ -247,12 +354,259 @@ const VariableManagementV2: React.FC = () => {
     }
   };
 
+  // 移动变量到新的父级
+  const handleMoveVariable = async (id: number, newParentId: number | null) => {
+    try {
+      setLoading(true);
+      const response = await ModelVariableAPI.moveVariable(id, newParentId);
+      message.success('移动成功');
+      fetchVariables();
+      fetchVariableTree();
+    } catch (error) {
+      console.error('移动失败:', error);
+      message.error('移动失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 打开约束条件设置
+  const handleOpenConstraint = (variable: ModelVariable) => {
+    setSelectedParentVariable(variable);
+    setConstraintFormula(variable.constraintFormula || '');
+    constraintForm.setFieldsValue({
+      constraintFormula: variable.constraintFormula || ''
+    });
+    setConstraintDrawerVisible(true);
+  };
+
+  // 保存约束条件
+  const handleSaveConstraint = async () => {
+    try {
+      const values = await constraintForm.validateFields();
+      setLoading(true);
+
+      if (!selectedParentVariable) return;
+
+      // 更新变量的约束条件
+      const formData = {
+        modelId: parseInt(modelId!),
+        variableCode: selectedParentVariable.variableCode,
+        variableName: selectedParentVariable.variableName,
+        variableType: selectedParentVariable.variableType,
+        dataType: selectedParentVariable.dataType,
+        defaultValue: selectedParentVariable.defaultValue,
+        minValue: selectedParentVariable.minValue,
+        maxValue: selectedParentVariable.maxValue,
+        unit: selectedParentVariable.unit,
+        description: selectedParentVariable.description,
+        isRequired: selectedParentVariable.isRequired,
+        displayOrder: selectedParentVariable.displayOrder,
+        isVisible: selectedParentVariable.isVisible,
+        calculationFormula: selectedParentVariable.calculationFormula,
+        apiConfig: selectedParentVariable.apiConfig,
+        parentId: selectedParentVariable.parentId,
+        constraintFormula: values.constraintFormula
+      };
+
+      await ModelVariableAPI.updateVariable(selectedParentVariable.id, formData);
+      message.success('约束条件保存成功');
+      setConstraintDrawerVisible(false);
+      fetchVariables();
+      fetchVariableTree();
+
+    } catch (error) {
+      console.error('保存约束条件失败:', error);
+      message.error('保存约束条件失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // 返回模型管理
   const handleBackToModels = () => {
     window.location.href = '/saleops-optimizer/financial-analysis/v2/financial-models';
   };
 
-  // 表格列定义 - 参考V1版本的优雅设计
+  // 将变量数据转换为树形组件数据
+  const convertToTreeData = (variables: ModelVariable[]): DataNode[] => {
+    return variables.map(variable => ({
+      key: variable.id,
+      title: (
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'flex-start', 
+          justifyContent: 'space-between', 
+          width: '100%',
+          padding: '8px 16px',
+          borderBottom: '1px solid #f0f0f0',
+          borderRadius: '6px',
+          backgroundColor: '#fafafa',
+          margin: '2px 0',
+          minHeight: '45px'
+        }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'flex-start', gap: '16px', paddingLeft: '8px', paddingTop: '2px' }}>
+            {/* 变量类型图标 */}
+            <div style={{ 
+              width: '28px', 
+              height: '28px', 
+              borderRadius: '5px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: variable.variableType === 'INPUT' ? '#e6f7ff' : 
+                              variable.variableType === 'CALC' ? '#f6ffed' : '#fff7e6',
+              border: `1px solid ${variable.variableType === 'INPUT' ? '#91d5ff' : 
+                                  variable.variableType === 'CALC' ? '#b7eb8f' : '#ffd591'}`
+            }}>
+              {variable.variableType === 'INPUT' ? <NodeIndexOutlined style={{ color: '#1890ff', fontSize: '14px' }} /> : 
+               variable.variableType === 'CALC' ? <BranchesOutlined style={{ color: '#52c41a', fontSize: '14px' }} /> : 
+               <ApartmentOutlined style={{ color: '#faad14', fontSize: '14px' }} />}
+            </div>
+            
+            {/* 变量信息 */}
+            <div style={{ flex: 1 }}>
+              <div style={{ 
+                fontWeight: 600, 
+                fontSize: '14px', 
+                marginBottom: '6px',
+                color: '#262626',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <span>{variable.variableName}</span>
+                {variable.parentId && (
+                  <Tag color="purple" style={{ fontSize: '10px', margin: 0 }}>子变量</Tag>
+                )}
+                {variable.isRequired && (
+                  <Tag color="red" style={{ fontSize: '10px', margin: 0 }}>必填</Tag>
+                )}
+              </div>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ 
+                  fontSize: '11px', 
+                  color: '#8c8c8c', 
+                  fontFamily: 'monospace',
+                  backgroundColor: '#f5f5f5',
+                  padding: '2px 6px',
+                  borderRadius: '3px',
+                  display: 'inline-block'
+                }}>
+                  {variable.variableCode}
+                </div>
+                <Tag 
+                  color={variable.variableType === 'INPUT' ? 'blue' : 
+                         variable.variableType === 'CALC' ? 'green' : 'orange'}
+                  style={{ margin: 0, fontSize: '9px', padding: '0 4px' }}
+                >
+                  {getTypeDisplayName(variableTypeOptions, variable.variableType)}
+                </Tag>
+                <Tag color="default" style={{ margin: 0, fontSize: '9px', padding: '0 4px' }}>
+                  {getTypeDisplayName(dataTypeOptions, variable.dataType)}
+                </Tag>
+                {variable.constraintFormula && (
+                  <Tag color="purple" style={{ margin: 0, fontSize: '9px', padding: '0 4px' }}>有约束</Tag>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          {/* 操作按钮 */}
+          <div style={{ 
+            display: 'flex', 
+            gap: '4px',
+            opacity: 0.6,
+            transition: 'opacity 0.2s',
+            marginLeft: '20px',
+            paddingRight: '8px',
+            paddingTop: '2px'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.opacity = '1';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.opacity = '0.6';
+          }}
+          >
+            <Tooltip title="添加子变量">
+              <Button
+                type="text"
+                size="small"
+                icon={<PlusOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAdd(variable.id);
+                }}
+                style={{ 
+                  padding: '1px 3px', 
+                  minWidth: '22px',
+                  height: '22px'
+                }}
+              />
+            </Tooltip>
+            <Tooltip title="编辑变量">
+              <Button
+                type="text"
+                size="small"
+                icon={<EditOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleEdit(variable);
+                }}
+                style={{ 
+                  padding: '1px 3px', 
+                  minWidth: '22px',
+                  height: '22px'
+                }}
+              />
+            </Tooltip>
+            <Tooltip title="设置约束条件">
+              <Button
+                type="text"
+                size="small"
+                icon={<LinkOutlined />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleOpenConstraint(variable);
+                }}
+                style={{ 
+                  padding: '1px 3px', 
+                  minWidth: '22px',
+                  height: '22px'
+                }}
+              />
+            </Tooltip>
+            <Popconfirm
+              title="确定要删除这个变量吗？"
+              onConfirm={() => handleDelete(variable.id)}
+              okText="确定"
+              cancelText="取消"
+            >
+              <Tooltip title="删除变量">
+                <Button
+                  type="text"
+                  danger
+                  size="small"
+                  icon={<DeleteOutlined />}
+                  onClick={(e) => e.stopPropagation()}
+                  style={{ 
+                    padding: '1px 3px', 
+                    minWidth: '22px',
+                    height: '22px'
+                  }}
+                />
+              </Tooltip>
+            </Popconfirm>
+          </div>
+        </div>
+      ),
+      children: variable.children ? convertToTreeData(variable.children) : undefined,
+      icon: null // 移除默认图标，使用自定义图标
+    }));
+  };
+
+  // 表格列定义
   const columns: ColumnsType<ModelVariable> = [
     {
       title: '变量信息',
@@ -262,6 +616,9 @@ const VariableManagementV2: React.FC = () => {
         <div>
           <div style={{ fontWeight: 600, fontSize: '14px', marginBottom: '4px' }}>
             {record.variableName}
+            {record.parentId && (
+              <Tag color="purple" style={{ marginLeft: 8 }}>子变量</Tag>
+            )}
           </div>
           <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
             编码: <code>{record.variableCode}</code>
@@ -300,6 +657,27 @@ const VariableManagementV2: React.FC = () => {
                 {record.unit && <span> {record.unit}</span>}
               </div>
             </div>
+          )}
+        </div>
+      ),
+    },
+    {
+      title: '约束条件',
+      key: 'constraint',
+      width: 150,
+      render: (_, record) => (
+        <div>
+          {record.constraintFormula ? (
+            <div>
+              <div style={{ fontSize: '12px', color: '#666', marginBottom: '4px' }}>
+                约束公式:
+              </div>
+              <code style={{ fontSize: '11px', background: '#f0f8ff', padding: '2px 4px', borderRadius: '2px' }}>
+                {record.constraintFormula}
+              </code>
+            </div>
+          ) : (
+            <span style={{ fontSize: '12px', color: '#999' }}>无约束</span>
           )}
         </div>
       ),
@@ -351,16 +729,32 @@ const VariableManagementV2: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 120,
+      width: 180,
       fixed: 'right',
       render: (_, record) => (
         <Space size="small">
+          <Tooltip title="添加子变量">
+            <Button
+              type="link"
+              size="small"
+              icon={<PlusOutlined />}
+              onClick={() => handleAdd(record.id)}
+            />
+          </Tooltip>
           <Tooltip title="编辑">
             <Button
               type="link"
               size="small"
               icon={<EditOutlined />}
               onClick={() => handleEdit(record)}
+            />
+          </Tooltip>
+          <Tooltip title="设置约束条件">
+            <Button
+              type="link"
+              size="small"
+              icon={<LinkOutlined />}
+              onClick={() => handleOpenConstraint(record)}
             />
           </Tooltip>
           <Popconfirm
@@ -404,10 +798,10 @@ const VariableManagementV2: React.FC = () => {
       <Card>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <div>
-            <h2 style={{ margin: 0, marginBottom: 8 }}>变量管理 V2</h2>
-            <span style={{ color: '#666', fontSize: '14px' }}>
-              管理财务模型的输入变量、计算变量和API变量配置
-            </span>
+            <Title level={2} style={{ margin: 0, marginBottom: 8 }}>变量管理 V2</Title>
+            <Text type="secondary">
+              管理财务模型的输入变量、计算变量和API变量配置，支持树形结构和约束条件
+            </Text>
           </div>
           <Space>
             <Button
@@ -419,7 +813,7 @@ const VariableManagementV2: React.FC = () => {
             <Button
               type="primary"
               icon={<PlusOutlined />}
-              onClick={handleAdd}
+              onClick={() => handleAdd()}
             >
               新增变量
             </Button>
@@ -446,18 +840,141 @@ const VariableManagementV2: React.FC = () => {
             <span style={{ color: '#1890ff' }}>输入变量: <strong>{variables.filter(v => v.variableType === 'INPUT').length}</strong></span>
             <span style={{ color: '#52c41a' }}>计算变量: <strong>{variables.filter(v => v.variableType === 'CALC').length}</strong></span>
             <span style={{ color: '#faad14' }}>API变量: <strong>{variables.filter(v => v.variableType === 'API').length}</strong></span>
+            <span style={{ color: '#722ed1' }}>树形变量: <strong>{variables.filter(v => v.parentId).length}</strong></span>
           </Space>
         </div>
 
-        {/* 数据表格 */}
-        <Table<ModelVariable>
-          columns={columns}
-          dataSource={variables}
-          rowKey="id"
-          loading={loading}
-          pagination={false}
-          scroll={{ x: 1000 }}
-        />
+        {/* 展示模式切换 */}
+        <Tabs 
+          activeKey={viewMode} 
+          onChange={(key) => setViewMode(key as 'list' | 'tree')}
+          style={{ marginBottom: 16 }}
+        >
+          <TabPane tab="列表展示" key="list">
+            <Table<ModelVariable>
+              columns={columns}
+              dataSource={variables}
+              rowKey="id"
+              loading={loading}
+              pagination={false}
+              scroll={{ x: 1200 }}
+            />
+          </TabPane>
+          <TabPane tab="树形展示" key="tree">
+            <div style={{ 
+              padding: '16px', 
+              backgroundColor: '#fafafa', 
+              borderRadius: '8px', 
+              minHeight: '400px',
+              border: '1px solid #e8e8e8'
+            }}>
+              <div style={{ 
+                marginBottom: '16px', 
+                padding: '12px 16px', 
+                backgroundColor: '#f0f8ff', 
+                borderRadius: '6px',
+                border: '1px solid #d6e4ff'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <Text type="secondary">
+                    <BranchesOutlined style={{ marginRight: '8px' }} />
+                    树形结构展示变量之间的父子关系，支持多层级嵌套和约束条件管理
+                  </Text>
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: '#666' }}>
+                      <span>总变量: <strong>{variables.length}</strong></span>
+                      <span>根变量: <strong>{variableTree.length}</strong></span>
+                      <span>子变量: <strong>{variables.filter(v => v.parentId).length}</strong></span>
+                      <span>有约束: <strong>{variables.filter(v => v.constraintFormula).length}</strong></span>
+                    </div>
+                    <Space size="small">
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          const allKeys = getAllKeys(variableTree);
+                          setExpandedKeys(allKeys);
+                          setAutoExpandParent(true);
+                        }}
+                      >
+                        展开全部
+                      </Button>
+                      <Button
+                        size="small"
+                        onClick={() => {
+                          setExpandedKeys([]);
+                          setAutoExpandParent(false);
+                        }}
+                      >
+                        折叠全部
+                      </Button>
+                    </Space>
+                  </div>
+                </div>
+              </div>
+              {loading ? (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '60px 20px',
+                  backgroundColor: 'white',
+                  borderRadius: '6px',
+                  border: '1px solid #f0f0f0'
+                }}>
+                  <div style={{ fontSize: '48px', color: '#d9d9d9', marginBottom: '16px' }}>
+                    <BranchesOutlined spin />
+                  </div>
+                  <div style={{ fontSize: '16px', color: '#8c8c8c' }}>
+                    正在加载变量数据...
+                  </div>
+                </div>
+              ) : variableTree.length > 0 ? (
+                <Tree
+                  showLine={{ showLeafIcon: false }}
+                  showIcon={false}
+                  expandedKeys={expandedKeys}
+                  autoExpandParent={autoExpandParent}
+                  onExpand={(keys) => {
+                    setExpandedKeys(keys);
+                    setAutoExpandParent(false);
+                  }}
+                  treeData={convertToTreeData(variableTree)}
+                  style={{ 
+                    backgroundColor: 'white', 
+                    padding: '20px 40px', 
+                    borderRadius: '8px',
+                    border: '1px solid #f0f0f0',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)'
+                  }}
+                  className="variable-tree"
+                />
+              ) : (
+                <div style={{ 
+                  textAlign: 'center', 
+                  padding: '60px 20px',
+                  backgroundColor: 'white',
+                  borderRadius: '6px',
+                  border: '1px solid #f0f0f0'
+                }}>
+                  <div style={{ fontSize: '48px', color: '#d9d9d9', marginBottom: '16px' }}>
+                    <BranchesOutlined />
+                  </div>
+                  <div style={{ fontSize: '16px', color: '#8c8c8c', marginBottom: '8px' }}>
+                    暂无变量数据
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#bfbfbf', marginBottom: '24px' }}>
+                    点击"新增变量"按钮开始创建您的第一个变量
+                  </div>
+                  <Button 
+                    type="primary" 
+                    icon={<PlusOutlined />}
+                    onClick={() => handleAdd()}
+                  >
+                    新增变量
+                  </Button>
+                </div>
+              )}
+            </div>
+          </TabPane>
+        </Tabs>
       </Card>
 
       {/* 新增/编辑模态框 */}
@@ -466,7 +983,7 @@ const VariableManagementV2: React.FC = () => {
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
-        width={700}
+        width={800}
       >
         <Form
           form={form}
@@ -590,6 +1107,27 @@ const VariableManagementV2: React.FC = () => {
             </Col>
           </Row>
 
+          {/* 父级变量选择 */}
+          <Form.Item
+            name="parentId"
+            label="父级变量"
+          >
+            <Select
+              placeholder="选择父级变量（可选）"
+              allowClear
+              showSearch
+              optionFilterProp="children"
+            >
+              {variables
+                .filter(v => v.id !== editingVariable?.id) // 排除自己
+                .map(variable => (
+                  <Option key={variable.id} value={variable.id}>
+                    {variable.variableName} ({variable.variableCode})
+                  </Option>
+                ))}
+            </Select>
+          </Form.Item>
+
           {/* 根据变量类型显示不同的字段 */}
           <Form.Item
             noStyle
@@ -632,6 +1170,17 @@ const VariableManagementV2: React.FC = () => {
             }}
           </Form.Item>
 
+          {/* 约束条件公式 */}
+          <Form.Item
+            name="constraintFormula"
+            label="约束条件公式"
+          >
+            <TextArea
+              rows={2}
+              placeholder="请输入约束条件公式，如: child1 + child2 = parent_value"
+            />
+          </Form.Item>
+
           <Form.Item
             name="description"
             label="描述"
@@ -664,8 +1213,275 @@ const VariableManagementV2: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      {/* 约束条件设置抽屉 */}
+      <Drawer
+        title="设置约束条件"
+        placement="right"
+        width={600}
+        open={constraintDrawerVisible}
+        onClose={() => setConstraintDrawerVisible(false)}
+        footer={
+          <div style={{ textAlign: 'right' }}>
+            <Space>
+              <Button onClick={() => setConstraintDrawerVisible(false)}>
+                取消
+              </Button>
+              <Button type="primary" onClick={handleSaveConstraint} loading={loading}>
+                保存约束条件
+              </Button>
+            </Space>
+          </div>
+        }
+      >
+        {selectedParentVariable && (
+          <div>
+            <Alert
+              message="约束条件说明"
+              description="约束条件用于定义子变量与父变量之间的关系。例如：子变量1 + 子变量2 = 父变量值"
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+            
+            <Descriptions title="父变量信息" bordered size="small" style={{ marginBottom: 16 }}>
+              <Descriptions.Item label="变量名称">{selectedParentVariable.variableName}</Descriptions.Item>
+              <Descriptions.Item label="变量编码">{selectedParentVariable.variableCode}</Descriptions.Item>
+              <Descriptions.Item label="数据类型">{getTypeDisplayName(dataTypeOptions, selectedParentVariable.dataType)}</Descriptions.Item>
+              <Descriptions.Item label="默认值">{selectedParentVariable.defaultValue} {selectedParentVariable.unit}</Descriptions.Item>
+            </Descriptions>
+
+            <Form
+              form={constraintForm}
+              layout="vertical"
+            >
+              <Form.Item
+                name="constraintFormula"
+                label="约束条件公式"
+                rules={[{ required: true, message: '请输入约束条件公式' }]}
+              >
+                <TextArea
+                  rows={4}
+                  placeholder="请输入约束条件公式，例如：
+1. 百分比约束：group_ratio + team_ratio = 100
+2. 金额约束：group_amount + team_amount + surplus = gross_profit
+3. 复杂约束：dept_ratio + employee_ratio = 100 AND dept_amount = team_amount * dept_ratio / 100"
+                />
+              </Form.Item>
+            </Form>
+
+            <Divider />
+
+            <div>
+              <Title level={5}>约束条件示例：</Title>
+              <ul>
+                <li><Text code>group_ratio + team_ratio = 100</Text> - 百分比之和等于100%</li>
+                <li><Text code>group_amount + team_amount + surplus = gross_profit</Text> - 金额分配等于毛利润</li>
+                <li><Text code>dept_ratio + employee_ratio = 100</Text> - 部门和个人比例之和等于100%</li>
+              </ul>
+            </div>
+          </div>
+        )}
+      </Drawer>
     </div>
   );
 };
 
-export default VariableManagementV2; 
+export default VariableManagementV2;
+
+// 添加自定义样式
+const styles = `
+  .variable-tree .ant-tree-node-content-wrapper {
+    padding: 6px 0 !important;
+    border-radius: 6px !important;
+    transition: all 0.2s ease !important;
+    min-height: 45px !important;
+    margin-left: 8px !important;
+  }
+  
+  .variable-tree .ant-tree-treenode .ant-tree-node-content-wrapper {
+    margin-left: 32px !important;
+  }
+  
+  .variable-tree .ant-tree-treenode .ant-tree-treenode .ant-tree-node-content-wrapper {
+    margin-left: 48px !important;
+  }
+  
+  .variable-tree .ant-tree-treenode .ant-tree-treenode .ant-tree-treenode .ant-tree-node-content-wrapper {
+    margin-left: 64px !important;
+  }
+  
+  .variable-tree .ant-tree-treenode .ant-tree-treenode .ant-tree-treenode .ant-tree-treenode .ant-tree-node-content-wrapper {
+    margin-left: 80px !important;
+  }
+  
+  .variable-tree .ant-tree-node-content-wrapper:hover {
+    background-color: #f8f9fa !important;
+  }
+  
+  .variable-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
+    background-color: #e6f7ff !important;
+  }
+  
+  .variable-tree .ant-tree-treenode {
+    margin-bottom: 8px !important;
+    padding: 4px 0 !important;
+  }
+  
+  .variable-tree .ant-tree-treenode .ant-tree-treenode {
+    margin-left: 48px !important;
+    border-left: 4px solid #f0f0f0 !important;
+    padding-left: 32px !important;
+    position: relative !important;
+  }
+  
+  .variable-tree .ant-tree-treenode .ant-tree-treenode .ant-tree-treenode {
+    margin-left: 64px !important;
+    border-left: 4px solid #e6f7ff !important;
+    padding-left: 40px !important;
+  }
+  
+  .variable-tree .ant-tree-treenode .ant-tree-treenode .ant-tree-treenode .ant-tree-treenode {
+    margin-left: 80px !important;
+    border-left: 4px solid #f6ffed !important;
+    padding-left: 48px !important;
+  }
+  
+  .variable-tree .ant-tree-treenode:last-child {
+    margin-bottom: 0 !important;
+  }
+  
+  .variable-tree .ant-tree-switcher {
+    margin-right: 16px !important;
+    margin-top: 12px !important;
+  }
+  
+  .variable-tree .ant-tree-line .ant-tree-switcher {
+    background: transparent !important;
+  }
+  
+  .variable-tree .ant-tree-line .ant-tree-switcher-leaf {
+    display: none !important;
+  }
+  
+  /* 优化树形线条显示 */
+  .variable-tree .ant-tree-line .ant-tree-switcher::before {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 12px !important;
+    height: 2px !important;
+    background-color: #d9d9d9 !important;
+    transform: translate(-50%, -50%) !important;
+  }
+  
+  .variable-tree .ant-tree-line .ant-tree-switcher::after {
+    content: '' !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    width: 2px !important;
+    height: 12px !important;
+    background-color: #d9d9d9 !important;
+    transform: translate(-50%, -50%) !important;
+  }
+  
+  .variable-tree .ant-tree-line .ant-tree-treenode-switcher-close .ant-tree-switcher::after {
+    display: none !important;
+  }
+  
+  .variable-tree .ant-tree-indent {
+    margin-right: 12px !important;
+  }
+  
+  .variable-tree .ant-tree-indent-unit {
+    width: 64px !important;
+  }
+  
+  .variable-tree .ant-tree-treenode-switcher-close .ant-tree-switcher,
+  .variable-tree .ant-tree-treenode-switcher-open .ant-tree-switcher {
+    color: #1890ff !important;
+  }
+  
+  /* 增加层次间的视觉分隔 */
+  .variable-tree .ant-tree-treenode:not(:last-child) {
+    border-bottom: 1px solid #f5f5f5 !important;
+    margin-bottom: 8px !important;
+    padding-bottom: 8px !important;
+  }
+  
+  /* 子节点缩进效果 */
+  .variable-tree .ant-tree-treenode .ant-tree-treenode {
+    background: linear-gradient(90deg, rgba(24, 144, 255, 0.06) 0%, transparent 100%) !important;
+    border-radius: 0 8px 8px 0 !important;
+    position: relative !important;
+  }
+  
+  .variable-tree .ant-tree-treenode .ant-tree-treenode::before {
+    content: '' !important;
+    position: absolute !important;
+    left: -4px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 4px !important;
+    background: linear-gradient(180deg, #1890ff 0%, #40a9ff 100%) !important;
+    border-radius: 2px !important;
+  }
+  
+  .variable-tree .ant-tree-treenode .ant-tree-treenode .ant-tree-treenode {
+    background: linear-gradient(90deg, rgba(82, 196, 26, 0.06) 0%, transparent 100%) !important;
+    border-radius: 0 8px 8px 0 !important;
+    position: relative !important;
+  }
+  
+  .variable-tree .ant-tree-treenode .ant-tree-treenode .ant-tree-treenode::before {
+    content: '' !important;
+    position: absolute !important;
+    left: -4px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 4px !important;
+    background: linear-gradient(180deg, #52c41a 0%, #73d13d 100%) !important;
+    border-radius: 2px !important;
+  }
+  
+  .variable-tree .ant-tree-treenode .ant-tree-treenode .ant-tree-treenode .ant-tree-treenode {
+    background: linear-gradient(90deg, rgba(250, 173, 20, 0.06) 0%, transparent 100%) !important;
+    border-radius: 0 8px 8px 0 !important;
+    position: relative !important;
+  }
+  
+  .variable-tree .ant-tree-treenode .ant-tree-treenode .ant-tree-treenode .ant-tree-treenode::before {
+    content: '' !important;
+    position: absolute !important;
+    left: -4px !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    width: 4px !important;
+    background: linear-gradient(180deg, #faad14 0%, #ffc53d 100%) !important;
+    border-radius: 2px !important;
+  }
+  
+  /* 悬停效果增强 */
+  .variable-tree .ant-tree-node-content-wrapper:hover {
+    background-color: #f8f9fa !important;
+    transform: translateX(6px) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+    border-left: 3px solid #1890ff !important;
+  }
+  
+  /* 选中状态 */
+  .variable-tree .ant-tree-node-content-wrapper.ant-tree-node-selected {
+    background-color: #e6f7ff !important;
+    border-left: 3px solid #1890ff !important;
+    box-shadow: 0 2px 8px rgba(24, 144, 255, 0.2) !important;
+  }
+`;
+
+// 动态注入样式
+if (typeof document !== 'undefined') {
+  const styleElement = document.createElement('style');
+  styleElement.textContent = styles;
+  document.head.appendChild(styleElement);
+} 

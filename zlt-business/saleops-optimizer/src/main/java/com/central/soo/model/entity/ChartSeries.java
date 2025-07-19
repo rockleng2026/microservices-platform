@@ -1,10 +1,8 @@
 package com.central.soo.model.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.central.common.model.BaseEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.time.LocalDateTime;
 
@@ -15,10 +13,9 @@ import java.time.LocalDateTime;
  * @since 2024-12-19
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @TableName("soo_chart_series")
 @Schema(description = "图表指标系列配置")
-public class ChartSeries extends BaseEntity {
+public class ChartSeries {
 
     private static final long serialVersionUID = 1L;
 
@@ -53,6 +50,10 @@ public class ChartSeries extends BaseEntity {
     @Schema(description = "排序")
     @TableField("sort_order")
     private Integer sortOrder;
+
+    @Schema(description = "创建时间")
+    @TableField(value = "created_at", fill = FieldFill.INSERT)
+    private LocalDateTime createdAt;
 
     // 非数据库字段
     @Schema(description = "关联的图表分析模型信息")

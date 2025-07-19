@@ -80,7 +80,7 @@ public interface ChartAnalysisModelMapper extends BaseMapper<ChartAnalysisModel>
     /**
      * 删除指定财务模型下的所有图表配置
      */
-    @Select("DELETE FROM soo_chart_analysis_model WHERE model_id = #{modelId}")
+    @org.apache.ibatis.annotations.Delete("DELETE FROM soo_chart_analysis_model WHERE model_id = #{modelId}")
     int deleteByModelId(@Param("modelId") Long modelId);
 
     Map<String, Object> selectChartUsageStats(Long chartId, String startDate, String endDate);

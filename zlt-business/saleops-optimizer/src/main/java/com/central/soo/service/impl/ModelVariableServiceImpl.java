@@ -54,6 +54,243 @@ public class ModelVariableServiceImpl extends ServiceImpl<ModelVariableMapper, M
     }
 
     @Override
+    public List<ModelVariable> getVariableTree(Long modelId) {
+        // 获取所有变量
+        List<ModelVariable> allVariables = getVariablesByModelId(modelId);
+        // 构建树形结构
+        return buildVariableTree(allVariables);
+    }
+
+    @Override
+    public List<ModelVariable> getChildVariables(Long parentId) {
+        return modelVariableMapper.selectChildrenByParentId(parentId);
+    }
+
+    @Override
+    public ModelVariable getParentVariable(Long id) {
+        return modelVariableMapper.selectParentById(id);
+    }
+
+    @Override
+    public List<ModelVariable> getAllChildrenRecursive(Long parentId) {
+        return modelVariableMapper.selectAllChildrenRecursive(parentId);
+    }
+
+    @Override
+    public List<ModelVariable> getAllParentsRecursive(Long id) {
+        return modelVariableMapper.selectAllParentsRecursive(id);
+    }
+
+    @Override
+    public boolean moveVariable(Long id, Long newParentId) {
+        // 检查循环引用
+        if (checkCircularReference(id, newParentId)) {
+            throw new RuntimeException("移动变量会导致循环引用");
+        }
+        
+        // 更新父级ID
+        return modelVariableMapper.updateParentId(id, newParentId) > 0;
+    }
+
+    @Override
+    public boolean checkCircularReference(Long id, Long newParentId) {
+        if (newParentId == null || newParentId == 0) {
+            return false; // 移动到根节点不会产生循环引用
+        }
+        
+        return modelVariableMapper.checkCircularReference(id, newParentId) > 0;
+    }
+
+    @Override
+    public List<ModelVariable> getVariableDependencies(Long variableId) {
+        return modelVariableMapper.selectDependencies(variableId);
+    }
+
+    @Override
+    public List<ModelVariable> buildVariableTree(List<ModelVariable> variables) {
+        if (variables == null || variables.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // 创建ID到变量的映射
+        Map<Long, ModelVariable> variableMap = new HashMap<>();
+        for (ModelVariable variable : variables) {
+            variableMap.put(variable.getId(), variable);
+            variable.setChildren(new ArrayList<>());
+            variable.setLevel(0);
+            variable.setIsLeaf(true);
+        }
+        
+        // 构建树形结构
+        List<ModelVariable> rootVariables = new ArrayList<>();
+        for (ModelVariable variable : variables) {
+            if (variable.getParentId() == null || variable.getParentId() == 0) {
+                // 根节点
+                rootVariables.add(variable);
+                buildTreeRecursive(variable, variableMap, 0);
+            }
+        }
+        
+        return rootVariables;
+    }
+
+    /**
+     * 递归构建树形结构
+     */
+    private void buildTreeRecursive(ModelVariable parent, Map<Long, ModelVariable> variableMap, int level) {
+        parent.setLevel(level);
+        
+        for (ModelVariable variable : variableMap.values()) {
+            if (Objects.equals(variable.getParentId(), parent.getId())) {
+                parent.getChildren().add(variable);
+                parent.setIsLeaf(false);
+                buildTreeRecursive(variable, variableMap, level + 1);
+            }
+        }
+        
+        // 设置子变量数量
+        parent.setChildrenCount(parent.getChildren().size());
+    }
+
+    @Override
+    public Map<String, Object> validateConstraint(Long modelId, Long parentId, String constraintFormula) {
+        Map<String, Object> result = new HashMap<>();
+        
+        if (!StringUtils.hasText(constraintFormula)) {
+            result.put("valid", false);
+            result.put("message", "约束条件公式不能为空");
+            return result;
+        }
+        
+        try {
+            // 获取父变量
+            ModelVariable parentVariable = this.getById(parentId);
+            if (parentVariable == null) {
+                result.put("valid", false);
+                result.put("message", "父变量不存在");
+                return result;
+            }
+            
+            // 获取所有子变量
+            List<ModelVariable> childVariables = getChildVariables(parentId);
+            if (childVariables.isEmpty()) {
+                result.put("valid", false);
+                result.put("message", "父变量没有子变量，无法设置约束条件");
+                return result;
+            }
+            
+            // 提取约束条件中的变量
+            Set<String> variablesInConstraint = extractVariablesFromFormula(constraintFormula);
+            
+            // 检查约束条件中的变量是否都是子变量
+            Set<String> childVariableCodes = childVariables.stream()
+                    .map(ModelVariable::getVariableCode)
+                    .collect(java.util.stream.Collectors.toSet());
+            
+            List<String> invalidVariables = new ArrayList<>();
+            for (String varCode : variablesInConstraint) {
+                if (!childVariableCodes.contains(varCode) && !varCode.equals(parentVariable.getVariableCode())) {
+                    invalidVariables.add(varCode);
+                }
+            }
+            
+            if (!invalidVariables.isEmpty()) {
+                result.put("valid", false);
+                result.put("message", "约束条件中包含无效变量: " + String.join(", ", invalidVariables));
+                return result;
+            }
+            
+            // 简单的语法检查
+            if (!isValidConstraintExpression(constraintFormula)) {
+                result.put("valid", false);
+                result.put("message", "约束条件语法错误");
+                return result;
+            }
+            
+            result.put("valid", true);
+            result.put("message", "约束条件验证通过");
+            result.put("parentVariable", parentVariable);
+            result.put("childVariables", childVariables);
+            
+        } catch (Exception e) {
+            log.error("验证约束条件失败", e);
+            result.put("valid", false);
+            result.put("message", "验证约束条件时发生错误: " + e.getMessage());
+        }
+        
+        return result;
+    }
+
+    @Override
+    public boolean updateVariableOrder(Long id, String direction) {
+        ModelVariable variable = this.getById(id);
+        if (variable == null) {
+            return false;
+        }
+        
+        // 获取同级变量
+        List<ModelVariable> siblings;
+        if (variable.getParentId() == null || variable.getParentId() == 0) {
+            // 根节点
+            siblings = modelVariableMapper.selectRootVariablesByModelId(variable.getModelId());
+        } else {
+            // 子节点
+            siblings = getChildVariables(variable.getParentId());
+        }
+        
+        // 按显示顺序排序
+        siblings.sort(Comparator.comparing(ModelVariable::getDisplayOrder));
+        
+        // 找到当前变量的位置
+        int currentIndex = -1;
+        for (int i = 0; i < siblings.size(); i++) {
+            if (siblings.get(i).getId().equals(id)) {
+                currentIndex = i;
+                break;
+            }
+        }
+        
+        if (currentIndex == -1) {
+            return false;
+        }
+        
+        // 计算新位置
+        int newIndex;
+        if ("up".equals(direction) && currentIndex > 0) {
+            newIndex = currentIndex - 1;
+        } else if ("down".equals(direction) && currentIndex < siblings.size() - 1) {
+            newIndex = currentIndex + 1;
+        } else {
+            return false; // 无法移动
+        }
+        
+        // 交换显示顺序
+        ModelVariable currentVar = siblings.get(currentIndex);
+        ModelVariable targetVar = siblings.get(newIndex);
+        
+        Integer tempOrder = currentVar.getDisplayOrder();
+        currentVar.setDisplayOrder(targetVar.getDisplayOrder());
+        targetVar.setDisplayOrder(tempOrder);
+        
+        // 更新数据库
+        this.updateById(currentVar);
+        this.updateById(targetVar);
+        
+        return true;
+    }
+
+    @Override
+    public boolean updateVariableOrder(List<Map<String, Object>> variables) {
+        for (Map<String, Object> var : variables) {
+            Long id = Long.valueOf(var.get("id").toString());
+            Integer displayOrder = Integer.valueOf(var.get("displayOrder").toString());
+            modelVariableMapper.updateDisplayOrder(id, displayOrder);
+        }
+        
+        return true;
+    }
+
+    @Override
     public ModelVariable createVariable(ModelVariable variable) {
         // 检查变量编码是否重复
         if (checkVariableCodeExists(variable.getModelId(), variable.getVariableCode(), null)) {
@@ -213,17 +450,6 @@ public class ModelVariableServiceImpl extends ServiceImpl<ModelVariableMapper, M
     }
 
     @Override
-    public boolean updateVariableOrder(List<Map<String, Object>> variables) {
-        for (Map<String, Object> var : variables) {
-            Long id = Long.valueOf(var.get("id").toString());
-            Integer displayOrder = Integer.valueOf(var.get("displayOrder").toString());
-            modelVariableMapper.updateDisplayOrder(id, displayOrder);
-        }
-        
-        return true;
-    }
-
-    @Override
     public String exportVariables(Long modelId) {
         List<ModelVariable> variables = getVariablesByModelId(modelId);
         
@@ -353,5 +579,42 @@ public class ModelVariableServiceImpl extends ServiceImpl<ModelVariableMapper, M
         } catch (Exception e) {
             return false;
         }
+    }
+
+    /**
+     * 验证约束条件表达式语法
+     */
+    private boolean isValidConstraintExpression(String constraintFormula) {
+        // 基本的语法检查
+        String formula = constraintFormula.trim();
+        
+        // 检查基本运算符
+        String[] operators = {"+", "-", "*", "/", "=", ">", "<", ">=", "<=", "!=", "AND", "OR"};
+        boolean hasOperator = false;
+        for (String op : operators) {
+            if (formula.contains(op)) {
+                hasOperator = true;
+                break;
+            }
+        }
+        
+        if (!hasOperator) {
+            return false;
+        }
+        
+        // 检查括号匹配
+        int openBrackets = 0;
+        for (char c : formula.toCharArray()) {
+            if (c == '(') {
+                openBrackets++;
+            } else if (c == ')') {
+                openBrackets--;
+                if (openBrackets < 0) {
+                    return false;
+                }
+            }
+        }
+        
+        return openBrackets == 0;
     }
 } 

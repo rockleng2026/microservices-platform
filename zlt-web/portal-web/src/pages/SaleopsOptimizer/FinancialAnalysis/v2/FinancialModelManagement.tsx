@@ -28,7 +28,8 @@ import {
   UploadOutlined,
   BarChartOutlined,
   EyeOutlined,
-  SettingOutlined
+  SettingOutlined,
+  InfoCircleOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { FinancialModelAPI, FinancialModel, ModelFormData, PageParams } from '@/services/financialModel';
@@ -44,6 +45,7 @@ const FinancialModelManagementV2: React.FC = () => {
   const [total, setTotal] = useState(0);
   const [current, setCurrent] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingModel, setEditingModel] = useState<FinancialModel | null>(null);
   const [searchKeyword, setSearchKeyword] = useState('');
@@ -215,21 +217,40 @@ const FinancialModelManagementV2: React.FC = () => {
     }
   };
 
+  // 复制模型弹窗状态
+  const [copyModalVisible, setCopyModalVisible] = useState(false);
+  const [copyingModel, setCopyingModel] = useState<FinancialModel | null>(null);
+  const [copyForm] = Form.useForm();
+
   // 复制模型
-  const handleCopy = async (record: FinancialModel) => {
+  const handleCopy = (record: FinancialModel) => {
+    setCopyingModel(record);
+    copyForm.resetFields();
+    copyForm.setFieldsValue({
+      newModelCode: `${record.modelCode}_COPY_${Date.now()}`,
+      newModelName: `${record.modelName} - 副本`,
+      includeVariables: true,
+      includeCharts: true
+    });
+    setCopyModalVisible(true);
+  };
+
+  // 执行复制
+  const handleCopySubmit = async () => {
     try {
+      const values = await copyForm.validateFields();
       setLoading(true);
-      const newModelCode = `${record.modelCode}_COPY_${Date.now()}`;
-      const newModelName = `${record.modelName} - 副本`;
       
       await FinancialModelAPI.cloneModel(
-        record.id,
-        newModelCode,
-        newModelName,
-        true
+        copyingModel!.id,
+        values.newModelCode,
+        values.newModelName,
+        values.includeVariables,
+        values.includeCharts
       );
 
       message.success('复制成功');
+      setCopyModalVisible(false);
       fetchModels();
     } catch (error) {
       console.error('复制失败:', error);
@@ -258,21 +279,58 @@ const FinancialModelManagementV2: React.FC = () => {
   const handleExport = async (record: FinancialModel) => {
     try {
       setLoading(true);
-      const configJson = await FinancialModelAPI.exportModelConfig(record.id);
-      
-      // 创建下载链接
-      const blob = new Blob([configJson], { type: 'application/json' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${record.modelCode}_config.json`;
-      link.click();
-      window.URL.revokeObjectURL(url);
-      
-      message.success('导出成功');
+      await FinancialModelAPI.exportModelConfig(record.id);
+      message.success('JSON导出成功');
     } catch (error) {
-      console.error('导出失败:', error);
-      message.error(`导出失败: ${error}`);
+      console.error('JSON导出失败:', error);
+      message.error(error instanceof Error ? error.message : 'JSON导出失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 处理Excel导出
+  const handleExportToExcel = async (record: FinancialModel) => {
+    try {
+      setLoading(true);
+      await FinancialModelAPI.exportModelToExcel(record.id);
+      message.success('Excel导出成功');
+    } catch (error) {
+      console.error('Excel导出失败:', error);
+      message.error(error instanceof Error ? error.message : 'Excel导出失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 处理批量导出
+  const handleBatchExport = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('请选择要导出的模型');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await FinancialModelAPI.exportModelsToExcel(selectedRowKeys);
+      message.success('批量导出成功');
+    } catch (error) {
+      console.error('批量导出失败:', error);
+      message.error(error instanceof Error ? error.message : '批量导出失败');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 处理全量导出
+  const handleExportAll = async () => {
+    try {
+      setLoading(true);
+      await FinancialModelAPI.exportAllModelsToExcel();
+      message.success('全量导出成功');
+    } catch (error) {
+      console.error('全量导出失败:', error);
+      message.error(error instanceof Error ? error.message : '全量导出失败');
     } finally {
       setLoading(false);
     }
@@ -416,12 +474,20 @@ const FinancialModelManagementV2: React.FC = () => {
               onClick={() => handleCopy(record)}
             />
           </Tooltip>
-          <Tooltip title="导出">
+          <Tooltip title="导出JSON">
             <Button 
               type="link" 
               size="small" 
               icon={<DownloadOutlined />}
               onClick={() => handleExport(record)}
+            />
+          </Tooltip>
+          <Tooltip title="导出Excel">
+            <Button 
+              type="link" 
+              size="small" 
+              icon={<DownloadOutlined />}
+              onClick={() => handleExportToExcel(record)}
             />
           </Tooltip>
           <Popconfirm
@@ -467,6 +533,20 @@ const FinancialModelManagementV2: React.FC = () => {
               onClick={handleImport}
             >
               导入模型
+            </Button>
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={handleExportAll}
+              disabled={loading}
+            >
+              全量导出
+            </Button>
+            <Button
+              icon={<DownloadOutlined />}
+              onClick={handleBatchExport}
+              disabled={selectedRowKeys.length === 0 || loading}
+            >
+              批量导出 ({selectedRowKeys.length})
             </Button>
           </Space>
         </div>
@@ -521,6 +601,10 @@ const FinancialModelManagementV2: React.FC = () => {
           dataSource={models}
           rowKey="id"
           loading={loading}
+          rowSelection={{
+            selectedRowKeys,
+            onChange: (keys) => setSelectedRowKeys(keys as number[]),
+          }}
           pagination={{
             current: current,
             pageSize: pageSize,
@@ -666,6 +750,110 @@ const FinancialModelManagementV2: React.FC = () => {
               {detailModel.modelDescription || '暂无描述'}
             </Descriptions.Item>
           </Descriptions>
+        )}
+      </Modal>
+
+      {/* 复制模型弹窗 */}
+      <Modal
+        title="复制财务模型"
+        open={copyModalVisible}
+        onCancel={() => setCopyModalVisible(false)}
+        footer={[
+          <Button key="cancel" onClick={() => setCopyModalVisible(false)}>
+            取消
+          </Button>,
+          <Button 
+            key="submit" 
+            type="primary" 
+            loading={loading}
+            onClick={handleCopySubmit}
+          >
+            确认复制
+          </Button>
+        ]}
+        width={600}
+      >
+        {copyingModel && (
+          <div>
+            <div style={{ marginBottom: 16, padding: 12, backgroundColor: '#f5f5f5', borderRadius: 6 }}>
+              <div style={{ fontWeight: 600, marginBottom: 4 }}>源模型信息</div>
+              <div>模型名称：{copyingModel.modelName}</div>
+              <div>模型编码：{copyingModel.modelCode}</div>
+              <div>变量数量：{copyingModel.variableCount || 0}</div>
+              <div>图表数量：{copyingModel.chartCount || 0}</div>
+            </div>
+            
+            <Form
+              form={copyForm}
+              layout="vertical"
+            >
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="newModelCode"
+                    label="新模型编码"
+                    rules={[
+                      { required: true, message: '请输入新模型编码' },
+                      { pattern: /^[a-zA-Z0-9_]+$/, message: '编码只能包含字母、数字和下划线' }
+                    ]}
+                  >
+                    <Input placeholder="请输入新模型编码" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="newModelName"
+                    label="新模型名称"
+                    rules={[{ required: true, message: '请输入新模型名称' }]}
+                  >
+                    <Input placeholder="请输入新模型名称" />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              <Form.Item
+                name="includeVariables"
+                valuePropName="checked"
+                initialValue={true}
+              >
+                <Space>
+                  <Switch />
+                  <span>复制变量配置</span>
+                </Space>
+              </Form.Item>
+
+              <Form.Item
+                name="includeCharts"
+                valuePropName="checked"
+                initialValue={true}
+              >
+                <Space>
+                  <Switch />
+                  <span>复制图表配置（包括系列）</span>
+                </Space>
+              </Form.Item>
+
+              <div style={{ 
+                padding: 12, 
+                backgroundColor: '#e6f7ff', 
+                border: '1px solid #91d5ff', 
+                borderRadius: 6,
+                marginTop: 16
+              }}>
+                <div style={{ fontWeight: 600, color: '#1890ff', marginBottom: 8 }}>
+                  <InfoCircleOutlined style={{ marginRight: 8 }} />
+                  复制说明
+                </div>
+                <div style={{ fontSize: 12, color: '#666', lineHeight: 1.6 }}>
+                  • 复制后的模型将包含源模型的所有配置信息<br/>
+                  • 变量配置：复制所有变量定义、公式和约束条件<br/>
+                  • 图表配置：复制所有图表设置和系列配置<br/>
+                  • 新模型将设置为启用状态，可以立即使用<br/>
+                  • 复制操作不可撤销，请谨慎操作
+                </div>
+              </div>
+            </Form>
+          </div>
         )}
       </Modal>
     </div>

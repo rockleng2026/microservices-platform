@@ -41,10 +41,12 @@ CREATE TABLE soo_model_variable (
     variable_type ENUM('INPUT','CALC','API') NOT NULL COMMENT '变量类型：输入/计算/API',
     data_type ENUM('NUMBER','DECIMAL','PERCENTAGE','CURRENCY','BOOLEAN','STRING') DEFAULT 'DECIMAL' COMMENT '数据类型',
     unit VARCHAR(20) COMMENT '单位',
+    parent_id BIGINT COMMENT '父级树ID,标识这个变量属于parent_id的子变量，他的值受父级变量值的约束',
     default_value DECIMAL(20,6) COMMENT '默认值',
     min_value DECIMAL(20,6) COMMENT '最小值',
     max_value DECIMAL(20,6) COMMENT '最大值',
     calculation_formula TEXT COMMENT '计算公式',
+    constraint_formula TEXT COMMENT '约束条件公式，定义子变量与父变量之间的关系',
     api_config JSON COMMENT 'API配置',
     display_order INT DEFAULT 0 COMMENT '显示顺序',
     is_required BOOLEAN DEFAULT FALSE COMMENT '是否必填',
@@ -59,6 +61,8 @@ CREATE TABLE soo_model_variable (
     UNIQUE KEY uk_model_variable (model_id, variable_code),
     INDEX idx_model_type (model_id, variable_type),
     INDEX idx_model_order (model_id, display_order),
+    INDEX idx_parent_id (parent_id),
+    INDEX idx_constraint_formula (constraint_formula),
     FOREIGN KEY (model_id) REFERENCES soo_financial_model(id) ON DELETE CASCADE
 ) COMMENT '模型变量表';
 

@@ -72,7 +72,7 @@ public class ChartAnalysisModelController {
      */
     @GetMapping
     @Operation(summary = "获取图表模型列表", description = "分页查询图表分析模型列表")
-    public Result<PageResult<ChartAnalysisModel>> getChartModels(
+    public PageResult<ChartAnalysisModel> getChartModels(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long modelId,
@@ -80,16 +80,8 @@ public class ChartAnalysisModelController {
             @RequestParam(required = false) String chartType,
             @LoginUser SysUser user) {
         
-        try {
-            Page<ChartAnalysisModel> pageInfo = new Page<>(page, size);
-            PageResult<ChartAnalysisModel> result = chartAnalysisModelService.pageChartModels(
-                    pageInfo, modelId, chartName, chartType);
-            
-            return Result.succeed(result);
-        } catch (Exception e) {
-            log.error("查询图表模型列表失败", e);
-            return Result.failed("查询失败: " + e.getMessage());
-        }
+        Page<ChartAnalysisModel> pageInfo = new Page<>(page, size);
+        return chartAnalysisModelService.pageChartModels(pageInfo, modelId, chartName, chartType);
     }
 
     /**

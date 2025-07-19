@@ -28,6 +28,8 @@ zlt:
       - soo_chart_analysis_model
       - soo_chart_simulation
       - soo_chart_series
+      - soo_model_instance_variable
+      - soo_model_instance_calculation_history
     ignoreSqls:
       - com.central.soo.mapper.FinancialModelMapper.selectPageModels
 

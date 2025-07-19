@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.soo.mapper.FinancialModelInstanceMapper">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="BaseResultMap" type="com.central.soo.model.entity.FinancialModelInstance">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="instance_code" property="instanceCode" jdbcType="VARCHAR"/>
+        <result column="instance_name" property="instanceName" jdbcType="VARCHAR"/>
+        <result column="model_id" property="modelId" jdbcType="BIGINT"/>
+        <result column="project_id" property="projectId" jdbcType="BIGINT"/>
+        <result column="instance_status" property="instanceStatus" jdbcType="VARCHAR"/>
+        <result column="instance_version" property="instanceVersion" jdbcType="VARCHAR"/>
+        <result column="instance_description" property="instanceDescription" jdbcType="VARCHAR"/>
+        <result column="instance_config" property="instanceConfig" jdbcType="LONGVARCHAR"/>
+        <result column="calculation_result" property="calculationResult" jdbcType="LONGVARCHAR"/>
+        <result column="last_calculated_at" property="lastCalculatedAt" jdbcType="TIMESTAMP"/>
+        <result column="calculation_status" property="calculationStatus" jdbcType="VARCHAR"/>
+        <result column="creator_id" property="creatorId" jdbcType="BIGINT"/>
+        <result column="tenant_id" property="tenantId" jdbcType="VARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+        <result column="deleted" property="deleted" jdbcType="TINYINT"/>
+    </resultMap>
+
+    <!-- 包含关联信息的结果映射 -->
+    <resultMap id="DetailResultMap" type="com.central.soo.model.entity.FinancialModelInstance" extends="BaseResultMap">
+        <association property="financialModel" javaType="com.central.soo.model.entity.FinancialModel">
+            <id column="model_id" property="id" jdbcType="BIGINT"/>
+            <result column="model_name" property="modelName" jdbcType="VARCHAR"/>
+            <result column="model_code" property="modelCode" jdbcType="VARCHAR"/>
+            <result column="model_description" property="modelDescription" jdbcType="VARCHAR"/>
+        </association>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, instance_code, instance_name, model_id, project_id, instance_status, instance_version,
+        instance_description, instance_config, calculation_result, last_calculated_at, calculation_status,
+        creator_id, tenant_id, created_at, updated_at, deleted
+    </sql>
+
+    <!-- 分页查询实例列表 -->
+    <select id="selectPageInstances" resultMap="DetailResultMap">
+        SELECT 
+            i.id, i.instance_code, i.instance_name, i.model_id, i.project_id, i.instance_status, 
+            i.instance_version, i.instance_description, i.instance_config, i.calculation_result,
+            i.last_calculated_at, i.calculation_status, i.creator_id, i.tenant_id, i.created_at, 
+            i.updated_at, i.deleted,
+            m.model_name, m.model_code, m.model_description
+        FROM soo_financial_model_instance i
+        LEFT JOIN soo_financial_model m ON i.model_id = m.id
+        WHERE i.deleted = 0
+        <if test="tenantId != null and tenantId != ''">
+            AND i.tenant_id = #{tenantId}
+        </if>
+        <if test="modelId != null">
+            AND i.model_id = #{modelId}
+        </if>
+        <if test="projectId != null">
+            AND i.project_id = #{projectId}
+        </if>
+        <if test="instanceStatus != null and instanceStatus != ''">
+            AND i.instance_status = #{instanceStatus}
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND (i.instance_code LIKE CONCAT('%', #{keyword}, '%') 
+                 OR i.instance_name LIKE CONCAT('%', #{keyword}, '%')
+                 OR i.instance_description LIKE CONCAT('%', #{keyword}, '%'))
+        </if>
+        ORDER BY i.created_at DESC
+    </select>
+
+    <!-- 根据模型ID查询实例列表 -->
+    <select id="selectByModelId" resultMap="DetailResultMap">
+        SELECT 
+            i.id, i.instance_code, i.instance_name, i.model_id, i.project_id, i.instance_status, 
+            i.instance_version, i.instance_description, i.instance_config, i.calculation_result,
+            i.last_calculated_at, i.calculation_status, i.creator_id, i.tenant_id, i.created_at, 
+            i.updated_at, i.deleted,
+            m.model_name, m.model_code, m.model_description
+        FROM soo_financial_model_instance i
+        LEFT JOIN soo_financial_model m ON i.model_id = m.id
+        WHERE i.deleted = 0 
+        AND i.model_id = #{modelId}
+        <if test="tenantId != null and tenantId != ''">
+            AND i.tenant_id = #{tenantId}
+        </if>
+        ORDER BY i.created_at DESC
+    </select>
+
+    <!-- 根据项目ID查询实例列表 -->
+    <select id="selectByProjectId" resultMap="DetailResultMap">
+        SELECT 
+            i.id, i.instance_code, i.instance_name, i.model_id, i.project_id, i.instance_status, 
+            i.instance_version, i.instance_description, i.instance_config, i.calculation_result,
+            i.last_calculated_at, i.calculation_status, i.creator_id, i.tenant_id, i.created_at, 
+            i.updated_at, i.deleted,
+            m.model_name, m.model_code, m.model_description
+        FROM soo_financial_model_instance i
+        LEFT JOIN soo_financial_model m ON i.model_id = m.id
+        WHERE i.deleted = 0 
+        AND i.project_id = #{projectId}
+        <if test="tenantId != null and tenantId != ''">
+            AND i.tenant_id = #{tenantId}
+        </if>
+        ORDER BY i.created_at DESC
+    </select>
+
+    <!-- 根据实例编码查询实例 -->
+    <select id="selectByInstanceCode" resultMap="DetailResultMap">
+        SELECT 
+            i.id, i.instance_code, i.instance_name, i.model_id, i.project_id, i.instance_status, 
+            i.instance_version, i.instance_description, i.instance_config, i.calculation_result,
+            i.last_calculated_at, i.calculation_status, i.creator_id, i.tenant_id, i.created_at, 
+            i.updated_at, i.deleted,
+            m.model_name, m.model_code, m.model_description
+        FROM soo_financial_model_instance i
+        LEFT JOIN soo_financial_model m ON i.model_id = m.id
+        WHERE i.deleted = 0 
+        AND i.instance_code = #{instanceCode}
+        <if test="tenantId != null and tenantId != ''">
+            AND i.tenant_id = #{tenantId}
+        </if>
+    </select>
+
+    <!-- 获取实例详情（包含关联信息） -->
+    <select id="selectInstanceDetail" resultMap="DetailResultMap">
+        SELECT 
+            i.id, i.instance_code, i.instance_name, i.model_id, i.project_id, i.instance_status, 
+            i.instance_version, i.instance_description, i.instance_config, i.calculation_result,
+            i.last_calculated_at, i.calculation_status, i.creator_id, i.tenant_id, i.created_at, 
+            i.updated_at, i.deleted,
+            m.model_name, m.model_code, m.model_description
+        FROM soo_financial_model_instance i
+        LEFT JOIN soo_financial_model m ON i.model_id = m.id
+        WHERE i.deleted = 0 AND i.id = #{instanceId}
+    </select>
+
+    <!-- 获取实例统计信息 -->
+    <select id="selectInstanceStatistics" resultType="java.util.Map">
+        SELECT 
+            COUNT(*) as totalInstances,
+            SUM(CASE WHEN instance_status = 'ACTIVE' THEN 1 ELSE 0 END) as activeInstances,
+            SUM(CASE WHEN instance_status = 'DRAFT' THEN 1 ELSE 0 END) as draftInstances,
+            SUM(CASE WHEN instance_status = 'INACTIVE' THEN 1 ELSE 0 END) as inactiveInstances,
+            SUM(CASE WHEN instance_status = 'ARCHIVED' THEN 1 ELSE 0 END) as archivedInstances,
+            SUM(CASE WHEN calculation_status = 'PENDING' THEN 1 ELSE 0 END) as pendingCalculations,
+            SUM(CASE WHEN calculation_status = 'CALCULATING' THEN 1 ELSE 0 END) as calculatingInstances,
+            SUM(CASE WHEN calculation_status = 'COMPLETED' THEN 1 ELSE 0 END) as completedCalculations,
+            SUM(CASE WHEN calculation_status = 'FAILED' THEN 1 ELSE 0 END) as failedCalculations
+        FROM soo_financial_model_instance
+        WHERE deleted = 0
+        <if test="tenantId != null and tenantId != ''">
+            AND tenant_id = #{tenantId}
+        </if>
+    </select>
+
+    <!-- 获取最近使用的实例 -->
+    <select id="selectRecentlyUsedInstances" resultMap="DetailResultMap">
+        SELECT 
+            i.id, i.instance_code, i.instance_name, i.model_id, i.project_id, i.instance_status, 
+            i.instance_version, i.instance_description, i.instance_config, i.calculation_result,
+            i.last_calculated_at, i.calculation_status, i.creator_id, i.tenant_id, i.created_at, 
+            i.updated_at, i.deleted,
+            m.model_name, m.model_code, m.model_description
+        FROM soo_financial_model_instance i
+        LEFT JOIN soo_financial_model m ON i.model_id = m.id
+        WHERE i.deleted = 0
+        <if test="tenantId != null and tenantId != ''">
+            AND i.tenant_id = #{tenantId}
+        </if>
+        ORDER BY i.updated_at DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 更新实例状态 -->
+    <update id="updateInstanceStatus">
+        UPDATE soo_financial_model_instance 
+        SET instance_status = #{instanceStatus}, updated_at = NOW()
+        WHERE id = #{instanceId} AND deleted = 0
+    </update>
+
+    <!-- 更新计算状态 -->
+    <update id="updateCalculationStatus">
+        UPDATE soo_financial_model_instance 
+        SET calculation_status = #{calculationStatus}, updated_at = NOW()
+        WHERE id = #{instanceId} AND deleted = 0
+    </update>
+
+</mapper> 

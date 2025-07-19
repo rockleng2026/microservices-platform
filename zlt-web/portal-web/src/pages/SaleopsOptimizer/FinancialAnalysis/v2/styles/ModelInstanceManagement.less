@@ -1,0 +1,452 @@
+.model-instance-management {
+  .ant-card {
+    margin-bottom: 16px;
+  }
+
+  .ant-statistic {
+    .ant-statistic-title {
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .ant-statistic-content {
+      font-size: 24px;
+      font-weight: bold;
+    }
+  }
+
+  .instance-table {
+    .ant-table-thead > tr > th {
+      background-color: #fafafa;
+      font-weight: 600;
+    }
+
+    .ant-table-tbody > tr:hover > td {
+      background-color: #f5f5f5;
+    }
+
+    .instance-code {
+      color: #1890ff;
+      cursor: pointer;
+      
+      &:hover {
+        text-decoration: underline;
+      }
+    }
+
+    .status-tag {
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .action-buttons {
+      .ant-btn-link {
+        padding: 4px 8px;
+        height: auto;
+        line-height: 1;
+        
+        &:hover {
+          background-color: #f0f0f0;
+          border-radius: 4px;
+        }
+      }
+    }
+  }
+
+  .search-bar {
+    .ant-input-search {
+      .ant-input {
+        border-radius: 6px;
+      }
+      
+      .ant-btn {
+        border-radius: 0 6px 6px 0;
+      }
+    }
+
+    .ant-select {
+      .ant-select-selector {
+        border-radius: 6px;
+      }
+    }
+  }
+
+  .filter-section {
+    background-color: #fafafa;
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+
+    .ant-row {
+      align-items: center;
+    }
+  }
+
+  .instance-form {
+    .ant-form-item-label {
+      font-weight: 500;
+    }
+
+    .model-info {
+      background-color: #f0f9ff;
+      border: 1px solid #bae7ff;
+      border-radius: 6px;
+      padding: 12px;
+      margin-bottom: 16px;
+
+      .model-name {
+        font-size: 16px;
+        font-weight: bold;
+        color: #1890ff;
+      }
+
+      .model-code {
+        color: #666;
+        font-size: 14px;
+      }
+    }
+
+    .variables-preview {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid #d9d9d9;
+      border-radius: 6px;
+      padding: 8px;
+
+      .variable-item {
+        background-color: #fafafa;
+        border-radius: 4px;
+        padding: 8px;
+        margin-bottom: 8px;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .variable-name {
+          font-weight: bold;
+          color: #333;
+        }
+
+        .variable-code {
+          color: #666;
+          font-size: 12px;
+        }
+
+        .variable-type {
+          color: #999;
+          font-size: 12px;
+        }
+
+        .required-mark {
+          color: #ff4d4f;
+          margin-left: 4px;
+        }
+      }
+    }
+  }
+
+  .instance-detail {
+    .ant-descriptions-item-label {
+      font-weight: 600;
+      color: #333;
+    }
+
+    .ant-descriptions-item-content {
+      color: #666;
+    }
+
+    .config-json {
+      background-color: #f5f5f5;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      max-height: 200px;
+      overflow: auto;
+    }
+
+    .result-json {
+      background-color: #f0f9ff;
+      border: 1px solid #bae7ff;
+      border-radius: 6px;
+      padding: 12px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      max-height: 200px;
+      overflow: auto;
+    }
+
+    .timeline-item {
+      .ant-timeline-item-content {
+        h4 {
+          margin: 0;
+          font-size: 14px;
+          font-weight: 500;
+        }
+
+        p {
+          margin: 4px 0 0 0;
+          color: #666;
+          font-size: 12px;
+        }
+      }
+    }
+  }
+
+  .variable-editor {
+    .ant-table {
+      .ant-table-thead > tr > th {
+        background-color: #fafafa;
+        font-weight: 600;
+        font-size: 12px;
+      }
+
+      .ant-table-tbody > tr > td {
+        padding: 8px;
+        font-size: 12px;
+      }
+    }
+
+    .variable-input {
+      .ant-form-item {
+        margin-bottom: 0;
+      }
+
+      .ant-input-number {
+        width: 100%;
+      }
+
+      .ant-input {
+        font-size: 12px;
+      }
+
+      .ant-switch {
+        font-size: 12px;
+      }
+    }
+
+    .variable-status {
+      .ant-tag {
+        font-size: 11px;
+        padding: 2px 6px;
+        border-radius: 3px;
+      }
+    }
+  }
+
+  .calculation-history {
+    .ant-table {
+      .ant-table-thead > tr > th {
+        background-color: #fafafa;
+        font-weight: 600;
+        font-size: 12px;
+      }
+
+      .ant-table-tbody > tr > td {
+        padding: 8px;
+        font-size: 12px;
+      }
+    }
+
+    .calculation-type-tag {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .calculation-status-tag {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 3px;
+    }
+
+    .execution-time {
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 11px;
+      color: #666;
+    }
+
+    .detail-drawer {
+      .ant-drawer-body {
+        padding: 16px;
+      }
+
+      .detail-card {
+        margin-bottom: 16px;
+
+        .ant-card-head {
+          padding: 0 16px;
+          min-height: 40px;
+
+          .ant-card-head-title {
+            font-size: 14px;
+            font-weight: 600;
+          }
+        }
+
+        .ant-card-body {
+          padding: 16px;
+        }
+      }
+
+      .json-display {
+        background-color: #f5f5f5;
+        border-radius: 6px;
+        padding: 12px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 11px;
+        line-height: 1.4;
+        max-height: 200px;
+        overflow: auto;
+        border: 1px solid #d9d9d9;
+      }
+
+      .error-message {
+        .ant-alert {
+          border-radius: 6px;
+          
+          .ant-alert-message {
+            font-weight: 600;
+          }
+          
+          .ant-alert-description {
+            font-size: 12px;
+            line-height: 1.5;
+          }
+        }
+      }
+    }
+  }
+
+  .calculation-modal {
+    .ant-modal-body {
+      padding: 24px;
+    }
+
+    .calculation-info {
+      background-color: #f0f9ff;
+      border: 1px solid #bae7ff;
+      border-radius: 6px;
+      padding: 16px;
+      margin-bottom: 16px;
+
+      .instance-name {
+        font-size: 16px;
+        font-weight: bold;
+        color: #1890ff;
+        margin-bottom: 8px;
+      }
+
+      .instance-code {
+        color: #666;
+        font-size: 14px;
+      }
+    }
+
+    .calculation-options {
+      .ant-form-item {
+        margin-bottom: 16px;
+      }
+
+      .ant-radio-group {
+        .ant-radio-button-wrapper {
+          border-radius: 6px;
+          margin-right: 8px;
+          
+          &:first-child {
+            border-radius: 6px 0 0 6px;
+          }
+          
+          &:last-child {
+            border-radius: 0 6px 6px 0;
+          }
+        }
+      }
+    }
+  }
+
+  .import-modal {
+    .ant-upload-drag {
+      border: 2px dashed #d9d9d9;
+      border-radius: 8px;
+      background-color: #fafafa;
+      
+      &:hover {
+        border-color: #1890ff;
+        background-color: #f0f9ff;
+      }
+
+      .ant-upload-drag-icon {
+        color: #1890ff;
+        font-size: 48px;
+      }
+
+      .ant-upload-text {
+        font-size: 16px;
+        color: #333;
+        margin: 8px 0;
+      }
+
+      .ant-upload-hint {
+        color: #666;
+        font-size: 14px;
+      }
+    }
+  }
+
+  // 响应式设计
+  @media (max-width: 768px) {
+    .ant-table {
+      .ant-table-thead > tr > th,
+      .ant-table-tbody > tr > td {
+        padding: 8px 4px;
+        font-size: 11px;
+      }
+    }
+
+    .ant-statistic {
+      .ant-statistic-content {
+        font-size: 18px;
+      }
+    }
+
+    .search-bar {
+      .ant-col {
+        margin-bottom: 8px;
+      }
+    }
+  }
+
+  // 暗色主题支持
+  .dark-theme & {
+    .ant-card {
+      background-color: #1f1f1f;
+      border-color: #303030;
+    }
+
+    .ant-table {
+      background-color: #1f1f1f;
+      
+      .ant-table-thead > tr > th {
+        background-color: #303030;
+        color: #fff;
+      }
+      
+      .ant-table-tbody > tr > td {
+        background-color: #1f1f1f;
+        color: #fff;
+        border-color: #303030;
+      }
+    }
+
+    .config-json,
+    .result-json,
+    .json-display {
+      background-color: #2a2a2a;
+      color: #fff;
+    }
+  }
+} 

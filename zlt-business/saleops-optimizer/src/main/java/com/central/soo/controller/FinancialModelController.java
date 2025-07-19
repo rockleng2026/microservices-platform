@@ -76,7 +76,7 @@ public class FinancialModelController {
      */
     @GetMapping
     @Operation(summary = "获取模型列表", description = "分页查询财务模型列表")
-    public Result<PageResult<FinancialModel>> getModels(
+    public PageResult<FinancialModel> getModels(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String category,
@@ -85,11 +85,7 @@ public class FinancialModelController {
             @RequestParam(required = false) Boolean isTemplate,
             @LoginUser SysUser user) {
         
-        Page<FinancialModel> pageInfo = new Page<>(page, size);
-        Page<FinancialModel> result = financialModelService.pageModels(
-            pageInfo, category, keyword, isActive, isTemplate, "default");
-        
-        return Result.succeed(PageResultUtil.buildPageResult(result));
+        return financialModelService.pageModels(page, size, category, keyword, isActive, isTemplate, "default");
     }
 
     /**

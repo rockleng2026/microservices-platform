@@ -175,6 +175,11 @@ export default defineConfig({
                   component: '@/pages/SaleopsOptimizer/FinancialAnalysis/BreakevenAnalysisPage',
                 },
                 {
+                  path: '/saleops-optimizer/financial-analysis/model-instances',
+                  name: '模型实例管理',
+                  component: '@/pages/SaleopsOptimizer/FinancialAnalysis/v2/ModelInstanceManagement',
+                },
+                {
                   path: '/saleops-optimizer/financial-analysis/api-test',
                   name: 'API测试',
                   component: '@/pages/SaleopsOptimizer/FinancialAnalysis/ApiTest',
@@ -203,6 +208,12 @@ export default defineConfig({
                   path: '/saleops-optimizer/financial-analysis/v2/breakeven-analysis',
                   name: '盈亏平衡分析V2',
                   component: '@/pages/SaleopsOptimizer/FinancialAnalysis/v2/BreakevenAnalysisPage',
+                  hideInMenu: true,
+                },
+                {
+                  path: '/saleops-optimizer/financial-analysis/v2/model-instances',
+                  name: '模型实例管理V2',
+                  component: '@/pages/SaleopsOptimizer/FinancialAnalysis/v2/ModelInstanceManagement',
                   hideInMenu: true,
                 },
                 {

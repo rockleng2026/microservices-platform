@@ -2,6 +2,7 @@ package com.central.soo.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.central.common.model.PageResult;
 import com.central.soo.model.entity.FinancialModel;
 
 import java.util.List;
@@ -43,7 +44,22 @@ public interface FinancialModelService extends IService<FinancialModel> {
     FinancialModel cloneModel(Long sourceModelId, String newModelCode, String newModelName, boolean includeVariables);
 
     /**
-     * 分页查询财务模型
+     * 分页查询财务模型（返回PageResult格式）
+     * 
+     * @param page 页码
+     * @param size 页大小
+     * @param category 模型分类
+     * @param keyword 关键词
+     * @param isActive 是否启用
+     * @param isTemplate 是否模板
+     * @param tenantId 租户ID
+     * @return 分页结果
+     */
+    PageResult<FinancialModel> pageModels(Integer page, Integer size, String category, String keyword, 
+                                         Boolean isActive, Boolean isTemplate, String tenantId);
+
+    /**
+     * 分页查询财务模型（返回Page格式，保留兼容性）
      * 
      * @param page 分页信息
      * @param category 模型分类

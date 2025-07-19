@@ -64,7 +64,7 @@ export class FinancialModelAPI {
    * 获取财务模型分页列表
    */
   static async getModels(params: PageParams): Promise<PageResult<FinancialModel>> {
-    const response = await request<ApiResponse<PageResult<FinancialModel>>>(API_BASE, {
+    const response = await request<PageResult<FinancialModel>>(API_BASE, {
       method: 'GET',
       params: {
         page: params.current || 1,
@@ -75,10 +75,8 @@ export class FinancialModelAPI {
       },
     });
 
-    if (response.resp_code === 0) {
-      return response.datas;
-    }
-    throw new Error(response.resp_msg || '获取模型列表失败');
+    // 直接返回PageResult格式的响应
+    return response;
   }
 
   /**

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.soo.mapper.ModelInstanceCalculationHistoryMapper">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="BaseResultMap" type="com.central.soo.model.entity.ModelInstanceCalculationHistory">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="instance_id" property="instanceId" jdbcType="BIGINT"/>
+        <result column="calculation_version" property="calculationVersion" jdbcType="VARCHAR"/>
+        <result column="calculation_type" property="calculationType" jdbcType="VARCHAR"/>
+        <result column="calculation_status" property="calculationStatus" jdbcType="VARCHAR"/>
+        <result column="triggered_by" property="triggeredBy" jdbcType="BIGINT"/>
+        <result column="started_at" property="startedAt" jdbcType="TIMESTAMP"/>
+        <result column="completed_at" property="completedAt" jdbcType="TIMESTAMP"/>
+        <result column="execution_time" property="executionTime" jdbcType="INTEGER"/>
+        <result column="input_data" property="inputData" jdbcType="LONGVARCHAR"/>
+        <result column="output_data" property="outputData" jdbcType="LONGVARCHAR"/>
+        <result column="error_message" property="errorMessage" jdbcType="VARCHAR"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 包含关联信息的结果映射 -->
+    <resultMap id="DetailResultMap" type="com.central.soo.model.entity.ModelInstanceCalculationHistory" extends="BaseResultMap">
+        <association property="modelInstance" javaType="com.central.soo.model.entity.FinancialModelInstance">
+            <id column="instance_id" property="id" jdbcType="BIGINT"/>
+            <result column="instance_code" property="instanceCode" jdbcType="VARCHAR"/>
+            <result column="instance_name" property="instanceName" jdbcType="VARCHAR"/>
+        </association>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, instance_id, calculation_version, calculation_type, calculation_status, input_data,
+        output_data, error_message, execution_time, triggered_by, started_at, completed_at, created_at
+    </sql>
+
+    <!-- 分页查询计算历史 -->
+    <select id="selectPageHistory" resultMap="DetailResultMap">
+        SELECT 
+            h.id, h.instance_id, h.calculation_version, h.calculation_type, h.calculation_status,
+            h.input_data, h.output_data, h.error_message, h.execution_time, h.triggered_by,
+            h.started_at, h.completed_at, h.created_at,
+            i.instance_code, i.instance_name
+        FROM soo_model_instance_calculation_history h
+        LEFT JOIN soo_financial_model_instance i ON h.instance_id = i.id AND i.deleted = 0
+        WHERE 1=1
+        <if test="instanceId != null">
+            AND h.instance_id = #{instanceId}
+        </if>
+        <if test="calculationType != null and calculationType != ''">
+            AND h.calculation_type = #{calculationType}
+        </if>
+        <if test="calculationStatus != null and calculationStatus != ''">
+            AND h.calculation_status = #{calculationStatus}
+        </if>
+        ORDER BY h.started_at DESC
+    </select>
+
+    <!-- 根据实例ID查询计算历史 -->
+    <select id="selectByInstanceId" resultMap="DetailResultMap">
+        SELECT 
+            h.id, h.instance_id, h.calculation_version, h.calculation_type, h.calculation_status,
+            h.input_data, h.output_data, h.error_message, h.execution_time, h.triggered_by,
+            h.started_at, h.completed_at, h.created_at,
+            i.instance_code, i.instance_name
+        FROM soo_model_instance_calculation_history h
+        LEFT JOIN soo_financial_model_instance i ON h.instance_id = i.id AND i.deleted = 0
+        WHERE h.instance_id = #{instanceId}
+        ORDER BY h.started_at DESC
+        <if test="limit != null">
+            LIMIT #{limit}
+        </if>
+    </select>
+
+    <!-- 获取最新的计算历史 -->
+    <select id="selectLatestHistory" resultMap="DetailResultMap">
+        SELECT 
+            h.id, h.instance_id, h.calculation_version, h.calculation_type, h.calculation_status,
+            h.input_data, h.output_data, h.error_message, h.execution_time, h.triggered_by,
+            h.started_at, h.completed_at, h.created_at,
+            i.instance_code, i.instance_name
+        FROM soo_model_instance_calculation_history h
+        LEFT JOIN soo_financial_model_instance i ON h.instance_id = i.id AND i.deleted = 0
+        WHERE h.instance_id = #{instanceId}
+        ORDER BY h.started_at DESC
+        LIMIT 1
+    </select>
+
+    <!-- 获取计算统计信息 -->
+    <select id="selectCalculationStatistics" resultType="java.util.Map">
+        SELECT 
+            COUNT(*) as totalCalculations,
+            SUM(CASE WHEN calculation_status = 'COMPLETED' THEN 1 ELSE 0 END) as successfulCalculations,
+            SUM(CASE WHEN calculation_status = 'FAILED' THEN 1 ELSE 0 END) as failedCalculations,
+            AVG(execution_time) as averageExecutionTime,
+            MAX(started_at) as lastCalculationTime,
+            SUM(CASE WHEN calculation_type = 'MANUAL' THEN 1 ELSE 0 END) as manualCalculations,
+            SUM(CASE WHEN calculation_type = 'AUTO' THEN 1 ELSE 0 END) as autoCalculations,
+            SUM(CASE WHEN calculation_type = 'SCHEDULED' THEN 1 ELSE 0 END) as scheduledCalculations
+        FROM soo_model_instance_calculation_history
+        WHERE instance_id = #{instanceId}
+    </select>
+
+    <!-- 根据计算版本查询历史 -->
+    <select id="selectByVersion" resultMap="DetailResultMap">
+        SELECT 
+            h.id, h.instance_id, h.calculation_version, h.calculation_type, h.calculation_status,
+            h.input_data, h.output_data, h.error_message, h.execution_time, h.triggered_by,
+            h.started_at, h.completed_at, h.created_at,
+            i.instance_code, i.instance_name
+        FROM soo_model_instance_calculation_history h
+        LEFT JOIN soo_financial_model_instance i ON h.instance_id = i.id AND i.deleted = 0
+        WHERE h.instance_id = #{instanceId} AND h.calculation_version = #{calculationVersion}
+        ORDER BY h.started_at DESC
+    </select>
+
+    <!-- 删除实例的计算历史 -->
+    <delete id="deleteByInstanceId">
+        DELETE FROM soo_model_instance_calculation_history WHERE instance_id = #{instanceId}
+    </delete>
+
+    <!-- 更新计算状态 -->
+    <update id="updateCalculationResult">
+        UPDATE soo_model_instance_calculation_history 
+        SET calculation_status = #{calculationStatus},
+            output_data = #{outputData},
+            error_message = #{errorMessage},
+            execution_time = #{executionTime},
+            completed_at = NOW()
+        WHERE id = #{id}
+    </update>
+
+</mapper> 

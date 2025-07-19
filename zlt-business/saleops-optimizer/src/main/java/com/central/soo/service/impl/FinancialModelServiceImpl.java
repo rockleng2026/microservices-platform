@@ -2,6 +2,7 @@ package com.central.soo.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.central.common.model.PageResult;
 import com.central.soo.mapper.FinancialModelMapper;
 import com.central.soo.mapper.ModelVariableMapper;
 import com.central.soo.mapper.ChartAnalysisModelMapper;
@@ -11,6 +12,7 @@ import com.central.soo.model.entity.ModelVariable;
 import com.central.soo.model.entity.ChartAnalysisModel;
 import com.central.soo.model.entity.ChartSeries;
 import com.central.soo.service.FinancialModelService;
+import com.central.soo.utils.PageResultUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -173,6 +175,18 @@ public class FinancialModelServiceImpl
                  category, keyword, isActive, isTemplate, tenantId);
         
         return financialModelMapper.selectPageModels(page, category, keyword, isActive, isTemplate, tenantId);
+    }
+
+    @Override
+    public PageResult<FinancialModel> pageModels(Integer page, Integer size, String category, String keyword, 
+                                                Boolean isActive, Boolean isTemplate, String tenantId) {
+        
+        log.info("分页查询财务模型(PageResult): page={}, size={}, category={}, keyword={}, isActive={}, isTemplate={}, tenantId={}", 
+                 page, size, category, keyword, isActive, isTemplate, tenantId);
+        
+        Page<FinancialModel> pageParam = new Page<>(page, size);
+        Page<FinancialModel> result = financialModelMapper.selectPageModels(pageParam, category, keyword, isActive, isTemplate, tenantId);
+        return PageResultUtil.buildPageResult(result);
     }
 
     @Override

@@ -29,7 +29,8 @@ import {
   BarChartOutlined,
   EyeOutlined,
   SettingOutlined,
-  InfoCircleOutlined
+  InfoCircleOutlined,
+  AppstoreOutlined
 } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { FinancialModelAPI, FinancialModel, ModelFormData, PageParams } from '@/services/financialModel';
@@ -105,7 +106,7 @@ const FinancialModelManagementV2: React.FC = () => {
       const response = await FinancialModelAPI.getModels(params);
       console.log('API响应:', response);
       
-      // API已经处理了错误情况，直接使用返回的数据
+      // API现在直接返回PageResult格式
       setModels(response.data || []);
       setTotal(response.count || 0);
       
@@ -162,6 +163,11 @@ const FinancialModelManagementV2: React.FC = () => {
   // 变量管理
   const handleVariableManagement = (record: FinancialModel) => {
     window.open(`/saleops-optimizer/financial-analysis/v2/variable-management?modelId=${record.id}`, '_blank');
+  };
+
+  // 实例管理
+  const handleInstanceManagement = (record: FinancialModel) => {
+    window.open(`/saleops-optimizer/financial-analysis/v2/model-instances?modelId=${record.id}`, '_blank');
   };
 
   // 图表配置
@@ -456,6 +462,14 @@ const FinancialModelManagementV2: React.FC = () => {
               size="small" 
               icon={<SettingOutlined />}
               onClick={() => handleVariableManagement(record)}
+            />
+          </Tooltip>
+          <Tooltip title="实例管理">
+            <Button 
+              type="link" 
+              size="small" 
+              icon={<AppstoreOutlined />}
+              onClick={() => handleInstanceManagement(record)}
             />
           </Tooltip>
           <Tooltip title="图表配置">

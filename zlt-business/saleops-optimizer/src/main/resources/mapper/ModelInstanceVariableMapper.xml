@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.central.soo.mapper.ModelInstanceVariableMapper">
+
+    <!-- 基础结果映射 -->
+    <resultMap id="BaseResultMap" type="com.central.soo.model.entity.ModelInstanceVariable">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="instance_id" property="instanceId" jdbcType="BIGINT"/>
+        <result column="variable_id" property="variableId" jdbcType="BIGINT"/>
+        <result column="variable_name" property="variableName" jdbcType="VARCHAR"/>
+        <result column="variable_code" property="variableCode" jdbcType="VARCHAR"/>
+        <result column="variable_value" property="variableValue" jdbcType="VARCHAR"/>
+        <result column="calculated_value" property="calculatedValue" jdbcType="VARCHAR"/>
+        <result column="variable_type" property="variableType" jdbcType="VARCHAR"/>
+        <result column="calculation_error" property="calculationError" jdbcType="VARCHAR"/>
+        <result column="is_required" property="isRequired" jdbcType="TINYINT"/>
+        <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
+        <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <!-- 包含变量信息的详细结果映射 -->
+    <resultMap id="DetailResultMap" type="com.central.soo.model.entity.ModelInstanceVariable" extends="BaseResultMap">
+        <association property="modelVariable" javaType="com.central.soo.model.entity.ModelVariable">
+            <id column="var_id" property="id" jdbcType="BIGINT"/>
+            <result column="var_name" property="variableName" jdbcType="VARCHAR"/>
+            <result column="var_code" property="variableCode" jdbcType="VARCHAR"/>
+            <result column="var_type" property="variableType" jdbcType="VARCHAR"/>
+            <result column="var_default_value" property="defaultValue" jdbcType="VARCHAR"/>
+            <result column="var_description" property="description" jdbcType="VARCHAR"/>
+            <result column="var_is_required" property="isRequired" jdbcType="TINYINT"/>
+            <result column="var_validation_rule" property="validationRule" jdbcType="VARCHAR"/>
+        </association>
+    </resultMap>
+
+    <!-- 基础字段 -->
+    <sql id="Base_Column_List">
+        id, instance_id, variable_id, variable_value, calculated_value, is_calculated, 
+        calculation_error, created_at, updated_at
+    </sql>
+
+    <!-- 根据实例ID查询变量列表 -->
+    <select id="selectByInstanceId" resultMap="DetailResultMap">
+        SELECT 
+            v.id, v.instance_id, v.variable_id, v.variable_value, v.calculated_value, 
+            v.is_calculated, v.calculation_error, v.created_at, v.updated_at,
+            mv.variable_code, mv.variable_name, mv.variable_type, mv.data_type, 
+            mv.unit, mv.is_required, mv.display_order, mv.description
+        FROM soo_model_instance_variable v
+        LEFT JOIN soo_model_variable mv ON v.variable_id = mv.id
+        WHERE v.instance_id = #{instanceId}
+        ORDER BY mv.display_order ASC, mv.variable_name ASC
+    </select>
+
+    <!-- 根据实例ID和变量ID查询变量 -->
+    <select id="selectByInstanceAndVariable" resultMap="DetailResultMap">
+        SELECT 
+            v.id, v.instance_id, v.variable_id, v.variable_value, v.calculated_value, 
+            v.is_calculated, v.calculation_error, v.created_at, v.updated_at,
+            mv.variable_code, mv.variable_name, mv.variable_type, mv.data_type, 
+            mv.unit, mv.is_required, mv.display_order, mv.description
+        FROM soo_model_instance_variable v
+        LEFT JOIN soo_model_variable mv ON v.variable_id = mv.id
+        WHERE v.instance_id = #{instanceId} AND v.variable_id = #{variableId}
+    </select>
+
+    <!-- 批量插入实例变量 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO soo_model_instance_variable (
+            instance_id, variable_id, variable_value, calculated_value, is_calculated, 
+            calculation_error, created_at, updated_at
+        ) VALUES
+        <foreach collection="variables" item="variable" separator=",">
+            (
+                #{variable.instanceId}, #{variable.variableId}, #{variable.variableValue}, 
+                #{variable.calculatedValue}, #{variable.isCalculated}, #{variable.calculationError},
+                #{variable.createdAt}, #{variable.updatedAt}
+            )
+        </foreach>
+    </insert>
+
+    <!-- 批量更新实例变量 -->
+    <update id="batchUpdate" parameterType="java.util.List">
+        <foreach collection="variables" item="variable" separator=";">
+            UPDATE soo_model_instance_variable 
+            SET variable_value = #{variable.variableValue},
+                calculated_value = #{variable.calculatedValue},
+                is_calculated = #{variable.isCalculated},
+                calculation_error = #{variable.calculationError},
+                updated_at = #{variable.updatedAt}
+            WHERE instance_id = #{variable.instanceId} AND variable_id = #{variable.variableId}
+        </foreach>
+    </update>
+
+    <!-- 根据实例ID删除变量 -->
+    <delete id="deleteByInstanceId">
+        DELETE FROM soo_model_instance_variable WHERE instance_id = #{instanceId}
+    </delete>
+
+    <!-- 更新变量值 -->
+    <update id="updateVariableValue">
+        UPDATE soo_model_instance_variable 
+        SET variable_value = #{variableValue}, updated_at = NOW()
+        WHERE instance_id = #{instanceId} AND variable_id = #{variableId}
+    </update>
+
+    <!-- 更新计算值 -->
+    <update id="updateCalculatedValue">
+        UPDATE soo_model_instance_variable 
+        SET calculated_value = #{calculatedValue}, 
+            is_calculated = #{isCalculated}, 
+            updated_at = NOW()
+        WHERE instance_id = #{instanceId} AND variable_id = #{variableId}
+    </update>
+
+</mapper> 

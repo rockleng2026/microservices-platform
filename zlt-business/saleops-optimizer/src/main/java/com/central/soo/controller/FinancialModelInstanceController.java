@@ -113,6 +113,17 @@ public class FinancialModelInstanceController {
         return Result.succeed(result);
     }
 
+    @PostMapping("/{id}/variables")
+    @Operation(summary = "创建实例变量")
+    public Result<Boolean> createInstanceVariables(
+            @PathVariable Long id,
+            @RequestBody Map<String, List<ModelInstanceVariable>> request,
+            @LoginUser SysUser user) {
+        List<ModelInstanceVariable> variables = request.get("variables");
+        boolean result = financialModelInstanceService.createInstanceVariables(id, variables);
+        return Result.succeed(result);
+    }
+
     @PostMapping("/{id}/clone")
     @Operation(summary = "克隆模型实例")
     public Result<FinancialModelInstance> cloneInstance(
@@ -131,5 +142,12 @@ public class FinancialModelInstanceController {
         String tenantId = TenantContextHolder.getTenant();
         Map<String, Object> statistics = financialModelInstanceService.getInstanceStatistics(tenantId);
         return Result.succeed(statistics);
+    }
+
+    @GetMapping("/{id}/trial-calculation")
+    @Operation(summary = "获取实例试算数据")
+    public Result<Map<String, Object>> getTrialCalculationData(@PathVariable Long id) {
+        Map<String, Object> data = financialModelInstanceService.getTrialCalculationData(id);
+        return Result.succeed(data);
     }
 } 

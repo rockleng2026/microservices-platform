@@ -90,6 +90,12 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
   const [createLoading, setCreateLoading] = useState(false);
   const [variableForm] = Form.useForm();
 
+  // 试算相关状态
+  const [trialModalVisible, setTrialModalVisible] = useState(false);
+  const [trialData, setTrialData] = useState<any>(null);
+  const [trialLoading, setTrialLoading] = useState(false);
+  const [trialForm] = Form.useForm();
+
   // 加载实例列表
   const loadInstances = async () => {
     setLoading(true);
@@ -254,6 +260,61 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
   // 保存变量
   const handleSaveVariables = () => {
     message.info('保存变量功能开发中...');
+  };
+
+  // 打开试算弹窗
+  const handleTrialCalculation = async (instance: financialModelInstanceAPI.FinancialModelInstance) => {
+    setTrialLoading(true);
+    try {
+      const response = await financialModelInstanceAPI.FinancialModelInstanceAPI.getTrialCalculationData(instance.id);
+      setTrialData(response);
+      setTrialModalVisible(true);
+      
+      // 设置表单初始值
+      setTimeout(() => {
+        const initialValues: any = {};
+        if (response.instanceVariables) {
+          response.instanceVariables.forEach((variable: any) => {
+            initialValues[variable.variableCode] = variable.variableValue;
+          });
+        }
+        trialForm.setFieldsValue(initialValues);
+      }, 100);
+    } catch (error) {
+      message.error('加载试算数据失败');
+    } finally {
+      setTrialLoading(false);
+    }
+  };
+
+  // 试算表单值变化处理
+  const handleTrialFormValuesChange = (changedValues: any, allValues: any) => {
+    if (!trialData?.modelVariables) return;
+    
+    // 只处理INPUT和API类型变量的变化
+    const inputVariables = trialData.modelVariables.filter((v: any) => 
+      v.variableType === 'INPUT' || v.variableType === 'API'
+    );
+    const hasInputChange = Object.keys(changedValues).some(key => 
+      inputVariables.some((v: any) => v.variableCode === key)
+    );
+    
+    if (hasInputChange) {
+      // 重新计算CALC类型变量
+      const calculatedValues = handleCalculateVariablesWithData(allValues, trialData.modelVariables);
+      
+      // 只更新CALC类型变量
+      const calcUpdates: any = {};
+      trialData.modelVariables.forEach((variable: any) => {
+        if (variable.variableType === 'CALC' && calculatedValues[variable.variableCode] !== undefined) {
+          calcUpdates[variable.variableCode] = calculatedValues[variable.variableCode];
+        }
+      });
+      
+      if (Object.keys(calcUpdates).length > 0) {
+        trialForm.setFieldsValue(calcUpdates);
+      }
+    }
   };
 
   // 计算表达式函数
@@ -638,6 +699,138 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
     }
   };
 
+  // 渲染试算变量输入组件
+  const renderTrialVariableInput = (variable: any) => {
+    const { dataType, unit, variableType, constraintFormula, calculationFormula } = variable;
+    const calculationDisplay = calculationFormula ? `计算表达式: ${calculationFormula}` : '';
+    const constraintDisplay = constraintFormula ? `约束表达式: ${constraintFormula}` : '';
+
+    // INPUT和API类型：可编辑
+    if (variableType === 'INPUT' || variableType === 'API') {
+      switch (dataType) {
+        case 'NUMBER':
+        case 'DECIMAL':
+          return (
+            <div>
+              <Form.Item name={variable.variableCode} noStyle>
+                <InputNumber
+                  style={{ width: '100%' }}
+                  placeholder={`请输入${variable.variableName}`}
+                  precision={dataType === 'DECIMAL' ? 2 : 0}
+                  addonAfter={unit}
+                />
+              </Form.Item>
+              {constraintDisplay && (
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+              )}
+            </div>
+          );
+        case 'PERCENTAGE':
+          return (
+            <div>
+              <Form.Item name={variable.variableCode} noStyle>
+                <InputNumber
+                  style={{ width: '100%' }}
+                  placeholder={`请输入${variable.variableName}`}
+                  precision={2}
+                  addonAfter="%"
+                  min={0}
+                  max={100}
+                />
+              </Form.Item>
+              {constraintDisplay && (
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+              )}
+            </div>
+          );
+        case 'CURRENCY':
+          return (
+            <div>
+              <Form.Item name={variable.variableCode} noStyle>
+                <InputNumber
+                  style={{ width: '100%' }}
+                  placeholder={`请输入${variable.variableName}`}
+                  precision={2}
+                  addonAfter="元"
+                  formatter={(value) => {
+                    if (value === null || value === undefined || value === '') return '';
+                    const numValue = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
+                    if (isNaN(numValue)) return '';
+                    return numValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                  }}
+                  parser={(value) => {
+                    if (!value) return 0;
+                    const cleanValue = value.replace(/,/g, '');
+                    const numValue = parseFloat(cleanValue);
+                    return isNaN(numValue) ? 0 : numValue;
+                  }}
+                />
+              </Form.Item>
+              {constraintDisplay && (
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+              )}
+            </div>
+          );
+        default:
+          return (
+            <div>
+              <Form.Item name={variable.variableCode} noStyle>
+                <Input
+                  placeholder={`请输入${variable.variableName}`}
+                  addonAfter={unit}
+                />
+              </Form.Item>
+              {constraintDisplay && (
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+              )}
+            </div>
+          );
+      }
+    }
+
+    // CALC_FACTORS和CALC类型：只读显示
+    switch (dataType) {
+      case 'NUMBER':
+      case 'DECIMAL':
+      case 'PERCENTAGE':
+      case 'CURRENCY':
+        return (
+          <div>
+            <Form.Item name={variable.variableCode} noStyle>
+              <InputNumber
+                style={{ width: '100%' }}
+                disabled
+                addonAfter={unit || (dataType === 'PERCENTAGE' ? '%' : dataType === 'CURRENCY' ? '元' : undefined)}
+              />
+            </Form.Item>
+            {calculationDisplay && (
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{calculationDisplay}</div>
+            )}
+            {constraintDisplay && (
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+            )}
+          </div>
+        );
+      default:
+        return (
+          <div>
+            <Form.Item name={variable.variableCode} noStyle>
+              <Input
+                disabled
+                addonAfter={unit}
+              />
+            </Form.Item>
+            {calculationDisplay && (
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{calculationDisplay}</div>
+            )}
+            {constraintDisplay && (
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+            )}
+          </div>
+        );
+    }
+  };
+
   // 实例列表列定义
   const instanceColumns = [
     {
@@ -664,6 +857,22 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
       dataIndex: 'instanceVersion',
       key: 'instanceVersion',
       width: 80,
+    },
+    {
+      title: '操作',
+      key: 'action',
+      width: 120,
+      render: (_, record: financialModelInstanceAPI.FinancialModelInstance) => (
+        <Space size="small">
+          <Button
+            type="link"
+            size="small"
+            onClick={() => handleTrialCalculation(record)}
+          >
+            试算
+          </Button>
+        </Space>
+      ),
     },
   ];
 
@@ -871,6 +1080,59 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
             </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* 试算模态框 */}
+      <Modal
+        title="模型实例试算"
+        open={trialModalVisible}
+        onCancel={() => setTrialModalVisible(false)}
+        footer={null}
+        width={800}
+        destroyOnClose
+      >
+        <Spin spinning={trialLoading}>
+          {trialData && (
+            <div>
+              <Alert
+                message="试算说明"
+                description="此功能用于试算模型实例的变量值。只有INPUT和API类型的变量可以编辑，CALC类型变量会根据输入实时计算。试算结果不会保存到数据库。"
+                type="info"
+                showIcon
+                style={{ marginBottom: 16 }}
+              />
+              
+              <Form
+                form={trialForm}
+                layout="vertical"
+                onValuesChange={handleTrialFormValuesChange}
+              >
+                {trialData.modelVariables?.map((variable: any) => (
+                  <Form.Item
+                    key={variable.id}
+                    label={
+                      <Space>
+                        <span>{variable.variableName}</span>
+                        {getVariableTypeTag(variable.variableType)}
+                        {getDataTypeTag(variable.dataType)}
+                        {(variable.variableType === 'INPUT' || variable.variableType === 'API') && (
+                          <Text type="secondary">(可编辑)</Text>
+                        )}
+                        {(variable.variableType === 'CALC_FACTORS' || variable.variableType === 'CALC') && (
+                          <Text type="secondary">(只读)</Text>
+                        )}
+                      </Space>
+                    }
+                    name={variable.variableCode}
+                    extra={variable.description}
+                  >
+                    {renderTrialVariableInput(variable)}
+                  </Form.Item>
+                ))}
+              </Form>
+            </div>
+          )}
+        </Spin>
       </Modal>
     </div>
   );

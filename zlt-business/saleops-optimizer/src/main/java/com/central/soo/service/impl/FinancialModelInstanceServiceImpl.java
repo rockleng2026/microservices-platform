@@ -28,6 +28,8 @@ import org.springframework.util.StringUtils;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import com.central.soo.model.entity.ModelVariable;
+import com.central.soo.service.IModelVariableService;
 
 /**
  * 财务模型实例服务实现类
@@ -48,6 +50,9 @@ public class FinancialModelInstanceServiceImpl extends ServiceImpl<FinancialMode
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private IModelVariableService modelVariableService;
 
     @Override
     public Page<FinancialModelInstance> pageInstances(Page<FinancialModelInstance> page, Long modelId, 
@@ -450,6 +455,29 @@ public class FinancialModelInstanceServiceImpl extends ServiceImpl<FinancialMode
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean createInstanceVariables(Long instanceId, List<ModelInstanceVariable> variables) {
+        // 验证实例是否存在
+        FinancialModelInstance instance = getById(instanceId);
+        if (instance == null) {
+            throw new RuntimeException("实例不存在");
+        }
+        // 批量插入变量
+        for (ModelInstanceVariable variable : variables) {
+            variable.setInstanceId(instanceId);
+            variable.setCreatedAt(LocalDateTime.now());
+            variable.setUpdatedAt(LocalDateTime.now());
+            modelInstanceVariableMapper.insert(variable);
+        }
+        // 更新实例配置
+        updateInstanceConfig(instanceId);
+        // 重置计算状态
+        baseMapper.updateCalculationStatus(instanceId, "PENDING");
+        log.info("创建实例变量成功: {}, 变量数量: {}", instanceId, variables.size());
+        return true;
+    }
+
+    @Override
     public String exportInstanceConfig(Long instanceId) {
         Map<String, Object> config = new HashMap<>();
         
@@ -516,6 +544,35 @@ public class FinancialModelInstanceServiceImpl extends ServiceImpl<FinancialMode
         }
     }
 
+    @Override
+    public Map<String, Object> getTrialCalculationData(Long instanceId) {
+        Map<String, Object> result = new HashMap<>();
+        
+        // 获取实例信息
+        FinancialModelInstance instance = getById(instanceId);
+        if (instance == null) {
+            throw new RuntimeException("实例不存在");
+        }
+        result.put("instance", instance);
+        
+        // 获取模型变量（所有变量定义）
+        List<ModelVariable> modelVariables = modelVariableService.getVariablesByModelId(instance.getModelId());
+        result.put("modelVariables", modelVariables);
+        
+        // 获取实例变量（已保存的值）
+        List<ModelInstanceVariable> instanceVariables = modelInstanceVariableMapper.selectByInstanceId(instanceId);
+        result.put("instanceVariables", instanceVariables);
+        
+        // 构建变量映射，方便前端使用
+        Map<String, Object> variableMap = new HashMap<>();
+        for (ModelInstanceVariable instanceVar : instanceVariables) {
+            variableMap.put(instanceVar.getVariableCode(), instanceVar.getVariableValue());
+        }
+        result.put("variableValues", variableMap);
+        
+        return result;
+    }
+    
     /**
      * 初始化实例变量
      */
@@ -660,5 +717,14 @@ public class FinancialModelInstanceServiceImpl extends ServiceImpl<FinancialMode
         } catch (Exception e) {
             log.error("更新实例配置失败: {}", instanceId, e);
         }
+    }
+
+    /**
+     * 根据模型ID获取模型变量
+     */
+    private List<ModelVariable> getModelVariablesByModelId(Long modelId) {
+        // 这里需要调用模型变量服务，暂时返回空列表
+        // 实际实现时需要注入 ModelVariableService
+        return new ArrayList<>();
     }
 } 

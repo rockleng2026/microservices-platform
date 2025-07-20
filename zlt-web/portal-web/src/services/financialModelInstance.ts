@@ -420,4 +420,18 @@ export class FinancialModelInstanceAPI {
     }
     throw new Error(response.resp_msg || '获取最近使用的实例失败');
   }
+
+  /**
+   * 获取实例试算数据
+   */
+  static async getTrialCalculationData(instanceId: number): Promise<Map<string, any>> {
+    const response = await request<ApiResponse<Map<string, any>>>(`${API_BASE}/${instanceId}/trial-calculation`, {
+      method: 'GET',
+    });
+
+    if (response.resp_code === 0) {
+      return response.datas;
+    }
+    throw new Error(response.resp_msg || '获取试算数据失败');
+  }
 } 

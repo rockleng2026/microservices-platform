@@ -192,4 +192,19 @@ public interface FinancialModelInstanceService extends IService<FinancialModelIn
      * @return 导入的实例
      */
     FinancialModelInstance importInstanceConfig(String configJson, String tenantId);
+
+    /**
+     * 创建实例变量
+     * @param instanceId 实例ID
+     * @param variables 变量列表
+     * @return 是否成功
+     */
+    boolean createInstanceVariables(Long instanceId, List<ModelInstanceVariable> variables);
+
+    /**
+     * 获取实例试算数据
+     * @param instanceId 实例ID
+     * @return 试算数据
+     */
+    Map<String, Object> getTrialCalculationData(Long instanceId);
 } 

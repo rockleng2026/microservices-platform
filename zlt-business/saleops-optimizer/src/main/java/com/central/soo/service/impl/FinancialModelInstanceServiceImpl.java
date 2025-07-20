@@ -225,10 +225,11 @@ public class FinancialModelInstanceServiceImpl extends ServiceImpl<FinancialMode
         FinancialModelInstance newInstance = new FinancialModelInstance();
         newInstance.setModelId(sourceInstance.getModelId());
         newInstance.setProjectId(sourceInstance.getProjectId());
-        newInstance.setInstanceCode(newInstanceCode);
+        newInstance.setInstanceCode(newInstanceCode); // 确保设置实例编码
         newInstance.setInstanceName(newInstanceName);
         newInstance.setInstanceDescription(sourceInstance.getInstanceDescription());
-        newInstance.setInstanceStatus("ACTIVE");
+        newInstance.setInstanceStatus("DRAFT"); // 新克隆的实例设置为草稿状态
+        newInstance.setInstanceVersion(sourceInstance.getInstanceVersion()); // 复制版本号
         newInstance.setCalculationStatus("PENDING");
         
         LoginAppUser loginUser = LoginUserUtils.getCurrentUser(false);
@@ -246,9 +247,11 @@ public class FinancialModelInstanceServiceImpl extends ServiceImpl<FinancialMode
             ModelInstanceVariable newVar = new ModelInstanceVariable();
             newVar.setInstanceId(newInstance.getId());
             newVar.setVariableId(sourceVar.getVariableId());
+            newVar.setVariableCode(sourceVar.getVariableCode()); // 确保设置变量编码
             newVar.setVariableName(sourceVar.getVariableName());
             newVar.setVariableValue(sourceVar.getVariableValue());
             newVar.setVariableType(sourceVar.getVariableType());
+            newVar.setDataType(sourceVar.getDataType()); // 复制数据类型
             newVar.setIsRequired(sourceVar.getIsRequired());
             newVar.setCreatedAt(LocalDateTime.now());
             newVar.setUpdatedAt(LocalDateTime.now());

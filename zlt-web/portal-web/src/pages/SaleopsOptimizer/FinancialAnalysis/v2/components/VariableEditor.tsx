@@ -337,7 +337,6 @@ const VariableEditor: React.FC<VariableEditorProps> = ({
               <li>计算变量：根据公式自动计算的变量</li>
               <li>常量变量：固定值的变量</li>
               <li>必填变量：必须填写值的变量</li>
-              <li>保存后可以执行计算来验证变量配置</li>
             </ul>
           }
           type="info"

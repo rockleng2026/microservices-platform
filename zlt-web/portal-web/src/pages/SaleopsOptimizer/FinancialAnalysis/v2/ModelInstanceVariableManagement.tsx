@@ -96,6 +96,13 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
   const [trialLoading, setTrialLoading] = useState(false);
   const [trialForm] = Form.useForm();
 
+  // 编辑变量相关状态
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editingInstance, setEditingInstance] = useState<financialModelInstanceAPI.FinancialModelInstance | null>(null);
+  const [editData, setEditData] = useState<any>(null);
+  const [editLoading, setEditLoading] = useState(false);
+  const [editForm] = Form.useForm();
+
   // 加载实例列表
   const loadInstances = async () => {
     setLoading(true);
@@ -262,31 +269,6 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
     message.info('保存变量功能开发中...');
   };
 
-  // 打开试算弹窗
-  const handleTrialCalculation = async (instance: financialModelInstanceAPI.FinancialModelInstance) => {
-    setTrialLoading(true);
-    try {
-      const response = await financialModelInstanceAPI.FinancialModelInstanceAPI.getTrialCalculationData(instance.id);
-      setTrialData(response);
-      setTrialModalVisible(true);
-      
-      // 设置表单初始值
-      setTimeout(() => {
-        const initialValues: any = {};
-        if (response.instanceVariables) {
-          response.instanceVariables.forEach((variable: any) => {
-            initialValues[variable.variableCode] = variable.variableValue;
-          });
-        }
-        trialForm.setFieldsValue(initialValues);
-      }, 100);
-    } catch (error) {
-      message.error('加载试算数据失败');
-    } finally {
-      setTrialLoading(false);
-    }
-  };
-
   // 试算表单值变化处理
   const handleTrialFormValuesChange = (changedValues: any, allValues: any) => {
     if (!trialData?.modelVariables) return;
@@ -313,6 +295,124 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
       
       if (Object.keys(calcUpdates).length > 0) {
         trialForm.setFieldsValue(calcUpdates);
+      }
+    }
+  };
+
+  // 打开试算弹窗
+  const handleTrialCalculation = async (instance: financialModelInstanceAPI.FinancialModelInstance) => {
+    setTrialLoading(true);
+    try {
+      const response = await financialModelInstanceAPI.FinancialModelInstanceAPI.getTrialCalculationData(instance.id);
+      setTrialData(response);
+      setTrialModalVisible(true);
+      
+      // 设置表单初始值
+      setTimeout(() => {
+        const initialValues: any = {};
+        if (response.instanceVariables) {
+          response.instanceVariables.forEach((variable: any) => {
+            initialValues[variable.variableCode] = variable.variableValue;
+          });
+        }
+        trialForm.setFieldsValue(initialValues);
+      }, 100);
+    } catch (error) {
+      message.error('加载试算数据失败');
+    } finally {
+      setTrialLoading(false);
+    }
+  };
+
+  // 打开编辑变量弹窗
+  const handleEditVariables = async (instance: financialModelInstanceAPI.FinancialModelInstance) => {
+    setEditLoading(true);
+    try {
+      const response = await financialModelInstanceAPI.FinancialModelInstanceAPI.getTrialCalculationData(instance.id);
+      setEditData(response);
+      setEditingInstance(instance);
+      setEditModalVisible(true);
+      
+      // 设置表单初始值
+      setTimeout(() => {
+        const initialValues: any = {};
+        if (response.instanceVariables) {
+          response.instanceVariables.forEach((variable: any) => {
+            initialValues[variable.variableCode] = variable.variableValue;
+          });
+        }
+        editForm.setFieldsValue(initialValues);
+      }, 100);
+    } catch (error) {
+      message.error('加载编辑数据失败');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  // 保存编辑的变量
+  const handleSaveEditVariables = async () => {
+    if (!editingInstance || !editData) return;
+    
+    try {
+      const formValues = editForm.getFieldsValue();
+      
+      // 只保存CALC_FACTORS类型的变量
+      const calcFactorsVariables = editData.instanceVariables.filter((variable: any) => 
+        variable.variableType === 'CALC_FACTORS'
+      );
+      
+      const updatedVariables = calcFactorsVariables.map((variable: any) => ({
+        instanceId: variable.instanceId,
+        variableId: variable.variableId,
+        variableValue: formValues[variable.variableCode] || ''
+      }));
+      
+      await financialModelInstanceAPI.FinancialModelInstanceAPI.updateInstanceVariables({
+        instanceId: editingInstance.id,
+        variables: updatedVariables
+      });
+      
+      message.success('变量保存成功');
+      setEditModalVisible(false);
+      setEditingInstance(null);
+      editForm.resetFields();
+      
+      // 如果当前选中的实例就是编辑的实例，刷新变量列表
+      if (selectedInstance?.id === editingInstance.id) {
+        loadInstanceVariables(editingInstance.id);
+      }
+    } catch (error) {
+      message.error('保存变量失败');
+    }
+  };
+
+  // 编辑表单值变化处理
+  const handleEditFormValuesChange = (changedValues: any, allValues: any) => {
+    if (!editData?.modelVariables) return;
+    
+    // 只处理INPUT、API、CALC_FACTORS类型变量的变化
+    const inputVariables = editData.modelVariables.filter((v: any) => 
+      v.variableType === 'INPUT' || v.variableType === 'API' || v.variableType === 'CALC_FACTORS'
+    );
+    const hasInputChange = Object.keys(changedValues).some(key => 
+      inputVariables.some((v: any) => v.variableCode === key)
+    );
+    
+    if (hasInputChange) {
+      // 重新计算CALC类型变量
+      const calculatedValues = handleCalculateVariablesWithData(allValues, editData.modelVariables);
+      
+      // 只更新CALC类型变量
+      const calcUpdates: any = {};
+      editData.modelVariables.forEach((variable: any) => {
+        if (variable.variableType === 'CALC' && calculatedValues[variable.variableCode] !== undefined) {
+          calcUpdates[variable.variableCode] = calculatedValues[variable.variableCode];
+        }
+      });
+      
+      if (Object.keys(calcUpdates).length > 0) {
+        editForm.setFieldsValue(calcUpdates);
       }
     }
   };
@@ -831,6 +931,138 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
     }
   };
 
+  // 渲染编辑变量输入组件
+  const renderEditVariableInput = (variable: any) => {
+    const { dataType, unit, variableType, constraintFormula, calculationFormula } = variable;
+    const calculationDisplay = calculationFormula ? `计算表达式: ${calculationFormula}` : '';
+    const constraintDisplay = constraintFormula ? `约束表达式: ${constraintFormula}` : '';
+
+    // INPUT、API、CALC_FACTORS类型：可编辑
+    if (variableType === 'INPUT' || variableType === 'API' || variableType === 'CALC_FACTORS') {
+      switch (dataType) {
+        case 'NUMBER':
+        case 'DECIMAL':
+          return (
+            <div>
+              <Form.Item name={variable.variableCode} noStyle>
+                <InputNumber
+                  style={{ width: '100%' }}
+                  placeholder={`请输入${variable.variableName}`}
+                  precision={dataType === 'DECIMAL' ? 2 : 0}
+                  addonAfter={unit}
+                />
+              </Form.Item>
+              {constraintDisplay && (
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+              )}
+            </div>
+          );
+        case 'PERCENTAGE':
+          return (
+            <div>
+              <Form.Item name={variable.variableCode} noStyle>
+                <InputNumber
+                  style={{ width: '100%' }}
+                  placeholder={`请输入${variable.variableName}`}
+                  precision={2}
+                  addonAfter="%"
+                  min={0}
+                  max={100}
+                />
+              </Form.Item>
+              {constraintDisplay && (
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+              )}
+            </div>
+          );
+        case 'CURRENCY':
+          return (
+            <div>
+              <Form.Item name={variable.variableCode} noStyle>
+                <InputNumber
+                  style={{ width: '100%' }}
+                  placeholder={`请输入${variable.variableName}`}
+                  precision={2}
+                  addonAfter="元"
+                  formatter={(value) => {
+                    if (value === null || value === undefined || value === '') return '';
+                    const numValue = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
+                    if (isNaN(numValue)) return '';
+                    return numValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                  }}
+                  parser={(value) => {
+                    if (!value) return 0;
+                    const cleanValue = value.replace(/,/g, '');
+                    const numValue = parseFloat(cleanValue);
+                    return isNaN(numValue) ? 0 : numValue;
+                  }}
+                />
+              </Form.Item>
+              {constraintDisplay && (
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+              )}
+            </div>
+          );
+        default:
+          return (
+            <div>
+              <Form.Item name={variable.variableCode} noStyle>
+                <Input
+                  placeholder={`请输入${variable.variableName}`}
+                  addonAfter={unit}
+                />
+              </Form.Item>
+              {constraintDisplay && (
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+              )}
+            </div>
+          );
+      }
+    }
+
+    // CALC类型：只读显示
+    switch (dataType) {
+      case 'NUMBER':
+      case 'DECIMAL':
+      case 'PERCENTAGE':
+      case 'CURRENCY':
+        return (
+          <div>
+            <Form.Item name={variable.variableCode} noStyle>
+              <InputNumber
+                style={{ width: '100%' }}
+                disabled
+                addonAfter={unit || (dataType === 'PERCENTAGE' ? '%' : dataType === 'CURRENCY' ? '元' : undefined)}
+              />
+            </Form.Item>
+            {calculationDisplay && (
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{calculationDisplay}</div>
+            )}
+            {constraintDisplay && (
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+            )}
+          </div>
+        );
+      default:
+        return (
+          <div>
+            <Form.Item name={variable.variableCode} noStyle>
+              <Input
+                disabled
+                addonAfter={unit}
+              />
+            </Form.Item>
+            {calculationDisplay && (
+              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{calculationDisplay}</div>
+            )}
+            {constraintDisplay && (
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+            )}
+          </div>
+        );
+    }
+  };
+
   // 实例列表列定义
   const instanceColumns = [
     {
@@ -861,7 +1093,7 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
     {
       title: '操作',
       key: 'action',
-      width: 120,
+      width: 180,
       render: (_, record: financialModelInstanceAPI.FinancialModelInstance) => (
         <Space size="small">
           <Button
@@ -870,6 +1102,13 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
             onClick={() => handleTrialCalculation(record)}
           >
             试算
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => handleEditVariables(record)}
+          >
+            编辑
           </Button>
         </Space>
       ),
@@ -1082,7 +1321,7 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
         </Form>
       </Modal>
 
-      {/* 试算模态框 */}
+      {/* 试算弹窗 */}
       <Modal
         title="模型实例试算"
         open={trialModalVisible}
@@ -1127,6 +1366,68 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
                     extra={variable.description}
                   >
                     {renderTrialVariableInput(variable)}
+                  </Form.Item>
+                ))}
+              </Form>
+            </div>
+          )}
+        </Spin>
+      </Modal>
+
+      {/* 编辑变量弹窗 */}
+      <Modal
+        title={`编辑变量 - ${editingInstance?.instanceName}`}
+        open={editModalVisible}
+        onCancel={() => {
+          setEditModalVisible(false);
+          setEditingInstance(null);
+          editForm.resetFields();
+        }}
+        onOk={handleSaveEditVariables}
+        okText="保存"
+        cancelText="取消"
+        width={800}
+        destroyOnClose
+      >
+        <Spin spinning={editLoading}>
+          {editData && (
+            <div>
+              <Alert
+                message="编辑说明"
+                description="INPUT、API、CALC_FACTORS类型的变量可以编辑，CALC类型变量会根据输入实时计算。保存时只保存CALC_FACTORS类型的变量值。"
+                type="info"
+                showIcon
+                style={{ marginBottom: 16 }}
+              />
+              
+              <Form
+                form={editForm}
+                layout="vertical"
+                onValuesChange={handleEditFormValuesChange}
+              >
+                {editData.modelVariables?.map((variable: any) => (
+                  <Form.Item
+                    key={variable.id}
+                    label={
+                      <Space>
+                        <span>{variable.variableName}</span>
+                        {getVariableTypeTag(variable.variableType)}
+                        {getDataTypeTag(variable.dataType)}
+                        {(variable.variableType === 'INPUT' || variable.variableType === 'API' || variable.variableType === 'CALC_FACTORS') && (
+                          <Text type="secondary">(可编辑)</Text>
+                        )}
+                        {variable.variableType === 'CALC' && (
+                          <Text type="secondary">(只读)</Text>
+                        )}
+                        {variable.variableType === 'CALC_FACTORS' && (
+                          <Text type="danger">(保存)</Text>
+                        )}
+                      </Space>
+                    }
+                    name={variable.variableCode}
+                    extra={variable.description}
+                  >
+                    {renderEditVariableInput(variable)}
                   </Form.Item>
                 ))}
               </Form>

@@ -23,7 +23,10 @@ import {
   Descriptions,
   Alert,
   Upload,
-  notification
+  notification,
+  InputNumber,
+  Spin,
+  Typography
 } from 'antd';
 import {
   PlusOutlined,
@@ -52,12 +55,13 @@ import * as financialModelAPI from '@/services/financialModel';
 import InstanceForm from './components/InstanceForm';
 import InstanceDetail from './components/InstanceDetail';
 import VariableEditor from './components/VariableEditor';
-import CalculationHistory from './components/CalculationHistory';
 import './styles/ModelInstanceManagement.less';
+import * as breakevenAnalysisAPI from '@/services/breakevenAnalysisV2';
 
 const { Search } = Input;
 const { Option } = Select;
 const { TabPane } = Tabs;
+const { Text } = Typography;
 
 interface ModelInstanceManagementProps {
   modelId?: number;
@@ -98,10 +102,19 @@ const ModelInstanceManagement: React.FC<ModelInstanceManagementProps> = ({
   const [formVisible, setFormVisible] = useState(false);
   const [detailVisible, setDetailVisible] = useState(false);
   const [variableEditorVisible, setVariableEditorVisible] = useState(false);
-  const [historyVisible, setHistoryVisible] = useState(false);
-  const [calculationModalVisible, setCalculationModalVisible] = useState(false);
   const [importModalVisible, setImportModalVisible] = useState(false);
-  
+  const [cloneModalVisible, setCloneModalVisible] = useState(false);
+  const [cloningInstance, setCloningInstance] = useState<financialModelInstanceAPI.FinancialModelInstance | null>(null);
+  const [cloneForm] = Form.useForm();
+
+  // 变量编辑相关状态
+  const [variableEditModalVisible, setVariableEditModalVisible] = useState(false);
+  const [editingInstanceForVariables, setEditingInstanceForVariables] = useState<financialModelInstanceAPI.FinancialModelInstance | null>(null);
+  const [instanceVariables, setInstanceVariables] = useState<financialModelInstanceAPI.ModelInstanceVariable[]>([]);
+  const [modelVariables, setModelVariables] = useState<any[]>([]);
+  const [variableEditLoading, setVariableEditLoading] = useState(false);
+  const [variableForm] = Form.useForm();
+
   // 表单数据
   const [formData, setFormData] = useState<financialModelInstanceAPI.InstanceFormData | null>(null);
   const [editingInstance, setEditingInstance] = useState<financialModelInstanceAPI.FinancialModelInstance | null>(null);
@@ -211,16 +224,136 @@ const ModelInstanceManagement: React.FC<ModelInstanceManagementProps> = ({
     window.open(`/saleops-optimizer/financial-analysis/v2/model-instance-variables?instanceId=${record.id}&modelId=${record.modelId}`, '_blank');
   };
 
-  // 查看计算历史
-  const handleViewHistory = (record: financialModelInstanceAPI.FinancialModelInstance) => {
-    setSelectedInstance(record);
-    setHistoryVisible(true);
+  // 内嵌编辑变量
+  const handleInlineEditVariables = async (record: financialModelInstanceAPI.FinancialModelInstance) => {
+    setVariableEditLoading(true);
+    try {
+      // 获取实例变量
+      const variables = await financialModelInstanceAPI.FinancialModelInstanceAPI.getInstanceVariables(record.id);
+      setInstanceVariables(variables);
+      
+      // 获取模型变量定义
+      const modelVars = await breakevenAnalysisAPI.BreakevenAnalysisV2API.getModelVariables(record.modelId);
+      setModelVariables(modelVars.datas || []);
+      
+      setEditingInstanceForVariables(record);
+      setVariableEditModalVisible(true);
+      
+      // 设置表单初始值
+      const initialValues: any = {};
+      variables.forEach(variable => {
+        initialValues[variable.variableCode || `var_${variable.variableId}`] = variable.variableValue;
+      });
+      variableForm.setFieldsValue(initialValues);
+    } catch (error) {
+      message.error('加载变量数据失败');
+    } finally {
+      setVariableEditLoading(false);
+    }
   };
 
-  // 执行计算
-  const handleCalculate = (record: financialModelInstanceAPI.FinancialModelInstance) => {
-    setSelectedInstance(record);
-    setCalculationModalVisible(true);
+  // 保存变量修改
+  const handleSaveVariables = async () => {
+    if (!editingInstanceForVariables) return;
+    
+    try {
+      const formValues = variableForm.getFieldsValue();
+      
+      // 构建变量更新数据
+      const updatedVariables = instanceVariables.map(variable => ({
+        instanceId: variable.instanceId,
+        variableId: variable.variableId,
+        variableValue: formValues[variable.variableCode || `var_${variable.variableId}`] || ''
+      }));
+      
+      await financialModelInstanceAPI.FinancialModelInstanceAPI.updateInstanceVariables({
+        instanceId: editingInstanceForVariables.id,
+        variables: updatedVariables
+      });
+      
+      message.success('变量保存成功');
+      setVariableEditModalVisible(false);
+      setEditingInstanceForVariables(null);
+      variableForm.resetFields();
+      loadInstances(); // 刷新列表
+    } catch (error) {
+      message.error('保存变量失败');
+    }
+  };
+
+  // 渲染变量输入组件
+  const renderVariableInput = (variable: financialModelInstanceAPI.ModelInstanceVariable) => {
+    const modelVar = modelVariables.find(mv => mv.id === variable.variableId);
+    const dataType = modelVar?.dataType || variable.dataType || 'TEXT';
+    const unit = modelVar?.unit || variable.unit;
+    const variableType = modelVar?.variableType || variable.variableType;
+    
+    // 只允许编辑INPUT和API类型的变量
+    const isEditable = variableType === 'INPUT' || variableType === 'API';
+    
+    switch (dataType) {
+      case 'NUMBER':
+      case 'DECIMAL':
+        return (
+          <Form.Item name={variable.variableCode || `var_${variable.variableId}`} noStyle>
+            <InputNumber
+              style={{ width: '100%' }}
+              placeholder={`请输入${variable.variableName}`}
+              precision={dataType === 'DECIMAL' ? 2 : 0}
+              addonAfter={unit}
+              disabled={!isEditable}
+            />
+          </Form.Item>
+        );
+      case 'PERCENTAGE':
+        return (
+          <Form.Item name={variable.variableCode || `var_${variable.variableId}`} noStyle>
+            <InputNumber
+              style={{ width: '100%' }}
+              placeholder={`请输入${variable.variableName}`}
+              precision={2}
+              addonAfter="%"
+              min={0}
+              max={100}
+              disabled={!isEditable}
+            />
+          </Form.Item>
+        );
+      case 'CURRENCY':
+        return (
+          <Form.Item name={variable.variableCode || `var_${variable.variableId}`} noStyle>
+            <InputNumber
+              style={{ width: '100%' }}
+              placeholder={`请输入${variable.variableName}`}
+              precision={2}
+              addonAfter="元"
+              formatter={(value) => {
+                if (value === null || value === undefined || value === '') return '';
+                const numValue = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
+                if (isNaN(numValue)) return '';
+                return numValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+              }}
+              parser={(value) => {
+                if (!value) return 0;
+                const cleanValue = value.replace(/,/g, '');
+                const numValue = parseFloat(cleanValue);
+                return isNaN(numValue) ? 0 : numValue;
+              }}
+              disabled={!isEditable}
+            />
+          </Form.Item>
+        );
+      default:
+        return (
+          <Form.Item name={variable.variableCode || `var_${variable.variableId}`} noStyle>
+            <Input
+              placeholder={`请输入${variable.variableName}`}
+              addonAfter={unit}
+              disabled={!isEditable}
+            />
+          </Form.Item>
+        );
+    }
   };
 
   // 删除实例
@@ -235,38 +368,41 @@ const ModelInstanceManagement: React.FC<ModelInstanceManagementProps> = ({
   };
 
   // 克隆实例
-  const handleClone = async (record: financialModelInstanceAPI.FinancialModelInstance) => {
-    Modal.confirm({
-      title: '克隆实例',
-      content: (
-        <Form layout="vertical">
-          <Form.Item label="新实例编码" required>
-            <Input placeholder="请输入新实例编码" />
-          </Form.Item>
-          <Form.Item label="新实例名称" required>
-            <Input placeholder="请输入新实例名称" />
-          </Form.Item>
-        </Form>
-      ),
-      onOk: async () => {
-        try {
-          const form = document.querySelector('.ant-modal-content form');
-          const formData = new FormData(form as HTMLFormElement);
-          const newInstanceCode = formData.get('instanceCode') as string;
-          const newInstanceName = formData.get('instanceName') as string;
-          
-          await financialModelInstanceAPI.FinancialModelInstanceAPI.cloneInstance(
-            record.id,
-            newInstanceCode,
-            newInstanceName
-          );
-          message.success('克隆成功');
-          loadInstances();
-        } catch (error) {
-          message.error('克隆失败');
-        }
-      },
+  const handleClone = (record: financialModelInstanceAPI.FinancialModelInstance) => {
+    setCloningInstance(record);
+    // 自动生成新的编码和名称
+    const newInstanceCode = `${record.instanceCode}_copy`;
+    const newInstanceName = `${record.instanceName}_副本`;
+    
+    cloneForm.setFieldsValue({
+      newInstanceCode,
+      newInstanceName,
     });
+    setCloneModalVisible(true);
+  };
+
+  // 确认克隆
+  const handleConfirmClone = async () => {
+    if (!cloningInstance) return;
+    
+    try {
+      const values = await cloneForm.validateFields();
+      
+      await financialModelInstanceAPI.FinancialModelInstanceAPI.cloneInstance(
+        cloningInstance.id,
+        values.newInstanceCode,
+        values.newInstanceName
+      );
+      
+      message.success('克隆成功');
+      setCloneModalVisible(false);
+      setCloningInstance(null);
+      cloneForm.resetFields();
+      loadInstances();
+    } catch (error) {
+      console.error('克隆失败:', error);
+      message.error('克隆失败');
+    }
   };
 
   // 导出配置
@@ -409,18 +545,11 @@ const ModelInstanceManagement: React.FC<ModelInstanceManagementProps> = ({
               onClick={() => handleEditVariables(record)}
             />
           </Tooltip>
-          <Tooltip title="执行计算">
+          <Tooltip title="内嵌编辑变量">
             <Button
               type="link"
-              icon={<CalculatorOutlined />}
-              onClick={() => handleCalculate(record)}
-            />
-          </Tooltip>
-          <Tooltip title="计算历史">
-            <Button
-              type="link"
-              icon={<HistoryOutlined />}
-              onClick={() => handleViewHistory(record)}
+              icon={<EditOutlined />}
+              onClick={() => handleInlineEditVariables(record)}
             />
           </Tooltip>
           <Tooltip title="克隆">
@@ -608,57 +737,44 @@ const ModelInstanceManagement: React.FC<ModelInstanceManagementProps> = ({
       />
 
       {/* 变量编辑器 */}
-      <VariableEditor
-        visible={variableEditorVisible}
-        instance={selectedInstance}
-        onCancel={() => setVariableEditorVisible(false)}
-        onSuccess={() => {
-          setVariableEditorVisible(false);
-          loadInstances();
-        }}
-      />
-
-      {/* 计算历史 */}
-      <CalculationHistory
-        visible={historyVisible}
-        instance={selectedInstance}
-        onCancel={() => setHistoryVisible(false)}
-      />
-
-      {/* 计算模态框 */}
       <Modal
-        title="执行计算"
-        open={calculationModalVisible}
-        onCancel={() => setCalculationModalVisible(false)}
-        footer={null}
+        title="编辑变量"
+        open={variableEditModalVisible}
+        onCancel={() => {
+          setVariableEditModalVisible(false);
+          setEditingInstanceForVariables(null);
+          variableForm.resetFields();
+        }}
+        onOk={handleSaveVariables}
+        okText="保存"
+        cancelText="取消"
+        confirmLoading={variableEditLoading}
       >
-        <div>
-          <p>确定要执行实例 "{selectedInstance?.instanceName}" 的计算吗？</p>
-          <Space style={{ marginTop: 16 }}>
-            <Button
-              type="primary"
-              icon={<CalculatorOutlined />}
-              onClick={async () => {
-                try {
-                  await financialModelInstanceAPI.FinancialModelInstanceAPI.executeCalculation({
-                    instanceId: selectedInstance!.id,
-                    calculationType: 'MANUAL',
-                  });
-                  message.success('计算已启动');
-                  setCalculationModalVisible(false);
-                  loadInstances();
-                } catch (error) {
-                  message.error('启动计算失败');
-                }
-              }}
-            >
-              开始计算
-            </Button>
-            <Button onClick={() => setCalculationModalVisible(false)}>
-              取消
-            </Button>
-          </Space>
-        </div>
+        {editingInstanceForVariables && (
+          <div>
+            <Alert
+              message={`编辑实例变量: ${editingInstanceForVariables.instanceName}`}
+              description="请修改实例变量值，然后点击保存按钮。"
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+            
+            <Form form={variableForm} layout="vertical">
+              {instanceVariables.map(variable => (
+                <Form.Item
+                  key={variable.variableId}
+                  label={variable.variableName}
+                  rules={[
+                    { required: true, message: `请输入${variable.variableName}` }
+                  ]}
+                >
+                  {renderVariableInput(variable)}
+                </Form.Item>
+              ))}
+            </Form>
+          </div>
+        )}
       </Modal>
 
       {/* 导入模态框 */}
@@ -693,6 +809,129 @@ const ModelInstanceManagement: React.FC<ModelInstanceManagementProps> = ({
           <p className="ant-upload-text">点击或拖拽文件到此区域上传</p>
           <p className="ant-upload-hint">支持 .json 格式的实例配置文件</p>
         </Upload.Dragger>
+      </Modal>
+
+      {/* 克隆模态框 */}
+      <Modal
+        title="克隆实例"
+        open={cloneModalVisible}
+        onCancel={() => {
+          setCloneModalVisible(false);
+          setCloningInstance(null);
+          cloneForm.resetFields();
+        }}
+        onOk={handleConfirmClone}
+        okText="确认克隆"
+        cancelText="取消"
+      >
+        {cloningInstance && (
+          <div>
+            <Alert
+              message="克隆说明"
+              description="克隆将创建新的实例，包含原实例的所有变量配置。新实例将处于草稿状态。"
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+            />
+            
+            <Form form={cloneForm} layout="vertical">
+              <Form.Item
+                label="原实例信息"
+                style={{ marginBottom: 16 }}
+              >
+                <Descriptions column={1} size="small">
+                  <Descriptions.Item label="实例编码">{cloningInstance.instanceCode}</Descriptions.Item>
+                  <Descriptions.Item label="实例名称">{cloningInstance.instanceName}</Descriptions.Item>
+                  <Descriptions.Item label="关联模型">{cloningInstance.financialModel?.modelName}</Descriptions.Item>
+                </Descriptions>
+              </Form.Item>
+              
+              <Form.Item
+                name="newInstanceCode"
+                label="新实例编码"
+                rules={[
+                  { required: true, message: '请输入新实例编码' },
+                  { pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/, message: '编码只能包含字母、数字和下划线，且必须以字母开头' }
+                ]}
+              >
+                <Input placeholder="请输入新实例编码" />
+              </Form.Item>
+              
+              <Form.Item
+                name="newInstanceName"
+                label="新实例名称"
+                rules={[
+                  { required: true, message: '请输入新实例名称' },
+                  { max: 100, message: '名称长度不能超过100字符' }
+                ]}
+              >
+                <Input placeholder="请输入新实例名称" />
+              </Form.Item>
+            </Form>
+          </div>
+        )}
+      </Modal>
+
+      {/* 变量编辑模态框 */}
+      <Modal
+        title={`编辑变量 - ${editingInstanceForVariables?.instanceName}`}
+        open={variableEditModalVisible}
+        onCancel={() => {
+          setVariableEditModalVisible(false);
+          setEditingInstanceForVariables(null);
+          variableForm.resetFields();
+        }}
+        onOk={handleSaveVariables}
+        okText="保存"
+        cancelText="取消"
+        width={800}
+        destroyOnClose
+      >
+        <Spin spinning={variableEditLoading}>
+          {editingInstanceForVariables && (
+            <div>
+              <Alert
+                message="变量编辑说明"
+                description="只有INPUT和API类型的变量可以编辑，CALC类型变量会根据公式自动计算。"
+                type="info"
+                showIcon
+                style={{ marginBottom: 16 }}
+              />
+              
+              <Form form={variableForm} layout="vertical">
+                {instanceVariables.map((variable) => {
+                  const modelVar = modelVariables.find(mv => mv.id === variable.variableId);
+                  const variableType = modelVar?.variableType || variable.variableType;
+                  const isEditable = variableType === 'INPUT' || variableType === 'API';
+                  
+                  return (
+                    <Form.Item
+                      key={variable.variableId}
+                      label={
+                        <Space>
+                          <span>{variable.variableName}</span>
+                          <Tag color={variableType === 'INPUT' ? 'blue' : variableType === 'API' ? 'orange' : 'green'}>
+                            {variableType === 'INPUT' ? '输入' : variableType === 'API' ? 'API' : '计算'}
+                          </Tag>
+                          {isEditable ? (
+                            <Text type="secondary">(可编辑)</Text>
+                          ) : (
+                            <Text type="secondary">(只读)</Text>
+                          )}
+                          {variable.isRequired && <Text type="danger">*</Text>}
+                        </Space>
+                      }
+                      name={variable.variableCode || `var_${variable.variableId}`}
+                      extra={modelVar?.description || variable.description}
+                    >
+                      {renderVariableInput(variable)}
+                    </Form.Item>
+                  );
+                })}
+              </Form>
+            </div>
+          )}
+        </Spin>
       </Modal>
     </div>
   );

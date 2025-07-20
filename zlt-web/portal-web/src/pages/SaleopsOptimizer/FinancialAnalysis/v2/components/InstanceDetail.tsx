@@ -75,7 +75,6 @@ const InstanceDetail: React.FC<InstanceDetailProps> = ({
       extra={
         <Space>
           <Button icon={<FileTextOutlined />}>导出配置</Button>
-          <Button type="primary" icon={<CalculatorOutlined />}>执行计算</Button>
         </Space>
       }
     >

@@ -38,7 +38,7 @@ CREATE TABLE soo_model_variable (
     model_id BIGINT NOT NULL COMMENT '模型ID',
     variable_code VARCHAR(50) NOT NULL COMMENT '变量编码',
     variable_name VARCHAR(100) NOT NULL COMMENT '变量名称',
-    variable_type ENUM('INPUT','CALC','API') NOT NULL COMMENT '变量类型：输入/计算/API',
+    variable_type ENUM('INPUT','CALC','API','CALC_FACTORS') NOT NULL COMMENT '变量类型：输入/计算/API/计算因子',
     data_type ENUM('NUMBER','DECIMAL','PERCENTAGE','CURRENCY','BOOLEAN','STRING') DEFAULT 'DECIMAL' COMMENT '数据类型',
     unit VARCHAR(20) COMMENT '单位',
     parent_id BIGINT COMMENT '父级树ID,标识这个变量属于parent_id的子变量，他的值受父级变量值的约束',

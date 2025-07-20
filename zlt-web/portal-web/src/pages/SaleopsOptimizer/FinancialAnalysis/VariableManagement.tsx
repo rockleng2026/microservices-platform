@@ -50,7 +50,7 @@ interface FrontendModelVariable {
   modelId: number;
   variableName: string;
   variableCode: string;
-  variableType: 'INPUT' | 'CALC' | 'API';
+  variableType: 'INPUT' | 'CALC' | 'API' | 'CALC_FACTORS';
   dataType: 'NUMBER' | 'DECIMAL' | 'PERCENTAGE' | 'CURRENCY' | 'STRING' | 'BOOLEAN';
   defaultValue?: string | number;
   unit?: string;
@@ -123,10 +123,12 @@ const VariableManagement: React.FC = () => {
           <Space>
             <Tag 
               color={record.variableType === 'INPUT' ? 'blue' : 
-                     record.variableType === 'CALC' ? 'green' : 'orange'}
+                     record.variableType === 'CALC' ? 'green' : 
+                     record.variableType === 'CALC_FACTORS' ? 'purple' : 'orange'}
             >
               {record.variableType === 'INPUT' ? '输入' : 
-               record.variableType === 'CALC' ? '计算' : 'API'}
+               record.variableType === 'CALC' ? '计算' : 
+               record.variableType === 'CALC_FACTORS' ? '计算因子' : 'API'}
             </Tag>
             <Tag color="default">{getDataTypeLabel(record.dataType)}</Tag>
           </Space>
@@ -596,6 +598,7 @@ const VariableManagement: React.FC = () => {
               >
                 <Option value="INPUT">输入</Option>
                 <Option value="CALC">计算</Option>
+                <Option value="CALC_FACTORS">计算因子</Option>
                 <Option value="API">API</Option>
               </Select>
             </Col>
@@ -645,9 +648,9 @@ const VariableManagement: React.FC = () => {
             <Col span={6}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '20px', fontWeight: 600, color: '#faad14' }}>
-                  {variables.filter(v => v.variableType === 'API').length}
+                  {variables.filter(v => v.variableType === 'CALC_FACTORS').length}
                 </div>
-                <div style={{ fontSize: '12px', color: '#666' }}>API</div>
+                <div style={{ fontSize: '12px', color: '#666' }}>计算因子</div>
               </div>
             </Col>
             <Col span={6}>
@@ -731,6 +734,7 @@ const VariableManagement: React.FC = () => {
                     <Select placeholder="请选择变量类型" onChange={handleVariableTypeChange}>
                       <Option value="INPUT">输入</Option>
                       <Option value="CALC">计算</Option>
+                      <Option value="CALC_FACTORS">计算因子</Option>
                       <Option value="API">API</Option>
                     </Select>
                   </Form.Item>
@@ -773,17 +777,17 @@ const VariableManagement: React.FC = () => {
                   if (variableType === 'CALC') {
                     return (
                       <Form.Item
-                        label="公式表达式"
+                        label="计算表达式"
                         name="formulaExpression"
-                        rules={[{ required: true, message: '请输入公式表达式' }]}
+                        rules={[{ required: true, message: '请输入计算表达式' }]}
                       >
                         <TextArea
                           rows={3}
-                          placeholder="请输入公式表达式，如: sales_volume * unit_price - fixed_cost"
+                          placeholder="请输入计算表达式，如: sales_volume * unit_price - fixed_cost"
                         />
                       </Form.Item>
                     );
-                  } else {
+                  } else if (variableType === 'INPUT' || variableType === 'API' || variableType === 'CALC_FACTORS') {
                     return (
                       <Form.Item
                         label="默认值"
@@ -793,7 +797,20 @@ const VariableManagement: React.FC = () => {
                       </Form.Item>
                     );
                   }
+                  
+                  return null;
                 }}
+              </Form.Item>
+
+              {/* 约束表达式 - 所有类型都显示 */}
+              <Form.Item
+                label="约束表达式"
+                name="constraintFormula"
+              >
+                <TextArea
+                  rows={2}
+                  placeholder="请输入约束表达式，如: child1 + child2 = parent_value"
+                />
               </Form.Item>
 
               <Form.Item

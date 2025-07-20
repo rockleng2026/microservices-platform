@@ -181,6 +181,7 @@ public class ModelVariable extends BaseEntity {
     public static final String TYPE_INPUT = "INPUT";
     public static final String TYPE_CALC = "CALC";
     public static final String TYPE_API = "API";
+    public static final String TYPE_CALC_FACTORS = "CALC_FACTORS";
 
     // 数据类型常量
     public static final String DATA_TYPE_NUMBER = "NUMBER";
@@ -215,9 +216,36 @@ public class ModelVariable extends BaseEntity {
                 return "计算";
             case TYPE_API:
                 return "API";
+            case TYPE_CALC_FACTORS:
+                return "计算因子";
             default:
                 return variableType;
         }
+    }
+
+    /**
+     * 判断变量类型是否需要用户输入
+     * INPUT和API类型不参与实例变量填写
+     * CALC_FACTORS和CALC类型需要用户填写
+     */
+    public boolean isUserInputRequired() {
+        return TYPE_CALC_FACTORS.equals(variableType) || TYPE_CALC.equals(variableType);
+    }
+
+    /**
+     * 判断变量类型是否显示计算表达式
+     * 只有CALC类型才显示计算表达式
+     */
+    public boolean shouldShowCalculationFormula() {
+        return TYPE_CALC.equals(variableType);
+    }
+
+    /**
+     * 判断变量类型是否显示约束表达式
+     * 所有类型都显示约束表达式（如果存在）
+     */
+    public boolean shouldShowConstraintFormula() {
+        return constraintFormula != null && !constraintFormula.trim().isEmpty();
     }
 
     /**

@@ -46,7 +46,7 @@ interface ModelVariable {
   id: number;
   variableCode: string;
   variableName: string;
-  variableType: 'INPUT' | 'CALC' | 'API';
+  variableType: 'INPUT' | 'CALC' | 'API' | 'CALC_FACTORS';
   dataType: 'NUMBER' | 'DECIMAL' | 'PERCENTAGE' | 'CURRENCY' | 'BOOLEAN' | 'STRING';
   unit?: string;
   defaultValue?: string;
@@ -148,67 +148,97 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
     await loadInstanceVariables(instance.id);
   };
 
-  // 创建变量实例
+  // 创建变量实例弹窗逻辑修正
   const handleCreateVariableInstance = async () => {
     if (!selectedInstance) {
       message.warning('请先选择一个模型实例');
       return;
     }
-    
     // 加载模型变量
-    await loadModelVariables(selectedInstance.modelId);
-    
-    // 重置表单
-    variableForm.resetFields();
-    
-    // 设置默认值 - 只为输入类型的变量设置默认值
-    const defaultValues: any = {};
-    modelVariables.forEach(variable => {
-      if (variable.variableType === 'INPUT' && variable.defaultValue) {
-        // 根据数据类型转换默认值
-        let convertedValue: any = variable.defaultValue;
-        
-        switch (variable.dataType) {
-          case 'NUMBER':
-          case 'DECIMAL':
-            convertedValue = parseFloat(variable.defaultValue) || 0;
-            break;
-          case 'PERCENTAGE':
-            convertedValue = parseFloat(variable.defaultValue) || 0;
-            break;
-          case 'CURRENCY':
-            convertedValue = parseFloat(variable.defaultValue) || 0;
-            break;
-          case 'BOOLEAN':
-            convertedValue = variable.defaultValue.toLowerCase() === 'true' || variable.defaultValue === '1';
-            break;
-          default:
-            convertedValue = variable.defaultValue;
-        }
-        
-        defaultValues[variable.variableCode] = convertedValue;
-      }
-    });
-    
-    // 处理计算类型变量的自动计算
-    const finalValues = handleCalculateVariables(defaultValues);
-    variableForm.setFieldsValue(finalValues);
-    
+    const modelVars = await financialModelAPI.FinancialModelAPI.getModelVariables(selectedInstance.modelId);
+    setModelVariables(modelVars);
     setCreateModalVisible(true);
+    // 等待弹窗渲染和modelVariables加载
+    setTimeout(() => {
+      variableForm.resetFields();
+      // 生成所有类型的默认值
+      const defaultValues: any = {};
+      
+      console.log('=== 开始处理默认值 ===');
+      console.log('modelVars:', modelVars);
+      
+      modelVars.forEach(variable => {
+        console.log(`处理变量: ${variable.variableCode}, 类型: ${variable.variableType}, 默认值: ${variable.defaultValue}, 类型: ${typeof variable.defaultValue}`);
+        
+        if (variable.defaultValue !== undefined && variable.defaultValue !== null && variable.defaultValue !== '') {
+          console.log(`设置默认值: ${variable.variableCode} = ${variable.defaultValue}`);
+          
+          switch (variable.dataType) {
+            case 'NUMBER':
+            case 'DECIMAL':
+            case 'PERCENTAGE':
+            case 'CURRENCY':
+              const numValue = parseFloat(variable.defaultValue) || 0;
+              defaultValues[variable.variableCode] = numValue;
+              console.log(`数字转换: ${variable.variableCode} = ${numValue}`);
+              break;
+            case 'BOOLEAN':
+              const boolValue = String(variable.defaultValue) === 'true' || String(variable.defaultValue) === '1' || variable.defaultValue === true || variable.defaultValue === 1;
+              defaultValues[variable.variableCode] = boolValue;
+              console.log(`布尔转换: ${variable.variableCode} = ${boolValue}`);
+              break;
+            default:
+              defaultValues[variable.variableCode] = variable.defaultValue;
+              console.log(`字符串保持: ${variable.variableCode} = ${variable.defaultValue}`);
+          }
+        } else {
+          console.log(`跳过变量: ${variable.variableCode} (无默认值)`);
+        }
+      });
+      
+      console.log('=== 默认值处理结果 ===');
+      console.log('defaultValues:', defaultValues);
+      
+      // 计算CALC类型变量
+      const finalValues = handleCalculateVariablesWithData(defaultValues, modelVars);
+      console.log('=== 最终值 ===');
+      console.log('finalValues:', finalValues);
+      
+      // 设置表单值
+      variableForm.setFieldsValue(finalValues);
+      
+      // 验证设置是否成功
+      setTimeout(() => {
+        const currentValues = variableForm.getFieldsValue();
+        console.log('=== 表单当前值 ===');
+        console.log('currentValues:', currentValues);
+        
+        // 检查关键字段
+        ['gross_profit', 'group_reserve_ratio', 'team_reserve_ratio'].forEach(fieldName => {
+          const fieldValue = variableForm.getFieldValue(fieldName);
+          console.log(`字段 ${fieldName}: 期望=${finalValues[fieldName]}, 实际=${fieldValue}`);
+        });
+      }, 100);
+    }, 200);
   };
 
   // 保存变量实例
   const handleSaveVariableInstance = async (values: any) => {
     setCreateLoading(true);
     try {
+      // 只保存CALC_FACTORS类型的变量值
       const variableData = {
         instanceId: selectedInstance!.id,
-        variables: modelVariables.map(variable => ({
-          instanceId: selectedInstance!.id,
-          variableId: variable.id,
-          variableValue: values[variable.variableCode] || variable.defaultValue || '',
-        }))
+        variables: modelVariables
+          .filter(variable => variable.variableType === 'CALC_FACTORS') // 只保存CALC_FACTORS类型
+          .map(variable => ({
+            instanceId: selectedInstance!.id,
+            variableId: variable.id,
+            variableValue: values[variable.variableCode] || variable.defaultValue || '',
+          }))
       };
+      
+      console.log('Saving CALC_FACTORS variables:', variableData);
       
       await financialModelInstanceAPI.FinancialModelInstanceAPI.createInstanceVariables(variableData);
       message.success('变量实例创建成功');
@@ -232,70 +262,175 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
       // 创建一个安全的计算环境
       const context = { ...variableValues };
       
+      // 处理包含赋值语句的表达式（提取等号右边的计算部分）
+      let processedFormula = formula.trim();
+      let targetVariable = '';
+      
+      // 如果包含等号，提取等号右边的部分作为计算表达式，左边作为目标变量
+      if (processedFormula.includes('=')) {
+        const parts = processedFormula.split('=');
+        if (parts.length >= 2) {
+          targetVariable = parts[0].trim(); // 等号左边是目标变量
+          processedFormula = parts[1].trim(); // 等号右边是计算表达式
+        }
+      }
+      
+      console.log('Original formula:', formula);
+      console.log('Target variable:', targetVariable);
+      console.log('Calculation expression:', processedFormula);
+      
       // 替换变量编码为实际值
-      let processedFormula = formula;
       Object.keys(context).forEach(varCode => {
         const value = context[varCode];
-        // 确保数值类型
-        const numValue = typeof value === 'number' ? value : parseFloat(value) || 0;
+        // 确保数值类型，如果值为undefined或null，使用0
+        const numValue = (value !== undefined && value !== null) ? (typeof value === 'number' ? value : parseFloat(value) || 0) : 0;
         processedFormula = processedFormula.replace(new RegExp(varCode, 'g'), numValue.toString());
       });
+      
+      // 检查是否还有未替换的变量（以字母开头的标识符）
+      const remainingVars = processedFormula.match(/[a-zA-Z_][a-zA-Z0-9_]*/g);
+      if (remainingVars) {
+        // 将未定义的变量替换为0
+        remainingVars.forEach(varName => {
+          // 跳过数学函数和常量
+          const mathFunctions = ['Math', 'sin', 'cos', 'tan', 'log', 'exp', 'sqrt', 'abs', 'floor', 'ceil', 'round'];
+          const constants = ['PI', 'E'];
+          if (!mathFunctions.includes(varName) && !constants.includes(varName)) {
+            processedFormula = processedFormula.replace(new RegExp('\\b' + varName + '\\b', 'g'), '0');
+          }
+        });
+      }
+      
+      console.log('Processed formula:', processedFormula);
       
       // 使用Function构造函数创建安全的计算函数
       const calculateFunction = new Function('return ' + processedFormula);
       const result = calculateFunction();
       
-      return typeof result === 'number' ? result : parseFloat(result) || 0;
+      // 确保返回有效的数字
+      const finalResult = (typeof result === 'number' && !isNaN(result)) ? result : 0;
+      console.log('Formula result:', formula, '=', finalResult);
+      
+      return finalResult;
     } catch (error) {
-      console.error('计算表达式错误:', error);
+      console.error('计算表达式错误:', error, 'Formula:', formula, 'Values:', variableValues);
       return 0;
     }
   };
 
-  // 处理计算类型变量的自动计算
-  const handleCalculateVariables = (inputValues: any): any => {
-    const calculatedValues = { ...inputValues };
-    
-    // 按依赖关系排序计算变量
-    const calcVariables = modelVariables.filter(v => v.variableType === 'CALC');
-    
-    // 简单的依赖排序（这里可以根据实际需求优化）
-    calcVariables.forEach(variable => {
-      if (variable.constraintFormula || variable.calculationFormula) {
-        const formula = variable.constraintFormula || variable.calculationFormula;
-        if (formula) {
-          const calculatedValue = calculateFormula(formula, calculatedValues);
-          calculatedValues[variable.variableCode] = calculatedValue;
-        }
+  // 处理计算类型变量的自动计算（使用传入的变量数据）
+  const handleCalculateVariablesWithData = (inputValues: any, variables: ModelVariable[]): any => {
+    // 先清洗所有数值类型字段
+    const cleanedValues: any = { ...inputValues };
+    variables.forEach(variable => {
+      if ([
+        'NUMBER', 'DECIMAL', 'CURRENCY', 'PERCENTAGE'
+      ].includes(variable.dataType)) {
+        const raw = cleanedValues[variable.variableCode];
+        cleanedValues[variable.variableCode] =
+          raw === undefined || raw === null
+            ? 0
+            : typeof raw === 'number'
+            ? raw
+            : parseFloat(String(raw).replace(/,/g, '')) || 0;
       }
     });
-    
+    // 后续用 cleanedValues 参与计算
+    const calculatedValues = { ...cleanedValues };
+    // 按依赖关系排序计算变量
+    const calcVariables = variables.filter(v => v.variableType === 'CALC');
+    calcVariables.forEach(variable => {
+      if (variable.calculationFormula) {
+        console.log(`Calculating ${variable.variableCode} using calculation_formula: ${variable.calculationFormula}`);
+        const calculatedValue = calculateFormula(variable.calculationFormula, calculatedValues);
+        calculatedValues[variable.variableCode] = calculatedValue;
+        console.log(`Calculated value for ${variable.variableCode}: ${calculatedValue}`);
+      }
+    });
+    return calculatedValues;
+  };
+
+  const handleCalculateVariables = (inputValues: any): any => {
+    // 先清洗所有数值类型字段
+    const cleanedValues: any = { ...inputValues };
+    modelVariables.forEach(variable => {
+      if ([
+        'NUMBER', 'DECIMAL', 'CURRENCY', 'PERCENTAGE'
+      ].includes(variable.dataType)) {
+        const raw = cleanedValues[variable.variableCode];
+        cleanedValues[variable.variableCode] =
+          raw === undefined || raw === null
+            ? 0
+            : typeof raw === 'number'
+            ? raw
+            : parseFloat(String(raw).replace(/,/g, '')) || 0;
+      }
+    });
+    // 后续用 cleanedValues 参与计算
+    const calculatedValues = { ...cleanedValues };
+    const calcVariables = modelVariables.filter(v => v.variableType === 'CALC');
+    calcVariables.forEach(variable => {
+      if (variable.calculationFormula) {
+        console.log(`Calculating ${variable.variableCode} using calculation_formula: ${variable.calculationFormula}`);
+        const calculatedValue = calculateFormula(variable.calculationFormula, calculatedValues);
+        calculatedValues[variable.variableCode] = calculatedValue;
+        console.log(`Calculated value for ${variable.variableCode}: ${calculatedValue}`);
+      }
+    });
     return calculatedValues;
   };
 
   // 处理表单值变化，实时计算
   const handleFormValuesChange = (changedValues: any, allValues: any) => {
-    // 只处理输入类型变量的变化
-    const inputVariables = modelVariables.filter(v => v.variableType === 'INPUT');
+    console.log('=== handleFormValuesChange 触发 ===');
+    console.log('changedValues:', changedValues);
+    console.log('allValues:', allValues);
+    
+    // 只要有INPUT、API、CALC_FACTORS类型变量变化就触发
+    const inputVariables = modelVariables.filter(v => v.variableType === 'INPUT' || v.variableType === 'API' || v.variableType === 'CALC_FACTORS');
     const hasInputChange = Object.keys(changedValues).some(key => 
       inputVariables.some(v => v.variableCode === key)
     );
     
+    console.log('inputVariables:', inputVariables.map(v => v.variableCode));
+    console.log('hasInputChange:', hasInputChange);
+    
     if (hasInputChange) {
-      // 重新计算计算类型变量
+      console.log('=== 开始重新计算CALC类型变量 ===');
+      // 重新计算所有CALC类型变量
       const calculatedValues = handleCalculateVariables(allValues);
+      console.log('calculatedValues:', calculatedValues);
       
-      // 只更新计算类型变量的值
+      // 只更新CALC类型变量
       const calcUpdates: any = {};
       modelVariables.forEach(variable => {
         if (variable.variableType === 'CALC' && calculatedValues[variable.variableCode] !== undefined) {
           calcUpdates[variable.variableCode] = calculatedValues[variable.variableCode];
+          console.log(`准备更新 ${variable.variableCode}: ${calculatedValues[variable.variableCode]}`);
         }
       });
       
-      // 批量更新表单值
+      console.log('=== 准备setFieldsValue ===');
+      console.log('calcUpdates:', calcUpdates);
+      
       if (Object.keys(calcUpdates).length > 0) {
+        console.log('执行 setFieldsValue...');
         variableForm.setFieldsValue(calcUpdates);
+        
+        // 验证更新是否成功
+        setTimeout(() => {
+          const currentFormValues = variableForm.getFieldsValue();
+          console.log('=== setFieldsValue 后的表单值 ===');
+          console.log('currentFormValues:', currentFormValues);
+          
+          // 检查关键CALC字段是否更新
+          Object.keys(calcUpdates).forEach(fieldName => {
+            const fieldValue = variableForm.getFieldValue(fieldName);
+            console.log(`字段 ${fieldName}: 期望=${calcUpdates[fieldName]}, 实际=${fieldValue}`);
+          });
+        }, 50);
+      } else {
+        console.log('没有CALC类型变量需要更新');
       }
     }
   };
@@ -317,7 +452,8 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
     const typeMap = {
       'INPUT': { color: 'blue', text: '输入' },
       'CALC': { color: 'green', text: '计算' },
-      'API': { color: 'purple', text: 'API' }
+      'CALC_FACTORS': { color: 'purple', text: '计算因子' },
+      'API': { color: 'orange', text: 'API' }
     };
     const config = typeMap[type as keyof typeof typeMap] || { color: 'default', text: type };
     return <Tag color={config.color}>{config.text}</Tag>;
@@ -339,167 +475,165 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
 
   // 渲染变量输入组件
   const renderVariableInput = (variable: ModelVariable) => {
-    const { dataType, unit, isRequired, defaultValue, variableType, constraintFormula, calculationFormula } = variable;
-    
-    // 如果是计算类型，显示只读的计算结果
+    const { dataType, unit, variableType, constraintFormula, calculationFormula } = variable;
+    const calculationDisplay = calculationFormula ? `计算表达式: ${calculationFormula}` : '';
+    const constraintDisplay = constraintFormula ? `约束表达式: ${constraintFormula}` : '';
+
+    // CALC类型变量：只读，使用Form.Item绑定确保UI更新
     if (variableType === 'CALC') {
-      const formula = constraintFormula || calculationFormula;
-      const formulaDisplay = formula ? `公式: ${formula}` : '无计算公式';
-      
       switch (dataType) {
         case 'NUMBER':
         case 'DECIMAL':
-          return (
-            <div>
-              <InputNumber
-                style={{ width: '100%' }}
-                placeholder="计算结果"
-                precision={dataType === 'DECIMAL' ? 2 : 0}
-                addonAfter={unit}
-                readOnly
-                disabled
-              />
-              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                {formulaDisplay}
-              </div>
-            </div>
-          );
         case 'PERCENTAGE':
-          return (
-            <div>
-              <InputNumber
-                style={{ width: '100%' }}
-                placeholder="计算结果"
-                precision={2}
-                addonAfter="%"
-                readOnly
-                disabled
-              />
-              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                {formulaDisplay}
-              </div>
-            </div>
-          );
         case 'CURRENCY':
           return (
             <div>
-              <InputNumber
-                style={{ width: '100%' }}
-                placeholder="计算结果"
-                precision={2}
-                addonAfter="元"
-                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
-                readOnly
-                disabled
-              />
-              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                {formulaDisplay}
-              </div>
+              <Form.Item name={variable.variableCode} noStyle>
+                <InputNumber
+                  style={{ width: '100%' }}
+                  disabled
+                  addonAfter={unit || (dataType === 'PERCENTAGE' ? '%' : dataType === 'CURRENCY' ? '元' : undefined)}
+                />
+              </Form.Item>
+              {calculationDisplay && (
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{calculationDisplay}</div>
+              )}
+              {constraintDisplay && (
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+              )}
             </div>
           );
         case 'BOOLEAN':
           return (
             <div>
-              <Switch
-                checkedChildren="是"
-                unCheckedChildren="否"
-                disabled
-              />
-              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                {formulaDisplay}
-              </div>
+              <Form.Item name={variable.variableCode} noStyle>
+                <Switch
+                  disabled
+                  checkedChildren="是"
+                  unCheckedChildren="否"
+                />
+              </Form.Item>
+              {calculationDisplay && (
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{calculationDisplay}</div>
+              )}
+              {constraintDisplay && (
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+              )}
             </div>
           );
         default:
           return (
             <div>
-              <Input
-                placeholder="计算结果"
-                addonAfter={unit}
-                readOnly
-                disabled
-              />
-              <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-                {formulaDisplay}
-              </div>
+              <Form.Item name={variable.variableCode} noStyle>
+                <Input
+                  disabled
+                  addonAfter={unit}
+                />
+              </Form.Item>
+              {calculationDisplay && (
+                <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{calculationDisplay}</div>
+              )}
+              {constraintDisplay && (
+                <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+              )}
             </div>
           );
       }
     }
-    
-    // 输入类型的变量处理（保持原有逻辑）
-    const getConvertedDefaultValue = () => {
-      if (!defaultValue) return undefined;
-      
-      switch (dataType) {
-        case 'NUMBER':
-        case 'DECIMAL':
-          return parseFloat(defaultValue) || 0;
-        case 'PERCENTAGE':
-          return parseFloat(defaultValue) || 0;
-        case 'CURRENCY':
-          return parseFloat(defaultValue) || 0;
-        case 'BOOLEAN':
-          return defaultValue.toLowerCase() === 'true' || defaultValue === '1';
-        default:
-          return defaultValue;
-      }
-    };
-    
-    const convertedDefaultValue = getConvertedDefaultValue();
-    
+
+    // 其他类型变量：可编辑，使用Form.Item绑定
     switch (dataType) {
       case 'NUMBER':
       case 'DECIMAL':
         return (
-          <InputNumber
-            style={{ width: '100%' }}
-            placeholder={`请输入${variable.variableName}`}
-            precision={dataType === 'DECIMAL' ? 2 : 0}
-            addonAfter={unit}
-            defaultValue={convertedDefaultValue}
-          />
+          <div>
+            <Form.Item name={variable.variableCode} noStyle>
+              <InputNumber
+                style={{ width: '100%' }}
+                placeholder={`请输入${variable.variableName}`}
+                precision={dataType === 'DECIMAL' ? 2 : 0}
+                addonAfter={unit}
+              />
+            </Form.Item>
+            {constraintDisplay && (
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+            )}
+          </div>
         );
       case 'PERCENTAGE':
         return (
-          <InputNumber
-            style={{ width: '100%' }}
-            placeholder={`请输入${variable.variableName}`}
-            precision={2}
-            addonAfter="%"
-            min={0}
-            max={100}
-            defaultValue={convertedDefaultValue}
-          />
+          <div>
+            <Form.Item name={variable.variableCode} noStyle>
+              <InputNumber
+                style={{ width: '100%' }}
+                placeholder={`请输入${variable.variableName}`}
+                precision={2}
+                addonAfter="%"
+                min={0}
+                max={100}
+              />
+            </Form.Item>
+            {constraintDisplay && (
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+            )}
+          </div>
         );
       case 'CURRENCY':
         return (
-          <InputNumber
-            style={{ width: '100%' }}
-            placeholder={`请输入${variable.variableName}`}
-            precision={2}
-            addonAfter="元"
-            formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-            parser={(value) => value!.replace(/\$\s?|(,*)/g, '')}
-            defaultValue={convertedDefaultValue}
-          />
+          <div>
+            <Form.Item name={variable.variableCode} noStyle>
+              <InputNumber
+                style={{ width: '100%' }}
+                placeholder={`请输入${variable.variableName}`}
+                precision={2}
+                addonAfter="元"
+                formatter={(value) => {
+                  if (value === null || value === undefined || value === '') return '';
+                  const numValue = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : value;
+                  if (isNaN(numValue)) return '';
+                  return numValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                }}
+                parser={(value) => {
+                  if (!value) return 0;
+                  // 移除所有逗号，然后转换为数字
+                  const cleanValue = value.replace(/,/g, '');
+                  const numValue = parseFloat(cleanValue);
+                  return isNaN(numValue) ? 0 : numValue;
+                }}
+              />
+            </Form.Item>
+            {constraintDisplay && (
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+            )}
+          </div>
         );
       case 'BOOLEAN':
         return (
-          <Switch
-            checkedChildren="是"
-            unCheckedChildren="否"
-            defaultChecked={convertedDefaultValue}
-          />
+          <div>
+            <Form.Item name={variable.variableCode} noStyle>
+              <Switch
+                checkedChildren="是"
+                unCheckedChildren="否"
+              />
+            </Form.Item>
+            {constraintDisplay && (
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+            )}
+          </div>
         );
       default:
         return (
-          <Input
-            placeholder={`请输入${variable.variableName}`}
-            addonAfter={unit}
-            defaultValue={convertedDefaultValue}
-          />
+          <div>
+            <Form.Item name={variable.variableCode} noStyle>
+              <Input
+                placeholder={`请输入${variable.variableName}`}
+                addonAfter={unit}
+              />
+            </Form.Item>
+            {constraintDisplay && (
+              <div style={{ fontSize: '12px', color: '#999', marginTop: '2px' }}>{constraintDisplay}</div>
+            )}
+          </div>
         );
     }
   };
@@ -699,7 +833,7 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
         >
           <Alert
             message="提示"
-            description="将为选中的模型实例创建所有模型变量的实例配置，请填写初始值。"
+            description="将为选中的模型实例创建所有模型变量的实例配置。所有变量都可以填写，但只有CALC_FACTORS类型为必填项。保存时只保存CALC_FACTORS类型的变量值。"
             type="info"
             showIcon
             style={{ marginBottom: 16 }}
@@ -711,13 +845,13 @@ const ModelInstanceVariableManagement: React.FC<ModelInstanceVariableManagementP
               label={
                 <Space>
                   <span>{variable.variableName}</span>
-                  {variable.isRequired && <Text type="danger">*</Text>}
+                  {variable.variableType === 'CALC_FACTORS' && <Text type="danger">*</Text>}
                   {getVariableTypeTag(variable.variableType)}
                   {getDataTypeTag(variable.dataType)}
                 </Space>
               }
               name={variable.variableCode}
-              rules={variable.isRequired ? [{ required: true, message: `请输入${variable.variableName}` }] : []}
+              rules={variable.variableType === 'CALC_FACTORS' ? [{ required: true, message: `请输入${variable.variableName}` }] : []}
               extra={variable.description}
             >
               {renderVariableInput(variable)}

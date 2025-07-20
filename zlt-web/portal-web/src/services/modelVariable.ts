@@ -8,7 +8,7 @@ export interface ModelVariable {
   modelId: number;
   variableName: string;
   variableCode: string;
-  variableType: 'INPUT' | 'CALC' | 'API';
+  variableType: 'INPUT' | 'CALC' | 'API' | 'CALC_FACTORS';
   dataType: 'NUMBER' | 'DECIMAL' | 'PERCENTAGE' | 'CURRENCY' | 'BOOLEAN' | 'STRING';
   defaultValue?: number;
   minValue?: number;
@@ -37,7 +37,7 @@ export interface VariableFormData {
   modelId: number;
   variableName: string;
   variableCode: string;
-  variableType: 'INPUT' | 'CALC' | 'API';
+  variableType: 'INPUT' | 'CALC' | 'API' | 'CALC_FACTORS';
   dataType: 'NUMBER' | 'DECIMAL' | 'PERCENTAGE' | 'CURRENCY' | 'BOOLEAN' | 'STRING';
   defaultValue?: number;
   minValue?: number;

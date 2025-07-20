@@ -77,6 +77,7 @@ const VariableManagementV2: React.FC = () => {
   const variableTypeOptions = [
     { label: '输入', value: 'INPUT' },
     { label: '计算', value: 'CALC' },
+    { label: '计算因子', value: 'CALC_FACTORS' },
     { label: 'API', value: 'API' }
   ];
 
@@ -497,7 +498,8 @@ const VariableManagementV2: React.FC = () => {
                 </div>
                 <Tag 
                   color={variable.variableType === 'INPUT' ? 'blue' : 
-                         variable.variableType === 'CALC' ? 'green' : 'orange'}
+                         variable.variableType === 'CALC' ? 'green' : 
+                         variable.variableType === 'CALC_FACTORS' ? 'purple' : 'orange'}
                   style={{ margin: 0, fontSize: '9px', padding: '0 4px' }}
                 >
                   {getTypeDisplayName(variableTypeOptions, variable.variableType)}
@@ -626,7 +628,8 @@ const VariableManagementV2: React.FC = () => {
           <Space>
             <Tag 
               color={record.variableType === 'INPUT' ? 'blue' : 
-                     record.variableType === 'CALC' ? 'green' : 'orange'}
+                     record.variableType === 'CALC' ? 'green' : 
+                     record.variableType === 'CALC_FACTORS' ? 'purple' : 'orange'}
             >
               {getTypeDisplayName(variableTypeOptions, record.variableType)}
             </Tag>
@@ -1141,13 +1144,13 @@ const VariableManagementV2: React.FC = () => {
               if (variableType === 'CALC') {
                 return (
                   <Form.Item
-                    label="公式表达式"
+                    label="计算表达式"
                     name="calculationFormula"
-                    rules={[{ required: true, message: '请输入公式表达式' }]}
+                    rules={[{ required: true, message: '请输入计算表达式' }]}
                   >
                     <TextArea
                       rows={3}
-                      placeholder="请输入公式表达式，如: revenue - (fixed_cost + salary + social_insurance)"
+                      placeholder="请输入计算表达式，如: revenue - (fixed_cost + salary + social_insurance)"
                     />
                   </Form.Item>
                 );
@@ -1161,6 +1164,18 @@ const VariableManagementV2: React.FC = () => {
                     <TextArea
                       rows={3}
                       placeholder="请输入API配置JSON，如：{&quot;url&quot;: &quot;https://api.example.com/data&quot;}"
+                    />
+                  </Form.Item>
+                );
+              } else if (variableType === 'INPUT' || variableType === 'CALC_FACTORS') {
+                return (
+                  <Form.Item
+                    label="默认值"
+                    name="defaultValue"
+                  >
+                    <InputNumber
+                      style={{ width: '100%' }}
+                      placeholder="请输入默认值"
                     />
                   </Form.Item>
                 );

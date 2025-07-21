@@ -817,6 +817,29 @@ export const getSalaryCalculationLogs = (params: any) => {
   }).then(handleResponse);
 };
 
+// 获取财务分配模型列表
+export const getFinancialModels = (params: any) => {
+  return request('/api-soo/api/soo/v2/models', {
+    method: 'GET',
+    params,
+  });
+};
+
+// 获取财务分配模型实例列表
+export const getFinancialModelInstances = (params: any) => {
+  return request('/api-soo/api/soo/v2/model-instances', {
+    method: 'GET',
+    params,
+  });
+};
+
+// 获取单个模型实例详情
+export const getFinancialModelInstanceById = (id: number) => {
+  return request(`/api-soo/api/soo/v2/model-instances/${id}`, {
+    method: 'GET',
+  });
+};
+
 // 统一导出 sooApi 对象（保持向后兼容）
 export const sooApi = {
   // 薪酬计算

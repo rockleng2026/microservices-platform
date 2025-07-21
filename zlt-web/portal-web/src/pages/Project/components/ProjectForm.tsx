@@ -14,7 +14,7 @@ import {
   Card,
 } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import moment from 'moment';
 import { projectApi } from '@/services/project';
 import UserSelector from '@/components/UserSelector';
 import type {
@@ -24,6 +24,7 @@ import type {
   FormMode,
 } from '@/types/project';
 import { getEmployeeBatchDetail } from '@/services/organization/employee';
+import { getFinancialModels, getFinancialModelInstances, getFinancialModelInstanceById } from '@/services/soo';
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -46,6 +47,10 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
   const [participants, setParticipants] = useState<ProjectParticipantInput[]>([]);
+  const [modelList, setModelList] = useState<any[]>([]);
+  const [instanceList, setInstanceList] = useState<any[]>([]);
+  const [selectedModelId, setSelectedModelId] = useState<number | undefined>();
+  const [modelInstanceName, setModelInstanceName] = useState<string>('');
 
   // 批量查详情
   const fetchParticipantsDetail = async (rawList: ProjectParticipantInput[], employeeMap?: Map<string, any>) => {
@@ -86,13 +91,33 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
     }
   };
 
+  useEffect(() => {
+    if (visible) {
+      getFinancialModels({ page: 1, size: 50 }).then(res => {
+        setModelList(res?.data || []);
+      });
+    }
+  }, [visible]);
+
+  useEffect(() => {
+    if (selectedModelId) {
+      getFinancialModelInstances({ page: 1, size: 50, modelId: selectedModelId }).then(res => {
+        setInstanceList(res?.data || []);
+      });
+    } else {
+      setInstanceList([]);
+    }
+  }, [selectedModelId]);
+
   // 初始化表单数据
   useEffect(() => {
     async function fetchLeaderAndParticipants() {
       if (visible && project && mode !== 'create') {
         const formData = {
           ...project,
-          startTime: project.startTime ? dayjs(project.startTime) : undefined,
+          startTime: project.startTime
+            ? (typeof project.startTime === 'string' ? moment(project.startTime) : project.startTime)
+            : undefined,
           leaderId: project.leaderId ? String(project.leaderId) : undefined,
         };
         
@@ -171,6 +196,21 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
         
         console.log('设置表单数据:', formData);
         form.setFieldsValue(formData);
+
+        if (project.financial_model_instance_id) {
+          // 反查模型id
+          // 这里假设接口可通过实例id查到modelId，否则需后端补充
+          // 这里直接赋值，实际可根据接口返回调整
+          formData.financial_model_instance_id = project.financial_model_instance_id;
+        }
+        if (project.financial_model_instance_id) {
+          // 获取模型实例名称，适配datas.instance.instanceName
+          getFinancialModelInstanceById(project.financial_model_instance_id).then(res => {
+            setModelInstanceName(res?.datas?.instance?.instanceName || '');
+          });
+        } else {
+          setModelInstanceName('');
+        }
       } else if (visible && mode === 'create') {
         form.resetFields();
         setParticipants([]);
@@ -178,6 +218,20 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
     }
     fetchLeaderAndParticipants();
   }, [visible, project, mode, form]);
+
+  // 计算下拉options，保证已选项一定在options里
+  const allInstanceOptions = React.useMemo(() => {
+    const selectedId = form.getFieldValue('financial_model_instance_id');
+    if (!selectedId) return instanceList;
+    const exists = instanceList.some(inst => inst.id === selectedId);
+    if (!exists && modelInstanceName) {
+      return [
+        ...instanceList,
+        { id: selectedId, instanceName: modelInstanceName }
+      ];
+    }
+    return instanceList;
+  }, [instanceList, form, modelInstanceName]);
 
   // 添加参与人
   const addParticipant = () => {
@@ -210,6 +264,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
         ...values,
         startTime,
         participants: participants,
+        financial_model_instance_id: values.financial_model_instance_id,
       };
 
       let response;
@@ -300,6 +355,29 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
           </Col>
           <Col span={12}>
             <Form.Item
+              name="financial_model_instance_id"
+              label="财务分配模型实例"
+              rules={[{ required: true, message: '请选择财务分配模型实例' }]}
+            >
+              <Select
+                placeholder="请选择模型实例"
+                disabled={mode === 'view'}
+                value={form.getFieldValue('financial_model_instance_id')}
+                onChange={val => form.setFieldValue('financial_model_instance_id', val)}
+                showSearch
+                optionFilterProp="children"
+              >
+                {allInstanceOptions.map(inst => (
+                  <Option key={inst.id} value={inst.id}>{inst.instanceName}</Option>
+                ))}
+              </Select>
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
               name="leaderId"
               label="项目负责人"
               rules={[{ required: true, message: '请选择项目负责人' }]}
@@ -353,6 +431,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                   placeholder="请选择参与人"
                   value={participant.participantId}
                   onChange={(value) => updateParticipant(index, 'participantId', value)}
+                  dropdownStyle={{ minWidth: 300 }}
+                  style={{ width: '100%' }}
                 />
               </Col>
               <Col span={10}>

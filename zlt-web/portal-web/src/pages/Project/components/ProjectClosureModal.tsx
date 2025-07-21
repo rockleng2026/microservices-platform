@@ -13,7 +13,7 @@ import {
   Statistic,
 } from 'antd';
 import { CalendarOutlined, DollarOutlined } from '@ant-design/icons';
-import dayjs from 'dayjs';
+import moment from 'moment';
 import { projectApi } from '@/services/project';
 import type { Project } from '@/types/project';
 
@@ -122,7 +122,7 @@ const ProjectClosureModal: React.FC<ProjectClosureModalProps> = ({
     if (visible && project) {
       // 初始化表单
       form.setFieldsValue({
-        closureTime: dayjs(),
+        closureTime: moment(),
         contractAmount: 0,
         actualAmount: 0,
         grossProfit: 0,
@@ -155,7 +155,7 @@ const ProjectClosureModal: React.FC<ProjectClosureModalProps> = ({
                 <strong>客户名称：</strong>{project.customerName}
               </Col>
               <Col span={12} style={{ marginTop: 8 }}>
-                <strong>立项时间：</strong>{project.startTime ? dayjs(project.startTime).format('YYYY-MM-DD') : '-'}
+                <strong>立项时间：</strong>{project.startTime ? moment(project.startTime).format('YYYY-MM-DD') : '-'}
               </Col>
             </Row>
           </Card>
@@ -164,7 +164,7 @@ const ProjectClosureModal: React.FC<ProjectClosureModalProps> = ({
             form={form}
             layout="vertical"
             initialValues={{
-              closureTime: dayjs(),
+              closureTime: moment(),
             }}
           >
             <Row gutter={16}>

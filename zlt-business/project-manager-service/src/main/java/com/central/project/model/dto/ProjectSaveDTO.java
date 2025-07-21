@@ -80,6 +80,11 @@ public class ProjectSaveDTO {
     private String status;
     
     /**
+     * 财务模型实例ID
+     */
+    private Long financial_model_instance_id;
+    
+    /**
      * 项目参与人DTO
      */
     @Data

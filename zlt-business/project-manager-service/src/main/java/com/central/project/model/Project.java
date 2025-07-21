@@ -130,6 +130,11 @@ public class Project {
      */
     private Integer delflag;
     
+    /**
+     * 财务模型实例ID
+     */
+    private Long financial_model_instance_id;
+    
     // =============== 扩展字段 ===============
     
     /**

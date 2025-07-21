@@ -158,6 +158,7 @@ const UserSelector: React.FC<UserSelectorProps> = ({
       notFoundContent={loading ? <Spin size="small" /> : '暂无数据'}
       mode={mode}
       optionLabelProp="children"
+      dropdownStyle={{ minWidth: 300 }}
     >
       {users.map(renderOption)}
     </Select>

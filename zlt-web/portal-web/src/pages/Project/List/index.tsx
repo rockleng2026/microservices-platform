@@ -45,6 +45,8 @@ import ProfitDistributionModal from '../components/ProfitDistributionModal';
 import SalesRevenueDistributionModal from '../components/SalesRevenueDistributionModal';
 import SalesRevenueProjectDetailModal from '../components/SalesRevenueProjectDetailModal';
 import SalesRevenueDistributionEditModal from '../components/SalesRevenueDistributionEditModal';
+import ProjectAccrualConfigModal from '../components/ProjectAccrualConfigModal';
+import { FinancialModelAPI } from '@/services/financialModel';
 import type {
   Project,
   ProjectQueryParams,
@@ -52,6 +54,7 @@ import type {
   ApprovalStatus,
   TableAction,
 } from '@/types/project';
+import { request } from '@/utils/request';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -82,6 +85,21 @@ const PROFIT_DISTRIBUTION_STATUS_CONFIG = {
   approval_failed: { text: '审批失败', color: 'error' },
   partially_settled: { text: '部分计提', color: 'orange' },
   settled: { text: '已计提完毕', color: 'green' },
+};
+
+// 新增获取 trial-calculation 变量API
+const getInstanceTrialVariables = async (instanceId: number) => {
+  const res = await request(`/api-soo/api/soo/v2/model-instances/${instanceId}/trial-calculation`);
+  if (res && res.datas && Array.isArray(res.datas.modelVariables)) {
+    return res.datas.modelVariables
+      .filter((v: any) => v.variableType === 'CALC')
+      .map((v: any) => ({
+        label: v.variableName,
+        value: v.variableCode,
+        calculationFormula: v.calculationFormula || '',
+      }));
+  }
+  return [];
 };
 
 const ProjectListPage: React.FC = () => {
@@ -118,6 +136,11 @@ const ProjectListPage: React.FC = () => {
   
   // 销售额提成编辑分配弹窗
   const [salesRevenueEditVisible, setSalesRevenueEditVisible] = useState(false);
+
+  // 关联模型变量弹窗
+  const [accrualConfigVisible, setAccrualConfigVisible] = useState(false);
+  const [accrualConfigProject, setAccrualConfigProject] = useState<Project | null>(null);
+  const [modelVariableOptions, setModelVariableOptions] = useState<{label:string,value:string}[]>([]);
 
   // 搜索条件
   const [searchParams, setSearchParams] = useState<Partial<ProjectQueryParams>>({});
@@ -298,6 +321,22 @@ const ProjectListPage: React.FC = () => {
   const handleSalesRevenueEdit = (record: Project) => {
     setCurrentProject(record);
     setSalesRevenueEditVisible(true);
+  };
+
+  // 关联模型变量
+  const handleAccrualConfig = async (record: Project) => {
+    setAccrualConfigProject(record);
+    setAccrualConfigVisible(true);
+    setModelVariableOptions([]);
+    if (record.financial_model_instance_id) {
+      try {
+        // 直接通过实例id获取 trial-calculation 变量
+        const options = await getInstanceTrialVariables(record.financial_model_instance_id);
+        setModelVariableOptions(options);
+      } catch (e) {
+        message.error('获取模型变量失败');
+      }
+    }
   };
 
   // 更新项目状态
@@ -482,6 +521,12 @@ const ProjectListPage: React.FC = () => {
             label: '销售额提成编辑分配示例',
             icon: <EditOutlined />,
             onClick: () => handleSalesRevenueEdit(record),
+          },
+          {
+            key: 'accrualConfig',
+            label: '关联模型变量',
+            icon: <CalculatorOutlined />,
+            onClick: () => handleAccrualConfig(record),
           },
           {
             type: 'divider' as const,
@@ -723,6 +768,15 @@ const ProjectListPage: React.FC = () => {
           setSalesRevenueEditVisible(false);
           fetchProjects();
         }}
+      />
+
+      {/* 关联模型变量弹窗 */}
+      <ProjectAccrualConfigModal
+        visible={accrualConfigVisible}
+        projectId={accrualConfigProject?.id || 0}
+        onCancel={() => setAccrualConfigVisible(false)}
+        onSuccess={() => { setAccrualConfigVisible(false); fetchProjects(); }}
+        modelVariableOptions={modelVariableOptions}
       />
     </PageContainer>
   );

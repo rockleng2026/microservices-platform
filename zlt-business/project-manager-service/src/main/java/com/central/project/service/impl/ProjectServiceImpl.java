@@ -148,6 +148,8 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         
         // 复制基本属性
         BeanUtils.copyProperties(saveDTO, project);
+        // 显式赋值财务模型实例ID，防止BeanUtils不兼容下划线
+        project.setFinancial_model_instance_id(saveDTO.getFinancial_model_instance_id());
         
         Date now = new Date();
         String tenantId = TenantContextHolder.getTenant();

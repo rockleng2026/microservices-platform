@@ -22,6 +22,7 @@
         <result column="created_at" property="createdAt" jdbcType="TIMESTAMP"/>
         <result column="updated_at" property="updatedAt" jdbcType="TIMESTAMP"/>
         <result column="delflag" property="delflag" jdbcType="TINYINT"/>
+        <result column="financial_model_instance_id" property="financial_model_instance_id" jdbcType="BIGINT"/>
         <!-- 扩展字段 -->
         <result column="participant_count" property="participantCount" jdbcType="INTEGER"/>
         <result column="days_running" property="daysRunning" jdbcType="INTEGER"/>
@@ -31,7 +32,7 @@
     <sql id="baseColumns">
         p.id, p.name, p.category, p.leader_id, p.customer_name, 
         p.customer_contact, p.start_time, p.status, p.process_instance_id, p.final_status,
-        p.profit_distribution_status,
+        p.profit_distribution_status, p.financial_model_instance_id,
         p.tenant_id, p.created_by, p.updated_by, p.created_at, p.updated_at, p.delflag
     </sql>
 
@@ -39,7 +40,7 @@
     <sql id="extendColumns">
         p.id, p.name, p.category, p.leader_id, p.customer_name, 
         p.customer_contact, p.start_time, p.status, p.process_instance_id, p.final_status,
-        p.profit_distribution_status,
+        p.profit_distribution_status, p.financial_model_instance_id,
         p.tenant_id, p.created_by, p.updated_by, p.created_at, p.updated_at, p.delflag,
         (SELECT COUNT(*) FROM project_detail pd WHERE pd.project_id = p.id AND pd.delflag = 0) as participant_count,
         DATEDIFF(NOW(), p.start_time) as days_running

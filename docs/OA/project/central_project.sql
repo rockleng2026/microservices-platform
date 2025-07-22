@@ -80,7 +80,7 @@ CREATE TABLE `project`  (
   `customer_contact` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '项目客户代表',
   `start_time` datetime NULL DEFAULT NULL COMMENT '立项时间',
   `status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'init' COMMENT '项目状态（如init、running、closed等）',
-  `profit_distribution_status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '项目提成分配状态(not_set:未设置，awaiting_approval:待审批,in_approval：审批中,approved:审批通过,approval_failed:审批失败,partially_settled部分计提，Settled：已计提完毕)',
+  `profit_distribution_status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '项目提成分配状态(not_set:未设置, assigned:已分配, awaiting_approval:待审批,in_approval：审批中,approved:审批通过,approval_failed:审批失败,partially_settled部分计提，Settled：已计提完毕)',
   `process_instance_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '流程实例ID',
   `final_status` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '最终审批状态（如approved、rejected等）',
   `tenant_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'default' COMMENT '租户ID',

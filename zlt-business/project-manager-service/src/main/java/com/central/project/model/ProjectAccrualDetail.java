@@ -19,4 +19,6 @@ public class ProjectAccrualDetail {
     private BigDecimal ratio;
     private Date createdAt;
     private Date updatedAt;
+    @TableField("tenant_id")
+    private String tenantId;
 } 

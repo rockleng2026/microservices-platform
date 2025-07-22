@@ -157,7 +157,7 @@ const ProjectProfitDistributionV2Modal: React.FC<ProjectProfitDistributionV2Moda
             init[cfg.id] = [{
               configId: cfg.id,
               type: 'group',
-              targetId: 'group',
+              targetId: 1,
               targetName: '集团',
               weight: 100,
               amount: cfg.maxAmount || 0,
@@ -276,8 +276,11 @@ const ProjectProfitDistributionV2Modal: React.FC<ProjectProfitDistributionV2Moda
         return;
       }
     }
-    // 组装明细
-    const allDetails = Object.values(details).flat();
+    // 组装明细，profitRatio 转为 ratio
+    const allDetails = Object.values(details).flat().map((item: any) => {
+      const { profitRatio, ...rest } = item;
+      return { ...rest, ratio: profitRatio };
+    });
     setLoading(true);
     try {
       await saveAccrualDetailV2(projectDetail.id, allDetails);

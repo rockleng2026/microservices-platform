@@ -803,4 +803,14 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         
         return result;
     }
+
+    @Override
+    public void updateProjectProfitDistributionStatus(Long projectId, String status) {
+        if (projectId == null || status == null) return;
+        Project project = new Project();
+        project.setId(projectId);
+        project.setProfitDistributionStatus(status);
+        project.setUpdatedAt(new Date());
+        updateById(project);
+    }
 } 

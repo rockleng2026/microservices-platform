@@ -231,4 +231,6 @@ public interface IProjectService extends IService<Project> {
      * @return 初始化数据
      */
     Map<String, Object> getProfitDistributionInitData(Long projectId);
+
+    void updateProjectProfitDistributionStatus(Long projectId, String status);
 } 

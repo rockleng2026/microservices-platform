@@ -56,6 +56,7 @@ import type {
 } from '@/types/project';
 import { request } from '@/utils/request';
 import ProjectProfitDistributionV2Modal from '../components/ProjectProfitDistributionV2Modal';
+import ProjectDetailV2Modal from '../components/ProjectDetailV2Modal';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -80,6 +81,7 @@ const APPROVAL_STATUS_CONFIG = {
 // 利润计提状态配置
 const PROFIT_DISTRIBUTION_STATUS_CONFIG = {
   not_set: { text: '未设置', color: 'default' },
+  assigned: { text: '已分配', color: 'blue' },
   awaiting_approval: { text: '待审批', color: 'warning' },
   in_approval: { text: '审批中', color: 'processing' },
   approved: { text: '审批通过', color: 'success' },
@@ -149,6 +151,10 @@ const ProjectListPage: React.FC = () => {
 
   // 搜索条件
   const [searchParams, setSearchParams] = useState<Partial<ProjectQueryParams>>({});
+
+  // V2详情弹窗
+  const [detailV2Visible, setDetailV2Visible] = useState(false);
+  const [currentProjectIdForV2, setCurrentProjectIdForV2] = useState<string | null>(null);
 
   // 获取项目列表
   const fetchProjects = async (params?: Partial<ProjectQueryParams>) => {
@@ -372,6 +378,12 @@ const ProjectListPage: React.FC = () => {
     });
   };
 
+  // 查看V2项目详情
+  const handleViewV2 = (record: Project) => {
+    setCurrentProjectIdForV2(record.id);
+    setDetailV2Visible(true);
+  };
+
   // 表格列定义
   const columns: ColumnsType<Project> = [
     {
@@ -456,6 +468,8 @@ const ProjectListPage: React.FC = () => {
           return <Tag color="default">未设置</Tag>;
         }
         const statusMap = {
+          not_set: { text: '未设置', color: 'default' },
+          assigned: { text: '已分配', color: 'blue' },
           awaiting_approval: { text: '待审批', color: 'warning' },
           in_approval: { text: '审批中', color: 'processing' },
           approved: { text: '审批通过', color: 'success' },
@@ -483,108 +497,99 @@ const ProjectListPage: React.FC = () => {
       key: 'action',
       width: 180,
       fixed: 'right',
-      render: (_, record: Project) => {
-        const items = [
-          {
-            key: 'view',
-            label: '查看详情',
-            icon: <EyeOutlined />,
-            onClick: () => handleView(record),
-          },
-          {
-            key: 'edit',
-            label: '编辑',
-            icon: <EditOutlined />,
-            onClick: () => handleEdit(record),
-          },
-          {
-            key: 'participant',
-            label: '管理参与人',
-            icon: <UserOutlined />,
-            onClick: () => handleParticipant(record),
-          },
-          {
-            key: 'closure',
-            label: '项目结项',
-            icon: <CheckCircleOutlined />,
-            onClick: () => handleClosure(record),
-          },
-          {
-            key: 'profitDistribution',
-            label: '项目提成',
-            icon: <CalculatorOutlined />,
-            onClick: () => handleProfitDistribution(record),
-          },
-          {
-            key: 'profitDistributionV2',
-            label: '项目提成V2',
-            icon: <CalculatorOutlined />,
-            onClick: () => handleProfitDistributionV2(record),
-          },
-          {
-            key: 'salesRevenueDistribution',
-            label: '销售额提成分配示例',
-            icon: <CalculatorOutlined />,
-            onClick: () => handleSalesRevenueDistribution(record),
-          },
-          {
-            key: 'salesRevenueDetail',
-            label: '销售额项目明细示例',
-            icon: <FileTextOutlined />,
-            onClick: () => handleSalesRevenueDetail(record),
-          },
-          {
-            key: 'salesRevenueEdit',
-            label: '销售额提成编辑分配示例',
-            icon: <EditOutlined />,
-            onClick: () => handleSalesRevenueEdit(record),
-          },
-          {
-            key: 'accrualConfig',
-            label: '关联模型变量',
-            icon: <CalculatorOutlined />,
-            onClick: () => handleAccrualConfig(record),
-          },
-          {
-            type: 'divider' as const,
-          },
-          {
-            key: 'delete',
-            label: '删除',
-            icon: <DeleteOutlined />,
-            danger: true,
-            onClick: () => handleDelete(record),
-          },
-        ];
-
-        return (
-          <Space size="middle">
-            <Button
-              type="link"
-              size="small"
-              icon={<EyeOutlined />}
-              onClick={() => handleView(record)}
-            >
-              查看
-            </Button>
-            <Button
-              type="link"
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => handleEdit(record)}
-            >
-              编辑
-            </Button>
-            <Dropdown
-              menu={{ items }}
-              trigger={['click']}
-              placement="bottomRight"
-            >
-              <Button type="link" size="small" icon={<MoreOutlined />} />
-            </Dropdown>
-          </Space>
-        );
-      },
+      render: (_, record: Project) => (
+        <Space>
+          <Button size="small" type="link" onClick={() => handleViewV2(record)}>
+            查询V2
+          </Button>
+          <Dropdown
+            menu={{
+              items: [
+                {
+                  key: 'viewV1',
+                  label: '查询V1',
+                  icon: <EyeOutlined />,
+                  onClick: () => handleView(record),
+                },
+                {
+                  key: 'edit',
+                  label: '编辑',
+                  icon: <EditOutlined />,
+                  onClick: () => handleEdit(record),
+                },
+                {
+                  key: 'participant',
+                  label: '管理参与人',
+                  icon: <UserOutlined />,
+                  onClick: () => handleParticipant(record),
+                },
+                {
+                  key: 'closure',
+                  label: '项目结项',
+                  icon: <CheckCircleOutlined />,
+                  onClick: () => handleClosure(record),
+                },
+                {
+                  key: 'profitDistribution',
+                  label: '项目提成',
+                  icon: <CalculatorOutlined />,
+                  onClick: () => handleProfitDistribution(record),
+                },
+                {
+                  key: 'profitDistributionV2',
+                  label: '项目提成V2',
+                  icon: <CalculatorOutlined />,
+                  onClick: () => handleProfitDistributionV2(record),
+                },
+                {
+                  key: 'salesRevenueDistribution',
+                  label: '销售额提成分配示例',
+                  icon: <CalculatorOutlined />,
+                  onClick: () => handleSalesRevenueDistribution(record),
+                },
+                {
+                  key: 'salesRevenueDetail',
+                  label: '销售额项目明细示例',
+                  icon: <FileTextOutlined />,
+                  onClick: () => handleSalesRevenueDetail(record),
+                },
+                {
+                  key: 'salesRevenueEdit',
+                  label: '销售额提成编辑分配示例',
+                  icon: <EditOutlined />,
+                  onClick: () => handleSalesRevenueEdit(record),
+                },
+                {
+                  key: 'accrualConfig',
+                  label: '关联模型变量',
+                  icon: <CalculatorOutlined />,
+                  onClick: () => handleAccrualConfig(record),
+                },
+                {
+                  key: 'viewV2',
+                  label: '查看V2',
+                  icon: <EyeOutlined />,
+                  onClick: () => handleViewV2(record),
+                },
+                {
+                  type: 'divider' as const,
+                },
+                {
+                  key: 'delete',
+                  label: '删除',
+                  icon: <DeleteOutlined />,
+                  danger: true,
+                  onClick: () => handleDelete(record),
+                },
+              ],
+            }}
+            trigger={['click']}
+            placement="bottomRight"
+          >
+            <Button type="link" size="small" icon={<MoreOutlined />} />
+          </Dropdown>
+        </Space>
+      ),
     },
   ];
 
@@ -805,6 +810,13 @@ const ProjectListPage: React.FC = () => {
           setProfitDistributionV2Visible(false);
           // 可选：刷新列表
         }}
+      />
+
+      {/* 项目V2详情弹窗 */}
+      <ProjectDetailV2Modal
+        visible={detailV2Visible}
+        projectId={currentProjectIdForV2}
+        onCancel={() => setDetailV2Visible(false)}
       />
     </PageContainer>
   );

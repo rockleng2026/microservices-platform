@@ -7,12 +7,20 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.List;
+import com.central.project.model.Project;
+import com.central.project.model.ProjectAccrualConfig;
+import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api/v2/project/{projectId}/accrual-detail")
 public class ProjectAccrualDetailController {
     @Resource
     private IProjectAccrualDetailService detailService;
+    @Resource
+    private com.central.project.service.IProjectService projectService;
+    @Resource
+    private com.central.project.service.IProjectAccrualConfigService projectAccrualConfigService;
 
     @GetMapping
     public Result<List<ProjectAccrualDetail>> getDetail(@PathVariable Long projectId) {
@@ -26,12 +34,22 @@ public class ProjectAccrualDetailController {
         return Result.succeed(null);
     }
 
-    @PostMapping("/v2")
-    public Result<Void> saveDetailV2(@PathVariable Long projectId, @RequestBody List<ProjectAccrualDetail> details) {
-        detailService.saveOrUpdateBatch(details, projectId);
-        // 更新主表状态为“已分配”或“已提交”
-        // 这里假设有 ProjectService 可用
-        // projectService.updateProfitDistributionStatus(projectId, "distributed");
-        return Result.succeed(null);
+    @GetMapping("/v2")
+    public Result<Map<String, Object>> getDetailV2(@PathVariable Long projectId) {
+        Map<String, Object> result = new HashMap<>();
+        // 1. 基本信息
+        Project project = projectService.getProjectDetailById(projectId);
+        result.put("project", project);
+        // 2. 项目参与人
+        result.put("participants", project.getParticipantDetails());
+        // 3. 项目结项信息
+        result.put("closure", project.getClosure());
+        // 4. 项目提成分配规则
+        java.util.List<ProjectAccrualConfig> configs = projectAccrualConfigService.getByProjectId(projectId);
+        result.put("accrualConfigs", configs);
+        // 5. 项目提成分配明细
+        java.util.List<ProjectAccrualDetail> details = detailService.getByProjectId(projectId);
+        result.put("accrualDetails", details);
+        return Result.succeed(result);
     }
 } 

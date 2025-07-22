@@ -16,7 +16,11 @@ public class ProjectAccrualDetail {
     private Long targetId;
     private String targetName;
     private BigDecimal amount;
+    /** 当前分配占比 */
     private BigDecimal ratio;
+    /** 总毛利润分配占比 */
+    @TableField("total_ratio")
+    private BigDecimal totalRatio;
     private Date createdAt;
     private Date updatedAt;
     @TableField("tenant_id")

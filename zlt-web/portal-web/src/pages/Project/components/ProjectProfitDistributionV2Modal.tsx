@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Modal, Card, Row, Col, Table, Button, InputNumber, message, Divider, Statistic, Tooltip, Popconfirm, Select } from 'antd';
 import type { Project } from '@/types/project';
-import { getAccrualConfig, saveAccrualDetailV2 } from '@/services/projectAccrual';
+import { getAccrualConfig, saveAccrualDetail, getAccrualDetail } from '@/services/projectAccrual';
 import { projectApi } from '@/services/project';
 import { request } from '@/utils/request';
 
@@ -37,6 +37,18 @@ const TYPE_LABELS: Record<string, string> = {
 
 const getDefaultWeight = (count: number) => count > 0 ? Number((100 / count).toFixed(2)) : 0;
 
+// 状态映射
+const PROFIT_DISTRIBUTION_STATUS_TEXT: Record<string, string> = {
+  not_set: '未设置',
+  assigned: '已分配',
+  awaiting_approval: '待审批',
+  in_approval: '审批中',
+  approved: '审批通过',
+  approval_failed: '审批失败',
+  partially_settled: '部分计提',
+  settled: '已计提完毕',
+};
+
 const ProjectProfitDistributionV2Modal: React.FC<ProjectProfitDistributionV2ModalProps> = ({
   visible,
   project,
@@ -49,15 +61,16 @@ const ProjectProfitDistributionV2Modal: React.FC<ProjectProfitDistributionV2Moda
   const [details, setDetails] = useState<any>({}); // { configId: [detail, ...] }
   const [projectDetail, setProjectDetail] = useState<Project | null>(null);
   const [employeeDeptMap, setEmployeeDeptMap] = useState<Record<string, { id: string, name: string }>>({});
+  const [readOnly, setReadOnly] = useState(false); // 初始为可编辑
 
   // 1. 获取项目信息（优先 closure）
   const getProjectAmountInfo = () => {
     if (!projectDetail) return { actualAmount: '', grossProfit: '', grossProfitRate: '' };
     const closure = projectDetail.closure || {};
     return {
-      actualAmount: closure.actualAmount || projectDetail.actualAmount || '',
-      grossProfit: closure.grossProfit || projectDetail.grossProfit || '',
-      grossProfitRate: closure.grossProfitRate || projectDetail.grossProfitRate || '',
+      actualAmount: (closure as any).actualAmount ?? (projectDetail as any).actualAmount ?? '',
+      grossProfit: (closure as any).grossProfit ?? (projectDetail as any).grossProfit ?? '',
+      grossProfitRate: (closure as any).grossProfitRate ?? (projectDetail as any).grossProfitRate ?? '',
     };
   };
   const projectAmountInfo = getProjectAmountInfo();
@@ -120,11 +133,10 @@ const ProjectProfitDistributionV2Modal: React.FC<ProjectProfitDistributionV2Moda
   useEffect(() => {
     if (visible && project?.id) {
       let needFetch = false;
-      if (!project.actualAmount || !project.grossProfit) needFetch = true;
+      if (!(project as any).actualAmount || !(project as any).grossProfit) needFetch = true;
       if (needFetch) {
         projectApi.getProjectById(String(project.id)).then(res => {
-          // 只取项目主数据，不合并closure，id始终为项目ID
-          setProjectDetail(res?.datas || res?.data || project);
+          setProjectDetail(res?.datas || project);
         });
       } else {
         setProjectDetail(project);
@@ -139,7 +151,72 @@ const ProjectProfitDistributionV2Modal: React.FC<ProjectProfitDistributionV2Moda
     }
   }, [visible]);
 
-  // 初始化分配明细，只在所有数据都准备好且details为空时执行
+  // assigned及其它审批中状态下，进入页面默认只读
+  useEffect(() => {
+    if (
+      visible &&
+      project &&
+      project.id &&
+      [
+        'assigned',
+        'awaiting_approval',
+        'in_approval',
+        'approved',
+        'partially_settled',
+        'settled',
+      ].includes(project.profitDistributionStatus) &&
+      dynamicDepartments.length > 0 &&
+      dynamicEmployees.length > 0 &&
+      Object.keys(details).length === 0
+    ) {
+      getAccrualConfig(project.id).then(cfgRes => {
+        setAccrualConfigs(cfgRes?.datas || []);
+        getAccrualDetail(project.id).then(res => {
+          const arr = res?.datas || [];
+          const grouped: any = {};
+          arr.forEach((item: any) => {
+            // 1. weight=ratio
+            const weight = item.ratio ?? 0;
+            // 2. profitRatio=totalRatio
+            const profitRatio = item.totalRatio ?? 0;
+            // 3. 名称映射
+            let targetName = item.targetName;
+            let departmentName = item.departmentName;
+            if (item.type === 'department') {
+              const dep = dynamicDepartments.find(dep => String(dep.id) === String(item.targetId));
+              if (dep) targetName = dep.name;
+            } else if (item.type === 'project_individual' || item.type === 'project_team') {
+              const emp = dynamicEmployees.find(emp => String(emp.id) === String(item.targetId));
+              if (emp) targetName = emp.name;
+              // 关联部门
+              if (employeeDeptMap && employeeDeptMap[item.targetId]) {
+                departmentName = employeeDeptMap[item.targetId].name;
+              }
+            }
+            if (!grouped[item.configId]) grouped[item.configId] = [];
+            grouped[item.configId].push({
+              ...item,
+              weight,
+              profitRatio,
+              targetName,
+              departmentName,
+            });
+          });
+          setDetails(grouped);
+        });
+      });
+      setReadOnly(true);
+    } else if (
+      visible &&
+      project &&
+      project.id &&
+      ['not_set', 'approval_failed'].includes(project.profitDistributionStatus)
+    ) {
+      setReadOnly(false);
+    }
+  }, [visible, project, dynamicDepartments, dynamicEmployees, details, employeeDeptMap]);
+
+  // 初始化分配明细，只在所有数据都准备好且details为空且非只读时执行
   useEffect(() => {
     if (
       visible &&
@@ -147,7 +224,8 @@ const ProjectProfitDistributionV2Modal: React.FC<ProjectProfitDistributionV2Moda
       projectDetail.id &&
       dynamicDepartments.length > 0 &&
       dynamicEmployees.length > 0 &&
-      Object.keys(details).length === 0
+      Object.keys(details).length === 0 &&
+      !readOnly
     ) {
       getAccrualConfig(projectDetail.id).then(res => {
         setAccrualConfigs(res?.datas || []);
@@ -191,7 +269,7 @@ const ProjectProfitDistributionV2Modal: React.FC<ProjectProfitDistributionV2Moda
         setDetails(init);
       });
     }
-  }, [visible, projectDetail?.id, dynamicDepartments, dynamicEmployees, details]);
+  }, [visible, projectDetail?.id, dynamicDepartments, dynamicEmployees, details, readOnly]);
 
   // 权重/金额/占比联动
   const updateDetail = (configId: string, idx: number, field: string, value: number) => {
@@ -278,12 +356,12 @@ const ProjectProfitDistributionV2Modal: React.FC<ProjectProfitDistributionV2Moda
     }
     // 组装明细，profitRatio 转为 ratio
     const allDetails = Object.values(details).flat().map((item: any) => {
-      const { profitRatio, ...rest } = item;
-      return { ...rest, ratio: profitRatio };
+      const { profitRatio, weight, ...rest } = item;
+      return { ...rest, ratio: weight, totalRatio: profitRatio };
     });
     setLoading(true);
     try {
-      await saveAccrualDetailV2(projectDetail.id, allDetails);
+      await saveAccrualDetail(projectDetail.id, allDetails);
       message.success('保存成功');
       onSuccess();
     } catch (e) {
@@ -291,6 +369,13 @@ const ProjectProfitDistributionV2Modal: React.FC<ProjectProfitDistributionV2Moda
     } finally {
       setLoading(false);
     }
+  };
+
+  // 重新分配按钮逻辑（assigned状态不再显示）
+  const canReassign = useMemo(() => false, []);
+  const handleReassign = () => {
+    setReadOnly(false);
+    setDetails({}); // 清空明细，触发初始化
   };
 
   // 渲染分配明细表格
@@ -316,33 +401,53 @@ const ProjectProfitDistributionV2Modal: React.FC<ProjectProfitDistributionV2Moda
       <>
         <Table
           columns={[
-            { title: '对象', dataIndex: 'targetId', width: 160, render: (v, r, i) => (
-              <Select
-                value={r.targetId}
-                style={{ width: 140 }}
-                onChange={val => {
-                  const name = options.find(opt => opt.id === val)?.name || val;
-                  setDetails(prev => {
-                    const arr = [...(prev[cfg.id] || [])];
-                    arr[i].targetId = val;
-                    arr[i].targetName = name;
-                    if (cfg.type === 'project_individual' || cfg.type === 'project_team') {
-                      arr[i].departmentName = employeeDeptMap[val]?.name || '';
-                    }
-                    return { ...prev, [cfg.id]: arr };
-                  });
-                }}
-                showSearch
-                optionFilterProp="children"
-              >
-                {options.map(opt => <Option key={opt.id} value={opt.id}>{opt.name}</Option>)}
-              </Select>
-            ) },
+            {
+              title: '对象',
+              dataIndex: 'targetId',
+              width: 160,
+              render: (v, r, i) => {
+                if (readOnly) {
+                  if (r.type === 'group') return '集团';
+                  if (r.type === 'department') {
+                    const dep = dynamicDepartments.find(dep => String(dep.id) === String(r.targetId));
+                    return dep ? dep.name : r.targetId;
+                  }
+                  if (r.type === 'project_individual' || r.type === 'project_team') {
+                    const emp = dynamicEmployees.find(emp => String(emp.id) === String(r.targetId));
+                    return emp ? emp.name : r.targetId;
+                  }
+                  return r.targetName || v;
+                }
+                return (
+                  <Select
+                    value={r.targetId}
+                    style={{ width: 140 }}
+                    onChange={val => {
+                      const name = options.find(opt => opt.id === val)?.name || val;
+                      setDetails(prev => {
+                        const arr = [...(prev[cfg.id] || [])];
+                        arr[i].targetId = val;
+                        arr[i].targetName = name;
+                        if (cfg.type === 'project_individual' || cfg.type === 'project_team') {
+                          arr[i].departmentName = employeeDeptMap[val]?.name || '';
+                        }
+                        return { ...prev, [cfg.id]: arr };
+                      });
+                    }}
+                    showSearch
+                    optionFilterProp="children"
+                  >
+                    {options.map(opt => <Option key={opt.id} value={opt.id}>{opt.name}</Option>)}
+                  </Select>
+                );
+              }
+            },
             { title: '权重(%)', dataIndex: 'weight', width: 100, render: (v, r, i) => (
               <InputNumber min={0} max={100} value={v} onChange={val => updateDetail(cfg.id, i, 'weight', val || 0)} />
             ) },
             { title: '分配金额', dataIndex: 'amount', width: 120, render: (v) => `¥${v}` },
-            { title: '毛利润占比', dataIndex: 'profitRatio', width: 120, render: (v) => `${v}%` },
+            { title: '当前分配占比(%)', dataIndex: 'weight', width: 120, render: (v) => `${v}%` },
+            { title: '总毛利润占比(%)', dataIndex: 'profitRatio', width: 120, render: (v) => `${v}%` },
             ...(cfg.type === 'project_individual' || cfg.type === 'project_team' ? [{ title: '部门', dataIndex: 'departmentName', width: 120 }] : []),
             { title: '操作', dataIndex: 'action', width: 80, render: (_, __, i) => (
               <Popconfirm title="确定删除？" onConfirm={() => removeDetail(cfg.id, i)}><Button size="small" danger>删除</Button></Popconfirm>
@@ -368,16 +473,25 @@ const ProjectProfitDistributionV2Modal: React.FC<ProjectProfitDistributionV2Moda
     );
   };
 
+  // 弹窗底部按钮
+  const canSave = ['not_set', 'assigned', 'approval_failed'].includes(project?.profitDistributionStatus);
   return (
     <Modal
       title="项目提成V2分配"
       open={visible}
       onCancel={onCancel}
-      onOk={handleSave}
+      onOk={canSave ? handleSave : onCancel}
       confirmLoading={loading}
       width={1100}
       destroyOnClose
+      okText={canSave ? '保存' : '关闭'}
+      cancelButtonProps={canSave ? {} : { style: { display: 'none' } }}
     >
+      {canReassign && (
+        <Button type="primary" style={{ marginBottom: 16 }} onClick={handleReassign}>
+          重新分配
+        </Button>
+      )}
       {projectDetail && (
         <>
           {/* 项目信息 */}
@@ -402,7 +516,8 @@ const ProjectProfitDistributionV2Modal: React.FC<ProjectProfitDistributionV2Moda
             pagination={false}
             size="small"
           />
-          <Divider>具体分配方案</Divider>
+          {/* 具体分配方案后显示状态 */}
+          <Divider>具体分配方案 <span style={{marginLeft:16, color:'#888'}}>当前状态：{PROFIT_DISTRIBUTION_STATUS_TEXT[project?.profitDistributionStatus] || project?.profitDistributionStatus}</span></Divider>
           {accrualConfigs.map(cfg => (
             <Card key={cfg.id} size="small" style={{ marginBottom: 16 }} title={TYPE_LABELS[cfg.type] || cfg.type}>
               {renderDetailTable(cfg)}

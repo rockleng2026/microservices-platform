@@ -66,6 +66,9 @@ export interface Project {
   createdAt: string;
   updatedAt: string;
   delflag: number;
+  actualAmount?: number;
+  grossProfit?: number;
+  grossProfitRate?: number;
   
   // 项目提成分配相关字段
   profitDistributions?: ProjectProfitDistribution[];

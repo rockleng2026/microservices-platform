@@ -55,6 +55,7 @@ import type {
   TableAction,
 } from '@/types/project';
 import { request } from '@/utils/request';
+import ProjectProfitDistributionV2Modal from '../components/ProjectProfitDistributionV2Modal';
 
 const { Search } = Input;
 const { Option } = Select;
@@ -141,6 +142,10 @@ const ProjectListPage: React.FC = () => {
   const [accrualConfigVisible, setAccrualConfigVisible] = useState(false);
   const [accrualConfigProject, setAccrualConfigProject] = useState<Project | null>(null);
   const [modelVariableOptions, setModelVariableOptions] = useState<{label:string,value:string}[]>([]);
+
+  // 项目提成V2弹窗
+  const [profitDistributionV2Visible, setProfitDistributionV2Visible] = useState(false);
+  const [currentProjectForV2, setCurrentProjectForV2] = useState<Project | null>(null);
 
   // 搜索条件
   const [searchParams, setSearchParams] = useState<Partial<ProjectQueryParams>>({});
@@ -303,6 +308,12 @@ const ProjectListPage: React.FC = () => {
   const handleProfitDistribution = (record: Project) => {
     setCurrentProject(record);
     setProfitDistributionVisible(true);
+  };
+
+  // 项目提成V2
+  const handleProfitDistributionV2 = (record: Project) => {
+    setCurrentProjectForV2(record);
+    setProfitDistributionV2Visible(true);
   };
 
   // 销售额提成分配示例
@@ -501,8 +512,14 @@ const ProjectListPage: React.FC = () => {
           {
             key: 'profitDistribution',
             label: '项目提成',
-            icon: <ExportOutlined />,
+            icon: <CalculatorOutlined />,
             onClick: () => handleProfitDistribution(record),
+          },
+          {
+            key: 'profitDistributionV2',
+            label: '项目提成V2',
+            icon: <CalculatorOutlined />,
+            onClick: () => handleProfitDistributionV2(record),
           },
           {
             key: 'salesRevenueDistribution',
@@ -777,6 +794,17 @@ const ProjectListPage: React.FC = () => {
         onCancel={() => setAccrualConfigVisible(false)}
         onSuccess={() => { setAccrualConfigVisible(false); fetchProjects(); }}
         modelVariableOptions={modelVariableOptions}
+      />
+
+      {/* 项目提成V2弹窗 */}
+      <ProjectProfitDistributionV2Modal
+        visible={profitDistributionV2Visible}
+        project={currentProjectForV2}
+        onCancel={() => setProfitDistributionV2Visible(false)}
+        onSuccess={() => {
+          setProfitDistributionV2Visible(false);
+          // 可选：刷新列表
+        }}
       />
     </PageContainer>
   );

@@ -25,4 +25,13 @@ public class ProjectAccrualDetailController {
         detailService.saveOrUpdateBatch(details, projectId);
         return Result.succeed(null);
     }
+
+    @PostMapping("/v2")
+    public Result<Void> saveDetailV2(@PathVariable Long projectId, @RequestBody List<ProjectAccrualDetail> details) {
+        detailService.saveOrUpdateBatch(details, projectId);
+        // 更新主表状态为“已分配”或“已提交”
+        // 这里假设有 ProjectService 可用
+        // projectService.updateProfitDistributionStatus(projectId, "distributed");
+        return Result.succeed(null);
+    }
 } 

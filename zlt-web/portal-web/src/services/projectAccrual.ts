@@ -16,6 +16,10 @@ export async function saveAccrualDetail(projectId: number, details: any[]) {
   return request(`/api-project/api/v2/project/${projectId}/accrual-detail`, { method: 'POST', data: details });
 }
 
+export async function saveAccrualDetailV2(projectId: number, details: any[]) {
+  return request(`/api-project/api/v2/project/${projectId}/accrual-detail/v2`, { method: 'POST', data: details });
+}
+
 export async function autoCalcAccrualDetail(projectId: number, params: any) {
   return request(`/api-project/api/v2/project/${projectId}/accrual-calc`, { method: 'POST', data: params });
 } 

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.central.common.model.PageResult;
 import com.central.soo.model.entity.FinancialModelInstance;
 import com.central.soo.model.entity.ModelInstanceVariable;
+import com.central.soo.model.entity.ModelVariable;
 
 import java.util.List;
 import java.util.Map;
@@ -150,16 +151,6 @@ public interface FinancialModelInstanceService extends IService<FinancialModelIn
     Map<String, Object> validateInstance(Long instanceId);
 
     /**
-     * 执行实例计算
-     * 
-     * @param instanceId 实例ID
-     * @param calculationType 计算类型
-     * @param triggeredBy 触发人ID
-     * @return 计算结果
-     */
-    Map<String, Object> executeCalculation(Long instanceId, String calculationType, Long triggeredBy);
-
-    /**
      * 获取实例变量列表
      * 
      * @param instanceId 实例ID
@@ -207,4 +198,15 @@ public interface FinancialModelInstanceService extends IService<FinancialModelIn
      * @return 试算数据
      */
     Map<String, Object> getTrialCalculationData(Long instanceId);
+
+    /**
+     * 执行实例计算（支持变量赋值和返回类型控制）
+     * @param instanceId 实例ID
+     * @param calculationType 计算类型
+     * @param triggeredBy 触发人ID
+     * @param variableValues 变量赋值（INPUT/API类型）
+     * @param calcOnly 是否只返回CALC类型变量
+     * @return 计算结果
+     */
+    Map<String, Object> executeCalculationV2(Long instanceId, String calculationType, Long triggeredBy, List<Map<String, Object>> variableValues, Boolean calcOnly);
 } 

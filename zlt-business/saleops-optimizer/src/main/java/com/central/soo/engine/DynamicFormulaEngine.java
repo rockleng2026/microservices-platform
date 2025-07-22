@@ -90,15 +90,17 @@ public class DynamicFormulaEngine {
     }
 
     /**
-     * 公式预处理
+     * 公式预处理，保证只取等号右侧表达式，兼容历史和新数据
      */
     private String preprocessFormula(String formula) {
-        // 移除多余的空格
-        String processed = formula.replaceAll("\\s+", " ").trim();
-        
-        // 处理百分比符号
+        // 移除所有空格
+        String processed = formula.replaceAll("\\s+", "").trim();
+        // 只取等号右侧
+        if (processed.contains("=")) {
+            processed = processed.split("=", 2)[1].trim();
+        }
+        // 处理百分号（如35% => (35/100)）
         processed = processed.replaceAll("(\\d+(?:\\.\\d+)?)%", "($1/100)");
-        
         return processed;
     }
 
@@ -223,26 +225,33 @@ public class DynamicFormulaEngine {
      */
     private String replaceVariables(String expression, Map<String, Object> variables, Map<String, String> variableDataTypes) {
         String result = expression;
-        
         for (Map.Entry<String, Object> entry : variables.entrySet()) {
             String varName = entry.getKey();
             Object value = entry.getValue();
-            
-            if (value instanceof Number) {
+            String valueStr;
+            if (value == null) {
+                valueStr = "0";
+            } else if (value instanceof Number) {
                 // 处理百分比类型变量
                 if (variableDataTypes != null && "percentage".equals(variableDataTypes.get(varName))) {
-                    // 百分比类型需要除以100
                     double percentageValue = ((Number) value).doubleValue() / 100.0;
-                    value = percentageValue;
+                    valueStr = String.valueOf(percentageValue);
                     log.debug("备用方案中百分比变量 {} 转换: {} -> {}", varName, entry.getValue(), percentageValue);
+                } else {
+                    valueStr = value.toString();
+                }
+            } else {
+                // 尝试将字符串等转为BigDecimal，失败则用0
+                try {
+                    valueStr = new java.math.BigDecimal(value.toString()).toPlainString();
+                } catch (Exception e) {
+                    valueStr = "0";
+                }
             }
-                
-                // 使用正则表达式替换变量，确保只替换完整的变量名
-                String regex = "\\b" + Pattern.quote(varName) + "\\b";
-                result = result.replaceAll(regex, value.toString());
-            }
+            // 使用正则表达式替换变量，确保只替换完整的变量名
+            String regex = "\\b" + Pattern.quote(varName) + "\\b";
+            result = result.replaceAll(regex, valueStr);
         }
-        
         return result;
     }
 

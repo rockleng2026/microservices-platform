@@ -1,8 +1,6 @@
 package com.central.soo.service.impl;
 
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.central.common.context.TenantContextHolder;
@@ -27,9 +25,10 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 import com.central.soo.model.entity.ModelVariable;
 import com.central.soo.service.IModelVariableService;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 财务模型实例服务实现类
@@ -53,6 +52,10 @@ public class FinancialModelInstanceServiceImpl extends ServiceImpl<FinancialMode
 
     @Autowired
     private IModelVariableService modelVariableService;
+
+    // 1. 注入 DynamicFormulaEngine
+    @Autowired
+    private com.central.soo.engine.DynamicFormulaEngine dynamicFormulaEngine;
 
     @Override
     public Page<FinancialModelInstance> pageInstances(Page<FinancialModelInstance> page, Long modelId, 
@@ -315,103 +318,72 @@ public class FinancialModelInstanceServiceImpl extends ServiceImpl<FinancialMode
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Map<String, Object> executeCalculation(Long instanceId, String calculationType, Long triggeredBy) {
+    public Map<String, Object> executeCalculationV2(Long instanceId, String calculationType, Long triggeredBy, List<Map<String, Object>> variableValues, Boolean calcOnly) {
         Map<String, Object> result = new HashMap<>();
-        
         try {
             // 获取实例
             FinancialModelInstance instance = getById(instanceId);
             if (instance == null) {
                 throw new RuntimeException("实例不存在");
             }
-
-            // 创建计算历史记录
-            ModelInstanceCalculationHistory history = new ModelInstanceCalculationHistory();
-            history.setInstanceId(instanceId);
-            history.setCalculationVersion(instance.getInstanceVersion());
-            history.setCalculationType(calculationType);
-            history.setCalculationStatus("STARTED");
-            history.setTriggeredBy(triggeredBy);
-            history.setStartedAt(LocalDateTime.now());
-            history.setCreatedAt(LocalDateTime.now());
-            
-            calculationHistoryMapper.insert(history);
-
-            // 更新实例计算状态
-            baseMapper.updateCalculationStatus(instanceId, "CALCULATING");
-
-            // 获取实例变量
-            List<ModelInstanceVariable> variables = modelInstanceVariableMapper.selectByInstanceId(instanceId);
-            
-            // 构建输入数据
-            Map<String, Object> inputData = new HashMap<>();
-            for (ModelInstanceVariable variable : variables) {
-                if (StringUtils.hasText(variable.getVariableValue())) {
-                    inputData.put(variable.getVariableCode(), parseVariableValue(variable));
+            // 获取所有模型变量定义
+            List<ModelVariable> modelVariables = modelVariableService.getVariablesByModelId(instance.getModelId());
+            Map<String, ModelVariable> defMap = new HashMap<>();
+            for (ModelVariable mv : modelVariables) {
+                defMap.put(mv.getVariableCode(), mv);
+            }
+            // 获取当前实例变量
+            List<ModelInstanceVariable> instanceVariables = modelInstanceVariableMapper.selectByInstanceId(instanceId);
+            Map<String, String> instanceValueMap = new HashMap<>();
+            for (ModelInstanceVariable v : instanceVariables) {
+                instanceValueMap.put(v.getVariableCode(), v.getVariableValue());
+            }
+            // 变量赋值优先级：variableValues > 实例表 > defaultValue > 0
+            Map<String, Object> valueMap = new HashMap<>();
+            // 先用实例表和defaultValue初始化
+            for (ModelVariable mv : modelVariables) {
+                String code = mv.getVariableCode();
+                String val = instanceValueMap.get(code);
+                if (val != null && !val.isEmpty()) {
+                    valueMap.put(code, val);
+                } else if (mv.getDefaultValue() != null) {
+                    valueMap.put(code, mv.getDefaultValue().toString());
+                } else {
+                    valueMap.put(code, "0");
                 }
             }
-            
-            history.setInputData(objectMapper.writeValueAsString(inputData));
-            calculationHistoryMapper.updateById(history);
-
-            // 执行计算逻辑（这里需要根据具体的计算引擎实现）
-            Map<String, Object> calculationResult = performCalculation(instance, variables);
-            
-            // 更新计算结果
-            String outputData = objectMapper.writeValueAsString(calculationResult);
-            history.setOutputData(outputData);
-            history.setCalculationStatus("COMPLETED");
-            history.setCompletedAt(LocalDateTime.now());
-            history.setExecutionTime((int) (System.currentTimeMillis() - history.getStartedAt().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()));
-            
-            calculationHistoryMapper.updateCalculationResult(
-                history.getId(), 
-                history.getCalculationStatus(), 
-                history.getOutputData(), 
-                null, 
-                history.getExecutionTime()
-            );
-
-            // 更新实例计算结果
-            instance.setCalculationResult(outputData);
-            instance.setLastCalculatedAt(LocalDateTime.now());
-            instance.setCalculationStatus("COMPLETED");
-            instance.setUpdatedAt(LocalDateTime.now());
-            updateById(instance);
-
-            // 更新变量计算值
-            updateVariableCalculatedValues(instanceId, calculationResult);
-
-            result.put("success", true);
-            result.put("message", "计算完成");
-            result.put("executionTime", history.getExecutionTime());
-            result.put("data", calculationResult);
-
-            log.info("实例计算完成: {}, 执行时间: {}ms", instance.getInstanceCode(), history.getExecutionTime());
-
-        } catch (Exception e) {
-            log.error("实例计算失败: {}", instanceId, e);
-            
-            // 更新计算状态为失败
-            baseMapper.updateCalculationStatus(instanceId, "FAILED");
-            
-            // 更新历史记录
-            ModelInstanceCalculationHistory history = calculationHistoryMapper.selectLatestHistory(instanceId);
-            if (history != null) {
-                calculationHistoryMapper.updateCalculationResult(
-                    history.getId(), 
-                    "FAILED", 
-                    null, 
-                    e.getMessage(), 
-                    null
-                );
+            // 再用variableValues覆盖
+            if (variableValues != null) {
+                for (Map<String, Object> item : variableValues) {
+                    String variableCode = (String) item.get("variableCode");
+                    Object value = item.get("variableValue");
+                    if (variableCode != null) {
+                        valueMap.put(variableCode, value != null ? value.toString() : "0");
+                    }
+                }
             }
-
+            // 计算所有CALC类型变量
+            valueMap = performCalculation(instance, instanceVariables, modelVariables, valueMap);
+            // 构建返回
+            Map<String, Object> data = new HashMap<>();
+            for (ModelVariable mv : modelVariables) {
+                String code = mv.getVariableCode();
+                if (Boolean.TRUE.equals(calcOnly)) {
+                    if (ModelVariable.TYPE_CALC.equals(mv.getVariableType())) {
+                        data.put(code, valueMap.get(code) != null ? valueMap.get(code).toString() : null);
+                    }
+                } else {
+                    data.put(code, valueMap.get(code) != null ? valueMap.get(code).toString() : null);
+                }
+            }
+            result.put("success", true);
+            result.put("data", data);
+            return result;
+        } catch (Exception e) {
             result.put("success", false);
-            result.put("message", "计算失败: " + e.getMessage());
+            result.put("message", e.getMessage());
+            return result;
         }
-
-        return result;
     }
 
     @Override
@@ -586,27 +558,6 @@ public class FinancialModelInstanceServiceImpl extends ServiceImpl<FinancialMode
     }
 
     /**
-     * 克隆实例变量
-     */
-    private void cloneInstanceVariables(Long sourceInstanceId, Long newInstanceId) {
-        List<ModelInstanceVariable> sourceVariables = modelInstanceVariableMapper.selectByInstanceId(sourceInstanceId);
-        
-        for (ModelInstanceVariable sourceVariable : sourceVariables) {
-            ModelInstanceVariable newVariable = new ModelInstanceVariable();
-            newVariable.setInstanceId(newInstanceId);
-            newVariable.setVariableId(sourceVariable.getVariableId());
-            newVariable.setVariableValue(sourceVariable.getVariableValue());
-            newVariable.setCalculatedValue(sourceVariable.getCalculatedValue());
-            newVariable.setIsCalculated(0); // 重置计算状态
-            newVariable.setCalculationError(null);
-            newVariable.setCreatedAt(LocalDateTime.now());
-            newVariable.setUpdatedAt(LocalDateTime.now());
-            
-            modelInstanceVariableMapper.insert(newVariable);
-        }
-    }
-
-    /**
      * 验证变量值
      */
     private void validateVariableValue(ModelInstanceVariable variable) {
@@ -639,64 +590,35 @@ public class FinancialModelInstanceServiceImpl extends ServiceImpl<FinancialMode
         }
     }
 
-    /**
-     * 解析变量值
-     */
-    private Object parseVariableValue(ModelInstanceVariable variable) {
-        if (!StringUtils.hasText(variable.getVariableValue())) {
-            return null;
-        }
-
-        switch (variable.getDataType()) {
-            case "INTEGER":
-                return Integer.parseInt(variable.getVariableValue());
-            case "DECIMAL":
-                return Double.parseDouble(variable.getVariableValue());
-            case "BOOLEAN":
-                String value = variable.getVariableValue().toLowerCase();
-                return "true".equals(value) || "1".equals(value);
-            default:
-                return variable.getVariableValue();
-        }
-    }
-
-    /**
-     * 执行计算逻辑
-     */
-    private Map<String, Object> performCalculation(FinancialModelInstance instance, List<ModelInstanceVariable> variables) {
-        // 这里需要实现具体的计算逻辑
-        // 可以根据模型的公式定义来执行计算
-        Map<String, Object> result = new HashMap<>();
-        
-        // 示例：简单的收入-成本=利润计算
-        double revenue = 0, cost = 0;
-        for (ModelInstanceVariable variable : variables) {
-            if ("revenue".equals(variable.getVariableCode()) && StringUtils.hasText(variable.getVariableValue())) {
-                revenue = Double.parseDouble(variable.getVariableValue());
-            }
-            if ("cost".equals(variable.getVariableCode()) && StringUtils.hasText(variable.getVariableValue())) {
-                cost = Double.parseDouble(variable.getVariableValue());
+    // 2. 重写 performCalculation，集成 DynamicFormulaEngine
+    private Map<String, Object> performCalculation(
+        FinancialModelInstance instance,
+        List<ModelInstanceVariable> variables,
+        List<ModelVariable> modelVariables,
+        Map<String, Object> valueMap
+    ) {
+        // 依赖排序
+        List<ModelVariable> sortedVars = topoSortByDependency(modelVariables);
+        for (ModelVariable def : sortedVars) {
+            if (ModelVariable.TYPE_CALC.equals(def.getVariableType()) && def.getCalculationFormula() != null && !def.getCalculationFormula().trim().isEmpty()) {
+                try {
+                    String formula = def.getCalculationFormula().trim();
+                    com.central.soo.engine.DynamicFormulaEngine.CalculationResult result =
+                        dynamicFormulaEngine.executeFormula(formula, valueMap);
+                    if (result.isSuccess() && result.getValue() != null) {
+                        valueMap.put(def.getVariableCode(), result.getValue().stripTrailingZeros().toPlainString());
+                        log.info("[财务模型试算] 变量: {} 公式: {} 计算结果: {}", def.getVariableCode(), formula, result.getValue());
+                    } else {
+                        valueMap.put(def.getVariableCode(), "0");
+                        log.warn("[财务模型试算] 变量: {} 公式: {} 计算失败: {}", def.getVariableCode(), formula, result.getErrors());
+                    }
+                } catch (Exception ex) {
+                    valueMap.put(def.getVariableCode(), "0");
+                    log.warn("[财务模型试算] 变量: {} 公式异常: {}", def.getVariableCode(), ex.getMessage());
+                }
             }
         }
-        
-        double profit = revenue - cost;
-        double margin = revenue > 0 ? profit / revenue : 0;
-        
-        result.put("profit", profit);
-        result.put("margin", margin);
-        
-        return result;
-    }
-
-    /**
-     * 更新变量计算值
-     */
-    private void updateVariableCalculatedValues(Long instanceId, Map<String, Object> calculationResult) {
-        for (Map.Entry<String, Object> entry : calculationResult.entrySet()) {
-            // 根据变量编码查找变量并更新计算值
-            // 这里需要根据具体的变量编码映射来实现
-            log.debug("更新变量计算值: {} = {}", entry.getKey(), entry.getValue());
-        }
+        return valueMap;
     }
 
     /**
@@ -722,12 +644,33 @@ public class FinancialModelInstanceServiceImpl extends ServiceImpl<FinancialMode
         }
     }
 
-    /**
-     * 根据模型ID获取模型变量
-     */
-    private List<ModelVariable> getModelVariablesByModelId(Long modelId) {
-        // 这里需要调用模型变量服务，暂时返回空列表
-        // 实际实现时需要注入 ModelVariableService
-        return new ArrayList<>();
+    // 拓扑排序，确保依赖先算
+    private List<ModelVariable> topoSortByDependency(List<ModelVariable> variables) {
+        Map<String, ModelVariable> codeMap = new HashMap<>();
+        for (ModelVariable v : variables) codeMap.put(v.getVariableCode(), v);
+        List<ModelVariable> result = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+        for (ModelVariable v : variables) {
+            dfsTopo(v, codeMap, visited, result);
+        }
+        return result;
     }
-} 
+    private void dfsTopo(ModelVariable v, Map<String, ModelVariable> codeMap, Set<String> visited, List<ModelVariable> result) {
+        if (visited.contains(v.getVariableCode())) return;
+        visited.add(v.getVariableCode());
+        String formula = v.getCalculationFormula();
+        if (formula != null) {
+            if (formula.contains("=")) {
+                formula = formula.split("=", 2)[1];
+            }
+            Matcher m = Pattern.compile("\\b([A-Za-z_][A-Za-z0-9_]*)\\b").matcher(formula);
+            while (m.find()) {
+                String dep = m.group(1);
+                if (codeMap.containsKey(dep)) {
+                    dfsTopo(codeMap.get(dep), codeMap, visited, result);
+                }
+            }
+        }
+        if (!result.contains(v)) result.add(v);
+    }
+}

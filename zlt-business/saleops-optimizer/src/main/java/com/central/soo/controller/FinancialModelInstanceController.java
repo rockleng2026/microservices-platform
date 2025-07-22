@@ -1,9 +1,7 @@
 package com.central.soo.controller;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.central.common.annotation.LoginUser;
 import com.central.common.context.TenantContextHolder;
-import com.central.common.model.LoginAppUser;
 import com.central.common.model.Result;
 import com.central.common.model.PageResult;
 import com.central.common.model.SysUser;
@@ -11,7 +9,6 @@ import com.central.soo.model.entity.FinancialModelInstance;
 import com.central.soo.model.entity.ModelInstanceVariable;
 import com.central.soo.service.FinancialModelInstanceService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,15 +80,30 @@ public class FinancialModelInstanceController {
         return Result.succeed(result);
     }
 
+    /**
+     * variableValues 只要传了 INPUT、API、CALC_FACTORS 类型变量，就会覆盖实例表中的值；<br/>
+     * 没有传的 CALC_FACTORS（或 INPUT、API）类型变量，则自动用模型实例表中已有的值；<br/>
+     * 计算时用的是“传参+实例表”合并后的最终变量值，保证了灵活性和兼容性 <br/>
+     *
+     * @param id 模型实例ID
+     * @param request 请求体
+     * @param user 当前用户
+     * @return Result
+     */
     @PostMapping("/{id}/calculate")
     @Operation(summary = "执行实例计算")
     public Result<Map<String, Object>> executeCalculation(
-            @PathVariable Long id, 
-            @RequestBody Map<String, String> request,
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> request,
             @LoginUser SysUser user) {
-        String calculationType = request.get("calculationType");
+        // 变量赋值（INPUT/API类型）
+        List<Map<String, Object>> variableValues = (List<Map<String, Object>>) request.get("variableValues");
+        // 返回类型控制：calcOnly=true 只返回CALC类型，否则返回全部
+        Boolean calcOnly = request.get("calcOnly") != null ? (Boolean) request.get("calcOnly") : false;
+        String calculationType = request.get("calculationType") != null ? (String) request.get("calculationType") : "MANUAL";
         Long triggeredBy = user.getId();
-        Map<String, Object> result = financialModelInstanceService.executeCalculation(id, calculationType, triggeredBy);
+        // 调用service
+        Map<String, Object> result = financialModelInstanceService.executeCalculationV2(id, calculationType, triggeredBy, variableValues, calcOnly);
         return Result.succeed(result);
     }
 

@@ -840,6 +840,17 @@ export const getFinancialModelInstanceById = (id: number) => {
   });
 };
 
+// 计算财务分配模型变量
+export const calculateFinancialModelVariables = (instanceId: number, variableValues: { variableCode: string; variableValue: string | number }[], calcOnly = true) => {
+  return request(`/api-soo/api/soo/v2/model-instances/${instanceId}/calculate`, {
+    method: 'POST',
+    data: {
+      variableValues,
+      calcOnly,
+    },
+  });
+};
+
 // 统一导出 sooApi 对象（保持向后兼容）
 export const sooApi = {
   // 薪酬计算

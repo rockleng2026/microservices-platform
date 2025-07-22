@@ -10,6 +10,7 @@ import com.central.project.model.Project;
 import com.central.project.model.ProjectClosure;
 import com.central.project.model.ProjectDetail;
 import com.central.project.model.ProjectProfitDistribution;
+import com.central.project.model.ProjectAccrualConfig;
 import com.central.project.model.dto.ProjectQueryDTO;
 import com.central.project.model.dto.ProjectSaveDTO;
 import com.central.project.model.dto.ProjectProfitDistributionSaveDTO;
@@ -17,6 +18,7 @@ import com.central.project.service.IProjectService;
 import com.central.project.service.IProjectDetailService;
 import com.central.project.service.IProjectClosureService;
 import com.central.project.service.IProjectProfitDistributionService;
+import com.central.project.service.IProjectAccrualConfigService;
 import com.central.project.utils.IdUtils;
 import com.central.common.context.TenantContextHolder;
 import org.springframework.beans.BeanUtils;
@@ -49,6 +51,9 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
     
     @Autowired
     private IProjectProfitDistributionService projectProfitDistributionService;
+
+    @Autowired
+    private IProjectAccrualConfigService projectAccrualConfigService;
     
     @Override
     public IPage<Project> getProjectPage(ProjectQueryDTO queryDTO) {
@@ -486,7 +491,6 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
         if (closureData == null || closureData.getProjectId() == null) {
             return false;
         }
-        
         try {
             // 1. 保存结项数据到 project_closure 表
             boolean closureResult = projectClosureService.saveClosure(closureData);
@@ -494,23 +498,24 @@ public class ProjectServiceImpl extends ServiceImpl<ProjectMapper, Project> impl
                 log.error("保存项目结项数据失败，项目ID: {}", closureData.getProjectId());
                 return false;
             }
-            
+
+            List<ProjectAccrualConfig> configs = closureData.getAccrualConfigs();
+            if (configs != null && !configs.isEmpty()) {
+                projectAccrualConfigService.saveOrUpdateBatch(configs, closureData.getProjectId());
+            }
             // 2. 更新项目状态为已结项
             Project project = new Project();
             project.setId(closureData.getProjectId());
             project.setStatus("closed");
             project.setUpdatedAt(new Date());
             project.setUpdatedBy(1L);
-            
             boolean updateResult = updateById(project);
             if (!updateResult) {
                 log.error("更新项目状态失败，项目ID: {}", closureData.getProjectId());
                 return false;
             }
-            
             log.info("项目结项完成，项目ID: {}, 毛利润: {}, 毛利率: {}%", 
                 closureData.getProjectId(), closureData.getGrossProfit(), closureData.getGrossProfitRate());
-            
             return true;
         } catch (Exception e) {
             log.error("项目结项处理失败，项目ID: {}", closureData.getProjectId(), e);

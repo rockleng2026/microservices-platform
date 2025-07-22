@@ -11,11 +11,14 @@ import {
   Divider,
   Card,
   Statistic,
+  Table,
 } from 'antd';
 import { CalendarOutlined, DollarOutlined } from '@ant-design/icons';
 import moment from 'moment';
 import { projectApi } from '@/services/project';
 import type { Project } from '@/types/project';
+import { getAccrualConfig } from '@/services/projectAccrual';
+import { calculateFinancialModelVariables } from '@/services/soo';
 
 const { TextArea } = Input;
 
@@ -36,6 +39,8 @@ const ProjectClosureModal: React.FC<ProjectClosureModalProps> = ({
   const [loading, setLoading] = useState(false);
   const [grossProfit, setGrossProfit] = useState<number>(0);
   const [grossProfitRate, setGrossProfitRate] = useState<number>(0);
+  const [accrualConfigs, setAccrualConfigs] = useState<any[]>([]);
+  const [variableValues, setVariableValues] = useState<Record<string, string>>({});
 
   // 重置表单
   const resetForm = () => {
@@ -76,6 +81,41 @@ const ProjectClosureModal: React.FC<ProjectClosureModalProps> = ({
     setTimeout(calculateProfit, 100);
   };
 
+  // 毛利润输入框失去焦点时才计算模型变量
+  const handleGrossProfitBlur = () => {
+    const instanceId = (project as any)?.financial_model_instance_id;
+    if (
+      instanceId &&
+      grossProfit > 0 &&
+      accrualConfigs.length > 0
+    ) {
+      calculateFinancialModelVariables(
+        instanceId,
+        [{ variableCode: 'gross_profit', variableValue: grossProfit }]
+      ).then(res => {
+        const data = res?.datas?.data || {};
+        setVariableValues(data);
+      });
+    } else {
+      setVariableValues({});
+    }
+  };
+
+  // 计算分配额和毛利润占比
+  const getConfigWithCalc = () => {
+    const gp = Number(grossProfit) || 0;
+    return accrualConfigs.map((item: any) => {
+      const val = variableValues[String(item.modelVariableCode)] !== undefined ? Number(variableValues[String(item.modelVariableCode)]) : undefined;
+      const maxAmount = val || 0;
+      const maxRatio = gp > 0 && val !== undefined ? Number(((maxAmount / gp) * 100).toFixed(2)) : 0;
+      return {
+        ...item,
+        _maxAmount: maxAmount,
+        _maxRatio: maxRatio,
+      };
+    });
+  };
+
   // 提交结项
   const handleSubmit = async () => {
     try {
@@ -87,11 +127,19 @@ const ProjectClosureModal: React.FC<ProjectClosureModalProps> = ({
         return;
       }
 
+      // 保存时将分配额和毛利润占比赋值到配置
+      const configsToSave = getConfigWithCalc().map(item => ({
+        ...item,
+        maxAmount: item._maxAmount,
+        maxRatio: item._maxRatio,
+      }));
+
       const closureData = {
         ...values,
         closureTime: values.closureTime?.format('YYYY-MM-DD HH:mm:ss'),
         grossProfit,
         grossProfitRate: Number(grossProfitRate.toFixed(2)),
+        accrualConfigs: configsToSave,
       };
 
       const response = await projectApi.completeProjectClosure(project.id, closureData);
@@ -130,6 +178,15 @@ const ProjectClosureModal: React.FC<ProjectClosureModalProps> = ({
       });
     }
   }, [visible, project]);
+
+  // 获取计提配置
+  useEffect(() => {
+    if (project?.id) {
+      getAccrualConfig(project.id).then(res => setAccrualConfigs(res?.datas || []));
+    } else {
+      setAccrualConfigs([]);
+    }
+  }, [project]);
 
   return (
     <Modal
@@ -239,6 +296,7 @@ const ProjectClosureModal: React.FC<ProjectClosureModalProps> = ({
                     formatter={(value) => `¥ ${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                     parser={(value) => Number(value!.replace(/¥\s?|(,*)/g, '')) || 0}
                     onChange={handleGrossProfitChange}
+                    onBlur={handleGrossProfitBlur}
                   />
                 </Form.Item>
               </Col>
@@ -301,6 +359,34 @@ const ProjectClosureModal: React.FC<ProjectClosureModalProps> = ({
                 </Form.Item>
               </Col>
             </Row>
+            {/* 新增：项目计提配置及分配额展示 */}
+            {accrualConfigs.length > 0 && (
+              <>
+                <Divider>项目计提配置及分配额</Divider>
+                <Table
+                  columns={[
+                    { title: '分配类型', dataIndex: 'type', width: 120, render: (v: string) => {
+                      switch (v) {
+                        case 'group': return '集团分配';
+                        case 'department': return '部门分配';
+                        case 'project_individual': return '项目个人分配';
+                        case 'project_team': return '项目团队分配';
+                        default: return v;
+                      }
+                    } },
+                    { title: '名称', dataIndex: 'name', width: 180 },
+                    { title: '模型变量', dataIndex: 'modelVariableCode', width: 180 },
+                    { title: '分配额', dataIndex: '_maxAmount', width: 180, render: (val: number) => val !== undefined ? `¥${val.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : '-' },
+                    { title: '毛利润占比', dataIndex: '_maxRatio', width: 140, render: (val: number) => val !== undefined ? `${val.toFixed(2)}%` : '-' },
+                  ]}
+                  dataSource={getConfigWithCalc()}
+                  rowKey={(r: any) => String(r.type) + String(r.modelVariableCode || '')}
+                  pagination={false}
+                  size="small"
+                  style={{ marginTop: 16, marginBottom: 8 }}
+                />
+              </>
+            )}
           </Form>
         </>
       )}

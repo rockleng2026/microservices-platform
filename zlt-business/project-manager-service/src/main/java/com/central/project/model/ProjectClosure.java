@@ -12,6 +12,8 @@ import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
+import com.central.project.model.ProjectAccrualConfig;
 
 /**
  * 项目结项实体类
@@ -121,4 +123,10 @@ public class ProjectClosure {
      */
     @TableField(exist = false)
     private String creatorName;
+    
+    /**
+     * 项目计提配置（结项时一并保存）
+     */
+    @TableField(exist = false)
+    private List<ProjectAccrualConfig> accrualConfigs;
 } 

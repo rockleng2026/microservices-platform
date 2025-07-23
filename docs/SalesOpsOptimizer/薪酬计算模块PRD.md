@@ -24,6 +24,8 @@
 
 #### 2.1.1 计算引擎架构
 ```
+
+基础工资+岗位工资+绩效工资+个人提成+项目提成+部门分红
 工资计算引擎
 ├── 核心计算器 (SalaryCalculationEngine)
 │   ├── 基础工资计算器 (BaseSalaryCalculator)

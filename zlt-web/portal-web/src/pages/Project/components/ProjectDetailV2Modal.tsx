@@ -1,7 +1,12 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Modal, Descriptions, Table, Card, Divider, Spin, Tag, Statistic, Row, Col } from 'antd';
+import { Modal, Descriptions, Table, Card, Divider, Spin, Tag, Statistic, Row, Col, Button } from 'antd';
 import { request } from '@/utils/request';
 import { UserOutlined, DollarOutlined } from '@ant-design/icons';
+import * as XLSX from 'xlsx';
+import { saveAs } from 'file-saver';
+// @ts-ignore
+// eslint-disable-next-line
+declare module 'file-saver';
 
 interface ProjectDetailV2ModalProps {
   visible: boolean;
@@ -82,7 +87,7 @@ const ProjectDetailV2Modal: React.FC<ProjectDetailV2ModalProps> = ({ visible, pr
   // configId->中文名映射
   const configId2Label = useMemo(() => {
     const map: Record<string, string> = {};
-    accrualConfigs.forEach((cfg: any) => { map[cfg.id] = TYPE_LABELS[cfg.type] || cfg.type; });
+    (accrualConfigs as any[]).forEach((cfg: any) => { map[cfg.id] = TYPE_LABELS[cfg.type] || cfg.type; });
     return map;
   }, [accrualConfigs]);
   // 明细映射
@@ -97,9 +102,98 @@ const ProjectDetailV2Modal: React.FC<ProjectDetailV2ModalProps> = ({ visible, pr
     };
   }), [data.accrualDetails, employeeMap, departmentMap, configId2Label]);
 
+  // 优化后的导出Excel
+  const handleExportExcel = () => {
+    const ws_data: any[][] = [];
+    // 分块工具函数
+    const addBlock = (title: string, header: string[], rows: any[][]) => {
+      if (ws_data.length > 0) ws_data.push([], []); // 空行分隔
+      ws_data.push([title]);
+      ws_data.push(header);
+      rows.forEach(r => ws_data.push(r));
+    };
+    // 基本信息
+    ws_data.push(['【基本信息】']);
+    [
+      ['项目名称', project.name, '项目类别', project.category],
+      ['项目负责人', employeeMap[project.leaderId]?.name || project.leaderName || project.leaderId, '客户名称', project.customerName],
+      ['客户联系人', project.customerContact, '立项时间', project.startTime],
+      ['项目状态', project.status, '审批状态', project.finalStatus],
+      ['计提状态', project.profitDistributionStatus, '创建时间', project.createdAt],
+      ['更新时间', project.updatedAt, '', ''],
+    ].forEach(row => ws_data.push(row));
+    ws_data.push([], []);
+    // 参与人
+    addBlock('【项目参与人】', ['姓名', '角色', '部门', '电话', '邮箱'],
+      participants.map((p: any) => [p.participantName, p.role, p.departmentName, p.participantPhone, p.participantEmail])
+    );
+    // 结项信息
+    addBlock('【项目结项信息】', ['合同金额', '实际金额', '毛利润', '毛利率', '结项时间', '审批状态', '备注'],
+      [[closure.contractAmount || 0, closure.actualAmount || 0, closure.grossProfit || 0, closure.grossProfitRate || 0, closure.closureTime, closure.finalStatus, closure.remarks]]
+    );
+    // 分配规则
+    addBlock('【项目提成分配规则】', ['类型', '名称', '分配上限', '毛利润占比'],
+      accrualConfigs.map((cfg: any) => [TYPE_LABELS[cfg.type] || cfg.type, cfg.name, cfg.maxAmount, cfg.maxRatio])
+    );
+    // 分配明细
+    addBlock('【项目提成分配明细】', ['类型', '对象', '分配金额', '当前分配占比', '总毛利润占比'],
+      accrualDetails.map((item: any) => [item.typeLabel, item.targetName, item.amount, item.ratio, item.totalRatio])
+    );
+    // 生成sheet
+    const ws = XLSX.utils.aoa_to_sheet(ws_data);
+    // 合并分块标题单元格
+    ws['!merges'] = ws['!merges'] || [];
+    ws_data.forEach((r, idx) => {
+      if (r.length === 1 && r[0]?.startsWith('【')) {
+        ws['!merges'].push({ s: { r: idx, c: 0 }, e: { r: idx, c: 6 } });
+      }
+    });
+    // 设置样式
+    Object.keys(ws).forEach(key => {
+      if (!key.startsWith('!')) {
+        const cell = ws[key];
+        const { r, c } = XLSX.utils.decode_cell(key);
+        // 分块标题
+        if (ws_data[r]?.length === 1 && ws_data[r][0]?.startsWith('【')) {
+          cell.s = {
+            font: { bold: true, sz: 14, color: { rgb: 'FFFFFF' } },
+            fill: { fgColor: { rgb: '4472C4' } },
+            alignment: { horizontal: 'center', vertical: 'center' }
+          };
+        }
+        // 表头
+        else if (ws_data[r - 1]?.length === 1 && ws_data[r - 1][0]?.startsWith('【')) {
+          cell.s = {
+            font: { bold: true, color: { rgb: '1F4E78' } },
+            fill: { fgColor: { rgb: 'D9E1F2' } },
+            border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } },
+            alignment: { horizontal: 'center', vertical: 'center' }
+          };
+        }
+        // 内容区
+        else if (ws_data[r]?.length > 1) {
+          cell.s = {
+            font: { color: { rgb: '333333' } },
+            border: { top: { style: 'thin' }, bottom: { style: 'thin' }, left: { style: 'thin' }, right: { style: 'thin' } },
+            alignment: { vertical: 'center' }
+          };
+        }
+      }
+    });
+    // 列宽
+    ws['!cols'] = [
+      { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }, { wch: 16 }
+    ];
+    // 导出
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '项目明细');
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array', cellStyles: true });
+    saveAs(new Blob([wbout], { type: 'application/octet-stream' }), `${project.name || '项目'}_明细.xlsx`);
+  };
+
   return (
     <Modal
-      title="项目V2详情"
+      title={<span>项目V2详情 <Button onClick={handleExportExcel} type="primary" size="small" style={{ float: 'right' }}>导出Excel</Button></span>}
       open={visible}
       onCancel={onCancel}
       footer={null}

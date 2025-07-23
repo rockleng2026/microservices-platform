@@ -34,6 +34,8 @@
     "antd": "^4.24.8",
     "dayjs": "^1.11.7",
     "echarts": "^5.6.0",
+    "exceljs": "^4.4.0",
+    "file-saver": "^2.0.5",
     "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -41,6 +43,7 @@
     "umi": "^4.0.74"
   },
   "devDependencies": {
+    "@types/file-saver": "^2.0.7",
     "@types/lodash": "^4.14.194",
     "@types/node": "^18.15.11",
     "@types/react": "^18.0.35",

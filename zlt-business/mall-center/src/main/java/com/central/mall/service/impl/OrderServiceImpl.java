@@ -10,6 +10,7 @@ import com.central.mall.service.IOrderService;
 import com.central.mall.service.IStockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +24,7 @@ import java.util.*;
 public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> implements IOrderService {
 
     private final IStockService stockService;
+    private final StringRedisTemplate redisTemplate;
     private final MallOrderItemMapper orderItemMapper;
     private final MallGoodsMapper goodsMapper;
     private final MallGoodsSkuMapper skuMapper;
@@ -355,5 +357,98 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
 
     private String generateOrderNo(Long orderId) {
         return "ORD" + String.format("%013d", orderId) + String.format("%03d", new Random().nextInt(1000));
+    }
+
+    private static final String ORDER_CLOSE_LOCK_PREFIX = "order:close:";
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean adminCloseOrder(Long orderId, String reason) {
+        String lockKey = ORDER_CLOSE_LOCK_PREFIX + orderId;
+        Boolean lockAcquired = redisTemplate.opsForValue().setIfAbsent(lockKey, "1", java.time.Duration.ofMinutes(5));
+        if (lockAcquired == null || !lockAcquired) {
+            throw new RuntimeException("Order is being processed, please try again later");
+        }
+        try {
+            MallOrder order = baseMapper.selectById(orderId);
+            if (order == null) {
+                throw new RuntimeException("Order not found");
+            }
+            // Only status=3 (shipped) can be closed
+            if (!Integer.valueOf(3).equals(order.getStatus())) {
+                throw new RuntimeException("Only shipped orders (status=3) can be closed");
+            }
+            order.setStatus(MallOrder.STATUS_CLOSED);
+            order.setUpdateTime(LocalDateTime.now());
+            baseMapper.updateById(order);
+            log.info("Admin closed order {} with reason: {}", orderId, reason);
+            return true;
+        } finally {
+            redisTemplate.delete(lockKey);
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean adjustOrderAmount(Long orderId, java.math.BigDecimal adjustAmount, String reason) {
+        if (adjustAmount == null || adjustAmount.compareTo(java.math.BigDecimal.ZERO) > 0) {
+            throw new RuntimeException("Adjust amount must be negative");
+        }
+        String lockKey = ORDER_CLOSE_LOCK_PREFIX + orderId;
+        Boolean lockAcquired = redisTemplate.opsForValue().setIfAbsent(lockKey, "1", java.time.Duration.ofMinutes(5));
+        if (lockAcquired == null || !lockAcquired) {
+            throw new RuntimeException("Order is being processed, please try again later");
+        }
+        try {
+            MallOrder order = baseMapper.selectById(orderId);
+            if (order == null) {
+                throw new RuntimeException("Order not found");
+            }
+            // Only status in (1,2) can be adjusted
+            if (!Integer.valueOf(1).equals(order.getStatus()) && !Integer.valueOf(2).equals(order.getStatus())) {
+                throw new RuntimeException("Only pending pay (1) or paid (2) orders can be adjusted");
+            }
+            java.math.BigDecimal newPayAmount = order.getPayAmount().add(adjustAmount);
+            if (newPayAmount.compareTo(java.math.BigDecimal.ZERO) < 0) {
+                throw new RuntimeException("Pay amount cannot be negative");
+            }
+            if (newPayAmount.compareTo(order.getTotalAmount()) > 0) {
+                throw new RuntimeException("Pay amount cannot exceed total amount");
+            }
+            order.setPayAmount(newPayAmount);
+            order.setUpdateTime(LocalDateTime.now());
+            baseMapper.updateById(order);
+            log.info("Admin adjusted order {} amount by {} from {} to {}, reason: {}",
+                    orderId, adjustAmount, order.getPayAmount().subtract(adjustAmount), newPayAmount, reason);
+            return true;
+        } finally {
+            redisTemplate.delete(lockKey);
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateUserRemark(Long orderId, Long userId, String remark) {
+        MallOrder order = baseMapper.selectById(orderId);
+        if (order == null || !order.getUserId().equals(userId)) {
+            throw new RuntimeException("Order not found");
+        }
+        order.setRemark(remark);
+        order.setUpdateTime(LocalDateTime.now());
+        baseMapper.updateById(order);
+        return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean updateAdminRemark(Long orderId, String adminRemark) {
+        MallOrder order = baseMapper.selectById(orderId);
+        if (order == null) {
+            throw new RuntimeException("Order not found");
+        }
+        order.setAdminRemark(adminRemark);
+        order.setUpdateTime(LocalDateTime.now());
+        baseMapper.updateById(order);
+        return true;
     }
 }

@@ -3,6 +3,7 @@ package com.central.mall.controller;
 import com.central.common.model.Result;
 import com.central.mall.model.dto.CreateOrderDTO;
 import com.central.mall.model.dto.LogisticsTrackDTO;
+import com.central.mall.model.dto.UpdateRemarkDTO;
 import com.central.mall.service.ILogisticsTrackService;
 import com.central.mall.service.IOrderService;
 import com.central.mall.service.IPayService;
@@ -115,6 +116,18 @@ public class OrderController {
             return Result.succeed(logisticsInfo);
         } catch (RuntimeException e) {
             return Result.failed("物流信息不存在");
+        }
+    }
+
+    @PostMapping("/{id}/remark")
+    @Operation(summary = "用户添加订单备注 (ORDER-EXT-03)")
+    public Result<Boolean> updateUserRemark(@PathVariable Long id, @RequestBody @Validated UpdateRemarkDTO dto) {
+        Long userId = getCurrentUserId();
+        try {
+            boolean result = orderService.updateUserRemark(id, userId, dto.getRemark());
+            return result ? Result.succeed(true, "备注添加成功") : Result.failed("添加失败");
+        } catch (RuntimeException e) {
+            return Result.failed(e.getMessage());
         }
     }
 

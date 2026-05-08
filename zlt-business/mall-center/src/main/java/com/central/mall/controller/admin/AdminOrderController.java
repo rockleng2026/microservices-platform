@@ -2,9 +2,7 @@ package com.central.mall.controller.admin;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.central.common.model.Result;
-import com.central.mall.model.dto.OrderDetailDTO;
-import com.central.mall.model.dto.OrderListDTO;
-import com.central.mall.model.dto.ShipOrderDTO;
+import com.central.mall.model.dto.*;
 import com.central.mall.service.IOrderService;
 import com.central.mall.config.TenantInterceptor;
 import io.swagger.v3.oas.annotations.Operation;
@@ -104,5 +102,38 @@ public class AdminOrderController {
         stats.put("completedCount", 0);
 
         return Result.succeed(stats);
+    }
+
+    @PostMapping("/{id}/close")
+    @Operation(summary = "管理员关闭订单 (ORDER-EXT-01)")
+    public Result<Boolean> adminCloseOrder(@PathVariable Long id, @RequestBody @Validated CloseOrderDTO dto) {
+        try {
+            boolean result = orderService.adminCloseOrder(id, dto.getReason());
+            return result ? Result.succeed(true, "订单关闭成功") : Result.failed("关闭失败");
+        } catch (RuntimeException e) {
+            return Result.failed(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/adjust-amount")
+    @Operation(summary = "管理员调整订单金额 (ORDER-EXT-02)")
+    public Result<Boolean> adjustOrderAmount(@PathVariable Long id, @RequestBody @Validated AdminAdjustOrderDTO dto) {
+        try {
+            boolean result = orderService.adjustOrderAmount(id, dto.getAdjustAmount(), dto.getReason());
+            return result ? Result.succeed(true, "金额调整成功") : Result.failed("调整失败");
+        } catch (RuntimeException e) {
+            return Result.failed(e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/admin-remark")
+    @Operation(summary = "管理员添加订单备注 (ORDER-EXT-03)")
+    public Result<Boolean> updateAdminRemark(@PathVariable Long id, @RequestBody @Validated UpdateRemarkDTO dto) {
+        try {
+            boolean result = orderService.updateAdminRemark(id, dto.getRemark());
+            return result ? Result.succeed(true, "备注添加成功") : Result.failed("添加失败");
+        } catch (RuntimeException e) {
+            return Result.failed(e.getMessage());
+        }
     }
 }

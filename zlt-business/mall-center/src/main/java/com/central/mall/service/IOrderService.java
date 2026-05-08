@@ -54,4 +54,26 @@ public interface IOrderService extends IService<MallOrder> {
      * Handle order timeout (STOCK-03)
      */
     void handleOrderTimeout(Long orderId);
+
+    /**
+     * Admin: close shipped order (ORDER-EXT-01)
+     * Only status=3 (shipped) orders can be closed. No refund, no stock return.
+     */
+    boolean adminCloseOrder(Long orderId, String reason);
+
+    /**
+     * Admin: adjust order amount (ORDER-EXT-02)
+     * Only status in (1,2) and adjustAmount <= 0. newPayAmount must be >= 0 and <= totalAmount.
+     */
+    boolean adjustOrderAmount(Long orderId, java.math.BigDecimal adjustAmount, String reason);
+
+    /**
+     * User: update order remark (ORDER-EXT-03)
+     */
+    boolean updateUserRemark(Long orderId, Long userId, String remark);
+
+    /**
+     * Admin: update admin remark (ORDER-EXT-03)
+     */
+    boolean updateAdminRemark(Long orderId, String remark);
 }

@@ -20,11 +20,39 @@ public class MallOrder {
     private BigDecimal totalAmount;
     private BigDecimal freightAmount;
     private BigDecimal payAmount;
-    private Integer status;         // 1=待付款, 2=已付款, 3=已发货, 4=已完成, 5=已取消
+    private Integer status;         // 1=待付款, 2=已付款, 3=已发货, 4=已完成, 5=已取消, 6=退款中, 7=已退款, 8=已关闭
+
+    // Status constants
+    public static final Integer STATUS_PENDING = 1;
+    public static final Integer STATUS_PAID = 2;
+    public static final Integer STATUS_SHIPPED = 3;
+    public static final Integer STATUS_COMPLETED = 4;
+    public static final Integer STATUS_CANCELLED = 5;
+    public static final Integer STATUS_REFUNDING = 6;
+    public static final Integer STATUS_REFUNDED = 7;
+    public static final Integer STATUS_CLOSED = 8;
+
+    public String getStatusName() {
+        switch (status) {
+            case 1: return "待付款";
+            case 2: return "已付款";
+            case 3: return "已发货";
+            case 4: return "已完成";
+            case 5: return "已取消";
+            case 6: return "退款中";
+            case 7: return "已退款";
+            case 8: return "已关闭";
+            default: return "未知";
+        }
+    }
+
+    private Long couponId;          // 使用的优惠券ID
+    private BigDecimal discountAmount; // 优惠金额
     private LocalDateTime payTime;
     private LocalDateTime shipTime;
     private LocalDateTime completeTime;
     private String remark;
+    private String adminRemark;   // 管理员备注
     private Integer delFlag;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

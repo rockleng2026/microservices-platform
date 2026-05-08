@@ -3,12 +3,15 @@ package com.central.mall.utils;
 import com.central.mall.model.entity.MallOrder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -18,17 +21,28 @@ import java.util.Map;
 @Component
 public class WeChatTemplateMsgUtil {
 
-    private final RestTemplate restTemplate = new RestTemplate();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final RestTemplate restTemplate;
+    private final ObjectMapper objectMapper;
+    private final StringRedisTemplate redisTemplate;
 
     @Value("${wechat.pay.app-id:#{null}}")
     private String appId;
+
+    @Value("${wechat.pay.app-secret:#{null}}")
+    private String appSecret;
 
     @Value("${wechat.template.order-notify-id:#{null}}")
     private String orderNotifyTemplateId;
 
     @Value("${wechat.template.shipping-notify-id:#{null}}")
     private String shippingNotifyTemplateId;
+
+    @Autowired
+    public WeChatTemplateMsgUtil(StringRedisTemplate redisTemplate, RestTemplate restTemplate) {
+        this.redisTemplate = redisTemplate;
+        this.restTemplate = restTemplate;
+        this.objectMapper = new ObjectMapper();
+    }
 
     private static final String TEMPLATE_MSG_URL = "https://api.weixin.qq.com/cgi-bin/message/subscribe/send";
     private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -118,13 +132,37 @@ public class WeChatTemplateMsgUtil {
     }
 
     private String getAccessToken() {
-        // For Phase 7, return empty string to fall through to mock mode
-        // Full implementation would fetch token from https://api.weixin.qq.com/cgi-bin/token
-        // and cache in Redis with key "wechat:access_token:{appId}"
-        if (appId == null || appId.isEmpty()) {
+        if (appId == null || appId.isEmpty() || appSecret == null || appSecret.isEmpty()) {
+            log.warn("WeChat appId or appSecret not configured, cannot get access token");
             return "";
         }
-        // Placeholder - in production, fetch and cache token
+        String cacheKey = "wechat:access_token:" + appId;
+        try {
+            String cachedToken = redisTemplate.opsForValue().get(cacheKey);
+            if (cachedToken != null) {
+                return cachedToken;
+            }
+        } catch (Exception e) {
+            log.warn("Failed to get cached token, will fetch from WeChat API", e);
+        }
+        // Fetch from WeChat OAuth API
+        String url = "https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=" + appId + "&secret=" + appSecret;
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> response = restTemplate.getForObject(url, Map.class);
+            if (response != null && response.containsKey("access_token")) {
+                String token = (String) response.get("access_token");
+                Integer expiresIn = (Integer) response.get("expires_in");
+                if (expiresIn != null && expiresIn > 60) {
+                    redisTemplate.opsForValue().set(cacheKey, token, Duration.ofSeconds(expiresIn - 60));
+                }
+                return token;
+            } else {
+                log.error("Failed to get WeChat access token: response={}", response);
+            }
+        } catch (Exception e) {
+            log.error("Failed to get WeChat access token", e);
+        }
         return "";
     }
 }

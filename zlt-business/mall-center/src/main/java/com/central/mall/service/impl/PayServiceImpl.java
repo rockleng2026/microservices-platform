@@ -44,7 +44,7 @@ public class PayServiceImpl implements IPayService {
     @Autowired
     private WeChatTemplateMsgUtil weChatTemplateMsgUtil;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate;
 
     @Override
     public Map<String, String> initiatePay(Long orderId, String openId) {
@@ -54,6 +54,11 @@ public class PayServiceImpl implements IPayService {
         }
         if (order.getStatus() != 1) {
             throw new RuntimeException("Order is not in pending pay status");
+        }
+
+        // Validate WeChat Pay configuration (WR-06: fail fast on incomplete config)
+        if (appId == null || appId.isEmpty() || mchId == null || mchId.isEmpty() || apiKey == null || apiKey.isEmpty()) {
+            throw new RuntimeException("WeChat Pay configuration incomplete: appId, mchId, and apiKey are required");
         }
 
         // Build WeChat unified order request parameters
@@ -140,6 +145,18 @@ public class PayServiceImpl implements IPayService {
             if (order == null) {
                 log.error("Order not found for callback: {}", orderNo);
                 return false;
+            }
+
+            // Verify callback amount matches order amount (CR-01: prevent fraud)
+            String totalFeeStr = callbackData.get("total_fee");
+            if (totalFeeStr != null) {
+                long callbackAmount = Long.parseLong(totalFeeStr);
+                long orderAmount = order.getPayAmount().multiply(new BigDecimal("100")).longValue();
+                if (callbackAmount != orderAmount) {
+                    log.error("Payment callback amount mismatch: orderId={}, expected={}, got={}",
+                            order.getId(), orderAmount, callbackAmount);
+                    return false;
+                }
             }
 
             // Update order as paid (will handle virtual goods auto-complete)

@@ -1,31 +1,26 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: milestone
-status: completed
-last_updated: "2026-05-08T23:15:00.000Z"
+milestone: v2.0
+milestone_name: 前端开发
+status: planning
+last_updated: "2026-05-09"
 progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 2
-  completed_plans: 2
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
 ---
 
 # State: Mall-Center 在线商城系统
 
-> 版本: v1.2 — Planned
-> 更新日期: 2026-05-08
+> 版本: v2.0 — Planning
+> 更新日期: 2026-05-09
 
 ---
 
 ## Milestone Status
 
-**v1.2** — Planned
-
-| Phase | Name | Status | Plans |
-|-------|------|--------|-------|
-| 6 | 订单增强与管理端完善 | ✅ Complete | 2/2 |
-| 7 | 扩展功能 | ✅ Complete | 3/3 |
+**v2.0** — Planning
 
 ---
 
@@ -35,65 +30,25 @@ See: .planning/PROJECT.md
 
 **Core value:** 为IT硬件经销商提供一套完整的B2C在线销售解决方案，同时支持实物与虚拟商品，一套系统覆盖从商品展示到支付交付的全链路电商能力。
 
-**Current focus:** v1.2 — All phases complete
+**Current focus:** v2.0 — 前端开发（管理后台 + 微信小程序）
 
 ---
 
-## v1.2 Goals
+## v2.0 Goals
 
-1. **订单增强** — 管理员关单（status=3）、改价（仅减少不高于原价）、备注（用户+管理员） ✅
-2. **管理端数据看板** — 销售趋势（日/周/月）、库存预警、用户分析 ✅
-3. **扩展功能** — Redis Lua库存原子化、平台自营+商户多租户、微信模板消息 ✅
-
----
-
-## Phase 6 Summary
-
-| Plan | Objective | Requirements | Status |
-|------|-----------|-------------|--------|
-| 06-01 | 订单增强（管理员关单、改价、备注） | ORDER-EXT-01~03 | ✅ Complete |
-| 06-02 | 管理端数据看板（销售趋势、库存预警、用户分析） | STAT-01~03 | ✅ Complete |
-
-### Completed Plans (06-01, 06-02)
-- Commit: `b74b5f699` - feat(6-01): add order extension features - admin close/adjust/remark, user remark
-- Summary: `.planning/phases/06-订单增强与管理端/06-01-SUMMARY.md`
-- Commit: `5e769995c` - feat(6-02): implement admin dashboard statistics APIs
-- Summary: `.planning/phases/06-订单增强与管理端完善/06-02-SUMMARY.md`
+1. **管理后台 Web** — React + Umi + Ant Design Pro，与 portal-web 框架保持一致
+2. **微信小程序** — uni-app + Vue，面向消费者用户侧功能
+3. **页面设计** — 调用 `/gsd-ui-phase` 进行 UI 设计规划，注重美观和交互体验
 
 ---
 
-## Phase 7 Summary
+## Current Position
 
-| Plan | Objective | Requirements | Status |
-|------|-----------|-------------|--------|
-| 07-01 | Redis Lua原子化库存扣减 | ADVANCED-02 | ✅ Complete |
-| 07-02 | 商户多租户入驻平台 | ADVANCED-03 | ✅ Complete |
-| 07-03 | 微信模板消息通知 | ADVANCED-04 | ✅ Complete |
-
-### Completed Plans (07-01, 07-02, 07-03)
-- Commit: `b99624d52` - fix(7-01): use Spring Data Redis scripting instead of broken Redisson API
-- Commit: `f3fde06c2` - feat(7-02): add MallMerchant entity and mapper for multi-tenant merchant platform
-- Commit: `ad6b9b2a0` - feat(7-02): add MerchantServiceImpl and AdminMerchantController for merchant review
-- Commit: `ce45acaeb` - feat(7-03): add openid field to MallOrder for WeChat template messages
-- Commit: `223abdfd3` - feat(7-03): create WeChatTemplateMsgUtil for sending template messages
-- Commit: `7c19fdb22` - feat(7-03): integrate WeChatTemplateMsgUtil into PayServiceImpl and OrderServiceImpl
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-05-09 — Milestone v2.0 started
 
 ---
 
-## Quick Commands
-
-```bash
-
-# 开始执行 Phase 6
-
-/gsd-execute-phase 6
-
-# 查看 Phase 6 计划
-
-cat .planning/phases/06-订单增强与管理端完善/06-01-PLAN.md
-cat .planning/phases/06-订单增强与管理端完善/06-02-PLAN.md
-```
-
----
-
-*State updated: 2026-05-08 after Phase 6 planning*
+*State updated: 2026-05-09 after v2.0 milestone started*

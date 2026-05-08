@@ -1,10 +1,20 @@
 package com.central.mall.service.impl;
 
 import com.central.mall.config.TenantInterceptor;
+import com.central.mall.mapper.MallGoodsMapper;
+import com.central.mall.mapper.MallGoodsSkuMapper;
+import com.central.mall.mapper.MallOrderMapper;
 import com.central.mall.mapper.MallSettingsMapper;
+import com.central.mall.model.dto.SalesTrendDTO;
 import com.central.mall.model.dto.StatisticsDTO;
+import com.central.mall.model.dto.StockWarningDTO;
+import com.central.mall.model.dto.UserAnalysisDTO;
+import com.central.mall.model.entity.MallGoods;
+import com.central.mall.model.entity.MallGoodsSku;
+import com.central.mall.model.entity.MallOrder;
 import com.central.mall.service.IAdminStatisticsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBucket;
@@ -14,6 +24,9 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 管理员统计服务实现
@@ -37,6 +50,9 @@ public class AdminStatisticsServiceImpl implements IAdminStatisticsService {
 
     private final RedissonClient redissonClient;
     private final MallSettingsMapper settingsMapper;
+    private final MallOrderMapper orderMapper;
+    private final MallGoodsSkuMapper goodsSkuMapper;
+    private final MallGoodsMapper goodsMapper;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -109,5 +125,38 @@ public class AdminStatisticsServiceImpl implements IAdminStatisticsService {
         stats.setTotalPv(0L);
         stats.setAvgOrderAmount(BigDecimal.ZERO);
         return stats;
+    }
+
+    @Override
+    public List<SalesTrendDTO> getSalesTrend(String type, String startDate, String endDate) {
+        // Phase 2: mall_order 表尚未创建，返回空列表
+        // Phase 3: 实际查询 mall_order 表计算
+        // SQL: SELECT DATE(create_time) as date, COUNT(*) as orderCount,
+        //       SUM(payAmount) as salesAmount, COUNT(DISTINCT userId) as userCount
+        //       FROM mall_order WHERE status IN (2,3,4) AND createTime BETWEEN startDate AND endDate
+        //       GROUP BY DATE(create_time)
+        return new ArrayList<>();
+    }
+
+    @Override
+    public List<StockWarningDTO> getStockWarningList() {
+        // Phase 2: mall_goods_sku 表尚未创建，返回空列表
+        // Phase 3: 实际查询 mall_goods_sku 和 mall_goods，过滤 stock <= 10
+        // JOIN mall_goods_sku 和 mall_goods，过滤 stock <= 预警阈值(默认10)
+        return new ArrayList<>();
+    }
+
+    @Override
+    public UserAnalysisDTO getUserAnalysis() {
+        // Phase 2: mall_order 表尚未创建，返回全0数据
+        // Phase 3: 实际查询 mall_order 表计算
+        // 今日/本周/本月新增用户，活跃用户(当月有订单)，平均订单金额
+        UserAnalysisDTO dto = new UserAnalysisDTO();
+        dto.setTodayNewUsers(0);
+        dto.setWeekNewUsers(0);
+        dto.setMonthNewUsers(0);
+        dto.setActiveUsers(0);
+        dto.setAvgOrderAmount(BigDecimal.ZERO);
+        return dto;
     }
 }

@@ -68,6 +68,7 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
             for (Long cartId : dto.getCartItemIds()) {
                 MallCart cart = cartMapper.selectById(cartId);
                 if (cart == null || !cart.getUserId().equals(userId)) {
+                    log.warn("Skipping cart item {}: not found or not owned by user {}", cartId, userId);
                     continue;
                 }
 
@@ -97,6 +98,9 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
                 }
 
                 MallGoods goods = goodsMapper.selectById(sku.getGoodsId());
+                if (goods == null) {
+                    throw new RuntimeException("Goods not found for SKU: " + sku.getId());
+                }
 
                 Map<String, Object> item = new HashMap<>();
                 item.put("skuId", directItem.getSkuId());
@@ -233,7 +237,7 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
         if (order == null || !order.getUserId().equals(userId)) {
             throw new RuntimeException("Order not found");
         }
-        if (order.getStatus() != 1) {
+        if (!Integer.valueOf(MallOrder.STATUS_PENDING).equals(order.getStatus())) {
             throw new RuntimeException("Only pending pay orders can be cancelled");
         }
 
@@ -255,7 +259,7 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
         if (order == null || !order.getUserId().equals(userId)) {
             throw new RuntimeException("Order not found");
         }
-        if (order.getStatus() != 3) { // 3=shipped
+        if (!Integer.valueOf(MallOrder.STATUS_SHIPPED).equals(order.getStatus())) { // 3=shipped
             throw new RuntimeException("Only shipped orders can be confirmed");
         }
 
@@ -274,7 +278,7 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
         if (order == null) {
             throw new RuntimeException("Order not found");
         }
-        if (order.getStatus() != 2) { // 2=paid
+        if (!Integer.valueOf(MallOrder.STATUS_PAID).equals(order.getStatus())) { // 2=paid
             throw new RuntimeException("Only paid orders can be shipped");
         }
 
@@ -313,7 +317,7 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
         if (order == null) {
             throw new RuntimeException("Order not found");
         }
-        if (order.getStatus() != 1) {
+        if (!Integer.valueOf(MallOrder.STATUS_PENDING).equals(order.getStatus())) {
             // Idempotency: already processed
             return true;
         }
@@ -389,7 +393,7 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
                 throw new RuntimeException("Order not found");
             }
             // Only status=3 (shipped) can be closed
-            if (!Integer.valueOf(3).equals(order.getStatus())) {
+            if (!Integer.valueOf(MallOrder.STATUS_SHIPPED).equals(order.getStatus())) {
                 throw new RuntimeException("Only shipped orders (status=3) can be closed");
             }
             order.setStatus(MallOrder.STATUS_CLOSED);
@@ -419,7 +423,7 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
                 throw new RuntimeException("Order not found");
             }
             // Only status in (1,2) can be adjusted
-            if (!Integer.valueOf(1).equals(order.getStatus()) && !Integer.valueOf(2).equals(order.getStatus())) {
+            if (!Integer.valueOf(MallOrder.STATUS_PENDING).equals(order.getStatus()) && !Integer.valueOf(MallOrder.STATUS_PAID).equals(order.getStatus())) {
                 throw new RuntimeException("Only pending pay (1) or paid (2) orders can be adjusted");
             }
             java.math.BigDecimal newPayAmount = order.getPayAmount().add(adjustAmount);

@@ -58,7 +58,7 @@ public class MerchantServiceImpl extends ServiceImpl<MallMerchantMapper, MallMer
         if (merchant == null) {
             return false;
         }
-        if (status.equals(MallMerchant.STATUS_APPROVED)) {
+        if (status != null && status.equals(MallMerchant.STATUS_APPROVED)) {
             // Auto-generate tenantId for approved merchant
             merchant.setTenantId("MERCHANT_" + id);
         }

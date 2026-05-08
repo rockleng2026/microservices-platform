@@ -11,7 +11,7 @@ See: .planning/PROJECT.md (updated 2026-05-08)
 
 **Core value:** 为IT硬件经销商提供一套完整的B2C在线销售解决方案，同时支持实物与虚拟商品，一套系统覆盖从商品展示到支付交付的全链路电商能力。
 
-**Current focus:** Phase 1 - 基础架构搭建
+**Current focus:** Phase 2 - 后台管理-商品与系统
 
 ---
 
@@ -19,21 +19,17 @@ See: .planning/PROJECT.md (updated 2026-05-08)
 
 | Milestone | Status | Phase | Requirements |
 |-----------|--------|-------|--------------|
-| v1.0 | In Progress | Phase 1 | 14/39 complete |
+| v1.0 | In Progress | Phase 2 | 14/39 complete |
 
 ---
 
 ## Current Phase
 
-**Phase 1: 基础架构搭建** — In Progress
+**Phase 1: 基础架构搭建** — ✅ Complete
 
-**Goal:** 完成mall-center服务创建、数据库设计、用户侧商品浏览与购物车基础功能
+Phase 1 completed. mall-center服务（端口7010）、数据库6表、购物车/商品CRUD、IDOR修复已全部完成。
 
-**Requirements in scope:**
-- GOODS-01, GOODS-02, GOODS-03, GOODS-04
-- CART-01, CART-02, CART-03, CART-04, CART-05, CART-06
-- USER-01, USER-02, USER-03
-- VIRTUAL-01
+**Next:** Phase 2 - 后台管理-商品与系统
 
 ---
 
@@ -66,9 +62,11 @@ See: .planning/PROJECT.md (updated 2026-05-08)
 
 ## Notes
 
+- Phase 1 完成：mall-center服务（端口7010）、数据库6表、商品/购物车/地址CRUD
+- Phase 1 安全修复：CR-01~05 已处理（commit c4ff28f48），getCurrentUserId() stub待zlt-uaa集成
 - 微信支付参数（app-id, mch-id, api-key）需用户提供后才能对接真实支付
 - 微信登录需在 zlt-uaa 配置微信 OAuth2 客户端
 - 库存扣减 Redis 键设计：`sku:stock:{skuId}` 和 `order:stock:lock:{orderId}`
 
 ---
-*State updated: 2026-05-08 after project initialization*
+*State updated: 2026-05-08 after Phase 1 completion + security fixes*

@@ -51,4 +51,18 @@ Last activity: 2026-05-09 — Milestone v2.0 started
 
 ---
 
-*State updated: 2026-05-09 after v2.0 milestone started*
+## v2.0 Phase Plan
+
+| Phase | Name | Requirements | Status |
+|-------|------|--------------|--------|
+| 8 | Admin基础框架 + 小程序首页/商品 | ADMIN-01(5) + MINI-01(7) + MINI-02(5) + MINI-03(9) = 26 | Pending |
+| 9 | 小程序交易流程 | MINI-04(7) + MINI-05(9) + MINI-06(5) + MINI-07(5) + MINI-08(6) + MINI-10(5) = 37 | Pending |
+| 10 | 管理后台核心模块 | ADMIN-01(5) + ADMIN-02(10) + ADMIN-03(7) + ADMIN-04(7) + ADMIN-10(5) = 34 | Pending |
+| 11 | 管理后台运营模块 | ADMIN-06(6) + ADMIN-07(6) + ADMIN-08(4) + ADMIN-09(5) = 21 | Pending |
+| 12 | 管理后台配置与小程序个人中心 | ADMIN-05(6) + ADMIN-11(3) + MINI-09(7) = 16 | Pending |
+| 13 | 集成测试与优化 | All v2.0 requirements | Pending |
+| **Total** | | **134** | |
+
+---
+
+*State updated: 2026-05-09 — v2.0 roadmap defined (Phases 8-13)*

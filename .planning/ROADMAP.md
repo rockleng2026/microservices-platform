@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 MVP** — Phases 1-4 (shipped 2026-05-08)
 - ✅ **v1.2** — Phases 5-7 (shipped 2026-05-08)
-- 📋 **v2.0** — Planned
+- 📋 **v2.0** — Phases 8-13 (In Progress)
 
 ---
 
@@ -38,6 +38,93 @@
 
 </details>
 
+<details>
+<summary>📋 v2.0 (Phases 8-13) — IN PROGRESS</summary>
+
+| Phase | Name | Goal | Requirements | Success Criteria |
+|-------|------|------|--------------|------------------|
+| 8 | Admin基础框架 + 小程序首页/商品 | 搭建Admin Web基础框架（含布局/路由/权限），实现小程序首页+商品列表+商品详情 | ADMIN-01(5) + MINI-01(7) + MINI-02(5) + MINI-03(9) | Admin Web可运行，布局/导航/登录完成；小程序首页Banner/分类/推荐商品正常展示；商品列表筛选排序正常；商品详情规格选择/加入购物车正常 |
+| 9 | 小程序交易流程 | 实现小程序购物车+订单确认+微信支付+订单列表+订单详情+退款申请 | MINI-04(7) + MINI-05(9) + MINI-06(5) + MINI-07(5) + MINI-08(6) + MINI-10(5) | 购物车增删改查正常；订单确认页地址/优惠券/总价计算正确；微信支付调起成功；订单列表状态筛选正常；退款申请提交/取消正常 |
+| 10 | 管理后台核心模块 | 实现管理后台商品管理、订单管理、优惠券管理、轮播图管理、仪表盘 | ADMIN-02(10) + ADMIN-03(7) + ADMIN-04(7) + ADMIN-10(5) + ADMIN-01(5) | 商品CRUD/批量上下架正常；订单筛选/详情/改价/关单正常；优惠券创建/发放/统计正常；Banner配置正常；Dashboard图表数据正确 |
+| 11 | 管理后台运营模块 | 实现退款审核、物流管理、用户管理、商户管理模块 | ADMIN-06(6) + ADMIN-07(6) + ADMIN-08(4) + ADMIN-09(5) | 退款审批/拒绝/触发退款正常；物流轨迹查询正常；用户列表/消费统计正常；商户审批/拒绝/状态切换正常 |
+| 12 | 管理后台配置与小程序个人中心 | 实现微信支付配置、促销管理、会员积分、个人中心 | ADMIN-05(6) + ADMIN-11(3) + MINI-09(7) | 促销活动CRUD/启用禁用正常；微信支付参数配置保存成功；会员积分调整正常；个人中心地址/优惠券/收藏/积分展示正常 |
+| 13 | 集成测试与优化 | 端到端测试、UI优化、性能优化、bug修复 | All v2.0 requirements | 所有功能端到端联调通过；Admin Web和小程序UI/交互优化完成；无重大bug遗留 |
+
+**v2.0 Summary:**
+- Phase 8: ADMIN-01 + MINI-01 + MINI-02 + MINI-03 (26 requirements)
+- Phase 9: MINI-04 + MINI-05 + MINI-06 + MINI-07 + MINI-08 + MINI-10 (37 requirements)
+- Phase 10: ADMIN-01 + ADMIN-02 + ADMIN-03 + ADMIN-04 + ADMIN-10 (34 requirements)
+- Phase 11: ADMIN-06 + ADMIN-07 + ADMIN-08 + ADMIN-09 (21 requirements)
+- Phase 12: ADMIN-05 + ADMIN-11 + MINI-09 (16 requirements)
+- Phase 13: Integration testing + optimization (all requirements)
+
+</details>
+
+---
+
+## Phase Mapping
+
+### Phase 8: Admin基础框架 + 小程序首页/商品
+
+| Module | Requirements | Count |
+|--------|--------------|-------|
+| ADMIN-01 Dashboard | ADMIN-01-01~05 | 5 |
+| MINI-01 Home | MINI-01-01~07 | 7 |
+| MINI-02 Product List | MINI-02-01~05 | 5 |
+| MINI-03 Product Detail | MINI-03-01~09 | 9 |
+| **Total** | | **26** |
+
+### Phase 9: 小程序交易流程
+
+| Module | Requirements | Count |
+|--------|--------------|-------|
+| MINI-04 Shopping Cart | MINI-04-01~07 | 7 |
+| MINI-05 Order Confirmation | MINI-05-01~09 | 9 |
+| MINI-06 Order List | MINI-06-01~05 | 5 |
+| MINI-07 Order Detail | MINI-07-01~05 | 5 |
+| MINI-08 Refund Application | MINI-08-01~06 | 6 |
+| MINI-10 WeChat Payment | MINI-10-01~05 | 5 |
+| **Total** | | **37** |
+
+### Phase 10: 管理后台核心模块
+
+| Module | Requirements | Count |
+|--------|--------------|-------|
+| ADMIN-01 Dashboard | ADMIN-01-01~05 | 5 |
+| ADMIN-02 Product Management | ADMIN-02-01~10 | 10 |
+| ADMIN-03 Order Management | ADMIN-03-01~07 | 7 |
+| ADMIN-04 Coupon Management | ADMIN-04-01~07 | 7 |
+| ADMIN-10 Banner Management | ADMIN-10-01~05 | 5 |
+| **Total** | | **34** |
+
+### Phase 11: 管理后台运营模块
+
+| Module | Requirements | Count |
+|--------|--------------|-------|
+| ADMIN-06 Refund Audit | ADMIN-06-01~06 | 6 |
+| ADMIN-07 Logistics Management | ADMIN-07-01~06 | 6 |
+| ADMIN-08 User Management | ADMIN-08-01~04 | 4 |
+| ADMIN-09 Merchant Management | ADMIN-09-01~05 | 5 |
+| **Total** | | **21** |
+
+### Phase 12: 管理后台配置与小程序个人中心
+
+| Module | Requirements | Count |
+|--------|--------------|-------|
+| ADMIN-05 Promotion Management | ADMIN-05-01~06 | 6 |
+| ADMIN-11 WeChat Configuration | ADMIN-11-01~03 | 3 |
+| MINI-09 Personal Center | MINI-09-01~07 | 7 |
+| **Total** | | **16** |
+
+### Phase 13: 集成测试与优化
+
+| Scope | Description |
+|-------|-------------|
+| Integration Testing | End-to-end testing of all Admin Web and Mini Program features |
+| UI/UX Optimization | Visual polish, responsive design, interaction improvements |
+| Performance | Load time optimization, lazy loading, caching strategies |
+| Bug Fixes | Resolve any issues found during integration testing |
+
 ---
 
 ## Progress
@@ -51,6 +138,12 @@
 | 5 | v1.2 | 3/3 | Complete | 2026-05-08 |
 | 6 | v1.2 | 2/2 | Complete | 2026-05-08 |
 | 7 | v1.2 | 3/3 | Complete | 2026-05-08 |
+| 8 | v2.0 | 0/26 | Pending | — |
+| 9 | v2.0 | 0/37 | Pending | — |
+| 10 | v2.0 | 0/34 | Pending | — |
+| 11 | v2.0 | 0/21 | Pending | — |
+| 12 | v2.0 | 0/16 | Pending | — |
+| 13 | v2.0 | 0/all | Pending | — |
 
 ---
-*Roadmap updated: 2026-05-09 after v1.2 milestone*
+*Roadmap updated: 2026-05-09 for v2.0 milestone (Phase 8-13)*

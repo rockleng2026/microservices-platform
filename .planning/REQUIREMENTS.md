@@ -316,14 +316,16 @@ The following are explicitly excluded from v2.0:
 | MINI-09 Personal Center | USER-01~05, CART-01~06 | Implemented |
 | MINI-10 Payment | PAY-01~04 | Implemented |
 
-### Phase Mapping (TBD by roadmap)
+### Phase Mapping (v2.0)
 
 | Phase | Admin Modules | Mini Modules |
 |-------|---------------|--------------|
-| Phase 1 | | |
-| Phase 2 | | |
-| Phase 3 | | |
-| Phase 4 | | |
+| Phase 8 | ADMIN-01 Dashboard | MINI-01 Home, MINI-02 Product List, MINI-03 Product Detail |
+| Phase 9 | — | MINI-04 Cart, MINI-05 Order Confirm, MINI-06 Order List, MINI-07 Order Detail, MINI-08 Refund, MINI-10 Payment |
+| Phase 10 | ADMIN-01 Dashboard, ADMIN-02 Product, ADMIN-03 Order, ADMIN-04 Coupon, ADMIN-10 Banner | — |
+| Phase 11 | ADMIN-06 Refund, ADMIN-07 Logistics, ADMIN-08 User, ADMIN-09 Merchant | — |
+| Phase 12 | ADMIN-05 Promotion, ADMIN-11 WeChat Config | MINI-09 Personal Center |
+| Phase 13 | All (integration) | All (integration) |
 
 ---
 

@@ -8,11 +8,37 @@
 
 为IT硬件经销商提供一套完整的B2C在线销售解决方案，同时支持实物与虚拟商品，一套系统覆盖从商品展示到支付交付的全链路电商能力。
 
+## Current Milestone: v1.1
+
+**Goal:** 修复编译问题 + 实现退款和营销模块
+
+**Target features:**
+- 修复 Phase 1/2 Result.succeed() 泛型编译问题
+- 退款模块：用户发起退款 → 管理员审核 → 微信退款 → 库存回增
+- 营销模块：优惠券、满减活动、会员等级
+
 ## Requirements
 
 ### Validated
 
 - ✓ GOODS-01~04 — Phase 1 (商品分类、搜索、列表、详情)
+- ✓ CART-01~06 — Phase 1 (购物车全功能)
+- ✓ USER-01~03 — Phase 1 (微信登录、收货地址、个人信息)
+- ✓ VIRTUAL-01 — Phase 1 (虚拟商品无需收货地址)
+- ✓ GOODS-05~08 — Phase 2 (管理员商品管理、批量上下架、实物/虚拟商品类型)
+- ✓ SYS-01~03 — Phase 2 (轮播图管理、微信支付参数配置、统计卡片)
+- ✓ VIRTUAL-02~04 — Phase 2 (虚拟商品资源交付、有效期、无限制库存)
+- ✓ ORDER-01~09 — Phase 3 (订单创建/流转/管理)
+- ✓ PAY-01~04 — Phase 3 (微信JSAPI支付集成)
+- ✓ STOCK-01~06 — Phase 3 (Redis库存预占/真实扣减/释放、手动修正、预警)
+- ✓ DELIVERY-01 — Phase 3 (物流公司配置CRUD)
+- ✓ EVAL-01~03 — Phase 4 (评价模块：评分/评论/图片)
+- ✓ USER-04~05 — Phase 4 (用户列表、消费统计)
+- ✓ DELIVERY-02~04 — Phase 4 (物流轨迹追踪)
+
+### Active
+
+(None — v1.1 not yet started)
 - ✓ CART-01~06 — Phase 1 (购物车全功能)
 - ✓ USER-01~03 — Phase 1 (微信登录、收货地址、个人信息)
 - ✓ VIRTUAL-01 — Phase 1 (虚拟商品无需收货地址)
@@ -59,7 +85,7 @@
 
 **当前状态：**
 - v1.0 MVP 已完成 (2026-05-08)
-- 所有39个v1需求已验证
+- v1.1 规划中（修复编译 + 退款 + 营销模块）
 - Phase 1/2 存在编译问题 (Result.succeed() 泛型)，不影响功能
 
 ## Constraints

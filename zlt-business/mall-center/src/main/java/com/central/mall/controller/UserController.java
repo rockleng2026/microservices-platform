@@ -18,8 +18,7 @@ public class UserController {
     @GetMapping("/info")
     @Operation(summary = "获取个人信息")
     public Result<Map<String, Object>> getUserInfo() {
-        // TODO: 从Token获取真实userId
-        Long userId = 1L;
+        Long userId = getCurrentUserId();
         Map<String, Object> userInfo = new HashMap<>();
         userInfo.put("userId", userId);
         userInfo.put("nickname", "测试用户");
@@ -31,7 +30,12 @@ public class UserController {
     @GetMapping("/address/list")
     @Operation(summary = "获取收货地址列表")
     public Result<Object> getAddressList() {
-        // TODO: 实现收货地址列表
+        // TODO: implement via IUserAddressService.getByUserId(getCurrentUserId())
         return Result.success(null);
+    }
+
+    private Long getCurrentUserId() {
+        // TODO: integrate with real auth context (SecurityContextHolder / token)
+        return 1L;
     }
 }

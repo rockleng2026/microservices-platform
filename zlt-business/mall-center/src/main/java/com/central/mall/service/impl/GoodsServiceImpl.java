@@ -173,7 +173,7 @@ public class GoodsServiceImpl extends ServiceImpl<MallGoodsMapper, MallGoods> im
         wrapper.eq(MallGoods::getStatus, 1)
                 .eq(MallGoods::getDelFlag, 0)
                 .orderByDesc(MallGoods::getSales)
-                .last("LIMIT " + limit);
+                .last("LIMIT " + limit);  // safe: limit is primitive int, not user input
         return baseMapper.selectList(wrapper);
     }
 }

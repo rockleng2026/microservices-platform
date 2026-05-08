@@ -27,17 +27,17 @@ public interface ICartService extends IService<MallCart> {
     /**
      * 修改购物车商品数量
      */
-    boolean updateQuantity(Long cartId, Integer quantity);
+    boolean updateQuantity(Long cartId, Long userId, Integer quantity);
 
     /**
      * 修改选中状态
      */
-    boolean updateChecked(Long cartId, Integer checked);
+    boolean updateChecked(Long cartId, Long userId, Integer checked);
 
     /**
      * 删除购物车项
      */
-    boolean deleteCartItem(Long cartId);
+    boolean deleteCartItem(Long cartId, Long userId);
 
     /**
      * 清空已选中的购物车项

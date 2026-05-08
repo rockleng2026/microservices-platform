@@ -122,27 +122,43 @@ public class CartServiceImpl extends ServiceImpl<MallCartMapper, MallCart> imple
     }
 
     @Override
-    public boolean updateQuantity(Long cartId, Integer quantity) {
+    public boolean updateQuantity(Long cartId, Long userId, Integer quantity) {
         MallCart cart = baseMapper.selectById(cartId);
         if (cart == null) {
             return false;
+        }
+        // Ownership check: only the cart owner can update
+        if (!cart.getUserId().equals(userId)) {
+            throw new SecurityException("Not authorized to update this cart item");
         }
         cart.setQuantity(quantity);
         return updateById(cart);
     }
 
     @Override
-    public boolean updateChecked(Long cartId, Integer checked) {
+    public boolean updateChecked(Long cartId, Long userId, Integer checked) {
         MallCart cart = baseMapper.selectById(cartId);
         if (cart == null) {
             return false;
+        }
+        // Ownership check: only the cart owner can update
+        if (!cart.getUserId().equals(userId)) {
+            throw new SecurityException("Not authorized to update this cart item");
         }
         cart.setChecked(checked);
         return updateById(cart);
     }
 
     @Override
-    public boolean deleteCartItem(Long cartId) {
+    public boolean deleteCartItem(Long cartId, Long userId) {
+        MallCart cart = baseMapper.selectById(cartId);
+        if (cart == null) {
+            return false;
+        }
+        // Ownership check: only the cart owner can delete
+        if (!cart.getUserId().equals(userId)) {
+            throw new SecurityException("Not authorized to delete this cart item");
+        }
         return removeById(cartId);
     }
 

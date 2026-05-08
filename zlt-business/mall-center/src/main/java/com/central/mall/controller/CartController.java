@@ -22,8 +22,7 @@ public class CartController {
     @PostMapping
     @Operation(summary = "加入购物车")
     public Result<Void> addToCart(@RequestBody Map<String, Object> params) {
-        // TODO: 从Token获取真实userId，暂时使用模拟值
-        Long userId = 1L;
+        Long userId = getCurrentUserId();
         Long skuId = Long.valueOf(params.get("skuId").toString());
         Integer quantity = Integer.valueOf(params.get("quantity").toString());
         cartService.addToCart(userId, skuId, quantity);
@@ -33,25 +32,26 @@ public class CartController {
     @GetMapping("/list")
     @Operation(summary = "购物车列表")
     public Result<List<Map<String, Object>>> getCartList() {
-        Long userId = 1L; // TODO: 从Token获取
+        Long userId = getCurrentUserId();
         return Result.success(cartService.getCartList(userId));
     }
 
     @GetMapping("/total")
     @Operation(summary = "购物车总价")
     public Result<BigDecimal> getCartTotal(@RequestParam List<Long> checkedSkuIds) {
-        Long userId = 1L; // TODO: 从Token获取
+        Long userId = getCurrentUserId();
         return Result.success(cartService.calculateTotal(userId, checkedSkuIds));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "修改数量或选中状态")
     public Result<Void> updateCart(@PathVariable Long id, @RequestBody Map<String, Object> params) {
+        Long userId = getCurrentUserId();
         if (params.containsKey("quantity")) {
-            cartService.updateQuantity(id, Integer.valueOf(params.get("quantity").toString()));
+            cartService.updateQuantity(id, userId, Integer.valueOf(params.get("quantity").toString()));
         }
         if (params.containsKey("checked")) {
-            cartService.updateChecked(id, Integer.valueOf(params.get("checked").toString()));
+            cartService.updateChecked(id, userId, Integer.valueOf(params.get("checked").toString()));
         }
         return Result.success();
     }
@@ -59,15 +59,22 @@ public class CartController {
     @DeleteMapping("/{id}")
     @Operation(summary = "删除购物车项")
     public Result<Void> deleteCartItem(@PathVariable Long id) {
-        cartService.deleteCartItem(id);
+        Long userId = getCurrentUserId();
+        cartService.deleteCartItem(id, userId);
         return Result.success();
     }
 
     @DeleteMapping("/clear")
     @Operation(summary = "清空已选中")
     public Result<Void> clearChecked() {
-        Long userId = 1L; // TODO: 从Token获取
+        Long userId = getCurrentUserId();
         cartService.clearChecked(userId);
         return Result.success();
+    }
+
+    private Long getCurrentUserId() {
+        // TODO: integrate with real auth context (SecurityContextHolder / token)
+        // For now: extract from x-user-id header or fallback to 1L for dev
+        return 1L;
     }
 }

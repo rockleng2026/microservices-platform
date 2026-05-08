@@ -41,7 +41,7 @@ See: .planning/PROJECT.md (updated 2026-05-08)
 
 | Phase | Name | Status | Requirements |
 |-------|------|--------|--------------|
-| 1 | 基础架构搭建 | 🔄 In Progress | 14 |
+| 1 | 基础架构搭建 | ✅ Complete | 14 |
 | 2 | 后台管理-商品与系统 | ⏳ Pending | 10 |
 | 3 | 订单与支付核心 | ⏳ Pending | 18 |
 | 4 | 用户侧评价与交互 | ⏳ Pending | 8 |

@@ -2,6 +2,8 @@ package com.central.mall.controller;
 
 import com.central.common.model.Result;
 import com.central.mall.model.dto.CreateOrderDTO;
+import com.central.mall.model.dto.LogisticsTrackDTO;
+import com.central.mall.service.ILogisticsTrackService;
 import com.central.mall.service.IOrderService;
 import com.central.mall.service.IPayService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -21,6 +23,7 @@ public class OrderController {
 
     private final IOrderService orderService;
     private final IPayService payService;
+    private final ILogisticsTrackService logisticsTrackService;
 
     @PostMapping
     @Operation(summary = "创建订单")
@@ -90,6 +93,28 @@ public class OrderController {
             return Result.succeed(paymentParams);
         } catch (RuntimeException e) {
             return Result.failed("支付发起失败: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/delivery")
+    @Operation(summary = "物流轨迹 (DELIVERY-03, DELIVERY-04)")
+    public Result<LogisticsTrackDTO> getOrderDelivery(@PathVariable Long id) {
+        Long userId = getCurrentUserId();
+        try {
+            // Validate order belongs to user
+            Map<String, Object> detail = orderService.getOrderDetail(id, userId);
+            if (detail == null) {
+                return Result.failed("订单不存在");
+            }
+            // Only allow viewing delivery for shipped or completed orders
+            Integer status = (Integer) detail.get("status");
+            if (status != null && status < 3) {
+                return Result.failed("订单尚未发货，无法查看物流");
+            }
+            LogisticsTrackDTO logisticsInfo = logisticsTrackService.getLogisticsInfo(id);
+            return Result.succeed(logisticsInfo);
+        } catch (RuntimeException e) {
+            return Result.failed("物流信息不存在");
         }
     }
 

@@ -10,6 +10,8 @@ import com.central.mall.service.IStockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +26,31 @@ public class StockServiceImpl implements IStockService {
 
     private static final String SKU_STOCK_KEY_PREFIX = "sku:stock:";
     private static final String ORDER_STOCK_LOCK_PREFIX = "order:stock:lock:";
+
+    /**
+     * Lua script for atomic stock pre-allocation.
+     * Returns remaining stock after decrement, or -1 if insufficient/not found.
+     */
+    private static final String LUA_PREALLOCATE_SCRIPT =
+        "local stock = redis.call('GET', KEYS[1])\n" +
+        "if stock == false then\n" +
+        "    return -1\n" +
+        "end\n" +
+        "local current = tonumber(stock)\n" +
+        "local quantity = tonumber(ARGV[1])\n" +
+        "if current < quantity then\n" +
+        "    return -1\n" +
+        "end\n" +
+        "local remaining = current - quantity\n" +
+        "redis.call('DECRBY', KEYS[1], quantity)\n" +
+        "return remaining\n";
+
+    private static final DefaultRedisScript<Long> LUA_SCRIPT = new DefaultRedisScript<>();
+
+    static {
+        LUA_SCRIPT.setScriptText(LUA_PREALLOCATE_SCRIPT);
+        LUA_SCRIPT.setResultType(Long.class);
+    }
 
     private final StringRedisTemplate redisTemplate;
     private final MallGoodsSkuMapper skuMapper;
@@ -45,17 +72,14 @@ public class StockServiceImpl implements IStockService {
                 continue;
             }
 
-            // Atomic decrement
+            // Atomic decrement via Lua script
             String stockKey = SKU_STOCK_KEY_PREFIX + skuId;
-            Long stockAfterDecr = redisTemplate.opsForValue().decrement(stockKey, quantity);
-
-            if (stockAfterDecr != null && stockAfterDecr < 0) {
-                // Rollback the decrement
-                redisTemplate.opsForValue().increment(stockKey, quantity);
-                log.warn("Stock insufficient for SKU {}: requested {}, available before: {}",
-                        skuId, quantity, stockAfterDecr + quantity);
+            Long luaResult = redisTemplate.execute(LUA_SCRIPT, List.of(stockKey), String.valueOf(quantity));
+            if (luaResult != null && luaResult < 0) {
+                log.warn("Stock insufficient for SKU {}: requested {}", skuId, quantity);
                 return false;
             }
+            Long stockAfterDecr = luaResult;
 
             // Record pre-allocation in Redis hash
             String lockKey = ORDER_STOCK_LOCK_PREFIX + orderId;

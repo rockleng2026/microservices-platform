@@ -2,6 +2,7 @@ package com.central.mall.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.central.mall.config.TenantInterceptor;
 import com.central.mall.mapper.MallMerchantMapper;
@@ -39,7 +40,8 @@ public class MerchantServiceImpl extends ServiceImpl<MallMerchantMapper, MallMer
                     .or().like(MallMerchant::getContactName, keyword));
         }
         wrapper.orderByDesc(MallMerchant::getApplyTime);
-        IPage<MallMerchant> result = baseMapper.selectPage(page, wrapper);
+        Page<MallMerchant> pageForQuery = new Page<>(page.getCurrent(), page.getSize());
+        IPage<MallMerchant> result = baseMapper.selectPage(pageForQuery, wrapper);
         return result.convert(this::toDTO);
     }
 

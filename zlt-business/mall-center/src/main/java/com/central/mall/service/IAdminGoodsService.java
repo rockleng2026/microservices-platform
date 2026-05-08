@@ -3,10 +3,11 @@ package com.central.mall.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.central.mall.model.dto.AdminGoodsDTO;
+import com.central.mall.model.entity.MallGoods;
 
 import java.util.Map;
 
-public interface IAdminGoodsService extends IService<Object> {
+public interface IAdminGoodsService extends IService<MallGoods> {
 
     /**
      * Admin goods list with filters

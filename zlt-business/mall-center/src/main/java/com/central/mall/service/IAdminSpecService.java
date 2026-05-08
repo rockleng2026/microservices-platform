@@ -2,10 +2,11 @@ package com.central.mall.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.central.mall.model.dto.SpecDTO;
+import com.central.mall.model.entity.MallSpec;
 
 import java.util.List;
 
-public interface IAdminSpecService extends IService<Object> {
+public interface IAdminSpecService extends IService<MallSpec> {
 
     /**
      * Get all specs with their values

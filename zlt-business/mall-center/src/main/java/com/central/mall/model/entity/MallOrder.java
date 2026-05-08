@@ -53,6 +53,7 @@ public class MallOrder {
     private LocalDateTime completeTime;
     private String remark;
     private String adminRemark;   // 管理员备注
+    private String openid;      // 用户openid，用于微信模板消息
     private Integer delFlag;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;

@@ -25,7 +25,7 @@ progress:
 | Phase | Name | Status | Plans |
 |-------|------|--------|-------|
 | 6 | 订单增强与管理端完善 | ✅ Complete | 2/2 |
-| 7 | 扩展功能 | ✅ Planned | — |
+| 7 | 扩展功能 | ✅ Complete | 3/3 |
 
 ---
 
@@ -35,15 +35,15 @@ See: .planning/PROJECT.md
 
 **Core value:** 为IT硬件经销商提供一套完整的B2C在线销售解决方案，同时支持实物与虚拟商品，一套系统覆盖从商品展示到支付交付的全链路电商能力。
 
-**Current focus:** v1.2 — 订单流程完善 + 管理端数据看板
+**Current focus:** v1.2 — All phases complete
 
 ---
 
 ## v1.2 Goals
 
-1. **订单增强** — 管理员关单（status=3）、改价（仅减少不高于原价）、备注（用户+管理员）
-2. **管理端数据看板** — 销售趋势（日/周/月）、库存预警、用户分析
-3. **扩展功能** — Redis Lua库存原子化、平台自营+商户多租户、微信模板消息
+1. **订单增强** — 管理员关单（status=3）、改价（仅减少不高于原价）、备注（用户+管理员） ✅
+2. **管理端数据看板** — 销售趋势（日/周/月）、库存预警、用户分析 ✅
+3. **扩展功能** — Redis Lua库存原子化、平台自营+商户多租户、微信模板消息 ✅
 
 ---
 
@@ -59,6 +59,24 @@ See: .planning/PROJECT.md
 - Summary: `.planning/phases/06-订单增强与管理端/06-01-SUMMARY.md`
 - Commit: `5e769995c` - feat(6-02): implement admin dashboard statistics APIs
 - Summary: `.planning/phases/06-订单增强与管理端完善/06-02-SUMMARY.md`
+
+---
+
+## Phase 7 Summary
+
+| Plan | Objective | Requirements | Status |
+|------|-----------|-------------|--------|
+| 07-01 | Redis Lua原子化库存扣减 | ADVANCED-02 | ✅ Complete |
+| 07-02 | 商户多租户入驻平台 | ADVANCED-03 | ✅ Complete |
+| 07-03 | 微信模板消息通知 | ADVANCED-04 | ✅ Complete |
+
+### Completed Plans (07-01, 07-02, 07-03)
+- Commit: `b99624d52` - fix(7-01): use Spring Data Redis scripting instead of broken Redisson API
+- Commit: `f3fde06c2` - feat(7-02): add MallMerchant entity and mapper for multi-tenant merchant platform
+- Commit: `ad6b9b2a0` - feat(7-02): add MerchantServiceImpl and AdminMerchantController for merchant review
+- Commit: `ce45acaeb` - feat(7-03): add openid field to MallOrder for WeChat template messages
+- Commit: `223abdfd3` - feat(7-03): create WeChatTemplateMsgUtil for sending template messages
+- Commit: `7c19fdb22` - feat(7-03): integrate WeChatTemplateMsgUtil into PayServiceImpl and OrderServiceImpl
 
 ---
 

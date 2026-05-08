@@ -48,7 +48,7 @@
 - `b74b5f699` - feat(6-01): add order extension features
 - `5e769995c` - feat(6-02): implement admin dashboard statistics APIs
 
-## Phase 7: 扩展功能 ✅ Planned
+## Phase 7: 扩展功能 ✅ Complete
 
 **Goal:** Redis Lua原子化库存 + 平台自营+商户模式 + 微信模板消息
 
@@ -60,9 +60,15 @@
 
 **Mode:** standard
 
-**Plans:** (to be created via /gsd-plan-phase 7)
+**Plans:** 07-01, 07-02, 07-03
 
-**Context:** `.planning/phases/07-扩展功能/07-CONTEXT.md`
+**Commits:**
+- `b99624d52` - fix(7-01): use Spring Data Redis scripting instead of broken Redisson API
+- `f3fde06c2` - feat(7-02): add MallMerchant entity and mapper for multi-tenant merchant platform
+- `ad6b9b2a0` - feat(7-02): add MerchantServiceImpl and AdminMerchantController for merchant review
+- `ce45acaeb` - feat(7-03): add openid field to MallOrder for WeChat template messages
+- `223abdfd3` - feat(7-03): create WeChatTemplateMsgUtil for sending template messages
+- `7c19fdb22` - feat(7-03): integrate WeChatTemplateMsgUtil into PayServiceImpl and OrderServiceImpl
 
 ---
 *Roadmap updated: 2026-05-08*

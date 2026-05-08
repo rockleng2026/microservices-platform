@@ -53,6 +53,20 @@
 
 ---
 
+## Phase 6: 订单增强与管理端完善
+
+### 订单流程增强 (ORDER-EXT)
+- [ ] **ORDER-EXT-01**: 管理员可关闭/取消订单（已发货订单强制关闭）
+- [ ] **ORDER-EXT-02**: 管理员可修改订单金额（优惠折让/运费调整）
+- [ ] **ORDER-EXT-03**: 用户和管理员可给订单添加/查看备注
+
+### 统计看板 (STAT)
+- [ ] **STAT-01**: 销售趋势统计（日/周/月维度）
+- [ ] **STAT-02**: 库存预警统计（低于阈值的SKU）
+- [ ] **STAT-03**: 用户分析（新增用户、活跃度）
+
+---
+
 ## v2 Requirements (Deferred)
 
 ### 退款扩展
@@ -83,18 +97,18 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| COMPILE-01 | Phase 5 | Pending |
-| REFUND-01~03 | Phase 6 | Pending |
-| REFUND-04~10 | Phase 6 | Pending |
-| MARKETING-01~04 | Phase 7 | Pending |
-| MARKETING-05~06 | Phase 7 | Pending |
-| MARKETING-07~09 | Phase 7 | Pending |
+| COMPILE-01 | Phase 5 | ✅ Complete |
+| REFUND-01~03 | Phase 5 | ✅ Complete |
+| REFUND-04~10 | Phase 5 | ✅ Complete |
+| MARKETING-01~04 | Phase 5 | ✅ Complete |
+| MARKETING-05~06 | Phase 5 | ✅ Complete |
+| MARKETING-07~09 | Phase 5 | ✅ Complete |
+| ORDER-EXT-01~03 | Phase 6 | Pending |
+| STAT-01~03 | Phase 6 | ✅ Complete |
 
 **Coverage:**
-- v1.1 requirements: 20 total
-- Phase 5: 1 (编译修复)
-- Phase 6: 10 (退款模块)
-- Phase 7: 9 (营销模块)
+- v1.1 requirements: 20 total (COMPILE-01 + REFUND-01~10 + MARKETING-01~09)
+- v1.2 requirements: 6 total (ORDER-EXT-01~03 + STAT-01~03)
 
 ---
 *Requirements defined: 2026-05-08*

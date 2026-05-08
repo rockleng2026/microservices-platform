@@ -109,6 +109,12 @@ spring:
             - Path=/api-search/**
           filters:
             - StripPrefix=1
+        - id: mall-center
+          uri: lb://mall-center
+          predicates:
+            - Path=/api-mall/**
+          filters:
+            - StripPrefix=1
 #    sentinel:
 #      datasource.ds1.nacos:
 #        server-addr: ${spring.cloud.nacos.server-addr}

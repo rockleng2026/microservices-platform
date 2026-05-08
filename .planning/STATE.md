@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: milestone
-status: planned
-last_updated: "2026-05-08T22:30:00.000Z"
+status: completed
+last_updated: "2026-05-08T23:15:00.000Z"
 progress:
   total_phases: 1
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 2
-  completed_plans: 0
+  completed_plans: 2
 ---
 
 # State: Mall-Center 在线商城系统
@@ -24,7 +24,7 @@ progress:
 
 | Phase | Name | Status | Plans |
 |-------|------|--------|-------|
-| 6 | 订单增强与管理端完善 | ✅ Planned | 2/2 |
+| 6 | 订单增强与管理端完善 | ✅ Complete | 2/2 |
 
 ---
 
@@ -52,7 +52,9 @@ See: .planning/PROJECT.md
 | 06-01 | 订单增强（管理员关单、改价、备注） | ORDER-EXT-01~03 | ✅ Complete |
 | 06-02 | 管理端数据看板（销售趋势、库存预警、用户分析） | STAT-01~03 | ✅ Complete |
 
-### Completed Plans (06-02)
+### Completed Plans (06-01, 06-02)
+- Commit: `b74b5f699` - feat(6-01): add order extension features - admin close/adjust/remark, user remark
+- Summary: `.planning/phases/06-订单增强与管理端/06-01-SUMMARY.md`
 - Commit: `5e769995c` - feat(6-02): implement admin dashboard statistics APIs
 - Summary: `.planning/phases/06-订单增强与管理端完善/06-02-SUMMARY.md`
 

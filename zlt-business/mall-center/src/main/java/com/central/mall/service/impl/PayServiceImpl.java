@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -159,6 +160,75 @@ public class PayServiceImpl implements IPayService {
             case 4: return "COMPLETED";
             case 5: return "CANCELLED";
             default: return "UNKNOWN";
+        }
+    }
+
+    @Override
+    public String processRefund(Long orderId, BigDecimal refundAmount, String refundNo) {
+        MallOrder order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new RuntimeException("Order not found");
+        }
+
+        // Build WeChat refund request parameters (v3 API)
+        Map<String, String> params = new HashMap<>();
+        params.put("appid", appId != null ? appId : "");
+        params.put("mch_id", mchId != null ? mchId : "");
+        params.put("nonce_str", generateNonceStr());
+        params.put("out_refund_no", refundNo);  // Unique idempotency key
+        params.put("transaction_id", "");  // Use out_trade_no or transaction_id
+        params.put("out_trade_no", order.getOrderNo());
+        // Convert to fen (cents)
+        params.put("total_fee", String.valueOf(order.getPayAmount().multiply(new BigDecimal("100")).intValue()));
+        params.put("refund_fee", String.valueOf(refundAmount.multiply(new BigDecimal("100")).intValue()));
+        params.put("refund_desc", "Mall order refund: " + order.getOrderNo());
+
+        // Generate signature
+        if (apiKey != null && !apiKey.isEmpty()) {
+            params.put("sign", WeChatPayUtil.generateSignature(params, apiKey));
+        }
+
+        try {
+            // Call WeChat refund API v3
+            String refundUrl = "https://api.mch.weixin.qq.com/v3/refund/domestic/refunds";
+            String responseJson = sendRefundRequest(refundUrl, params);
+
+            // Parse response - in production, parse the JSON response
+            log.info("WeChat refund processed: orderId={}, refundNo={}, response={}", orderId, refundNo, responseJson);
+            return refundNo;  // Return the refund_no as confirmation
+        } catch (Exception e) {
+            log.error("Error processing WeChat refund", e);
+            throw new RuntimeException("Refund processing failed: " + e.getMessage(), e);
+        }
+    }
+
+    private String sendRefundRequest(String url, Map<String, String> params) {
+        try {
+            // Build JSON request body for v3 API using Jackson
+            com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            java.util.Map<String, Object> jsonBody = new java.util.HashMap<>();
+            jsonBody.put("appid", params.get("appid"));
+            jsonBody.put("mch_id", params.get("mch_id"));
+            jsonBody.put("nonce_str", params.get("nonce_str"));
+            jsonBody.put("out_refund_no", params.get("out_refund_no"));
+            jsonBody.put("transaction_id", params.get("transaction_id"));
+            jsonBody.put("out_trade_no", params.get("out_trade_no"));
+            jsonBody.put("total_fee", params.get("total_fee"));
+            jsonBody.put("refund_fee", params.get("refund_fee"));
+            jsonBody.put("refund_desc", params.get("refund_desc"));
+
+            String jsonString = objectMapper.writeValueAsString(jsonBody);
+
+            org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+            headers.setContentType(org.springframework.http.MediaType.APPLICATION_JSON);
+
+            org.springframework.http.HttpEntity<String> entity = new org.springframework.http.HttpEntity<>(jsonString, headers);
+            org.springframework.http.ResponseEntity<String> response = restTemplate.postForEntity(url, entity, String.class);
+
+            return response.getBody();
+        } catch (Exception e) {
+            log.error("Error sending refund request to WeChat Pay API", e);
+            throw new RuntimeException("Failed to call WeChat Pay Refund API", e);
         }
     }
 

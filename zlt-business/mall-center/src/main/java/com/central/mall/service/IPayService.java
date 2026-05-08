@@ -20,4 +20,10 @@ public interface IPayService {
      * Query payment status
      */
     String queryPayStatus(Long orderId);
+
+    /**
+     * Process WeChat refund (REFUND-07)
+     * Uses unique refund_no for idempotency
+     */
+    String processRefund(Long orderId, java.math.BigDecimal refundAmount, String refundNo);
 }

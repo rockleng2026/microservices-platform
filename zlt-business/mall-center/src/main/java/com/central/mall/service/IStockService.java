@@ -38,4 +38,10 @@ public interface IStockService {
      * Check if stock is below threshold (STOCK-06)
      */
     boolean isBelowThreshold(Long skuId);
+
+    /**
+     * Restore stock on refund (REFUND-09)
+     * Called only after WeChat refund success callback
+     */
+    void restoreStockOnRefund(Long orderId);
 }

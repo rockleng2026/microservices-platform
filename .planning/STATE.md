@@ -44,10 +44,10 @@ See: .planning/PROJECT.md
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: Not started (context gathered)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-05-09 — Milestone v2.0 started
+Status: Context gathered
+Last activity: 2026-05-09 — Phase 8 context gathered (Dashboard + Mini Home/List/Detail)
 
 ---
 

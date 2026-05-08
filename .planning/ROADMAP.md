@@ -48,15 +48,21 @@
 - `b74b5f699` - feat(6-01): add order extension features
 - `5e769995c` - feat(6-02): implement admin dashboard statistics APIs
 
-## Phase 7: 扩展功能（规划中）
+## Phase 7: 扩展功能 ✅ Planned
 
-**Goal:** 预留扩展方向
+**Goal:** Redis Lua原子化库存 + 平台自营+商户模式 + 微信模板消息
 
 **Requirements:**
 - ~~ADVANCED-01: 商品搜索接入Elasticsearch提升体验~~ ❌ 已移除（增加系统复杂度和部署难度）
 - ADVANCED-02: Redis Lua脚本进一步提升库存扣减并发性能
 - ADVANCED-03: 多租户商户入驻（运营层面支持切换租户）
 - ADVANCED-04: 模板消息通知（微信消息通知用户）
+
+**Mode:** standard
+
+**Plans:** (to be created via /gsd-plan-phase 7)
+
+**Context:** `.planning/phases/07-扩展功能/07-CONTEXT.md`
 
 ---
 *Roadmap updated: 2026-05-08*

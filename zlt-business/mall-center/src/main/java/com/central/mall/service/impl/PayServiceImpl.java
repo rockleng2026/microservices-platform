@@ -6,9 +6,12 @@ import com.central.mall.model.entity.MallOrder;
 import com.central.mall.service.IOrderService;
 import com.central.mall.service.IPayService;
 import com.central.mall.utils.WeChatPayUtil;
+import com.central.mall.utils.WeChatTemplateMsgUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -36,6 +39,10 @@ public class PayServiceImpl implements IPayService {
 
     @Value("${wechat.pay.notify-url:#{null}}")
     private String notifyUrl;
+
+    @Lazy
+    @Autowired
+    private WeChatTemplateMsgUtil weChatTemplateMsgUtil;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -137,6 +144,13 @@ public class PayServiceImpl implements IPayService {
 
             // Update order as paid (will handle virtual goods auto-complete)
             orderService.updateOrderPaid(order.getId());
+
+            // Send WeChat template message notification
+            try {
+                weChatTemplateMsgUtil.sendOrderNotify(order);
+            } catch (Exception e) {
+                log.error("Failed to send order notification for order {}", order.getOrderNo(), e);
+            }
 
             log.info("WeChat Pay callback processed successfully: orderNo={}, transactionId={}", orderNo, transactionId);
             return true;

@@ -8,8 +8,11 @@ import com.central.mall.model.dto.CreateOrderDTO;
 import com.central.mall.model.entity.*;
 import com.central.mall.service.IOrderService;
 import com.central.mall.service.IStockService;
+import com.central.mall.utils.WeChatTemplateMsgUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +35,10 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
     private final MallUserAddressMapper addressMapper;
     private final MallDeliveryMapper deliveryMapper;
     private final MallResourceDeliveryMapper resourceDeliveryMapper;
+
+    @Lazy
+    @Autowired
+    private WeChatTemplateMsgUtil weChatTemplateMsgUtil;
 
     /**
      * Stub: get current user ID from auth context
@@ -288,6 +295,13 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
         order.setShipTime(LocalDateTime.now());
         order.setUpdateTime(LocalDateTime.now());
         baseMapper.updateById(order);
+
+        // Send WeChat template message notification
+        try {
+            weChatTemplateMsgUtil.sendShippingNotify(order, expressName, waybillNo);
+        } catch (Exception e) {
+            log.error("Failed to send shipping notification for order {}", order.getOrderNo(), e);
+        }
 
         return true;
     }

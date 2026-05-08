@@ -1,19 +1,33 @@
 package com.central.mall.model.dto;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 import java.util.List;
 
 @Data
 public class CreateOrderDTO {
+    @NotNull(message = "商品类型不能为空")
     private Integer goodsType;       // 1=实物, 2=虚拟
-    private Long addressId;          // 收货地址ID（虚拟商品可为空）
-    private List<Long> cartItemIds;  // 从购物车购买时的购物车项ID列表
-    private List<DirectBuyItemDTO> items;  // 直接购买时的商品列表
-    private String remark;           // 订单备注
+
+    // addressId required for physical goods
+    private Long addressId;
+
+    // From cart purchase
+    private List<Long> cartItemIds;
+
+    // Direct purchase
+    private List<DirectBuyItemDTO> items;
+
+    private String remark;
 
     @Data
     public static class DirectBuyItemDTO {
+        @NotNull(message = "SKU不能为空")
         private Long skuId;
+
+        @NotNull(message = "数量不能为空")
         private Integer quantity;
+
+        private Long goodsId;
     }
 }

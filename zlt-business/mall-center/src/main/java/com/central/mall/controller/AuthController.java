@@ -27,6 +27,6 @@ public class AuthController {
         Map<String, Object> result = new HashMap<>();
         result.put("token", "MOCK_TOKEN_" + System.currentTimeMillis());
         result.put("userId", 1L);
-        return Result.success(result);
+        return Result.succeed(result);
     }
 }

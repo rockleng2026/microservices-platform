@@ -42,7 +42,7 @@ public class AdminGoodsController {
                         "goodsType", goodsType != null ? goodsType : ""
                 )
         );
-        return Result.success(result);
+        return Result.succeed(result);
     }
 
     @GetMapping("/{id}")
@@ -52,7 +52,7 @@ public class AdminGoodsController {
         if (goods == null) {
             return Result.failed("商品不存在");
         }
-        return Result.success(goods);
+        return Result.succeed(goods);
     }
 
     @PostMapping
@@ -71,7 +71,7 @@ public class AdminGoodsController {
             return Result.failed("价格不能为空");
         }
         boolean result = adminGoodsService.publishGoods(dto);
-        return result ? Result.success(true, "商品发布成功") : Result.failed("商品发布失败");
+        return result ? Result.succeed(true, "商品发布成功") : Result.failed("商品发布失败");
     }
 
     @PutMapping
@@ -81,21 +81,21 @@ public class AdminGoodsController {
             return Result.failed("商品ID不能为空");
         }
         boolean result = adminGoodsService.updateGoods(dto);
-        return result ? Result.success(true, "商品更新成功") : Result.failed("商品更新失败");
+        return result ? Result.succeed(true, "商品更新成功") : Result.failed("商品更新失败");
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除商品（软删除）")
     public Result<Boolean> deleteGoods(@PathVariable Long id) {
         boolean result = adminGoodsService.deleteGoods(id);
-        return result ? Result.success(true, "商品删除成功") : Result.failed("商品删除失败");
+        return result ? Result.succeed(true, "商品删除成功") : Result.failed("商品删除失败");
     }
 
     @PutMapping("/{id}/status/{status}")
     @Operation(summary = "更新商品状态")
     public Result<Boolean> updateStatus(@PathVariable Long id, @PathVariable @NotNull Integer status) {
         boolean result = adminGoodsService.updateStatus(id, status);
-        return result ? Result.success(true, "状态更新成功") : Result.failed("状态更新失败");
+        return result ? Result.succeed(true, "状态更新成功") : Result.failed("状态更新失败");
     }
 
     @PutMapping("/batch/status")
@@ -108,7 +108,7 @@ public class AdminGoodsController {
             return Result.failed("状态值不能为空");
         }
         boolean result = adminGoodsService.batchUpdateStatus(dto.getGoodsIds(), dto.getStatus());
-        return result ? Result.success(true, "批量状态更新成功") : Result.failed("批量状态更新失败");
+        return result ? Result.succeed(true, "批量状态更新成功") : Result.failed("批量状态更新失败");
     }
 
     @PostMapping("/clone")
@@ -121,6 +121,6 @@ public class AdminGoodsController {
         if (newGoodsId == null) {
             return Result.failed("商品克隆失败");
         }
-        return Result.success(newGoodsId, "商品克隆成功");
+        return Result.succeed(newGoodsId, "商品克隆成功");
     }
 }

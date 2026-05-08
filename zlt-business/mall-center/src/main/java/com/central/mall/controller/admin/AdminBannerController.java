@@ -30,7 +30,7 @@ public class AdminBannerController {
     @GetMapping("/list")
     @Operation(summary = "获取轮播图列表")
     public Result<List<BannerDTO>> getBannerList() {
-        return Result.success(adminBannerService.getBannerList());
+        return Result.succeed(adminBannerService.getBannerList());
     }
 
     @PostMapping
@@ -38,41 +38,41 @@ public class AdminBannerController {
     public Result<Boolean> addBanner(@RequestBody @Validated BannerDTO dto) {
         // Validate title is required
         if (dto.getTitle() == null || dto.getTitle().trim().isEmpty()) {
-            return Result.fail("轮播图标题不能为空");
+            return Result.failed("轮播图标题不能为空");
         }
         // Validate imageUrl is required
         if (dto.getImageUrl() == null || dto.getImageUrl().trim().isEmpty()) {
-            return Result.fail("轮播图图片不能为空");
+            return Result.failed("轮播图图片不能为空");
         }
         // Validate linkType
         if (dto.getLinkType() == null || (dto.getLinkType() != 1 && dto.getLinkType() != 2)) {
-            return Result.fail("链接类型必须为1(商品)或2(外部链接)");
+            return Result.failed("链接类型必须为1(商品)或2(外部链接)");
         }
         boolean success = adminBannerService.addBanner(dto);
-        return success ? Result.success(true) : Result.fail("新增轮播图失败");
+        return success ? Result.succeed(true) : Result.failed("新增轮播图失败");
     }
 
     @PutMapping
     @Operation(summary = "编辑轮播图")
     public Result<Boolean> updateBanner(@RequestBody @Validated BannerDTO dto) {
         if (dto.getId() == null) {
-            return Result.fail("轮播图ID不能为空");
+            return Result.failed("轮播图ID不能为空");
         }
         boolean success = adminBannerService.updateBanner(dto);
-        return success ? Result.success(true) : Result.fail("编辑轮播图失败");
+        return success ? Result.succeed(true) : Result.failed("编辑轮播图失败");
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除轮播图")
     public Result<Boolean> deleteBanner(@PathVariable Long id) {
         boolean success = adminBannerService.deleteBanner(id);
-        return success ? Result.success(true) : Result.fail("删除轮播图失败");
+        return success ? Result.succeed(true) : Result.failed("删除轮播图失败");
     }
 
     @PutMapping("/{id}/sort/{sort}")
     @Operation(summary = "更新轮播图排序")
     public Result<Boolean> updateSort(@PathVariable Long id, @PathVariable Integer sort) {
         boolean success = adminBannerService.updateSort(id, sort);
-        return success ? Result.success(true) : Result.fail("更新排序失败");
+        return success ? Result.succeed(true) : Result.failed("更新排序失败");
     }
 }

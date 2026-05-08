@@ -23,7 +23,7 @@ public class AdminSpecController {
     @Operation(summary = "获取规格列表（含规格值）")
     public Result<List<SpecDTO>> getSpecList() {
         List<SpecDTO> specList = adminSpecService.getSpecList();
-        return Result.success(specList);
+        return Result.succeed(specList);
     }
 
     @PostMapping
@@ -34,7 +34,7 @@ public class AdminSpecController {
             return Result.failed("规格名称不能为空");
         }
         Long specId = adminSpecService.addSpec(specName.trim());
-        return Result.success(specId, "规格添加成功");
+        return Result.succeed(specId, "规格添加成功");
     }
 
     @PostMapping("/value")
@@ -60,20 +60,20 @@ public class AdminSpecController {
         }
 
         Long valueId = adminSpecService.addSpecValue(specId, specValue.trim());
-        return Result.success(valueId, "规格值添加成功");
+        return Result.succeed(valueId, "规格值添加成功");
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除规格（同时删除所有规格值）")
     public Result<Boolean> deleteSpec(@PathVariable Long id) {
         boolean result = adminSpecService.deleteSpec(id);
-        return result ? Result.success(true, "规格删除成功") : Result.failed("规格删除失败");
+        return result ? Result.succeed(true, "规格删除成功") : Result.failed("规格删除失败");
     }
 
     @DeleteMapping("/value/{id}")
     @Operation(summary = "删除单个规格值")
     public Result<Boolean> deleteSpecValue(@PathVariable Long id) {
         boolean result = adminSpecService.deleteSpecValue(id);
-        return result ? Result.success(true, "规格值删除成功") : Result.failed("规格值删除失败");
+        return result ? Result.succeed(true, "规格值删除成功") : Result.failed("规格值删除失败");
     }
 }

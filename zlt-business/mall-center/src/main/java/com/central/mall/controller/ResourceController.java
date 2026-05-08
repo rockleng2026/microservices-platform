@@ -45,27 +45,27 @@ public class ResourceController {
         // 1. 验证过期时间
         if (expire < System.currentTimeMillis()) {
             log.warn("Resource download expired: deliveryId={}, expire={}", deliveryId, expire);
-            return Result.fail("下载链接已过期");
+            return Result.failed("下载链接已过期");
         }
 
         // 2. 查询交付记录
         MallResourceDelivery delivery = resourceDeliveryMapper.selectById(deliveryId);
         if (delivery == null) {
             log.warn("Resource delivery not found: deliveryId={}", deliveryId);
-            return Result.fail("交付记录不存在");
+            return Result.failed("交付记录不存在");
         }
 
         // 3. 验证token
         if (!token.equals(delivery.getToken())) {
             log.warn("Resource download token mismatch: deliveryId={}, expected={}, got={}",
                     deliveryId, delivery.getToken(), token);
-            return Result.fail("下载Token无效");
+            return Result.failed("下载Token无效");
         }
 
         // 4. 验证过期时间（双重验证）
         if (delivery.getExpireTime() != null && delivery.getExpireTime().isBefore(LocalDateTime.now())) {
             log.warn("Resource download expired: deliveryId={}, expireTime={}", deliveryId, delivery.getExpireTime());
-            return Result.fail("资源已过期");
+            return Result.failed("资源已过期");
         }
 
         // 5. 增加下载次数
@@ -75,6 +75,6 @@ public class ResourceController {
         // 6. 返回资源URL
         log.info("Resource download success: deliveryId={}, downloadCount={}",
                 deliveryId, delivery.getDownloadCount());
-        return Result.success(delivery.getResourceUrl());
+        return Result.succeed(delivery.getResourceUrl());
     }
 }

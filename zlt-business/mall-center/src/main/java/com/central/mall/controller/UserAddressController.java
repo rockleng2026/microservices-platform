@@ -22,7 +22,7 @@ public class UserAddressController {
     @Operation(summary = "地址列表")
     public Result<List<MallUserAddress>> getAddressList() {
         Long userId = getCurrentUserId();
-        return Result.success(userAddressService.getByUserId(userId));
+        return Result.succeed(userAddressService.getByUserId(userId));
     }
 
     @PostMapping
@@ -31,7 +31,7 @@ public class UserAddressController {
         Long userId = getCurrentUserId();
         address.setUserId(userId);
         userAddressService.save(address);
-        return Result.success();
+        return Result.succeed();
     }
 
     @PutMapping("/{id}")
@@ -41,12 +41,12 @@ public class UserAddressController {
         // Ownership check: verify address belongs to current user
         MallUserAddress existing = userAddressService.getById(id);
         if (existing == null || !existing.getUserId().equals(userId)) {
-            return Result.fail("Address not found or access denied");
+            return Result.failed("Address not found or access denied");
         }
         address.setId(id);
         address.setUserId(userId); // Prevent userId override
         userAddressService.updateById(address);
-        return Result.success();
+        return Result.succeed();
     }
 
     @DeleteMapping("/{id}")
@@ -56,10 +56,10 @@ public class UserAddressController {
         // Ownership check: verify address belongs to current user
         MallUserAddress existing = userAddressService.getById(id);
         if (existing == null || !existing.getUserId().equals(userId)) {
-            return Result.fail("Address not found or access denied");
+            return Result.failed("Address not found or access denied");
         }
         userAddressService.removeById(id);
-        return Result.success();
+        return Result.succeed();
     }
 
     @PutMapping("/{id}/default")
@@ -69,10 +69,10 @@ public class UserAddressController {
         // Ownership check
         MallUserAddress existing = userAddressService.getById(id);
         if (existing == null || !existing.getUserId().equals(userId)) {
-            return Result.fail("Address not found or access denied");
+            return Result.failed("Address not found or access denied");
         }
         userAddressService.setDefault(userId, id);
-        return Result.success();
+        return Result.succeed();
     }
 
     private Long getCurrentUserId() {

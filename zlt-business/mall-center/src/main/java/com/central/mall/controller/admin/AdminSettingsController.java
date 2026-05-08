@@ -29,7 +29,7 @@ public class AdminSettingsController {
     @GetMapping
     @Operation(summary = "获取所有系统设置")
     public Result<List<SettingsDTO>> getAllSettings() {
-        return Result.success(adminSettingsService.getAllSettings());
+        return Result.succeed(adminSettingsService.getAllSettings());
     }
 
     /**
@@ -44,7 +44,7 @@ public class AdminSettingsController {
                 settingsDTO.getType(),
                 settingsDTO.getDescription()
         );
-        return Result.success(success);
+        return Result.succeed(success);
     }
 
     /**
@@ -53,7 +53,7 @@ public class AdminSettingsController {
     @GetMapping("/wx-config")
     @Operation(summary = "获取微信支付配置")
     public Result<Map<String, String>> getWechatPayConfig() {
-        return Result.success(adminSettingsService.getWechatPayConfig());
+        return Result.succeed(adminSettingsService.getWechatPayConfig());
     }
 
     /**
@@ -64,6 +64,6 @@ public class AdminSettingsController {
     public Result<String> testDecrypt(@RequestBody Map<String, String> request) {
         String key = request.get("key");
         String decrypted = adminSettingsService.getSetting(key);
-        return Result.success(decrypted);
+        return Result.succeed(decrypted);
     }
 }

@@ -24,14 +24,14 @@ public class UserController {
         userInfo.put("nickname", "测试用户");
         userInfo.put("avatar", "/images/avatar/default.jpg");
         userInfo.put("phone", "13800138000");
-        return Result.success(userInfo);
+        return Result.succeed(userInfo);
     }
 
     @GetMapping("/address/list")
     @Operation(summary = "获取收货地址列表")
     public Result<Object> getAddressList() {
         // TODO: implement via IUserAddressService.getByUserId(getCurrentUserId())
-        return Result.success(null);
+        return Result.succeed(null);
     }
 
     private Long getCurrentUserId() {

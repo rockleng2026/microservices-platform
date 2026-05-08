@@ -26,6 +26,6 @@ public class AdminStatisticsController {
     @GetMapping("/today")
     @Operation(summary = "获取今日统计")
     public Result<StatisticsDTO> getTodayStatistics() {
-        return Result.success(adminStatisticsService.getTodayStatistics());
+        return Result.succeed(adminStatisticsService.getTodayStatistics());
     }
 }

@@ -23,7 +23,7 @@ public class GoodsController {
     @GetMapping("/categories")
     @Operation(summary = "获取分类树")
     public Result<List<Map<String, Object>>> getCategories() {
-        return Result.success(goodsService.getCategoryTree());
+        return Result.succeed(goodsService.getCategoryTree());
     }
 
     @GetMapping("/list")
@@ -42,18 +42,18 @@ public class GoodsController {
                    "sortField", sortField,
                    "sortOrder", sortOrder)
         );
-        return Result.success(pageResult);
+        return Result.succeed(pageResult);
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "商品详情")
     public Result<Map<String, Object>> getGoodsDetail(@PathVariable Long id) {
-        return Result.success(goodsService.getGoodsDetail(id));
+        return Result.succeed(goodsService.getGoodsDetail(id));
     }
 
     @GetMapping("/hot")
     @Operation(summary = "热门推荐")
     public Result<List<MallGoods>> getHotGoods(@RequestParam(defaultValue = "10") int limit) {
-        return Result.success(goodsService.getHotGoods(limit));
+        return Result.succeed(goodsService.getHotGoods(limit));
     }
 }

@@ -29,7 +29,7 @@ public class AdminCategoryController {
     @GetMapping("/list")
     @Operation(summary = "获取分类列表(树形)")
     public Result<List<AdminCategoryDTO>> getCategoryTree() {
-        return Result.success(adminCategoryService.getCategoryTree());
+        return Result.succeed(adminCategoryService.getCategoryTree());
     }
 
     @PostMapping
@@ -37,36 +37,36 @@ public class AdminCategoryController {
     public Result<Boolean> addCategory(@RequestBody @Validated AdminCategoryDTO dto) {
         // Validate name is required
         if (dto.getName() == null || dto.getName().trim().isEmpty()) {
-            return Result.fail("分类名称不能为空");
+            return Result.failed("分类名称不能为空");
         }
         boolean success = adminCategoryService.addCategory(dto);
-        return success ? Result.success(true) : Result.fail("新增分类失败");
+        return success ? Result.succeed(true) : Result.failed("新增分类失败");
     }
 
     @PutMapping
     @Operation(summary = "编辑分类")
     public Result<Boolean> updateCategory(@RequestBody @Validated AdminCategoryDTO dto) {
         if (dto.getId() == null) {
-            return Result.fail("分类ID不能为空");
+            return Result.failed("分类ID不能为空");
         }
         boolean success = adminCategoryService.updateCategory(dto);
-        return success ? Result.success(true) : Result.fail("编辑分类失败");
+        return success ? Result.succeed(true) : Result.failed("编辑分类失败");
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "删除分类")
     public Result<Boolean> deleteCategory(@PathVariable Long id) {
         boolean success = adminCategoryService.deleteCategory(id);
-        return success ? Result.success(true) : Result.fail("删除分类失败");
+        return success ? Result.succeed(true) : Result.failed("删除分类失败");
     }
 
     @PutMapping("/sort")
     @Operation(summary = "批量排序分类")
     public Result<Boolean> sortCategories(@RequestBody List<Long> ids) {
         if (ids == null || ids.isEmpty()) {
-            return Result.fail("排序ID列表不能为空");
+            return Result.failed("排序ID列表不能为空");
         }
         boolean success = adminCategoryService.sortCategories(ids);
-        return success ? Result.success(true) : Result.fail("排序失败");
+        return success ? Result.succeed(true) : Result.failed("排序失败");
     }
 }

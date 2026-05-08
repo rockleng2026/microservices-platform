@@ -26,21 +26,21 @@ public class CartController {
         Long skuId = Long.valueOf(params.get("skuId").toString());
         Integer quantity = Integer.valueOf(params.get("quantity").toString());
         cartService.addToCart(userId, skuId, quantity);
-        return Result.success();
+        return Result.succeed();
     }
 
     @GetMapping("/list")
     @Operation(summary = "购物车列表")
     public Result<List<Map<String, Object>>> getCartList() {
         Long userId = getCurrentUserId();
-        return Result.success(cartService.getCartList(userId));
+        return Result.succeed(cartService.getCartList(userId));
     }
 
     @GetMapping("/total")
     @Operation(summary = "购物车总价")
     public Result<BigDecimal> getCartTotal(@RequestParam List<Long> checkedSkuIds) {
         Long userId = getCurrentUserId();
-        return Result.success(cartService.calculateTotal(userId, checkedSkuIds));
+        return Result.succeed(cartService.calculateTotal(userId, checkedSkuIds));
     }
 
     @PutMapping("/{id}")
@@ -53,7 +53,7 @@ public class CartController {
         if (params.containsKey("checked")) {
             cartService.updateChecked(id, userId, Integer.valueOf(params.get("checked").toString()));
         }
-        return Result.success();
+        return Result.succeed();
     }
 
     @DeleteMapping("/{id}")
@@ -61,7 +61,7 @@ public class CartController {
     public Result<Void> deleteCartItem(@PathVariable Long id) {
         Long userId = getCurrentUserId();
         cartService.deleteCartItem(id, userId);
-        return Result.success();
+        return Result.succeed();
     }
 
     @DeleteMapping("/clear")
@@ -69,7 +69,7 @@ public class CartController {
     public Result<Void> clearChecked() {
         Long userId = getCurrentUserId();
         cartService.clearChecked(userId);
-        return Result.success();
+        return Result.succeed();
     }
 
     private Long getCurrentUserId() {

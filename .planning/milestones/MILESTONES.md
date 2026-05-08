@@ -35,3 +35,48 @@
 ---
 
 *Last updated: 2026-05-08*
+---
+
+## v1.2 — 2026-05-08
+
+**Phases:** 3 | **Plans:** 8 | **Tasks:** ~16
+
+### Key Accomplishments
+
+1. 修复编译问题 — Result.succeed() 泛型修复，项目完整编译
+2. 退款模块完成 — 用户申请→管理员审核→微信退款→库存回增，状态机完整
+3. 营销模块完成 — 优惠券/促销互斥、会员积分体系
+4. 订单增强 — 管理员关单（status=3）、改价（仅允许减少）、备注
+5. 数据看板 — 销售趋势/库存预警/用户分析
+6. 扩展功能 — Redis Lua原子化库存、商户多租户入驻、微信模板消息
+
+### Stats
+
+- Commits: 23 (since 526c09365)
+- Files changed: 53
+- Lines added: +6,830 / -51
+- Timeline: 2026-05-08 (single day session)
+
+### Decisions
+
+| Decision | Outcome |
+|----------|---------|
+| 使用 Spring Data Redis scripting 替代 Redisson | ✓ Implemented (API不存在但效果相同) |
+| 商户审批后自动生成 MERCHANT_{id} 作为 tenantId | ✓ Implemented |
+| 优惠券与促销活动互斥 | ✓ Implemented |
+| ADVANCED-01 (Elasticsearch) Dropped | ❌ Removed — 增加系统复杂度和部署难度 |
+
+### Known Tech Debt
+
+- OrderServiceImpl.java line 45 TODO (zlt-uaa 集成，pre-existing)
+- 微信支付联调需要真实商户参数
+
+### Requirements Coverage
+
+- COMPILE-01 ✅ | REFUND-01~10 ✅ | MARKETING-01~09 ✅
+- ORDER-EXT-01~03 ✅ | STAT-01~03 ✅
+- ADVANCED-02~04 ✅ | ADVANCED-01 ❌ Dropped
+
+---
+
+*Last updated: 2026-05-09*

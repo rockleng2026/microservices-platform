@@ -8,14 +8,12 @@
 
 为IT硬件经销商提供一套完整的B2C在线销售解决方案，同时支持实物与虚拟商品，一套系统覆盖从商品展示到支付交付的全链路电商能力。
 
-## Current Milestone: v1.1
+## Current Milestone: v2.0
 
-**Goal:** 修复编译问题 + 实现退款和营销模块
+**Goal:** 下一版本规划中
 
 **Target features:**
-- 修复 Phase 1/2 Result.succeed() 泛型编译问题
-- 退款模块：用户发起退款 → 管理员审核 → 微信退款 → 库存回增
-- 营销模块：优惠券、满减活动、会员等级
+- 待定（可通过 `/gsd-new-milestone` 开始规划）
 
 ## Requirements
 
@@ -35,35 +33,28 @@
 - ✓ EVAL-01~03 — Phase 4 (评价模块：评分/评论/图片)
 - ✓ USER-04~05 — Phase 4 (用户列表、消费统计)
 - ✓ DELIVERY-02~04 — Phase 4 (物流轨迹追踪)
+- ✓ COMPILE-01 — Phase 5 (Result.succeed() 泛型修复)
+- ✓ REFUND-01~10 — Phase 5 (退款模块：申请/审核/微信退款/库存回增)
+- ✓ MARKETING-01~09 — Phase 5 (营销模块：优惠券/促销/会员积分)
+- ✓ ORDER-EXT-01~03 — Phase 6 (管理员关单/改价/备注)
+- ✓ STAT-01~03 — Phase 6 (销售趋势/库存预警/用户分析)
+- ✓ ADVANCED-02 — Phase 7 (Redis Lua 原子化库存)
+- ✓ ADVANCED-03 — Phase 7 (商户多租户入驻)
+- ✓ ADVANCED-04 — Phase 7 (微信模板消息通知)
 
 ### Active
 
-(None — v1.1 not yet started)
-- ✓ CART-01~06 — Phase 1 (购物车全功能)
-- ✓ USER-01~03 — Phase 1 (微信登录、收货地址、个人信息)
-- ✓ VIRTUAL-01 — Phase 1 (虚拟商品无需收货地址)
-- ✓ GOODS-05~08 — Phase 2 (管理员商品管理、批量上下架、实物/虚拟商品类型)
-- ✓ SYS-01~03 — Phase 2 (轮播图管理、微信支付参数配置、统计卡片)
-- ✓ VIRTUAL-02~04 — Phase 2 (虚拟商品资源交付、有效期、无限制库存)
-- ✓ ORDER-01~09 — Phase 3 (订单创建/流转/管理)
-- ✓ PAY-01~04 — Phase 3 (微信JSAPI支付集成)
-- ✓ STOCK-01~06 — Phase 3 (Redis库存预占/真实扣减/释放、手动修正、预警)
-- ✓ DELIVERY-01 — Phase 3 (物流公司配置CRUD)
-- ✓ EVAL-01~03 — Phase 4 (评价模块：评分/评论/图片)
-- ✓ USER-04~05 — Phase 4 (用户列表、消费统计)
-- ✓ DELIVERY-02~04 — Phase 4 (物流轨迹追踪)
-
-### Active
-
-(None — v1.0 MVP shipped)
+(None — v2.0 not yet planned)
 
 ### Out of Scope
 
-- 优惠券/满减活动（一期）— 营销工具可二期扩展
+- 优惠券/满减活动（一期→二期）— v1.2 已实现
 - 会员与权限精细化控制（一期）— 复用平台现有用户体系
-- 退款流程自动化（一期）— 人工审核退款即可
-- 多租户商户入驻（一期）— 表结构已支持，运营层面先单租户运营
 - 视频/直播带货 — 非核心需求
+- 自动化退款审批 — 欺诈风险，人工审核更安全
+- 限时秒杀（Redis原子扣减库存）— 可复用 Lua 脚本
+- 积分兑换商品 — 复杂度高，二期再做
+- Elasticsearch搜索 — 增加系统复杂度和部署难度
 
 ## Context
 
@@ -77,22 +68,16 @@
 - docs/mall-center/在线销售服务器硬件小程序开发V1.0.md — 基础需求（实物商品）
 - docs/mall-center/在线销售服务器硬件小程序开发V1.1.md — 修订需求（新增虚拟商品类型）
 
-**设计约束：**
-- 遵循现有架构规范：表结构必含 `id`、`tenant_id`、`create_time`、`update_time`
-- 复用现有公共组件：zlt-common-spring-boot-starter、zlt-db-starter、zlt-redis-starter、zlt-auth-client-starter
-- 网关路由：所有 `/api/mall/**` 路由至 mall-center
-- 微信登录通过 zlt-uaa 集成（接收code换Token）
-
 **当前状态：**
 - v1.0 MVP 已完成 (2026-05-08)
-- v1.1 规划中（修复编译 + 退款 + 营销模块）
-- Phase 1/2 存在编译问题 (Result.succeed() 泛型)，不影响功能
+- v1.2 已完成 (2026-05-08) — 退款+营销+订单增强+扩展功能
+- v2.0 规划中
 
 ## Constraints
 
 - **技术栈**: Spring Boot 3.x + Spring Cloud Alibaba + MyBatis Plus — 必须复用平台技术栈
 - **微信支付**: JSAPI支付，配置待后期联调 — 一期先完成业务逻辑，支付联调后续
-- **多租户**: 表结构支持 `tenant_id`，但一期运营层面单租户 — 避免过度设计
+- **多租户**: 表结构支持 `tenant_id`，商户运营层面多租户 — v1.2 已实现
 - **前端载体**: 微信小程序（主）+ 管理后台Web（独立项目） — 小程序和管理后台分开开发
 
 ## Key Decisions
@@ -106,6 +91,9 @@
 | 库存扣减：下单预占+支付成功真实扣减 | Redis原子操作防超卖，订单超时回滚 | ✓ |
 | 管理后台独立前端项目 | 复用现有 zlt-web 或新建 Vue3 项目 | ✓ |
 | 微信支付配置 | 一期暂不配置，待后期联调再配置真实商户参数 | ⚠️ Deferred |
+| 使用 Spring Data Redis scripting 替代 Redisson evalReadOnly | Redisson API 不存在但效果相同 | ✓ |
+| 商户审批后自动生成 `MERCHANT_{id}` 作为 tenantId | 运营层面多租户隔离 | ✓ |
+| 优惠券与促销活动互斥，同一订单只能使用一种 | 避免利润侵蚀，简化业务逻辑 | ✓ |
 
 ## Evolution
 
@@ -125,4 +113,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state (users, feedback, metrics)
 
 ---
-*Last updated: 2026-05-08 after v1.0 MVP milestone*
+*Last updated: 2026-05-09 after v1.2 milestone*

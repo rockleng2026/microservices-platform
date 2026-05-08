@@ -75,7 +75,7 @@ zlt-business/mall-center/
     └── mapper/
 ```
 
-**Database Tables:**
+**Plans:**
 - mall_category (商品分类)
 - mall_goods (商品信息，含goods_type区分实物/虚拟)
 - mall_goods_spec (商品规格定义)
@@ -126,7 +126,7 @@ model/dto/
 └── BannerDTO.java
 ```
 
-**Database Tables:**
+**Plans:**
 - mall_banner (轮播图)
 - mall_express (物流公司配置)
 - mall_settings (系统配置)
@@ -192,7 +192,7 @@ utils/
 └── WeChatPayUtil.java
 ```
 
-**Database Tables:**
+**Plans:**
 - mall_order (订单主表)
 - mall_order_item (订单明细)
 - mall_delivery (物流信息)

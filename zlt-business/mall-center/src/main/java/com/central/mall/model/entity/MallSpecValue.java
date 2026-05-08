@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 public class MallSpecValue extends Model<MallSpecValue> {
     private Long id;
     private String tenantId;
-    private Long specId;            // 规格ID
-    private String specValue;       // 规格值(如:红色,16GB,1TB)
+    private Long specId;
+    private String specValue;
     private LocalDateTime createTime;
 }

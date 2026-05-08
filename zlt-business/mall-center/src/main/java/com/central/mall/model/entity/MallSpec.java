@@ -10,6 +10,6 @@ import java.time.LocalDateTime;
 public class MallSpec extends Model<MallSpec> {
     private Long id;
     private String tenantId;
-    private String specName;        // 规格名称(如:颜色,内存,硬盘)
+    private String specName;
     private LocalDateTime createTime;
 }

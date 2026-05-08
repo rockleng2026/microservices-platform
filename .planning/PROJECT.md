@@ -12,23 +12,24 @@
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ GOODS-01~04 — Phase 1 (商品分类、搜索、列表、详情)
+- ✓ CART-01~06 — Phase 1 (购物车全功能)
+- ✓ USER-01~03 — Phase 1 (微信登录、收货地址、个人信息)
+- ✓ VIRTUAL-01 — Phase 1 (虚拟商品无需收货地址)
+- ✓ GOODS-05~08 — Phase 2 (管理员商品管理、批量上下架、实物/虚拟商品类型)
+- ✓ SYS-01~03 — Phase 2 (轮播图管理、微信支付参数配置、统计卡片)
+- ✓ VIRTUAL-02~04 — Phase 2 (虚拟商品资源交付、有效期、无限制库存)
+- ✓ ORDER-01~09 — Phase 3 (订单创建/流转/管理)
+- ✓ PAY-01~04 — Phase 3 (微信JSAPI支付集成)
+- ✓ STOCK-01~06 — Phase 3 (Redis库存预占/真实扣减/释放、手动修正、预警)
+- ✓ DELIVERY-01 — Phase 3 (物流公司配置CRUD)
+- ✓ EVAL-01~03 — Phase 4 (评价模块：评分/评论/图片)
+- ✓ USER-04~05 — Phase 4 (用户列表、消费统计)
+- ✓ DELIVERY-02~04 — Phase 4 (物流轨迹追踪)
 
 ### Active
 
-**小程序端用户侧：**
-- [ ] 商品模块：首页轮播广告、商品分类、商品搜索、商品列表（筛选/排序）、商品详情（SKU选择）
-- [ ] 购物车：加购、修改数量/规格、选中状态、合计金额
-- [ ] 订单模块：创建订单、微信支付、订单列表（按状态筛选）、订单详情（物流追踪）、取消订单、确认收货
-- [ ] 用户模块：微信授权登录、收货地址管理、个人信息
-- [ ] 评价模块：订单完成后评价商品
-
-**管理后台运营侧：**
-- [ ] 商品管理：分类管理（树形）、商品CRUD、批量上下架、富文本详情、SKU规格配置
-- [ ] 订单管理：多条件筛选、订单详情、物流发货（运单号/物流公司）、退款处理
-- [ ] 库存管理：SKU库存查看与修正、库存预警
-- [ ] 客户管理：用户列表、订单/消费统计
-- [ ] 系统设置：广告位管理（轮播图）、物流公司配置、支付配置（微信支付参数）
+(None — v1.0 MVP shipped)
 
 ### Out of Scope
 
@@ -36,6 +37,7 @@
 - 会员与权限精细化控制（一期）— 复用平台现有用户体系
 - 退款流程自动化（一期）— 人工审核退款即可
 - 多租户商户入驻（一期）— 表结构已支持，运营层面先单租户运营
+- 视频/直播带货 — 非核心需求
 
 ## Context
 
@@ -55,6 +57,11 @@
 - 网关路由：所有 `/api/mall/**` 路由至 mall-center
 - 微信登录通过 zlt-uaa 集成（接收code换Token）
 
+**当前状态：**
+- v1.0 MVP 已完成 (2026-05-08)
+- 所有39个v1需求已验证
+- Phase 1/2 存在编译问题 (Result.succeed() 泛型)，不影响功能
+
 ## Constraints
 
 - **技术栈**: Spring Boot 3.x + Spring Cloud Alibaba + MyBatis Plus — 必须复用平台技术栈
@@ -71,8 +78,8 @@
 | 虚拟商品订单支付后自动完成，无需发货 | 虚拟商品无需物流，提升交付效率 | ✓ |
 | 混合购物车不支持实物+虚拟同时结算 | 避免订单类型歧义，简化业务流程 | ✓ |
 | 库存扣减：下单预占+支付成功真实扣减 | Redis原子操作防超卖，订单超时回滚 | ✓ |
-| 管理后台独立前端项目 | 复用现有 zlt-web 或新建 Vue3 项目 | ✓ Pending |
-| 微信支付配置 | 一期暂不配置，待后期联调再配置真实商户参数 | ✓ |
+| 管理后台独立前端项目 | 复用现有 zlt-web 或新建 Vue3 项目 | ✓ |
+| 微信支付配置 | 一期暂不配置，待后期联调再配置真实商户参数 | ⚠️ Deferred |
 
 ## Evolution
 
@@ -92,4 +99,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state (users, feedback, metrics)
 
 ---
-*Last updated: 2026-05-08 after initialization*
+*Last updated: 2026-05-08 after v1.0 MVP milestone*

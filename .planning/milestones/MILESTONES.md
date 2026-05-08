@@ -79,4 +79,19 @@
 
 ---
 
-*Last updated: 2026-05-09*
+## v2.0 — Planning (2026-05-09)
+
+**Goal:** 开发管理前端（React + Umi + Ant Design）和微信小程序（uni-app + Vue）
+
+**Target features:**
+- 管理后台 Web：商品管理、订单管理、优惠券/促销管理、发货与物流等运营模块
+- 微信小程序：面向消费者的商品浏览、购物车、订单、支付等用户侧功能
+- 页面设计需调用 `/gsd-ui-phase` 进行 UI 设计规划
+
+**技术栈：**
+- 管理后台：React 18 + Umi 4 + Ant Design Pro（与 portal-web 保持一致）
+- 微信小程序：uni-app + Vue 3
+
+**Status:** 需求定义中
+
+---

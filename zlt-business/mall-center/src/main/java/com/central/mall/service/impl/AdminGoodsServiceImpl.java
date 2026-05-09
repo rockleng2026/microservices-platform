@@ -59,11 +59,15 @@ public class AdminGoodsServiceImpl extends ServiceImpl<MallGoodsMapper, MallGood
             wrapper.eq(MallGoods::getGoodsType, Integer.parseInt(params.get("goodsType").toString()));
         }
         wrapper.orderByDesc(MallGoods::getCreateTime);
-        Page<MallGoods> queryPage = new Page<>(page.getCurrent(), page.getSize());
-        IPage<MallGoods> goodsPage = baseMapper.selectPage(queryPage, wrapper);
-        IPage<AdminGoodsDTO> result = new Page<>(goodsPage.getCurrent(), goodsPage.getSize(), goodsPage.getTotal());
-        result.setRecords(goodsPage.getRecords().stream().map(this::convertToDTO).collect(Collectors.toList()));
-        return result;
+        // Use manual count query + select with wrapper.last() to avoid double LIMIT issue
+        // First get count
+        Long total = goodsMapper.selectCount(wrapper.clone());
+        // Apply pagination with wrapper.last() for LIMIT clause
+        wrapper.last("LIMIT " + page.getSize() + " OFFSET " + (page.getCurrent() - 1) * page.getSize());
+        List<MallGoods> goodsList = goodsMapper.selectList(wrapper);
+        page.setTotal(total);
+        page.setRecords(goodsList.stream().map(this::convertToDTO).collect(Collectors.toList()));
+        return page;
     }
 
     @Override

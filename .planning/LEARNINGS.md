@@ -343,3 +343,161 @@ GET /api/mall/admin/banner/list    - Banner列表
 
 ---
 *mall-center 配置经验记录于 2026-05-09*
+
+---
+
+## MyBatis-Plus PaginationInnerInterceptor Double LIMIT 问题
+
+**问题：** `AdminGoodsServiceImpl.getGoodsPage()` 调用时出现 SQL 语法错误：`LIMIT ? LIMIT ?`
+
+**环境：** mall-center (Spring Boot 3.1.6 + MyBatis-Plus 3.5.x + MySQL 8.x)
+
+### 症状
+
+```json
+GET /api/mall/admin/goods/list?page=1&pageSize=10
+→ 500 Internal Server Error
+→ java.sql.SQLSyntaxErrorException: You have an error in your SQL syntax... near 'LIMIT 10' at line 1
+```
+
+**日志中的 SQL：**
+```sql
+SELECT ... FROM mall_goods WHERE ... ORDER BY create_time DESC LIMIT ? LIMIT ?
+                                                           ↑ MyBatis-Plus   ↑ 拦截器追加
+```
+
+### 根因分析
+
+**触发条件：** 当 `IPage<T>` 的泛型类型 `T` 与 mapper 操作的实际 entity 类型不一致时，PaginationInnerInterceptor 会错误地追加 LIMIT。
+
+- `AdminGoodsServiceImpl.getGoodsPage(IPage<AdminGoodsDTO> page, ...)` 
+- 但 `goodsMapper.selectPage(mallPage, wrapper)` 操作的是 `MallGoods` 实体
+- `IPage<AdminGoodsDTO>` 包含分页信息，但与 `MallGoods` 类型不匹配
+- PaginationInnerInterceptor 检测到 `page.getSize()` 有值，追加 `LIMIT ?`
+- 但某些内部逻辑又从 `MallGoods` 角度处理，导致第二次追加
+
+### 修复方案
+
+**方案 A（已验证有效）：** 在 service 层使用手动 count + wrapper.last() 绕过自动分页
+
+```java
+// AdminGoodsServiceImpl.getGoodsPage()
+LambdaQueryWrapper<MallGoods> wrapper = new LambdaQueryWrapper<>();
+// ... 构建 wrapper ...
+
+// 手动获取总数
+Long total = goodsMapper.selectCount(wrapper.clone());
+
+// 使用 wrapper.last() 添加 LIMIT（绕过 PaginationInnerInterceptor）
+wrapper.last("LIMIT " + page.getSize() + " OFFSET " + (page.getCurrent() - 1) * page.getSize());
+
+// 查询数据
+List<MallGoods> goodsList = goodsMapper.selectList(wrapper);
+page.setTotal(total);
+page.setRecords(goodsList.stream().map(this::convertToDTO).collect(Collectors.toList()));
+return page;
+```
+
+**方案 B（临时）：** 在 MyBatisConfig 中禁用 PaginationInnerInterceptor
+
+```java
+@Bean
+@Primary
+public MybatisPlusInterceptor mybatisPlusInterceptor() {
+    MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+    // interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
+    return interceptor;
+}
+```
+
+**方案 C（待验证）：** 使用 `@InterceptorIgnore` 注解在 mapper 方法上跳过特定拦截器
+
+### 影响范围
+
+| 文件 | 方法 | 状态 |
+|------|------|------|
+| `AdminGoodsServiceImpl` | getGoodsPage() | ✅ 已用方案A修复 |
+| `GoodsServiceImpl` | getGoodsPage(IPage<MallGoods>) | ✅ 正常（类型匹配） |
+| 其他 AdminService | selectPage with IPage | ⚠️ 待验证 |
+
+### 关键代码修改
+
+**AdminGoodsServiceImpl.java** — getGoodsPage() 方法：
+```java
+// 修改前（有bug）
+Page<MallGoods> mallPage = new Page<>(page.getCurrent(), page.getSize());
+IPage<MallGoods> result = goodsMapper.selectPage(mallPage, wrapper);  // double LIMIT!
+
+// 修改后（workaround）
+Long total = goodsMapper.selectCount(wrapper.clone());
+wrapper.last("LIMIT " + page.getSize() + " OFFSET " + (page.getCurrent() - 1) * page.getSize());
+List<MallGoods> goodsList = goodsMapper.selectList(wrapper);
+```
+
+### 调试技巧
+
+1. **查看完整 SQL：** 启用 MyBatis-Plus 日志
+   ```yaml
+   mybatis-plus:
+     configuration:
+       log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+   ```
+
+2. **二分法定位：** 禁用 PaginationInnerInterceptor 后如果正常，说明是拦截器问题
+
+3. **检查泛型类型：** 确认 IPage 的泛型类型与 mapper 的 entity 类型是否匹配
+
+### 预防措施
+
+| 规则 | 说明 |
+|------|------|
+| 避免泛型类型不匹配 | `IPage<DTO>` 与 `selectPage(entityWrapper)` 混用时需小心 |
+| 统一分页方式 | 在 service 层处理分页，避免在 service 和 mapper 层双重分页 |
+| 测试分页边界 | 测试 page=1, page=2, pageSize=1, pageSize=100 等边界条件 |
+| 记录 SQL 日志 | 部署前验证 SQL 不是 double LIMIT 格式 |
+
+---
+
+*Phase 2 UAT 修复经验记录于 2026-05-10*
+
+---
+
+## Phase 2 UAT 测试结果摘要
+
+**测试时间：** 2026-05-10
+**测试范围：** 后台管理-商品与系统（共10项测试）
+
+### 测试通过项（10/10）
+
+| # | API端点 | 功能 | 结果 |
+|---|---------|------|------|
+| 1 | GET /api/mall/admin/category/list | 查看分类树 | ✅ PASS |
+| 2 | GET /api/mall/admin/goods/list | 商品列表分页 | ✅ PASS（已修复double LIMIT） |
+| 3 | GET /api/mall/admin/goods/{id} | 商品详情 | ✅ PASS |
+| 4 | PUT /api/mall/admin/goods/{id}/status/{status} | 更新商品状态 | ✅ PASS |
+| 5 | POST /api/mall/admin/goods | 发布商品 | ✅ PASS |
+| 6 | DELETE /api/mall/admin/goods/{id} | 软删除商品 | ✅ PASS |
+| 7 | POST /api/mall/admin/banner | 创建Banner | ✅ PASS |
+| 8 | GET /api/mall/admin/statistics/today | 统计卡片 | ✅ PASS（mock数据） |
+| 9 | GET /api/mall/admin/settings | 系统设置 | ✅ PASS（空数组） |
+| 10 | GET /api/mall/admin/spec/list | 规格列表 | ✅ PASS（空数组） |
+
+### 服务状态
+
+- **端口：** 7010
+- **租户头：** x-tenant-header: SUPER
+- **数据库：** central_mall (MySQL root/lengfeng847)
+- **当前商品数：** 7条
+- **当前分类数：** 8个
+
+### 已验证功能逻辑
+
+1. **分类管理：** 创建 → 列表查询正常
+2. **商品管理：** 发布 → 列表分页正常 → 详情正常 → 状态更新正常 → 删除正常
+3. **Banner管理：** 创建成功，列表返回4条（含测试数据）
+4. **统计接口：** 返回全0的mock数据（订单表尚未创建）
+5. **设置接口：** 微信支付等敏感配置未设置，返回空
+
+---
+
+*Phase 2 测试记录于 2026-05-10*

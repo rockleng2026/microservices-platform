@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: mall-center
+  cloud:
+    nacos:
+      server-addr: ${NACOS_SERVER:127.0.0.1:10020}
+      username: ${NACOS_USERNAME:nacos}
+      password: ${NACOS_PASSWORD:Leng@123456}
+      config:
+        file-extension: yml
+        shared-configs:
+          - data-id: common.yml
+            group: DEFAULT_GROUP
+            refresh: true

@@ -4,26 +4,15 @@ server:
 spring:
   application:
     name: mall-center
-  cloud:
-    nacos:
-      discovery:
-        server-addr: ${NACOS_SERVER:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:dev}
-      config:
-        server-addr: ${NACOS_SERVER:127.0.0.1:8848}
-        file-extension: yml
-        shared-configs:
-          - data-id: common.yml
-            group: DEFAULT_GROUP
-            refresh: true
   datasource:
+    url: jdbc:mysql://${zlt.datasource.ip}:3306/central_mall?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: ${zlt.datasource.username}
+    password: ${zlt.datasource.password}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:cp_mall}?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
-    username: ${DB_USER:root}
-    password: ${DB_PASSWORD:root}
   redis:
     host: ${REDIS_HOST:127.0.0.1}
-    port: ${REDIS_PORT:6379}
+    port: ${REDIS_PORT:16379}
+    timeout: 5000
     password: ${REDIS_PASSWORD:}
     database: 0
 
@@ -45,3 +34,11 @@ mall:
   goods:
     default-page-size: 20
     max-page-size: 100
+
+# 多租户配置
+zlt:
+  tenant:
+    enable: true
+  # 数据权限
+  datascope:
+    enabled: false

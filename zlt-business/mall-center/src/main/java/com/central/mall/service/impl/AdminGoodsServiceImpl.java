@@ -41,7 +41,7 @@ public class AdminGoodsServiceImpl extends ServiceImpl<MallGoodsMapper, MallGood
         wrapper.eq(MallGoods::getTenantId, tenantId);
         wrapper.eq(MallGoods::getDelFlag, 0);
 
-        if (params.get("categoryId") != null && StringUtils.isNotBlank(params.get("categoryId").toString())) {
+        if (params.get("categoryId") != null && StringUtils.isNotBlank(params.get("categoryId").toString()) && !"".equals(params.get("categoryId").toString())) {
             Long categoryId = Long.parseLong(params.get("categoryId").toString());
             wrapper.eq(MallGoods::getCategoryId, categoryId);
         }
@@ -49,10 +49,10 @@ public class AdminGoodsServiceImpl extends ServiceImpl<MallGoodsMapper, MallGood
             String keyword = params.get("keyword").toString();
             wrapper.and(w -> w.like(MallGoods::getName, keyword).or().like(MallGoods::getSubTitle, keyword));
         }
-        if (params.get("status") != null && StringUtils.isNotBlank(params.get("status").toString())) {
+        if (params.get("status") != null && StringUtils.isNotBlank(params.get("status").toString()) && !"".equals(params.get("status").toString())) {
             wrapper.eq(MallGoods::getStatus, Integer.parseInt(params.get("status").toString()));
         }
-        if (params.get("goodsType") != null && StringUtils.isNotBlank(params.get("goodsType").toString())) {
+        if (params.get("goodsType") != null && StringUtils.isNotBlank(params.get("goodsType").toString()) && !"".equals(params.get("goodsType").toString())) {
             wrapper.eq(MallGoods::getGoodsType, Integer.parseInt(params.get("goodsType").toString()));
         }
         wrapper.orderByDesc(MallGoods::getCreateTime);

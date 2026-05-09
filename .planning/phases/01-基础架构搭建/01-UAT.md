@@ -85,3 +85,15 @@ blocked: 0
 - **SecurityConfig未放行API路径**: 新增 `/api/**` SecurityFilterChain
   - File: `zlt-business/mall-center/src/main/java/com/central/mall/config/SecurityConfig.java`
   - 编译通过，需重启服务生效
+- **AdminGoodsServiceImpl参数解析bug**: `StringUtils.isNotBlank("")` returns true → Integer.parseInt("")
+  - Fix: 增加 `&& !"".equals(...)` 空字符串二次判断
+  - File: `zlt-business/mall-center/src/main/java/com/central/mall/service/impl/AdminGoodsServiceImpl.java`
+  - 编译通过，需重启服务生效
+  - Issue: admin/goods/list?page=1&pageSize=10 返回 500（其他list正常，疑似 MyBatis Plus 版本问题）
+
+## Known Issues (will fix after restart)
+
+- **AdminGoodsServiceImpl.getGoodsPage()**: 重启服务后生效，空字符串参数导致 parseInt 抛异常
+- **CartServiceImpl.addToCart()**: SKU表无测试数据，始终500（需插入SKU测试数据或跳过）
+- **CouponService**: 500错误（依赖 member/info，后者500）
+- **MemberController**: 500错误（依赖关系未调查）

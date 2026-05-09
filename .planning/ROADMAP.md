@@ -144,7 +144,7 @@ Plans:
 | 5 | v1.2 | 3/3 | Complete | 2026-05-08 |
 | 6 | v1.2 | 2/2 | Complete | 2026-05-08 |
 | 7 | v1.2 | 3/3 | Complete | 2026-05-08 |
-| 8 | v2.0 | 4/4 | In Progress | — |
+| 8 | v2.0 | 4/4 | Complete | 2026-05-09 |
 | 9 | v2.0 | 0/37 | Pending | — |
 | 10 | v2.0 | 0/34 | Pending | — |
 | 11 | v2.0 | 0/21 | Pending | — |
@@ -152,4 +152,4 @@ Plans:
 | 13 | v2.0 | 0/all | Pending | — |
 
 ---
-*Roadmap updated: 2026-05-09 for v2.0 milestone (Phase 8-13) — Phase 8 plans created*
+*Roadmap updated: 2026-05-09 — Phase 8 complete (Admin基础框架+小程序首页商品)*

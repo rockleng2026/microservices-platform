@@ -14,3 +14,10 @@ export const GOODS_DETAIL = '/api/mall/admin/goods/detail';
 // Order API endpoints
 export const ORDER_LIST = '/api/mall/admin/orders/list';
 export const ORDER_DETAIL = '/api/mall/admin/orders/detail';
+
+// Banner API endpoints (ADMIN-10)
+export const BANNER_LIST = '/api/mall/admin/banner/list';
+export const BANNER_CREATE = '/api/mall/admin/banner';
+export const BANNER_UPDATE = '/api/mall/admin/banner';
+export const BANNER_DELETE = '/api/mall/admin/banner';
+export const BANNER_SORT = '/api/mall/admin/banner/{id}/sort/{sort}';

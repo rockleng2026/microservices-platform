@@ -145,11 +145,11 @@ Plans:
 | 6 | v1.2 | 2/2 | Complete | 2026-05-08 |
 | 7 | v1.2 | 3/3 | Complete | 2026-05-08 |
 | 8 | v2.0 | 4/4 | Complete | 2026-05-09 |
-| 9 | v2.0 | 0/37 | Pending | — |
+| 9 | v2.0 | 6/6 | Complete | 2026-05-09 |
 | 10 | v2.0 | 0/34 | Pending | — |
 | 11 | v2.0 | 0/21 | Pending | — |
 | 12 | v2.0 | 0/16 | Pending | — |
 | 13 | v2.0 | 0/all | Pending | — |
 
 ---
-*Roadmap updated: 2026-05-09 — Phase 8 complete (Admin基础框架+小程序首页商品)*
+*Roadmap updated: 2026-05-09 — Phase 9 complete (小程序交易流程)*

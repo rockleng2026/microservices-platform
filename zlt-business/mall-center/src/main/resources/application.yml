@@ -1,6 +1,3 @@
-server:
-  port: 7010
-
 spring:
   application:
     name: mall-center
@@ -15,6 +12,13 @@ spring:
     timeout: 5000
     password: ${REDIS_PASSWORD:}
     database: 0
+#  data:
+#    redis:
+#      host: ${spring.data.redis.host}
+#      database: 0
+#      password:
+#      timeout: ${spring.data.redis.timeout}
+#      port: ${spring.data.redis.port}
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml

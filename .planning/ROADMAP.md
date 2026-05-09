@@ -74,6 +74,12 @@
 | MINI-03 Product Detail | MINI-03-01~09 | 9 |
 | **Total** | | **26** |
 
+Plans:
+- [x] 08-ADMIN-01-PLAN.md — Admin Web Dashboard (ADMIN-01-01~05)
+- [x] 08-MINI-01-PLAN.md — 小程序首页 (MINI-01-01~07)
+- [x] 08-MINI-02-PLAN.md — 商品列表 (MINI-02-01~05)
+- [x] 08-MINI-03-PLAN.md — 商品详情 (MINI-03-01~09)
+
 ### Phase 9: 小程序交易流程
 
 | Module | Requirements | Count |
@@ -138,7 +144,7 @@
 | 5 | v1.2 | 3/3 | Complete | 2026-05-08 |
 | 6 | v1.2 | 2/2 | Complete | 2026-05-08 |
 | 7 | v1.2 | 3/3 | Complete | 2026-05-08 |
-| 8 | v2.0 | 0/26 | Pending | — |
+| 8 | v2.0 | 4/4 | In Progress | — |
 | 9 | v2.0 | 0/37 | Pending | — |
 | 10 | v2.0 | 0/34 | Pending | — |
 | 11 | v2.0 | 0/21 | Pending | — |
@@ -146,4 +152,4 @@
 | 13 | v2.0 | 0/all | Pending | — |
 
 ---
-*Roadmap updated: 2026-05-09 for v2.0 milestone (Phase 8-13)*
+*Roadmap updated: 2026-05-09 for v2.0 milestone (Phase 8-13) — Phase 8 plans created*

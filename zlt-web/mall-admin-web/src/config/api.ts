@@ -15,6 +15,13 @@ export const GOODS_DETAIL = '/api/mall/admin/goods/detail';
 export const ORDER_LIST = '/api/mall/admin/orders/list';
 export const ORDER_DETAIL = '/api/mall/admin/orders/detail';
 
+// Goods API endpoints (ADMIN-02)
+export const GOODS_BATCH_STATUS = '/api/mall/admin/goods/batch/status';
+
+// Category API endpoints (ADMIN-02)
+export const CATEGORY_LIST = '/api/mall/admin/category/list';
+export const CATEGORY_SORT = '/api/mall/admin/category/sort';
+
 // Banner API endpoints (ADMIN-10)
 export const BANNER_LIST = '/api/mall/admin/banner/list';
 export const BANNER_CREATE = '/api/mall/admin/banner';

@@ -1,4 +1,7 @@
-import { API_BASE, ORDER_LIST, ORDER_DETAIL } from '@/config/api'
+import { API_BASE, ORDER_CREATE, ORDER_LIST, ORDER_DETAIL } from '@/config/api'
+
+// Re-export API constants for convenience
+export { ORDER_CREATE, ORDER_LIST, ORDER_DETAIL }
 
 // Request wrapper
 const request = <T>(url: string, options?: any): Promise<T> => {
@@ -79,6 +82,23 @@ export interface OrderListResponse {
   total: number
   page: number
   pageSize: number
+}
+
+// Order create params
+export interface OrderCreateParams {
+  skuIds: number[]
+  addressId: number
+  couponId?: number
+  remark?: string
+}
+
+// Create order
+export const createOrder = (params: OrderCreateParams): Promise<Order> => {
+  return request<Order>(ORDER_CREATE, {
+    method: 'POST',
+    data: params,
+    header: { 'x-user-id': uni.getStorageSync('userId') || '1' }
+  })
 }
 
 // Tab status mapping: tab index -> status filter

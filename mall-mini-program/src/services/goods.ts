@@ -93,3 +93,10 @@ export const getGoodsDetail = (id: number): Promise<GoodsDetailResponse> => {
 export const getEvaluateList = (goodsId: number, page = 1, pageSize = 5): Promise<EvaluateListResponse> => {
   return request<EvaluateListResponse>(`${EVALUATE_LIST}/${goodsId}?page=${page}&pageSize=${pageSize}`, { method: 'GET' })
 }
+
+// Get goods evaluations with object params (per Task 6)
+export const getGoodsEvaluates = (goodsId: number, params: { page?: number; pageSize?: number } = {}): Promise<EvaluateListResponse> => {
+  const page = params.page || 1
+  const pageSize = params.pageSize || 5
+  return request<EvaluateListResponse>(`${EVALUATE_LIST}/${goodsId}?page=${page}&pageSize=${pageSize}`, { method: 'GET' })
+}

@@ -5,8 +5,8 @@
 -- ============================================
 
 -- 创建数据库（如果不存在）
-CREATE DATABASE IF NOT EXISTS cp_mall DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-USE cp_mall;
+CREATE DATABASE IF NOT EXISTS central_mall DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+USE central_mall;
 
 -- ----------------------------------------
 -- 1. 商品分类表

@@ -36,6 +36,12 @@
       "style": {
         "navigationBarTitleText": "商品详情"
       }
+    },
+    {
+      "path": "pages/refund/apply",
+      "style": {
+        "navigationBarTitleText": "退款申请"
+      }
     }
   ],
   "globalStyle": {

@@ -97,3 +97,15 @@ blocked: 0
 - **CartServiceImpl.addToCart()**: SKU表无测试数据，始终500（需插入SKU测试数据或跳过）
 - **CouponService**: 500错误（依赖 member/info，后者500）
 - **MemberController**: 500错误（依赖关系未调查）
+- **Tenant冲突**: 全局 TenantFilter (TenantContextHolder) 与自定义 TenantInterceptor 并存，部分API返回500
+  - 原因: TenantContextHolder.setTenant() 在 Filter 中设置，但 getGoodsPage() 读取 TenantInterceptor.getCurrentTenantId()
+  - 两个租户上下文不一致导致问题
+  - 症状: 带x-tenant-header的请求在某些情况下返回500
+  - 建议: 统一使用 TenantContextHolder 或让 TenantInterceptor 也使用 TenantContextHolder
+
+## Commits (This Session)
+
+- a56ffb5d9 — fix(sql): align database name cp_mall → central_mall
+- 98d3bc95b — fix(mall-center): add /api/** SecurityFilterChain for dev mode
+- c9db0574a — fix(mall-center): prevent Integer.parseInt("") crash in getGoodsPage
+- <in-progress> — Tenant冲突分析和修复（待提交）

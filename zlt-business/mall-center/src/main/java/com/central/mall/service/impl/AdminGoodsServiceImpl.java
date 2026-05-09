@@ -38,6 +38,9 @@ public class AdminGoodsServiceImpl extends ServiceImpl<MallGoodsMapper, MallGood
     public IPage<AdminGoodsDTO> getGoodsPage(IPage<AdminGoodsDTO> page, Map<String, Object> params) {
         LambdaQueryWrapper<MallGoods> wrapper = new LambdaQueryWrapper<>();
         String tenantId = TenantInterceptor.getCurrentTenantId();
+        if (tenantId == null || tenantId.isBlank()) {
+            tenantId = "SUPER"; // default tenant for development
+        }
         wrapper.eq(MallGoods::getTenantId, tenantId);
         wrapper.eq(MallGoods::getDelFlag, 0);
 
@@ -56,7 +59,8 @@ public class AdminGoodsServiceImpl extends ServiceImpl<MallGoodsMapper, MallGood
             wrapper.eq(MallGoods::getGoodsType, Integer.parseInt(params.get("goodsType").toString()));
         }
         wrapper.orderByDesc(MallGoods::getCreateTime);
-        IPage<MallGoods> goodsPage = baseMapper.selectPage(new Page<>(page.getCurrent(), page.getSize()), wrapper);
+        Page<MallGoods> queryPage = new Page<>(page.getCurrent(), page.getSize());
+        IPage<MallGoods> goodsPage = baseMapper.selectPage(queryPage, wrapper);
         IPage<AdminGoodsDTO> result = new Page<>(goodsPage.getCurrent(), goodsPage.getSize(), goodsPage.getTotal());
         result.setRecords(goodsPage.getRecords().stream().map(this::convertToDTO).collect(Collectors.toList()));
         return result;

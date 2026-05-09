@@ -155,3 +155,59 @@ phase-10 分支：落后于 portal，未包含 Dashboard
 ---
 
 *教训记录于 2026-05-09 — Phase 10 执行完成后*
+---
+
+## 附录：SSH Host Key 验证失败问题修复
+
+**问题：** SSH 推送到 GitHub 时报 `Host key verification failed`
+
+**根因：** Claude Code 的 Bash 环境变量 HOME 被设置为 `.claude-local-runtime/home`，SSH 密钥存放在 `C:\Users\lengz\.ssh`，但 Bash 无法访问到
+
+**症状：**
+```
+ssh -T git@github.com → Host key verification failed
+git push origin portal → Could not read from remote repository
+```
+
+**诊断步骤：**
+```bash
+echo "HOME=$HOME"  # 确认 HOME 路径
+ls -la "$HOME/.ssh/"  # 检查 SSH 密钥是否存在
+ssh -v -T git@github.com  # 查看详细 SSH 连接信息
+```
+
+**修复步骤：**
+
+1. **确认真实 SSH 密钥位置：**
+   ```
+   ls -la C:/Users/lengz/.ssh/
+   ```
+   确认 `id_ed25519` 或 `id_rsa` 存在
+
+2. **复制 SSH 密钥到 Bash 的 HOME 目录：**
+   ```bash
+   mkdir -p "$HOME/.ssh"
+   cp -r C:/Users/lengz/.ssh/* "$HOME/.ssh/"
+   ```
+
+3. **验证连接：**
+   ```bash
+   ssh -T git@github.com
+   ```
+   期望输出：`Hi username! You've successfully authenticated...`
+
+4. **推送代码：**
+   ```bash
+   git push origin <branch>
+   ```
+
+**预防措施：**
+在 Claude Code 的 `settings.json` 中配置 SSH 密钥路径，或在项目 `CLAUDE.md` 中记录 SSH 问题排查步骤
+
+**配置文件路径：**
+- Claude Code settings: `C:\Users\lengz\.claude\settings.json`
+- SSH keys: `C:\Users\lengz\.ssh\`
+- Bash runtime HOME: `.claude-local-runtime/home/.ssh/`
+
+---
+*SSH 问题修复记录于 2026-05-09*

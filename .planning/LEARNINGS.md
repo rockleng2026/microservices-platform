@@ -211,3 +211,135 @@ ssh -v -T git@github.com  # 查看详细 SSH 连接信息
 
 ---
 *SSH 问题修复记录于 2026-05-09*
+
+---
+
+## mall-center 后端服务启动与配置经验
+
+**问题：** mall-center 启动失败，报错包括 MySQL Driver 缺失、UserService Feign 代理未创建、RestTemplate Bean 缺失等
+
+**根因：** mall-center 缺少必要的依赖和配置，与其他已验证可运行的服务（如 user-center）相比缺少关键组件
+
+### 启动依赖服务（本地环境）
+
+| 服务 | 端口 | 用途 |
+|------|------|------|
+| Nacos | 10020 | 注册中心+配置中心 |
+| Redis | 16379 | 缓存/会话 |
+| MySQL | 3306 | 数据库 |
+| SCGateway | - | API网关 |
+| UaaServer | - | 鉴权服务 |
+| UserCenter | - | 用户服务 |
+
+### mall-center 必要配置清单
+
+**1. pom.xml 必须依赖：**
+```xml
+<!-- MySQL驱动 -->
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+</dependency>
+
+<!-- Bootstrap启动（读取bootstrap.yml） -->
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-bootstrap</artifactId>
+</dependency>
+```
+
+**2. MallCenterApplication.java 必须注解：**
+```java
+@SpringBootApplication(scanBasePackages = {
+    "com.central.mall",
+    "com.central.common"
+})
+@EnableDiscoveryClient
+@EnableFeignClients(basePackages = "com.central.common.feign")  // 必须添加
+public class MallCenterApplication {}
+```
+
+**3. bootstrap.yml（Nacos配置）：**
+```yaml
+spring:
+  application:
+    name: mall-center
+  profiles:
+    active: dev
+  cloud:
+    nacos:
+      server-addr: ${NACOS_SERVER:127.0.0.1:10020}
+      username: ${NACOS_USERNAME:nacos}
+      password: ${NACOS_PASSWORD:Leng@123456}
+      config:
+        file-extension: yml
+        shared-configs:
+          - data-id: common.yml
+            group: DEFAULT_GROUP
+            refresh: true
+```
+
+**4. application.yml（数据源配置）：**
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://${zlt.datasource.ip}:3306/central_mall?useUnicode=true&characterEncoding=utf-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: ${zlt.datasource.username}
+    password: ${zlt.datasource.password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    host: ${REDIS_HOST:127.0.0.1}
+    port: ${REDIS_PORT:16379}
+
+# zlt公共配置
+zlt:
+  datasource:
+    ip: 127.0.0.1
+    username: root
+    password: lengfeng847
+```
+
+**5. 常用Bean配置（如果缺少）：**
+- `RestTemplateConfig.java` - 提供 RestTemplate Bean
+- `SecurityConfig.java` - 放行 Swagger/Knife4j（开发环境）
+
+### 数据库初始化
+
+```bash
+# 数据库名称必须是 central_mall
+mysql -h 127.0.0.1 -u root -plengfeng847 -e "CREATE DATABASE IF NOT EXISTS central_mall"
+
+# 执行建表SQL（替换数据库名）
+sed 's/cp_mall/central_mall/g' sql/mall-center/mall_center.sql | mysql ...
+```
+
+### 启动命令
+
+```bash
+cd zlt-business/mall-center
+mvn spring-boot:run
+# 服务端口: 7010
+# Swagger文档: http://localhost:7010/doc.html
+```
+
+### 常见错误排查
+
+| 错误 | 原因 | 修复 |
+|------|------|------|
+| `ClassNotFoundException: com.mysql.cj.jdbc.Driver` | 缺少MySQL驱动 | 添加 mysql-connector-java 依赖 |
+| `required a bean of type 'UserService'` | Feign代理未创建 | 添加 `@EnableFeignClients` |
+| `No qualifying bean of type 'RestTemplate'` | RestTemplate未配置 | 创建 RestTemplateConfig.java |
+| `Circular placeholder reference` | 配置引用循环 | 检查 `${spring.data.redis.host}` 语法 |
+| `Port 7010 was already in use` | 服务已运行 | `netstat -ano \| grep 7010` 查找进程 |
+
+### API路径（认证后访问）
+
+```
+GET /api/mall/admin/goods/list     - 商品列表
+GET /api/mall/admin/order/list     - 订单列表
+GET /api/mall/admin/coupon/list    - 优惠券列表
+GET /api/mall/admin/banner/list    - Banner列表
+```
+
+---
+*mall-center 配置经验记录于 2026-05-09*

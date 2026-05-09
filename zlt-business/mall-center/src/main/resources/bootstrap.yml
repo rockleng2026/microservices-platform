@@ -1,6 +1,8 @@
 spring:
   application:
     name: mall-center
+  profiles:
+    active: dev
   cloud:
     nacos:
       server-addr: ${NACOS_SERVER:127.0.0.1:10020}

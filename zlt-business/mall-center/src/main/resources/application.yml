@@ -42,3 +42,12 @@ zlt:
   # 数据权限
   datascope:
     enabled: false
+  # Security放行配置（开发环境-仅Swagger）
+  security:
+    ignore:
+      httpUrls:
+        - /doc.html
+        - /swagger-ui.html
+        - /v3/api-docs/**
+        - /swagger-ui/**
+        - /webjars/**

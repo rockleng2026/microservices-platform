@@ -1,0 +1,199 @@
+// Payment page styles
+// Accent: #ff5500, Destructive: #ff4d4f, Card radius: 8px
+
+.payment-page {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding-bottom: 100px;
+}
+
+// Countdown section
+.countdown-section {
+  background-color: #fff;
+  padding: 20px 16px;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.countdown-label {
+  font-size: 13px;
+  color: #999;
+  margin-bottom: 8px;
+}
+
+.countdown-time {
+  font-size: 32px;
+  font-weight: 700;
+  color: #333;
+  font-family: monospace;
+
+  &.urgent {
+    color: #ff4d4f;
+  }
+}
+
+.countdown-tip {
+  font-size: 13px;
+  color: #ff4d4f;
+  margin-top: 6px;
+}
+
+// Order card
+.order-card {
+  background-color: #fff;
+  padding: 16px;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  margin: 0 12px 8px;
+}
+
+.order-card-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 12px;
+}
+
+.order-card-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 0;
+}
+
+.order-label {
+  font-size: 14px;
+  color: #666;
+}
+
+.order-no-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.order-no {
+  font-size: 14px;
+  color: #333;
+  font-family: monospace;
+}
+
+.copy-btn {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 12px;
+  color: #666;
+  padding: 2px 6px;
+  border: 1px solid #e8e8e8;
+  border-radius: 4px;
+}
+
+.order-amount {
+  font-size: 20px;
+  font-weight: 700;
+  color: #ff5500;
+}
+
+.order-time {
+  font-size: 13px;
+  color: #999;
+}
+
+// Payment methods
+.payment-methods {
+  background-color: #fff;
+  margin: 0 12px;
+  border-radius: 8px;
+  padding: 0 16px;
+}
+
+.payment-method-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.payment-method {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid #f0f0f0;
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.wechat-icon {
+  width: 24px;
+  height: 24px;
+  background-color: #07c160;
+  border-radius: 4px;
+}
+
+.method-name {
+  flex: 1;
+  font-size: 15px;
+  color: #333;
+}
+
+.check-icon {
+  width: 18px;
+  height: 18px;
+  background-color: #ff5500;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// Bottom pay bar
+.pay-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 70px;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+  z-index: 100;
+}
+
+.pay-amount-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pay-label {
+  font-size: 12px;
+  color: #999;
+}
+
+.pay-amount {
+  font-size: 22px;
+  font-weight: 700;
+  color: #ff5500;
+}
+
+.pay-btn {
+  background-color: #07c160;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  padding: 14px 32px;
+  border-radius: 24px;
+
+  &.disabled {
+    background-color: #ccc;
+    pointer-events: none;
+  }
+}

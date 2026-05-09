@@ -9,8 +9,19 @@ export default defineConfig({
       routes: [
         { path: '/', redirect: '/dashboard' },
         { path: '/dashboard', name: '工作台', component: '@/pages/Dashboard' },
-        { path: '/goods', name: '商品管理', routes: [] },
-        { path: '/orders', name: '订单管理', routes: [] },
+<<<<<<< HEAD
+        { path: '/goods', name: '商品管理', component: '@/pages/Goods' },
+        { path: '/goods/detail/:id', component: '@/pages/Goods/detail' },
+        { path: '/categories', name: '分类管理', component: '@/pages/Categories' },
+        { path: '/orders', name: '订单管理', component: '@/pages/Orders' },
+        { path: '/banners', name: 'Banner 管理', component: '@/pages/Banners' },
+=======
+        { path: '/goods', name: '商品管理', component: '@/pages/Goods' },
+        { path: '/goods/detail/:id', component: '@/pages/Goods/detail' },
+        { path: '/categories', name: '分类管理', component: '@/pages/Categories' },
+        { path: '/orders', name: '订单管理', component: '@/pages/Orders' },
+        { path: '/banners', name: 'Banner 管理', component: '@/pages/Banners' },
+>>>>>>> phase-10
       ],
     },
   ],
@@ -22,6 +33,11 @@ export default defineConfig({
   // 代理配置 - 通过网关调用 mall-center (D-10)
   proxy: {
     '/mall-center': {
+      target: 'http://127.0.0.1:7010',
+      changeOrigin: true,
+      secure: false,
+    },
+'/api/mall/admin': {
       target: 'http://127.0.0.1:7010',
       changeOrigin: true,
       secure: false,

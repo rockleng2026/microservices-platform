@@ -92,6 +92,22 @@
     component: './Welcome',
   },
   {
+    path: '/coupons',
+    name: 'coupons',
+    icon: 'coupon',
+    component: './Coupons',
+  },
+  {
+    path: '/coupons/create',
+    name: 'coupon-create',
+    component: './Coupons/create',
+  },
+  {
+    path: '/coupons/edit/:id',
+    name: 'coupon-edit',
+    component: './Coupons/create',
+  },
+  {
     path: '/',
     redirect: '/welcome',
   },

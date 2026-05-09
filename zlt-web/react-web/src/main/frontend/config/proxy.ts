@@ -32,6 +32,10 @@
       target: 'http://127.0.0.1:9900',
       changeOrigin: true,
     },
+    '/api-mall/': {
+      target: 'http://127.0.0.1:7010',
+      changeOrigin: true,
+    },
   },
   test: {
     '/api/': {

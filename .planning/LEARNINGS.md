@@ -918,5 +918,84 @@ ALTER TABLE mall_stock_log CHANGE COLUMN `change` stock_change INT NOT NULL
 
 ---
 
-*Phase 10 UAT 测试完成 - 2026-05-10*
+---
+
+## Phase 5 UAT 测试问题记录
+
+**测试时间：** 2026-05-10
+**测试范围：** 退款模块 + 营销模块（优惠券、积分）
+
+### ISSUE-05-01: mall_refund 表缺失
+
+**问题描述：**
+- 代码实现了 RefundServiceImpl 和 RefundController，但数据库表 mall_refund 不存在
+- 导致 GET /api/mall/refund/list 返回 500 错误
+
+**根因：** Phase plan 中包含了创建表的 SQL 脚本，但执行验证前未执行
+
+**修复方案：**
+1. 创建 sql/mall-center/mall_center_refund.sql
+2. 执行建表SQL
+
+**关键教训：** Phase plan 应明确包含数据库迁移步骤的验证
+
+---
+
+### ISSUE-05-02: mall_points_account.tenant_id 错误
+
+**问题描述：**
+- 初始数据中 tenant_id='1' 而非 'SUPER'
+- 导致 GET /api/mall/admin/member/list 无法查询到用户积分账户
+
+**根因：** 测试数据使用了数字 tenant_id，而非字符串租户ID
+
+**修复方案：**
+```sql
+UPDATE central_mall.mall_points_account SET tenant_id='SUPER' WHERE id=2053146420910772225
+```
+
+**关键教训：** 所有测试数据必须使用正确的租户ID格式
+
+---
+
+### ISSUE-05-03: 优惠券expireTime为NULL问题
+
+**问题描述：**
+- 用户领取优惠券后 expire_time 为 NULL
+- 导致 getAvailableCoupons 的过期判断异常
+
+**根因：** validType=1 时依赖模板的 endTime，但模板的 endTime 可能为 NULL
+
+**影响：** getAvailableCoupons 返回空数组（即使有未过期的优惠券）
+
+**关键教训：** 优惠券模板创建时应强制设置有效期，避免 NULL 值
+
+---
+
+### ISSUE-05-04: 微信退款API调用失败
+
+**问题描述：**
+- 管理员审核通过退款时调用 payService.processRefund() 失败
+- 错误信息："Failed to call WeChat Pay Refund API"
+
+**根因：** 开发环境无微信支付配置（沙箱密钥未配置）
+
+**当前状态：** 退款状态从 1（待审核）变为 2（审核通过），状态流转正确
+
+**关键教训：** 第三方支付API在开发环境应配置沙箱环境
+
+---
+
+## 经验总结
+
+| # | 问题 | 解决方案 |
+|---|------|----------|
+| 1 | 数据库表缺失 | Phase plan 包含数据库迁移，执行前验证 |
+| 2 | 测试数据租户ID错误 | 所有测试数据使用统一的租户ID格式 |
+| 3 | NULL值导致业务异常 | 创建时强制必填字段，避免NULL |
+| 4 | 第三方API失败 | 开发环境配置沙箱环境 |
+
+---
+
+*Phase 5 经验教训记录于 2026-05-10*
 

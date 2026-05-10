@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
@@ -90,23 +91,65 @@ public class AdminStatisticsServiceImpl implements IAdminStatisticsService {
 
     /**
      * 计算今日统计数据
-     * Phase 2: mall_order 表尚未创建，返回mock数据
-     * Phase 3: 实际查询 mall_order 表计算
      */
     private StatisticsDTO computeTodayStatistics(String tenantId, String today) {
-        // TODO: Phase 3 实现实际统计查询
-        // 从 mall_order 表查询今日订单、销售额等
-        // 目前返回mock数据，结构已准备好Phase 3集成
-
         StatisticsDTO stats = new StatisticsDTO();
-        stats.setTodayOrderCount(0);
-        stats.setTodaySalesAmount(BigDecimal.ZERO);
-        stats.setWaitDeliveryCount(0);
-        stats.setTodayNewUsers(0);
-        stats.setYesterdayOrderCount(0);
-        stats.setYesterdaySalesAmount(BigDecimal.ZERO);
-        stats.setTotalPv(0L);
-        stats.setAvgOrderAmount(BigDecimal.ZERO);
+
+        try {
+            // 今日开始时间
+            LocalDate todayDate = LocalDate.parse(today);
+            LocalDate yesterdayDate = todayDate.minusDays(1);
+            LocalDateTime todayStart = todayDate.atStartOfDay();
+            LocalDateTime todayEnd = todayDate.plusDays(1).atStartOfDay();
+            LocalDateTime yesterdayStart = yesterdayDate.atStartOfDay();
+
+            // 今日订单统计 (status >= 2 已付款/已发货/已完成)
+            LambdaQueryWrapper<MallOrder> todayWrapper = new LambdaQueryWrapper<>();
+            todayWrapper.eq(MallOrder::getTenantId, tenantId);
+            todayWrapper.ge(MallOrder::getStatus, 2);
+            todayWrapper.between(MallOrder::getCreateTime, todayStart, todayEnd);
+            List<MallOrder> todayOrders = orderMapper.selectList(todayWrapper);
+            long todayOrderCount = todayOrders.size();
+            BigDecimal todaySalesAmount = todayOrders.stream()
+                    .map(MallOrder::getPayAmount)
+                    .filter(p -> p != null)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // 昨日订单统计
+            LambdaQueryWrapper<MallOrder> yesterdayWrapper = new LambdaQueryWrapper<>();
+            yesterdayWrapper.eq(MallOrder::getTenantId, tenantId);
+            yesterdayWrapper.ge(MallOrder::getStatus, 2);
+            yesterdayWrapper.between(MallOrder::getCreateTime, yesterdayStart, todayStart);
+            List<MallOrder> yesterdayOrders = orderMapper.selectList(yesterdayWrapper);
+            long yesterdayOrderCount = yesterdayOrders.size();
+            BigDecimal yesterdaySalesAmount = yesterdayOrders.stream()
+                    .map(MallOrder::getPayAmount)
+                    .filter(p -> p != null)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            // 待发货数 (status = 2)
+            LambdaQueryWrapper<MallOrder> deliveryWrapper = new LambdaQueryWrapper<>();
+            deliveryWrapper.eq(MallOrder::getTenantId, tenantId);
+            deliveryWrapper.eq(MallOrder::getStatus, 2);
+            long waitDeliveryCount = orderMapper.selectCount(deliveryWrapper);
+
+            // 平均订单金额
+            BigDecimal avgOrderAmount = todayOrderCount > 0
+                    ? todaySalesAmount.divide(BigDecimal.valueOf(todayOrderCount), 2, java.math.RoundingMode.HALF_UP)
+                    : BigDecimal.ZERO;
+
+            stats.setTodayOrderCount((int) todayOrderCount);
+            stats.setTodaySalesAmount(todaySalesAmount);
+            stats.setWaitDeliveryCount((int) waitDeliveryCount);
+            stats.setTodayNewUsers(0); // 用户表尚未集成
+            stats.setYesterdayOrderCount((int) yesterdayOrderCount);
+            stats.setYesterdaySalesAmount(yesterdaySalesAmount);
+            stats.setTotalPv(0L); // PV统计尚未实现
+            stats.setAvgOrderAmount(avgOrderAmount);
+        } catch (Exception e) {
+            log.error("Error computing today's statistics: {}", e.getMessage(), e);
+            return createEmptyStatistics();
+        }
 
         return stats;
     }
@@ -129,21 +172,77 @@ public class AdminStatisticsServiceImpl implements IAdminStatisticsService {
 
     @Override
     public List<SalesTrendDTO> getSalesTrend(String type, String startDate, String endDate) {
-        // Phase 2: mall_order 表尚未创建，返回空列表
-        // Phase 3: 实际查询 mall_order 表计算
-        // SQL: SELECT DATE(create_time) as date, COUNT(*) as orderCount,
-        //       SUM(payAmount) as salesAmount, COUNT(DISTINCT userId) as userCount
-        //       FROM mall_order WHERE status IN (2,3,4) AND createTime BETWEEN startDate AND endDate
-        //       GROUP BY DATE(create_time)
-        return new ArrayList<>();
+        List<SalesTrendDTO> trends = new ArrayList<>();
+        try {
+            LocalDate start = LocalDate.parse(startDate);
+            LocalDate end = LocalDate.parse(endDate);
+
+            // 查询日期范围内的已支付订单
+            LambdaQueryWrapper<MallOrder> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(MallOrder::getTenantId, TenantInterceptor.getCurrentTenantId());
+            wrapper.ge(MallOrder::getStatus, 2);
+            wrapper.between(MallOrder::getCreateTime, start.atStartOfDay(), end.plusDays(1).atStartOfDay());
+            List<MallOrder> orders = orderMapper.selectList(wrapper);
+
+            // 按日期分组统计
+            final DateTimeFormatter finalFormatter;
+            if ("month".equals(type)) {
+                finalFormatter = DateTimeFormatter.ofPattern("yyyy-MM");
+            } else if ("week".equals(type)) {
+                finalFormatter = DateTimeFormatter.ofPattern("yyyy-'W'ww");
+            } else {
+                finalFormatter = DateTimeFormatter.ISO_DATE;
+            }
+
+            java.util.Map<String, List<MallOrder>> byDate = orders.stream()
+                    .collect(java.util.stream.Collectors.groupingBy(
+                            o -> o.getCreateTime().format(finalFormatter)
+                    ));
+
+            for (java.util.Map.Entry<String, List<MallOrder>> entry : byDate.entrySet()) {
+                SalesTrendDTO dto = new SalesTrendDTO();
+                dto.setDate(entry.getKey());
+                dto.setOrderCount(entry.getValue().size());
+                BigDecimal salesAmount = entry.getValue().stream()
+                        .map(MallOrder::getPayAmount)
+                        .filter(p -> p != null)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+                dto.setSalesAmount(salesAmount);
+                dto.setUserCount((int) entry.getValue().stream().map(MallOrder::getUserId).distinct().count());
+                trends.add(dto);
+            }
+
+            // 按日期排序
+            trends.sort((a, b) -> a.getDate().compareTo(b.getDate()));
+        } catch (Exception e) {
+            log.error("Error getting sales trend: {}", e.getMessage(), e);
+        }
+        return trends;
     }
 
     @Override
     public List<StockWarningDTO> getStockWarningList() {
-        // Phase 2: mall_goods_sku 表尚未创建，返回空列表
-        // Phase 3: 实际查询 mall_goods_sku 和 mall_goods，过滤 stock <= 10
-        // JOIN mall_goods_sku 和 mall_goods，过滤 stock <= 预警阈值(默认10)
-        return new ArrayList<>();
+        List<StockWarningDTO> warnings = new ArrayList<>();
+        try {
+            // 预警阈值默认10
+            LambdaQueryWrapper<MallGoodsSku> wrapper = new LambdaQueryWrapper<>();
+            wrapper.le(MallGoodsSku::getStock, 10);
+            wrapper.eq(MallGoodsSku::getStatus, 1);
+            List<MallGoodsSku> lowStockSkus = goodsSkuMapper.selectList(wrapper);
+
+            for (MallGoodsSku sku : lowStockSkus) {
+                StockWarningDTO dto = new StockWarningDTO();
+                dto.setSkuName(sku.getSkuCode());
+                dto.setGoodsId(sku.getGoodsId());
+                dto.setRealStock(sku.getStock());
+                dto.setWarningStock(10);
+                dto.setGoodsName(sku.getSkuCode()); // 实际应关联goods表获取名称
+                warnings.add(dto);
+            }
+        } catch (Exception e) {
+            log.error("Error getting stock warning list: {}", e.getMessage(), e);
+        }
+        return warnings;
     }
 
     @Override

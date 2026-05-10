@@ -1111,3 +1111,77 @@ UPDATE mall_merchant SET tenant_id='SUPER' WHERE tenant_id IS NULL;
 | 3 | NULL值导致租户过滤失败 | 插入数据时必须指定 tenant_id |
 
 *Phase 7 经验教训记录于 2026-05-10*
+
+---
+
+## Phase 8 UAT 测试问题记录
+
+**测试时间：** 2026-05-10
+**测试范围：** Admin基础框架(08-ADMIN-01) + 小程序首页商品(08-MINI-01~03)
+
+### ISSUE-08-01: 统计API返回Mock数据
+
+**问题描述：**
+- AdminStatisticsServiceImpl 的 getTodayStatistics、getSalesTrend、getStockWarningList 均返回空数据/mock数据
+- 代码中有明确的 TODO 注释说明 Phase 3 会实现，但 Phase 8 验证时仍未实现
+
+**根因：** Phase 2/3 执行时只创建了表结构，未完善统计查询逻辑
+
+**修复方案：**
+实现 computeTodayStatistics() 从 mall_order 真实查询：
+```java
+// 今日订单统计 (status >= 2 已付款/已发货/已完成)
+List<MallOrder> todayOrders = orderMapper.selectList(todayWrapper);
+long todayOrderCount = todayOrders.size();
+BigDecimal todaySalesAmount = todayOrders.stream()
+    .map(MallOrder::getPayAmount)
+    .filter(p -> p != null)
+    .reduce(BigDecimal.ZERO, BigDecimal::add);
+```
+
+实现 getSalesTrend() 按日期分组：
+```java
+java.util.Map<String, List<MallOrder>> byDate = orders.stream()
+    .collect(java.util.stream.Collectors.groupingBy(
+        o -> o.getCreateTime().format(formatter)
+    ));
+```
+
+实现 getStockWarningList()：
+```java
+wrapper.le(MallGoodsSku::getStock, 10);  // 预警阈值默认10
+```
+
+**验证结果：**
+- todayOrderCount: 2, todaySalesAmount: 6097.00
+- 销售趋势: 2026-05-10 订单2 销售额6097.00
+- 库存预警: SKU002 stock=8 < 预警值10
+
+---
+
+### Phase 8 经验总结
+
+| # | 问题 | 解决方案 |
+|---|------|----------|
+| 1 | 统计API stub代码 | 实现实际查询逻辑，从 mall_order 等表计算统计数据 |
+| 2 | 前端项目仅验证后端 | Phase plan 应区分前端UI验证和后端API验证 |
+
+---
+
+## Phase 8 已知限制
+
+1. **User Analysis API** 仍返回全0（用户模块尚未集成到统计）
+2. **前端项目** (mall-admin-web, mall-mini-program) 需要启动前端服务才能完整验证UI
+3. **Code Review 发现的问题** (WR-01~08, IN-01~03) 尚未修复：
+   - WR-01/02: 购物车hardcoded userId='1'
+   - WR-03: FilterBar onClearKeyword 未清除 keyword
+   - WR-04/05: console.log/console.error 调试代码
+   - WR-06: 销售趋势卡片标题包含开发注释
+   - WR-07/08: 使用 window.location.href 而非 UMI navigate
+   - IN-01: Vue $index 废弃语法
+   - IN-02: any 类型丢失类型安全
+   - IN-03: 999 魔法数字无说明
+
+---
+
+*Phase 8 经验教训记录于 2026-05-10*

@@ -1048,3 +1048,66 @@ UPDATE central_mall.mall_points_account SET tenant_id='SUPER' WHERE id=205314642
 
 *Phase 6 经验教训记录于 2026-05-10*
 
+
+---
+
+## Phase 7 UAT 测试问题记录
+
+**测试时间：** 2026-05-10
+**测试范围：** Redis Lua原子库存(07-01)、商户平台(07-02)、微信模板消息(07-03)
+
+### ISSUE-07-01: mall_merchant 表缺失
+
+**问题描述：**
+- 代码实现了 MallMerchant.java、MallMerchantMapper.java、AdminMerchantController.java
+- 但数据库表 mall_merchant 不存在
+- 导致 GET /api/mall/admin/merchant/list 返回 500 错误
+
+**根因：** Phase plan 创建了实体但未创建数据库表的 SQL 脚本
+
+**修复方案：**
+1. 创建 sql/mall-center/mall_center_merchant.sql 建表脚本
+2. 执行建表SQL
+3. 插入测试商户数据（待审核、已通过、已拒绝各1条）
+
+**关键教训：** Phase plan 应明确包含数据库迁移步骤的验证
+
+---
+
+### ISSUE-07-02: mall_merchant.tenant_id 为NULL导致租户隔离过滤
+
+**问题描述：**
+- 数据库表创建后 tenant_id 字段为 NULL
+- 多租户查询时 TenantLineInterceptor 将 WHERE tenant_id = NULL 转换为 tenant_id = 'SUPER'
+- NULL = 'SUPER' 永远为 false，导致所有商户被过滤
+
+**根因：**
+- 插入数据时未指定 tenant_id
+- 多租户架构下，所有商户数据应该有 tenant_id
+
+**修复方案：**
+```sql
+-- 插入数据时指定正确的租户ID
+INSERT INTO mall_merchant (tenant_id, merchant_name, ...) VALUES ('SUPER', 'Test Merchant', ...);
+
+-- 或批量修复现有数据
+UPDATE mall_merchant SET tenant_id='SUPER' WHERE tenant_id IS NULL;
+```
+
+**验证结果：** tenant_id 设置为 'SUPER' 后，API 正常返回3条商户数据
+
+**关键教训：**
+- 测试多租户 API 时，确保测试数据的 tenant_id 与请求头 x-tenant-header 一致
+- 插入测试数据时必须指定 tenant_id
+
+---
+
+## 经验总结
+
+| # | 问题 | 解决方案 |
+|---|------|----------|
+| 1 | 数据库表缺失 | Phase plan 包含数据库迁移，执行前验证 |
+| 2 | 测试数据租户ID错误 | 所有测试数据使用统一的租户ID格式 |
+| 3 | NULL值导致租户过滤失败 | 插入数据时必须指定 tenant_id |
+
+*Phase 7 经验教训记录于 2026-05-10*

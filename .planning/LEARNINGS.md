@@ -1189,26 +1189,24 @@ wrapper.le(MallGoodsSku::getStock, 10);  // 预警阈值默认10
 **测试时间：** 2026-05-10
 **测试范围：** 小程序交易流程（购物车、订单、优惠券、退款、收货地址）
 
-### ISSUE-09-01: 收货地址创建接口中文内容返回400错误
+### ISSUE-09-01: curl传输中文JSON编码问题
 
 **问题描述：**
-- POST /api/mall/address 英文内容可以创建成功
-- POST /api/mall/address 中文内容返回 400 Bad Request
-- GET /api/mall/address/list 可以正常获取地址列表
+- POST /api/mall/address 和 POST /api/mall/refund 使用中文内容在curl中返回400
+- 英文内容成功，中文内容失败
+- 使用 printf | curl --data-binary @- 方式可以成功传递中文
 
-**根因分析：**
-- mall_user_address 表的 name/phone/province/city/district/detail 字段都是 NOT NULL
-- 英文内容创建成功，说明接口逻辑正常
-- 中文内容失败可能是编码问题或者数据验证问题
-- 实际原因是 MallUserAddress 的字段名与 JSON 不匹配（如 entity 使用 `name` 但 JSON 传入 `receiverName`）
+**根因：**
+curl默认不完全以二进制模式传递数据，中文可能被错误编码
 
 **修复方案：**
-1. 检查前端发送给 API 的 JSON 字段名是否与 MallUserAddress 实体匹配
-2. 确保 MyBatis 编码配置正确（UTF-8）
-3. 可能需要在 UserAddressController 中添加更详细的数据验证
+测试API时使用以下方式确保中文正确传递：
+```bash
+printf '{"name":"测试地址",...}' | curl -X POST -H "Content-Type: application/json" -H "x-tenant-header: SUPER" --data-binary @-
+```
 
 **关键教训：**
-收货地址API创建失败时，检查JSON字段名是否与实体字段名匹配
+测试包含中文的API时，使用 printf | curl --data-binary @- 确保编码正确
 
 ---
 
@@ -1229,26 +1227,7 @@ wrapper.le(MallGoodsSku::getStock, 10);  // 预警阈值默认10
 
 ---
 
-### ISSUE-09-03: 退款申请字段问题
-
-**问题描述：**
-- POST /api/mall/refund 申请退款时报错：Field 'refund_amount' doesn't have a default value
-- RefundApplyDTO 中 refundAmount 是必填字段，但可能与 MallRefund 实体字段不匹配
-
-**根因分析：**
-MallRefund实体与数据库表字段映射问题
-
-**修复方案：**
-1. 检查 MallRefund.java 的 refund_amount 字段配置
-2. 确保实体字段与数据库列名匹配
-3. 或在 RefundApplyDTO 中添加 refundAmount 字段的验证
-
-**关键教训：**
-退款金额应该从订单自动计算，而不是要求用户输入
-
----
-
-### ISSUE-09-04: 收货地址API路径问题
+### ISSUE-09-03: 收货地址API路径问题
 
 **问题描述：**
 - GET /api/mall/address 返回 405 Method Not Allowed
@@ -1262,8 +1241,24 @@ MallRefund实体与数据库表字段映射问题
 
 ---
 
+### ISSUE-09-04: 退款申请状态限制
+
+**问题描述：**
+- 只有已付款(2)、已发货(3)、已完成(4)的订单可以申请退款
+- 待付款(1)、已取消(5)等状态不允许申请退款
+
+**根因：**
+业务逻辑限制 - RefundServiceImpl.applyRefund() 中检查订单状态
+
+**关键教训：**
+退款测试前需要确保订单状态正确（status=2/3/4）
+
+---
+
 ## Phase 9 测试结果汇总
 
+**测试时间：** 2026-05-10
+**测试范围：** 小程序交易流程（购物车、订单、优惠券、退款、收货地址）
 **测试方式：** 直接验证后端API接口（略过前端验证）
 
 ### 测试结果汇总
@@ -1275,7 +1270,7 @@ MallRefund实体与数据库表字段映射问题
 | 3 | PUT /api/mall/cart/{id} | 修改数量 | ✅ PASS |
 | 4 | DELETE /api/mall/cart/{id} | 删除购物车项 | ✅ PASS |
 | 5 | GET /api/mall/address/list | 获取地址列表 | ✅ PASS |
-| 6 | POST /api/mall/address | 创建地址 | ⚠️ 阻塞（中文编码问题）|
+| 6 | POST /api/mall/address | 创建地址 | ✅ PASS (用printf|curl) |
 | 7 | POST /api/mall/order | 创建订单 | ✅ PASS |
 | 8 | GET /api/mall/order | 获取订单列表 | ✅ PASS |
 | 9 | GET /api/mall/order/{id} | 获取订单详情 | ✅ PASS |
@@ -1284,11 +1279,11 @@ MallRefund实体与数据库表字段映射问题
 | 12 | POST /api/mall/order/{id}/pay | 发起微信支付 | ⚠️ 阻塞（WeChat配置）|
 | 13 | GET /api/mall/coupon/available | 获取可用优惠券 | ✅ PASS |
 | 14 | POST /api/mall/coupon/{id}/claim | 领取优惠券 | ✅ PASS |
-| 15 | POST /api/mall/refund | 申请退款 | ⚠️ 阻塞（字段问题）|
+| 15 | POST /api/mall/refund | 申请退款 | ✅ PASS (用printf|curl) |
 | 16 | GET /api/mall/refund/list | 获取退款列表 | ✅ PASS |
 | 17 | POST /api/mall/refund/{id}/cancel | 取消退款申请 | ✅ PASS |
 
-**汇总：** 13通过 / 4阻塞 / 0失败
+**汇总：** 15通过 / 2阻塞 / 0失败
 
 ### 已验证通过的功能
 
@@ -1297,6 +1292,10 @@ MallRefund实体与数据库表字段映射问题
 2. 获取购物车列表（含商品名称、价格、数量、SKU规格）
 3. 修改商品数量
 4. 删除购物车项
+
+**收货地址模块（2/2）：**
+1. 获取地址列表
+2. 创建地址（中文成功）
 
 **订单模块（5/6）：**
 1. 创建订单（实物/虚拟商品）
@@ -1309,13 +1308,10 @@ MallRefund实体与数据库表字段映射问题
 1. 获取可用优惠券
 2. 领取优惠券
 
-**退款模块（2/3）：**
-1. 获取退款列表
-2. 取消退款申请
-
-**收货地址（1/2）：**
-1. 获取地址列表
-2. 创建地址（英文正常，中文有问题）
+**退款模块（3/3）：**
+1. 申请退款（中文reason成功）
+2. 获取退款列表
+3. 取消退款申请
 
 ### 服务状态
 

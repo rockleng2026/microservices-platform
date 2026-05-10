@@ -9,19 +9,11 @@ export default defineConfig({
       routes: [
         { path: '/', redirect: '/dashboard' },
         { path: '/dashboard', name: '工作台', component: '@/pages/Dashboard' },
-<<<<<<< HEAD
         { path: '/goods', name: '商品管理', component: '@/pages/Goods' },
         { path: '/goods/detail/:id', component: '@/pages/Goods/detail' },
         { path: '/categories', name: '分类管理', component: '@/pages/Categories' },
         { path: '/orders', name: '订单管理', component: '@/pages/Orders' },
         { path: '/banners', name: 'Banner 管理', component: '@/pages/Banners' },
-=======
-        { path: '/goods', name: '商品管理', component: '@/pages/Goods' },
-        { path: '/goods/detail/:id', component: '@/pages/Goods/detail' },
-        { path: '/categories', name: '分类管理', component: '@/pages/Categories' },
-        { path: '/orders', name: '订单管理', component: '@/pages/Orders' },
-        { path: '/banners', name: 'Banner 管理', component: '@/pages/Banners' },
->>>>>>> phase-10
       ],
     },
   ],

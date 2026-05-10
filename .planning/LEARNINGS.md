@@ -997,5 +997,54 @@ UPDATE central_mall.mall_points_account SET tenant_id='SUPER' WHERE id=205314642
 
 ---
 
-*Phase 5 经验教训记录于 2026-05-10*
+## Phase 6 UAT 测试问题记录
+
+**测试时间：** 2026-05-10
+**测试范围：** 订单增强（ORDER-EXT-01~03）+ 管理端统计（STAT-01~03）
+
+### ISSUE-06-01: 统计接口为Stub代码
+
+**问题描述：**
+- STAT-01/02/03 的服务实现返回空数据或全0
+- `AdminStatisticsServiceImpl.getSalesTrend()` 直接返回 `new ArrayList<>()`
+- `AdminStatisticsServiceImpl.getStockWarningList()` 直接返回空列表
+- `AdminStatisticsServiceImpl.getUserAnalysis()` 返回全0数据
+
+**根因：** Phase 6 的统计功能在 Phase 2/3 实现时只写了框架代码，未实现实际查询逻辑
+
+**影响：** 无法通过API获取真实的统计数据
+
+**修复建议：** 实现实际查询逻辑：
+- getSalesTrend: 查询 mall_order 按日期分组统计
+- getStockWarningList: 查询 mall_goods_sku WHERE stock <= 10
+- getUserAnalysis: 查询 mall_user 和 mall_order 表
+
+---
+
+### ISSUE-06-02: 订单发货接口需要完整数据
+
+**问题描述：**
+- 调用 POST /api/mall/admin/order/2/ship 返回 400 Bad Request
+- 但实际上订单2已经有物流记录（从之前测试数据）
+
+**根因：** 重复发货尝试被拒绝，但错误信息不够明确
+
+**已验证逻辑：** 仅 status=2（已付款）的订单可发货，已发货不可重复发货
+
+---
+
+## 经验总结
+
+| # | 问题 | 解决方案 |
+|---|------|----------|
+| 1 | 数据库表缺失 | Phase plan 包含数据库迁移，执行前验证 |
+| 2 | 测试数据租户ID错误 | 所有测试数据使用统一的租户ID格式 |
+| 3 | NULL值导致业务异常 | 创建时强制必填字段，避免NULL |
+| 4 | 第三方API失败 | 开发环境配置沙箱环境 |
+| 5 | 统计接口stub | 后续Phase应确保实际实现，不只是框架代码 |
+| 6 | 订单状态校验 | 测试前需确认订单当前状态，避免无效操作 |
+
+---
+
+*Phase 6 经验教训记录于 2026-05-10*
 

@@ -4,7 +4,7 @@
  */
 import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, InputNumber, Select, Radio, message, Divider } from 'antd';
-import { ProForm, ProFormText, ProFormSelect, ProFormRadioGroup, ProFormDigit } from '@ant-design/pro-components';
+import { ProForm, ProFormText, ProFormSelect, ProFormRadio, ProFormDigit } from '@ant-design/pro-components';
 import type { ModalProps } from 'antd';
 import {
   createGoods,
@@ -186,7 +186,7 @@ const GoodsModal: React.FC<GoodsModalProps> = ({
           ]}
         />
 
-        <ProFormRadioGroup
+        <ProFormRadio
           name="goodsType"
           label="商品类型"
           options={[

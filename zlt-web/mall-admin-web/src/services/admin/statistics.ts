@@ -1,4 +1,4 @@
-import { request } from 'umi';
+import { request } from '@/utils/request';
 import { notification } from 'antd';
 import { API_BASE_URL } from '@/config/api';
 

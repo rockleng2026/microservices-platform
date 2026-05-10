@@ -64,4 +64,7 @@ export default defineConfig({
   // 禁用可能导致问题的UMI功能
   mfsu: false,
   legacy: {},
+
+  // UMI plugins
+  plugins: ['@umijs/plugins/dist/request'],
 });

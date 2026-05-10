@@ -90,7 +90,7 @@ public class StockServiceImpl implements IStockService {
             stockLog.setTenantId(tenantId);
             stockLog.setSkuId(skuId);
             stockLog.setOrderId(orderId);
-            stockLog.setChange(-quantity);
+            stockLog.setStockChange(-quantity);
             stockLog.setStockBefore(currentStock != null ? currentStock : 0);
             stockLog.setStockAfter(stockAfterDecr != null ? stockAfterDecr.intValue() : 0);
             stockLog.setOperationType(1); // 1=pre-allocate
@@ -130,7 +130,7 @@ public class StockServiceImpl implements IStockService {
                 stockLog.setTenantId(tenantId);
                 stockLog.setSkuId(skuId);
                 stockLog.setOrderId(orderId);
-                stockLog.setChange(-quantity);
+                stockLog.setStockChange(-quantity);
                 stockLog.setStockBefore(sku.getStock() + quantity);
                 stockLog.setStockAfter(newStock);
                 stockLog.setOperationType(2); // 2=real deduction
@@ -175,7 +175,7 @@ public class StockServiceImpl implements IStockService {
             stockLog.setTenantId(tenantId);
             stockLog.setSkuId(skuId);
             stockLog.setOrderId(orderId);
-            stockLog.setChange(quantity);
+            stockLog.setStockChange(quantity);
             stockLog.setStockBefore(stockBefore);
             stockLog.setStockAfter(stockAfterIncr != null ? stockAfterIncr.intValue() : 0);
             stockLog.setOperationType(3); // 3=release/rollback
@@ -212,7 +212,7 @@ public class StockServiceImpl implements IStockService {
         stockLog.setTenantId(tenantId);
         stockLog.setSkuId(skuId);
         stockLog.setOrderId(null); // Manual correction has no order
-        stockLog.setChange(change);
+        stockLog.setStockChange(change);
         stockLog.setStockBefore(stockBefore);
         stockLog.setStockAfter(stockAfter);
         stockLog.setOperationType(4); // 4=manual correction
@@ -285,7 +285,7 @@ public class StockServiceImpl implements IStockService {
                 stockLog.setTenantId(tenantId);
                 stockLog.setSkuId(skuId);
                 stockLog.setOrderId(orderId);
-                stockLog.setChange(quantity);
+                stockLog.setStockChange(quantity);
                 stockLog.setStockBefore(stockBefore);
                 stockLog.setStockAfter(stockAfterIncr != null ? stockAfterIncr.intValue() : 0);
                 stockLog.setOperationType(5); // 5=refund restore

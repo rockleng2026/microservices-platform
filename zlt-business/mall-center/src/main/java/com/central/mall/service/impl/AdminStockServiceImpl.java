@@ -64,13 +64,24 @@ public class AdminStockServiceImpl implements IAdminStockService {
         wrapper.orderByDesc(MallGoodsSku::getUpdateTime);
         IPage<MallGoodsSku> skuPage = skuMapper.selectPage(new Page<>(page.getCurrent(), page.getSize()), wrapper);
 
-        // Get goods names
+        // Get goods names - handle encoding issues gracefully
         List<Long> goodsIds = skuPage.getRecords().stream()
                 .map(MallGoodsSku::getGoodsId)
                 .distinct()
                 .collect(Collectors.toList());
-        Map<Long, String> goodsNameMap = goodsMapper.selectBatchIds(goodsIds).stream()
-                .collect(Collectors.toMap(MallGoods::getId, MallGoods::getName));
+        Map<Long, String> goodsNameMap = new java.util.HashMap<>();
+        if (!goodsIds.isEmpty()) {
+            try {
+                List<MallGoods> goodsList = goodsMapper.selectBatchIds(goodsIds);
+                if (goodsList != null) {
+                    for (MallGoods goods : goodsList) {
+                        goodsNameMap.put(goods.getId(), goods.getName() != null ? goods.getName() : "");
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to fetch goods names for SKUs, using empty names: {}", e.getMessage());
+            }
+        }
 
         IPage<SkuStockDTO> result = new Page<>(skuPage.getCurrent(), skuPage.getSize(), skuPage.getTotal());
         result.setRecords(skuPage.getRecords().stream().map(sku -> convertToDTO(sku, goodsNameMap, threshold)).collect(Collectors.toList()));

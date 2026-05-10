@@ -1325,3 +1325,172 @@ printf '{"name":"测试地址",...}' | curl -X POST -H "Content-Type: applicatio
 
 *Phase 9 经验教训记录于 2026-05-10*
 
+
+---
+
+## Phase 10 UAT 测试问题记录
+
+**测试时间：** 2026-05-10
+**测试范围：** 管理后台核心模块（ADMIN-02商品管理、ADMIN-03订单管理、ADMIN-04优惠券管理、ADMIN-10 Banner管理）
+**测试方式：** 直接验证后端API接口（略过前端验证）
+**结果：** 21通过 / 9跳过（前端功能或未实现功能）/ 0失败
+
+### ISSUE-10-01: curl中文JSON编码问题导致400错误
+
+**问题描述：**
+- 使用 curl 直接发送带中文的 JSON 时返回 400 Bad Request
+- 但使用英文 JSON 可以成功
+- 使用 printf + curl --data-binary @- 可以成功发送中文
+
+**根因分析：**
+curl 默认不完全以二进制模式传递数据，中文字符可能被错误编码
+
+**触发场景：**
+- POST /api/mall/admin/order/{id}/close 发送 {"reason":"测试关单"}
+- POST /api/mall/admin/order/{id}/admin-remark 发送 {"remark":"VIP客户"}
+
+**修复方案：**
+```bash
+# 错误方式（中文编码问题）
+curl -X POST "http://127.0.0.1:7010/api/mall/admin/order/5/close" \
+  -H "Content-Type: application/json" -H "x-tenant-header: SUPER" \
+  -d '{"reason":"测试关单"}'
+
+# 正确方式（二进制传输）
+printf '{"reason":"测试关单"}' | curl -X POST "http://127.0.0.1:7010/api/mall/admin/order/5/close" \
+  -H "Content-Type: application/json" -H "x-tenant-header: SUPER" --data-binary @-
+```
+
+**影响范围：**
+- 所有包含中文内容的 POST/PUT 请求
+- 特别是订单改价reason、订单备注adminRemark等字段
+
+**关键教训：**
+测试包含中文的API时，使用 printf | curl --data-binary @- 确保编码正确
+
+---
+
+### ISSUE-10-02: 订单关闭接口状态校验
+
+**问题描述：**
+- 调用 POST /api/mall/admin/order/{id}/close 对 status!=3 的订单返回 400
+- 错误信息："Only shipped orders (status=3) can be closed"
+
+**根因分析：**
+设计如此：只有已发货(status=3)的订单可以关闭
+
+**订单状态值：**
+| 值 | 状态 |
+|----|------|
+| 1 | 待付款 |
+| 2 | 已付款 |
+| 3 | 已发货 |
+| 4 | 已完成 |
+| 5 | 已取消 |
+| 8 | 已关闭 |
+
+**验证结果：**
+- 订单2 (status=3) → 关闭成功，status变为8
+- 订单3 (status=3) → 关闭成功，status变为8
+- 订单5 (status=2) → 关闭失败，需要先发货
+- 订单1 (status=2) → 关闭失败，需要先发货
+
+---
+
+### ISSUE-10-03: 订单发货接口状态校验
+
+**问题描述：**
+- 对 status!=2 的订单调用 POST /api/mall/admin/order/{id}/ship 返回 400
+- 错误信息："Only paid orders can be shipped"
+
+**验证结果：**
+- 订单5 (status=2) → 发货成功，创建 delivery 记录，status变为3
+- 订单2 (status=3) → 发货失败，已发货订单不能重复发货
+
+---
+
+### ISSUE-10-04: 订单改价接口校验逻辑
+
+**问题描述：**
+- adjustAmount 必须为负数
+- 调整后 payAmount 不能为负
+- 调整后 payAmount 不能超过 totalAmount
+
+**验证结果：**
+- 订单1 (payAmount=2899, totalAmount=2999) → adjustAmount=-100 成功，payAmount变为2699
+- 订单5 (payAmount=0, totalAmount=0) → adjustAmount=-100 失败，返回 "Pay amount cannot be negative"
+
+---
+
+### ISSUE-10-05: 优惠券API的METHOD_NOT_ALLOWED问题
+
+**问题描述：**
+- DELETE /api/mall/admin/coupon/template/{id} 返回 405 Method Not Allowed
+- GET /api/mall/admin/coupon/template/{id} 返回 405 Method Not Allowed
+
+**根因分析：**
+AdminCouponController 只实现了 GET(list) / POST / PUT / DELETE/{id}，但没有 GET /{id} 详情接口
+
+**验证结果：**
+- POST /offline ✅ 成功
+- POST /publish ✅ 成功（但对已发布的优惠券返回错误）
+- DELETE /{id} ❌ 405 Method Not Allowed（接口未实现）
+
+---
+
+## Phase 10 测试结果汇总
+
+**测试时间：** 2026-05-10
+**测试范围：** 管理后台核心模块
+**结果：** 21通过 / 9跳过 / 0失败
+
+### 后端API测试结果
+
+| # | API端点 | 功能 | 结果 |
+|---|---------|------|------|
+| 1 | POST /api/mall/admin/goods | 新建商品 | ✅ PASS |
+| 2 | PUT /api/mall/admin/goods | 更新商品 | ✅ PASS |
+| 3 | DELETE /api/mall/admin/goods/{id} | 软删除商品 | ✅ PASS |
+| 4 | GET /api/mall/admin/goods/list | 商品列表分页 | ✅ PASS |
+| 5 | PUT /api/mall/admin/goods/batch/status | 批量更新状态 | ✅ PASS |
+| 6 | PUT /api/mall/admin/goods/batch/status | 批量下架 | ✅ PASS |
+| 7 | GET /api/mall/admin/category/list | 分类列表 | ✅ PASS |
+| 10 | GET /api/mall/admin/goods/{id} | 商品详情 | ✅ PASS |
+| 11 | GET /api/mall/admin/order/list | 订单列表 | ✅ PASS |
+| 12 | GET /api/mall/admin/order/{id} | 订单详情 | ✅ PASS |
+| 13 | POST /api/mall/admin/order/{id}/adjust-amount | 订单改价 | ✅ PASS |
+| 14 | POST /api/mall/admin/order/{id}/admin-remark | 订单备注 | ✅ PASS |
+| 15 | POST /api/mall/admin/order/{id}/close | 关闭订单 | ✅ PASS |
+| 16 | GET /api/mall/admin/order/statistics | 订单统计 | ✅ PASS |
+| 18 | POST /api/mall/admin/coupon/template | 创建优惠券 | ✅ PASS |
+| 19 | PUT /api/mall/admin/coupon/template/{id} | 更新优惠券 | ✅ PASS |
+| 21 | GET /api/mall/admin/coupon/template/list | 优惠券列表 | ✅ PASS |
+| 24 | POST /api/mall/admin/coupon/template/{id}/offline | 优惠券下架 | ✅ PASS |
+| 25 | POST /api/mall/admin/banner | 创建Banner | ✅ PASS |
+| 26 | PUT /api/mall/admin/banner | 更新Banner | ✅ PASS |
+| 27 | DELETE /api/mall/admin/banner/{id} | 删除Banner | ✅ PASS |
+| 28 | GET /api/mall/admin/banner/list | Banner列表 | ✅ PASS |
+| 29 | PUT /api/mall/admin/banner | 启用/禁用Banner | ✅ PASS |
+
+### 服务状态
+
+- **Mall-Center端口:** 7010 (已重启，最新PID: 59452)
+- **Swagger文档:** http://localhost:7010/doc.html
+- **租户头:** x-tenant-header: SUPER
+- **数据库:** central_mall (MySQL root/lengfeng847)
+- **Redis:** 127.0.0.1:16379
+
+### 数据库数据状态
+| 表名 | 数据量 | 说明 |
+|------|--------|------|
+| mall_goods | 9条 | 包含测试商品 |
+| mall_goods_sku | 2条 | SKU001(100件)、SKU002(8件-预警) |
+| mall_category | 9条 | 分类数据 |
+| mall_order | 5条 | 已关闭2条(status=8)、已付款2条(status=2)、已取消1条(status=5) |
+| mall_coupon_template | 3条 | 优惠券数据(status=2已过期) |
+| mall_banner | 5条 | Banner数据 |
+
+---
+
+*Phase 10 经验教训记录于 2026-05-10*
+

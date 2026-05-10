@@ -28,9 +28,13 @@ public class AdminStockController {
             @RequestParam(defaultValue = "20") Long pageSize,
             @RequestParam(required = false) Long goodsId,
             @RequestParam(required = false) String keyword) {
+        // Use HashMap to avoid NPE from Map.of() with null values
+        java.util.Map<String, Object> params = new java.util.HashMap<>();
+        params.put("goodsId", goodsId);
+        params.put("keyword", keyword);
         IPage<SkuStockDTO> result = adminStockService.getSkuStockPage(
                 new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, pageSize),
-                Map.of("goodsId", goodsId, "keyword", keyword));
+                params);
         return Result.succeed(result);
     }
 

@@ -1,8 +1,11 @@
 package com.central.mall.controller.admin;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.central.common.model.Result;
 import com.central.mall.model.dto.*;
+import com.central.mall.model.entity.MallOrder;
 import com.central.mall.service.IOrderService;
 import com.central.mall.config.TenantInterceptor;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,9 +17,11 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/mall/admin/order")
@@ -49,13 +54,59 @@ public class AdminOrderController {
         if (keyword != null && !keyword.isEmpty()) params.put("keyword", keyword);
         params.put("tenantId", tenantId);
 
-        // Get orders - this would need a proper implementation with pagination
-        // For now, return a basic page
-        com.baomidou.mybatisplus.extension.plugins.pagination.Page<OrderListDTO> pageResult =
-            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, pageSize);
+        // Build query wrapper with filters
+        LambdaQueryWrapper<MallOrder> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MallOrder::getTenantId, tenantId);
+        wrapper.eq(MallOrder::getDelFlag, 0); // Only non-deleted orders
 
-        // TODO: Implement with actual query when IAdminOrderService has getOrderPage method
-        return Result.succeed(pageResult);
+        if (orderNo != null && !orderNo.isEmpty()) {
+            wrapper.eq(MallOrder::getOrderNo, orderNo);
+        }
+        if (status != null) {
+            wrapper.eq(MallOrder::getStatus, status);
+        }
+        if (startTime != null && !startTime.isEmpty()) {
+            try {
+                LocalDateTime start = LocalDateTime.parse(startTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                wrapper.ge(MallOrder::getCreateTime, start);
+            } catch (Exception e) {
+                // Ignore invalid date format
+            }
+        }
+        if (endTime != null && !endTime.isEmpty()) {
+            try {
+                LocalDateTime end = LocalDateTime.parse(endTime, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+                wrapper.le(MallOrder::getCreateTime, end);
+            } catch (Exception e) {
+                // Ignore invalid date format
+            }
+        }
+
+        // Order by create time descending
+        wrapper.orderByDesc(MallOrder::getCreateTime);
+
+        // Execute paginated query
+        Page<MallOrder> orderPage = new Page<>(page, pageSize);
+        Page<MallOrder> result = orderService.getBaseMapper().selectPage(orderPage, wrapper);
+
+        // Convert to DTO page
+        Page<OrderListDTO> dtoPage = new Page<>(result.getCurrent(), result.getSize(), result.getTotal());
+        List<OrderListDTO> records = result.getRecords().stream().map(order -> {
+            OrderListDTO dto = new OrderListDTO();
+            dto.setId(order.getId());
+            dto.setOrderNo(order.getOrderNo());
+            dto.setUserId(order.getUserId());
+            dto.setTotalAmount(order.getTotalAmount());
+            dto.setPayAmount(order.getPayAmount());
+            dto.setStatus(order.getStatus());
+            dto.setStatusDesc(order.getStatusName());
+            dto.setGoodsType(order.getGoodsType());
+            dto.setCreateTime(order.getCreateTime());
+            return dto;
+        }).collect(Collectors.toList());
+        dtoPage.setRecords(records);
+
+        return Result.succeed(dtoPage);
     }
 
     @GetMapping("/{id}")
@@ -94,12 +145,40 @@ public class AdminOrderController {
     public Result<Map<String, Object>> getOrderStatistics() {
         String tenantId = TenantInterceptor.getCurrentTenantId();
 
-        // TODO: Implement actual statistics queries
+        // Count orders by status
+        LambdaQueryWrapper<MallOrder> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MallOrder::getTenantId, tenantId);
+        wrapper.eq(MallOrder::getDelFlag, 0);
+
+        // Today start (00:00:00)
+        LocalDateTime todayStart = LocalDateTime.now().toLocalDate().atStartOfDay();
+
+        // Get all orders for tenant (simplified implementation)
+        List<MallOrder> allOrders = orderService.getBaseMapper().selectList(wrapper);
+
+        int todayOrderCount = 0;
+        BigDecimal todaySalesAmount = BigDecimal.ZERO;
+        int pendingShipCount = 0;
+        int completedCount = 0;
+
+        for (MallOrder order : allOrders) {
+            // Today orders
+            if (order.getCreateTime() != null && !order.getCreateTime().isBefore(todayStart)) {
+                todayOrderCount++;
+                if (order.getStatus() == 2) { // Paid
+                    todaySalesAmount = todaySalesAmount.add(order.getPayAmount());
+                }
+            }
+            // Status counts
+            if (order.getStatus() == 2) pendingShipCount++; // Paid, awaiting shipment
+            if (order.getStatus() == 4) completedCount++; // Completed
+        }
+
         Map<String, Object> stats = new HashMap<>();
-        stats.put("todayOrderCount", 0);
-        stats.put("todaySalesAmount", BigDecimal.ZERO);
-        stats.put("pendingShipCount", 0);
-        stats.put("completedCount", 0);
+        stats.put("todayOrderCount", todayOrderCount);
+        stats.put("todaySalesAmount", todaySalesAmount);
+        stats.put("pendingShipCount", pendingShipCount);
+        stats.put("completedCount", completedCount);
 
         return Result.succeed(stats);
     }

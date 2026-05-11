@@ -15,7 +15,7 @@ import java.io.InputStream;
 @Service
 @ConditionalOnProperty(prefix = com.central.oss.properties.FileServerProperties.PREFIX, name = "type", havingValue = FileServerProperties.TYPE_LOCAL)
 public class LocalFileService extends AbstractIFileService {
-    private static final String BASE_PATH = "/data/files/"; // 可配置
+    private static final String BASE_PATH = System.getProperty("user.home") + "/file-center-data/files/"; // 绝对路径
 
     @Override
     protected String fileType() {

@@ -139,21 +139,21 @@ CREATE TABLE IF NOT EXISTS `mall_stock_log` (
 -- ----------------------------------------
 -- 测试订单（待付款状态）
 INSERT INTO `mall_order` (`tenant_id`, `order_no`, `user_id`, `address_id`, `goods_type`, `total_amount`, `freight_amount`, `pay_amount`, `status`, `remark`, `create_time`) VALUES
-('SUPER', 'ORD202605100001', 1, 1, 1, 2999.00, 0.00, 2999.00, 1, 'TestOrder1', NOW()),
-('SUPER', 'ORD202605100002', 1, 1, 1, 5998.00, 10.00, 6008.00, 2, 'TestOrder2', NOW()),
-('SUPER', 'ORD202605100003', 1, NULL, 2, 99.00, 0.00, 99.00, 4, 'VirtualOrder', NOW());
+('default', 'ORD202605100001', 1, 1, 1, 2999.00, 0.00, 2999.00, 1, 'TestOrder1', NOW()),
+('default', 'ORD202605100002', 1, 1, 1, 5998.00, 10.00, 6008.00, 2, 'TestOrder2', NOW()),
+('default', 'ORD202605100003', 1, NULL, 2, 99.00, 0.00, 99.00, 4, 'VirtualOrder', NOW());
 
 -- 测试订单项
 INSERT INTO `mall_order_item` (`tenant_id`, `order_id`, `user_id`, `sku_id`, `goods_id`, `goods_name`, `sku_specs`, `goods_image`, `price`, `quantity`, `subtotal`, `create_time`) VALUES
-('SUPER', 1, 1, 1, 1, '测试商品A', '{"颜色":"黑色","内存":"16GB"}', 'https://picsum.photos/200', 2999.00, 1, 2999.00, NOW()),
-('SUPER', 2, 1, 2, 1, '测试商品A', '{"颜色":"银色","内存":"32GB"}', 'https://picsum.photos/200', 2999.00, 2, 5998.00, NOW()),
-('SUPER', 3, 1, NULL, 2, '虚拟商品', NULL, 'https://picsum.photos/200', 99.00, 1, 99.00, NOW());
+('default', 1, 1, 1, 1, '测试商品A', '{"颜色":"黑色","内存":"16GB"}', 'https://picsum.photos/200', 2999.00, 1, 2999.00, NOW()),
+('default', 2, 1, 2, 1, '测试商品A', '{"颜色":"银色","内存":"32GB"}', 'https://picsum.photos/200', 2999.00, 2, 5998.00, NOW()),
+('default', 3, 1, NULL, 2, '虚拟商品', NULL, 'https://picsum.photos/200', 99.00, 1, 99.00, NOW());
 
 -- 测试物流信息
 INSERT INTO `mall_delivery` (`tenant_id`, `order_id`, `express_code`, `express_name`, `waybill_no`, `receiver_name`, `receiver_phone`, `receiver_address`, `status`, `ship_time`) VALUES
-('SUPER', 2, 'SF', '顺丰速运', 'SF1234567890', '张三', '13800138000', '北京市朝阳区xxx', 1, NOW());
+('default', 2, 'SF', '顺丰速运', 'SF1234567890', '张三', '13800138000', '北京市朝阳区xxx', 1, NOW());
 
 -- 测试库存日志
 INSERT INTO `mall_stock_log` (`tenant_id`, `sku_id`, `order_id`, `change`, `stock_before`, `stock_after`, `operation_type`, `operator`, `remark`) VALUES
-('SUPER', 1, 1, -1, 100, 99, 1, 'system', '订单预占'),
-('SUPER', 2, 2, -2, 50, 48, 1, 'system', '订单预占');
+('default', 1, 1, -1, 100, 99, 1, 'system', '订单预占'),
+('default', 2, 2, -2, 50, 48, 1, 'system', '订单预占');

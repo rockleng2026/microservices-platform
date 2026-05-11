@@ -121,9 +121,9 @@ CREATE TABLE IF NOT EXISTS `mall_marketing_activity` (
 -- 初始化测试数据
 -- ----------------------------------------
 INSERT INTO `mall_coupon_template` (`tenant_id`, `name`, `type`, `face_value`, `min_amount`, `total_count`, `remain_count`, `per_user_limit`, `valid_type`, `valid_days`, `status`) VALUES
-('SUPER', '新人满100减10优惠券', 1, 10.00, 100.00, 1000, 1000, 1, 2, 30, 1),
-('SUPER', '85折折扣券', 2, 0.00, 200.00, 500, 500, 1, 2, 7, 1);
+('default', '新人满100减10优惠券', 1, 10.00, 100.00, 1000, 1000, 1, 2, 30, 1),
+('default', '85折折扣券', 2, 0.00, 200.00, 500, 500, 1, 2, 7, 1);
 
 -- 用户积分账户测试数据
 INSERT INTO `mall_points_account` (`tenant_id`, `user_id`, `balance`, `total_earned`, `total_spent`) VALUES
-('SUPER', 1, 500, 600, 100);
+('default', 1, 500, 600, 100);

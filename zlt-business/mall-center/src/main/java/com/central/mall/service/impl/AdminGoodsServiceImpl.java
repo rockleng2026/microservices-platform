@@ -39,7 +39,7 @@ public class AdminGoodsServiceImpl extends ServiceImpl<MallGoodsMapper, MallGood
         LambdaQueryWrapper<MallGoods> wrapper = new LambdaQueryWrapper<>();
         String tenantId = TenantInterceptor.getCurrentTenantId();
         if (tenantId == null || tenantId.isBlank()) {
-            tenantId = "SUPER"; // default tenant for development
+            tenantId = "UNKNOWN"; // unknown tenant so query returns no data
         }
         wrapper.eq(MallGoods::getTenantId, tenantId);
         wrapper.eq(MallGoods::getDelFlag, 0);
@@ -274,6 +274,8 @@ public class AdminGoodsServiceImpl extends ServiceImpl<MallGoodsMapper, MallGood
         dto.setVirtualExpire(goods.getVirtualExpire());
         dto.setStatus(goods.getStatus());
         dto.setSort(goods.getSort());
+        dto.setSales(goods.getSales());
+        dto.setCreateTime(goods.getCreateTime());
         return dto;
     }
 

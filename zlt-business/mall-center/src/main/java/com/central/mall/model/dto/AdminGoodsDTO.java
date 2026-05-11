@@ -23,4 +23,7 @@ public class AdminGoodsDTO implements Serializable {
     private List<SkuDTO> skus;
     private Integer status;
     private Integer sort;
+    private Integer sales;      // 已售数量
+    private Integer stock;      // 总库存（从SKUs汇总）
+    private LocalDateTime createTime;
 }

@@ -274,6 +274,68 @@ export default defineConfig({
             },
           ],
         },
+        {
+          path: '/mall-admin',
+          name: '商城管理',
+          routes: [
+            {
+              path: '/mall-admin',
+              redirect: '/mall-admin/dashboard',
+            },
+            {
+              path: '/mall-admin/dashboard',
+              name: '工作台',
+              component: '@/pages/MallAdmin/Dashboard',
+            },
+            {
+              path: '/mall-admin/goods',
+              name: '商品管理',
+              component: '@/pages/MallAdmin/Goods',
+            },
+            {
+              path: '/mall-admin/goods/detail/:id',
+              name: '商品详情',
+              component: '@/pages/MallAdmin/Goods/detail',
+              hideInMenu: true,
+            },
+            {
+              path: '/mall-admin/categories',
+              name: '分类管理',
+              component: '@/pages/MallAdmin/Categories',
+            },
+            {
+              path: '/mall-admin/orders',
+              name: '订单管理',
+              component: '@/pages/MallAdmin/Orders',
+            },
+            {
+              path: '/mall-admin/banners',
+              name: 'Banner管理',
+              component: '@/pages/MallAdmin/Banners',
+            },
+            {
+              path: '/mall-admin/stock',
+              name: '库存管理',
+              component: '@/pages/MallAdmin/Stock',
+            },
+            {
+              path: '/mall-admin/coupon',
+              name: '优惠券管理',
+              component: '@/pages/MallAdmin/Coupon',
+            },
+            {
+              path: '/mall-admin/member',
+              name: '客户管理',
+              component: '@/pages/MallAdmin/Member',
+            },
+            {
+              path: '/mall-admin/orders/detail/:id',
+              name: '订单详情',
+              component: '@/pages/MallAdmin/Orders/detail',
+              hideInMenu: true,
+            },
+          ],
+        },
       ],
     },
     {
@@ -320,6 +382,20 @@ export default defineConfig({
       logLevel: 'debug',
     },
     '/api-soo': {
+      target: 'http://127.0.0.1:9900',
+      changeOrigin: true,
+      secure: false,
+      logLevel: 'debug',
+    },
+    // 商城API统一通过网关访问
+    '/api-mall': {
+      target: 'http://127.0.0.1:9900',
+      changeOrigin: true,
+      secure: false,
+      logLevel: 'debug',
+    },
+    // 文件服务代理
+    '/api-file': {
       target: 'http://127.0.0.1:9900',
       changeOrigin: true,
       secure: false,

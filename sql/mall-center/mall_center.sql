@@ -131,18 +131,18 @@ CREATE TABLE IF NOT EXISTS `mall_user_address` (
 -- 初始化测试数据
 -- ----------------------------------------
 INSERT INTO `mall_category` (`id`, `tenant_id`, `parent_id`, `name`, `sort`, `status`) VALUES
-(1, 'SUPER', 0, '服务器', 1, 1),
-(2, 'SUPER', 0, 'CPU处理器', 2, 1),
-(3, 'SUPER', 0, '内存', 3, 1),
-(4, 'SUPER', 0, 'NAS存储', 4, 1),
-(5, 'SUPER', 0, '网络设备', 5, 1),
-(6, 'SUPER', 0, '技术文档', 6, 1);
+(1, 'default', 0, '服务器', 1, 1),
+(2, 'default', 0, 'CPU处理器', 2, 1),
+(3, 'default', 0, '内存', 3, 1),
+(4, 'default', 0, 'NAS存储', 4, 1),
+(5, 'default', 0, '网络设备', 5, 1),
+(6, 'default', 0, '技术文档', 6, 1);
 
 INSERT INTO `mall_goods` (`id`, `tenant_id`, `category_id`, `name`, `sub_title`, `main_image`, `price`, `sales`, `status`, `goods_type`) VALUES
-(1, 'SUPER', 1, 'Dell PowerEdge R750 服务器', '2U机架式服务器', '/images/goods/dell_r750.jpg', 25999.00, 100, 1, 1),
-(2, 'SUPER', 2, 'Intel Xeon Gold 6348', '28核56线程处理器', '/images/goods/xeon_6348.jpg', 8999.00, 50, 1, 1),
-(3, 'SUPER', 3, '三星 64GB DDR5 ECC', '服务器内存 4800MHz', '/images/goods/ddr5_64g.jpg', 1899.00, 200, 1, 1),
-(4, 'SUPER', 6, 'Kubernetes实战指南', '云原生架构与实践', '/images/goods/k8s_guide.jpg', 99.00, 1000, 1, 2);
+(1, 'default', 1, 'Dell PowerEdge R750 服务器', '2U机架式服务器', '/images/goods/dell_r750.jpg', 25999.00, 100, 1, 1),
+(2, 'default', 2, 'Intel Xeon Gold 6348', '28核56线程处理器', '/images/goods/xeon_6348.jpg', 8999.00, 50, 1, 1),
+(3, 'default', 3, '三星 64GB DDR5 ECC', '服务器内存 4800MHz', '/images/goods/ddr5_64g.jpg', 1899.00, 200, 1, 1),
+(4, 'default', 6, 'Kubernetes实战指南', '云原生架构与实践', '/images/goods/k8s_guide.jpg', 99.00, 1000, 1, 2);
 
 -- ----------------------------------------
 -- 7. 轮播图管理表 (Phase 2)
@@ -362,16 +362,16 @@ CREATE TABLE IF NOT EXISTS `mall_marketing_activity` (
 -- 初始化规格测试数据 (Phase 2)
 -- ----------------------------------------
 INSERT INTO `mall_spec` (`id`, `tenant_id`, `spec_name`) VALUES
-(1, 'SUPER', '颜色'),
-(2, 'SUPER', '内存'),
-(3, 'SUPER', '硬盘');
+(1, 'default', '颜色'),
+(2, 'default', '内存'),
+(3, 'default', '硬盘');
 
 INSERT INTO `mall_spec_value` (`id`, `tenant_id`, `spec_id`, `spec_value`) VALUES
-(1, 'SUPER', 1, '黑色'),
-(2, 'SUPER', 1, '银色'),
-(3, 'SUPER', 2, '16GB'),
-(4, 'SUPER', 2, '32GB'),
-(5, 'SUPER', 2, '64GB'),
-(6, 'SUPER', 3, '512GB'),
-(7, 'SUPER', 3, '1TB'),
-(8, 'SUPER', 3, '2TB');
+(1, 'default', 1, '黑色'),
+(2, 'default', 1, '银色'),
+(3, 'default', 2, '16GB'),
+(4, 'default', 2, '32GB'),
+(5, 'default', 2, '64GB'),
+(6, 'default', 3, '512GB'),
+(7, 'default', 3, '1TB'),
+(8, 'default', 3, '2TB');

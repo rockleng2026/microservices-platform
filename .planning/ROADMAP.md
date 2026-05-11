@@ -151,7 +151,7 @@ Plans:
 | 12 | v2.0 | 0/16 | Pending | — |
 | 13 | v2.0 | 0/all | Pending | — |
 | 14 | v2.0 | 1/5 | Pending | — |
-| 15 | v2.0 | 0/1 | Pending | — |
+| 15 | v2.0 | 1/1 | ✅ Complete | 2026-05-11 |
 
 ---
 
@@ -192,7 +192,7 @@ Plans:
 - 08: 会员管理页面测试
 
 **Plans:**
-- [x] 15-ADMIN-UAT-01-PLAN.md — 管理后台页面UAT计划
+- [x] 15-ADMIN-UAT-01-PLAN.md — 管理后台页面UAT计划 ✅ (完成于 2026-05-11)
 
 ---
 

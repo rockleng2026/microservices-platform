@@ -68,18 +68,22 @@ export const useAdminStore = create<AdminState>((set) => ({
 
   // 获取今日统计数据
   fetchStatistics: async () => {
+    console.log('[Store] fetchStatistics called');
     set((state) => ({
       loading: { ...state.loading, statistics: true },
       error: { ...state.error, statistics: null },
     }));
 
     try {
+      console.log('[Store] calling getTodayStatistics API');
       const data = await getTodayStatistics();
+      console.log('[Store] getTodayStatistics returned:', data);
       set((state) => ({
         statistics: data,
         loading: { ...state.loading, statistics: false },
       }));
     } catch (error: any) {
+      console.error('[Store] fetchStatistics error:', error);
       set((state) => ({
         error: { ...state.error, statistics: error.message || '获取统计数据失败' },
         loading: { ...state.loading, statistics: false },

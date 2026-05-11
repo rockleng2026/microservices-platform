@@ -25,6 +25,7 @@ const Dashboard: React.FC = () => {
 
   // 加载所有数据
   useEffect(() => {
+    console.log('[Dashboard] useEffect triggered, calling fetch APIs');
     fetchStatistics();
     fetchSalesTrend('day');
     fetchStockWarnings();

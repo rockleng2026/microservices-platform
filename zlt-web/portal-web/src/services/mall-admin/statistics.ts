@@ -1,3 +1,5 @@
+import { request } from '@/utils/request';
+
 // API基础路径 - 通过网关访问 mall-center
 // 网关StripPrefix=1去掉/api-mall, 需要保留完整后端路径
 const MALL_CENTER_API = '/api-mall/mall-center';

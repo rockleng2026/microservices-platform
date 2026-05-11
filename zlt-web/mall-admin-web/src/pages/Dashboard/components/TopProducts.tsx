@@ -1,9 +1,16 @@
 import React from 'react';
 import { Card, List, Avatar, Badge } from 'antd';
-import { MallGoods } from '@/services/admin/statistics';
+
+interface TopProductItem {
+  id: number;
+  name: string;
+  mainImage?: string;
+  price?: number;
+  sales?: number;
+}
 
 interface TopProductsProps {
-  data: MallGoods[];
+  data: TopProductItem[];
   loading?: boolean;
 }
 
@@ -25,8 +32,8 @@ const TopProducts: React.FC<TopProductsProps> = ({ data, loading }) => {
     >
       <List
         loading={loading}
-        dataSource={data.slice(0, 10)}
-        renderItem={(item: MallGoods, index: number) => (
+        dataSource={data?.slice(0, 10) || []}
+        renderItem={(item: TopProductItem, index: number) => (
           <List.Item
             key={item.id}
             style={{ cursor: 'pointer' }}

@@ -38,6 +38,14 @@ export interface UserAnalysisDTO {
   avgOrderAmount: number;
 }
 
+export interface TopProductDTO {
+  id: number;
+  name: string;
+  mainImage?: string;
+  price?: number;
+  sales?: number;
+}
+
 // 获取今日统计数据
 export async function getTodayStatistics(): Promise<StatisticsDTO> {
   const response = await request(`${API_BASE_URL}/statistics/today`, {
@@ -73,4 +81,13 @@ export async function getUserAnalysis(): Promise<UserAnalysisDTO> {
     method: 'GET',
   });
   return response.datas || response.data || response;
+}
+
+// 获取热销商品排行
+export async function getTopProducts(limit: number = 10): Promise<TopProductDTO[]> {
+  const response = await request(`${API_BASE_URL}/statistics/top-products`, {
+    method: 'GET',
+    params: { limit },
+  });
+  return response.datas || response.data || response || [];
 }

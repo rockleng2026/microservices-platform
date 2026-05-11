@@ -150,6 +150,27 @@ Plans:
 | 11 | v2.0 | 0/21 | Pending | — |
 | 12 | v2.0 | 0/16 | Pending | — |
 | 13 | v2.0 | 0/all | Pending | — |
+| 14 | v2.0 | 1/5 | Pending | — |
 
 ---
-*Roadmap updated: 2026-05-09 — Phase 9 complete (小程序交易流程)*
+
+## Phase 14: 前端工程合并
+
+| Module | Requirements | Count |
+|--------|--------------|-------|
+| ADMIN-FRONTEND-01 前端迁移 | ADMIN-FRONTEND-01-01~05 | 5 |
+| **Total** | | **5** |
+
+**ADMIN-FRONTEND-01 前端迁移范围:**
+- 01: 环境准备与文件复制
+- 02: 路由配置
+- 03: 代码适配与修复
+- 04: 菜单权限与动态菜单集成
+- 05: 功能测试
+
+**Plans:**
+- [ ] 14-FRONTEND-01-PLAN.md — 前端迁移计划
+
+---
+
+*Roadmap updated: 2026-05-10 — Phase 14 added (前端工程合并)*

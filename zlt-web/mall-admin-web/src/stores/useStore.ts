@@ -4,10 +4,12 @@ import {
   getSalesTrend,
   getStockWarningList,
   getUserAnalysis,
+  getTopProducts,
   StatisticsDTO,
   SalesTrendDTO,
   StockWarningDTO,
   UserAnalysisDTO,
+  TopProductDTO,
 } from '@/services/admin/statistics';
 
 interface AdminState {
@@ -16,6 +18,7 @@ interface AdminState {
   salesTrend: SalesTrendDTO[];
   stockWarnings: StockWarningDTO[];
   userAnalysis: UserAnalysisDTO | null;
+  topProducts: TopProductDTO[];
 
   // 加载状态
   loading: {
@@ -23,6 +26,7 @@ interface AdminState {
     salesTrend: boolean;
     stockWarnings: boolean;
     userAnalysis: boolean;
+    topProducts: boolean;
   };
 
   // 错误状态
@@ -31,6 +35,7 @@ interface AdminState {
     salesTrend: string | null;
     stockWarnings: string | null;
     userAnalysis: string | null;
+    topProducts: string | null;
   };
 
   // 操作方法
@@ -38,6 +43,7 @@ interface AdminState {
   fetchSalesTrend: (type?: 'day' | 'week' | 'month', startDate?: string, endDate?: string) => Promise<void>;
   fetchStockWarnings: () => Promise<void>;
   fetchUserAnalysis: () => Promise<void>;
+  fetchTopProducts: (limit?: number) => Promise<void>;
   clearAll: () => void;
 }
 
@@ -47,12 +53,14 @@ export const useAdminStore = create<AdminState>((set) => ({
   salesTrend: [],
   stockWarnings: [],
   userAnalysis: null,
+  topProducts: [],
 
   loading: {
     statistics: false,
     salesTrend: false,
     stockWarnings: false,
     userAnalysis: false,
+    topProducts: false,
   },
 
   error: {
@@ -60,6 +68,7 @@ export const useAdminStore = create<AdminState>((set) => ({
     salesTrend: null,
     stockWarnings: null,
     userAnalysis: null,
+    topProducts: null,
   },
 
   // 获取今日统计数据
@@ -146,6 +155,27 @@ export const useAdminStore = create<AdminState>((set) => ({
     }
   },
 
+  // 获取热销商品排行
+  fetchTopProducts: async (limit = 10) => {
+    set((state) => ({
+      loading: { ...state.loading, topProducts: true },
+      error: { ...state.error, topProducts: null },
+    }));
+
+    try {
+      const data = await getTopProducts(limit);
+      set((state) => ({
+        topProducts: data || [],
+        loading: { ...state.loading, topProducts: false },
+      }));
+    } catch (error: any) {
+      set((state) => ({
+        error: { ...state.error, topProducts: error.message || '获取热销排行失败' },
+        loading: { ...state.loading, topProducts: false },
+      }));
+    }
+  },
+
   // 清空所有数据
   clearAll: () => {
     set({
@@ -153,17 +183,20 @@ export const useAdminStore = create<AdminState>((set) => ({
       salesTrend: [],
       stockWarnings: [],
       userAnalysis: null,
+      topProducts: [],
       loading: {
         statistics: false,
         salesTrend: false,
         stockWarnings: false,
         userAnalysis: false,
+        topProducts: false,
       },
       error: {
         statistics: null,
         salesTrend: null,
         stockWarnings: null,
         userAnalysis: null,
+        topProducts: null,
       },
     });
   },

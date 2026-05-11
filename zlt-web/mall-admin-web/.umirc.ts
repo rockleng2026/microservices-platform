@@ -29,7 +29,7 @@ export default defineConfig({
       changeOrigin: true,
       secure: false,
     },
-'/api/mall/admin': {
+    '/api/mall/admin': {
       target: 'http://127.0.0.1:7010',
       changeOrigin: true,
       secure: false,
@@ -64,7 +64,4 @@ export default defineConfig({
   // 禁用可能导致问题的UMI功能
   mfsu: false,
   legacy: {},
-
-  // UMI plugins
-  plugins: ['@umijs/plugins/dist/request'],
 });

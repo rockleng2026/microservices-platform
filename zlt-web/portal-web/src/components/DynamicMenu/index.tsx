@@ -1,15 +1,17 @@
 import React, { useMemo } from 'react';
 import { Menu } from 'antd';
 import { Link, useLocation } from 'umi';
-import { 
-  DashboardOutlined, 
-  TeamOutlined, 
+import {
+  DashboardOutlined,
+  TeamOutlined,
   CustomerServiceOutlined,
   AppstoreOutlined,
   ShoppingOutlined,
   FileTextOutlined,
   BarChartOutlined,
-  SettingOutlined
+  SettingOutlined,
+  PictureOutlined,
+  BoxPlotOutlined,
 } from '@ant-design/icons';
 import { MenuPermission } from '../../services/portal';
 
@@ -35,6 +37,8 @@ const iconMap: Record<string, React.ReactNode> = {
   user: <TeamOutlined />,
   contacts: <CustomerServiceOutlined />,
   'user-group': <CustomerServiceOutlined />,
+  box: <BoxPlotOutlined />,
+  picture: <PictureOutlined />,
 };
 
 const DynamicMenu: React.FC<DynamicMenuProps> = ({

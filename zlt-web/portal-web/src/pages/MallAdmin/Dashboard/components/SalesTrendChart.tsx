@@ -1,7 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, Button, Space } from 'antd';
 import * as echarts from 'echarts';
-import { SalesTrendDTO } from '@/services/admin/statistics';
+
+interface SalesTrendDTO {
+  date: string;
+  orderCount: number;
+  salesAmount: number;
+}
 
 interface SalesTrendChartProps {
   data: SalesTrendDTO[];

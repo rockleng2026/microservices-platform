@@ -1,7 +1,13 @@
 import React from 'react';
 import { Card, Row, Col, Statistic } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
-import { UserAnalysisDTO } from '@/services/admin/statistics';
+
+interface UserAnalysisDTO {
+  todayNewUsers: number;
+  yesterdayNewUsers: number;
+  totalUsers: number;
+  activeUsers: number;
+}
 
 interface UserStatsProps {
   data: UserAnalysisDTO | null;

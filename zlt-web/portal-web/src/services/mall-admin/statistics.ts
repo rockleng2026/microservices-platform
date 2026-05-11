@@ -7,7 +7,8 @@ export async function getTodayStatistics(): Promise<any> {
   const response = await request(`${MALL_CENTER_API}/api/mall/admin/statistics/today`, {
     method: 'GET',
   });
-  return response.datas || response.data || response;
+  // 兼容多种响应格式
+  return response?.datas || response?.data || response || null;
 }
 
 // 获取销售趋势
@@ -20,7 +21,9 @@ export async function getSalesTrend(
     method: 'GET',
     params: { type, startDate, endDate },
   });
-  return response.datas || response.data || response || [];
+  // 兼容多种响应格式
+  const data = response?.datas || response?.data || response;
+  return Array.isArray(data) ? data : [];
 }
 
 // 获取库存预警列表
@@ -28,7 +31,9 @@ export async function getStockWarningList(): Promise<any[]> {
   const response = await request(`${MALL_CENTER_API}/api/mall/admin/statistics/stock-warning`, {
     method: 'GET',
   });
-  return response.datas || response.data || response || [];
+  // 兼容多种响应格式
+  const data = response?.datas || response?.data || response;
+  return Array.isArray(data) ? data : [];
 }
 
 // 获取用户分析数据
@@ -36,7 +41,8 @@ export async function getUserAnalysis(): Promise<any> {
   const response = await request(`${MALL_CENTER_API}/api/mall/admin/statistics/user-analysis`, {
     method: 'GET',
   });
-  return response.datas || response.data || response;
+  // 兼容多种响应格式
+  return response?.datas || response?.data || response || null;
 }
 
 // 获取热销商品排行
@@ -45,5 +51,7 @@ export async function getTopProducts(limit: number = 10): Promise<any[]> {
     method: 'GET',
     params: { limit },
   });
-  return response.datas || response.data || response || [];
+  // 兼容多种响应格式
+  const data = response?.datas || response?.data || response;
+  return Array.isArray(data) ? data : [];
 }

@@ -1,6 +1,14 @@
 import React from 'react';
 import { Card, Table, Empty } from 'antd';
-import { StockWarningDTO } from '@/services/admin/statistics';
+
+interface StockWarningDTO {
+  goodsId: number;
+  goodsName: string;
+  skuId: number;
+  skuName: string;
+  realStock: number;
+  warningStock: number;
+}
 
 interface StockWarningListProps {
   data: StockWarningDTO[];

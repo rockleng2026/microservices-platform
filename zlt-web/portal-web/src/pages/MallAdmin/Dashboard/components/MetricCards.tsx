@@ -1,7 +1,16 @@
 import React from 'react';
 import { Card, Statistic, Row, Col } from 'antd';
 import { ArrowUpOutlined, ArrowDownOutlined } from '@ant-design/icons';
-import { StatisticsDTO } from '@/services/admin/statistics';
+
+interface StatisticsDTO {
+  todayOrderCount: number;
+  yesterdayOrderCount: number;
+  todaySalesAmount: number;
+  yesterdaySalesAmount: number;
+  totalPv: number;
+  avgOrderAmount: number;
+  waitDeliveryCount: number;
+}
 
 interface MetricCardsProps {
   data: StatisticsDTO | null;

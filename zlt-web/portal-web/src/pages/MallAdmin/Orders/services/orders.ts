@@ -155,7 +155,9 @@ export async function getOrderList(params: OrderListParams): Promise<PageRespons
       keyword: params.keyword,
     },
   });
-  return response.datas || { records: [], total: 0, size: 20, current: 1 };
+  // 兼容多种响应格式
+  const data = response?.datas || response?.data || response;
+  return data || { records: [], total: 0, size: 20, current: 1 };
 }
 
 /**
@@ -165,7 +167,8 @@ export async function getOrderDetail(id: number): Promise<OrderDetailDTO | null>
   const response = await request<ApiResponse<OrderDetailDTO>>(`/api-mall/api/mall/admin/order/${id}`, {
     method: 'GET',
   });
-  return response.datas || null;
+  // 兼容多种响应格式: response.datas, response.data, 或直接返回数据
+  return response?.datas || response?.data || response || null;
 }
 
 /**
@@ -181,7 +184,8 @@ export async function adjustOrderPrice(params: AdjustOrderPriceParams): Promise<
       reason: params.reason || '',
     },
   });
-  return response.datas || false;
+  // 兼容多种响应格式
+  return response?.datas || response?.data || false;
 }
 
 /**
@@ -192,7 +196,8 @@ export async function addAdminRemark(orderId: number, remark: string): Promise<b
     method: 'POST',
     data: { remark },
   });
-  return response.datas || false;
+  // 兼容多种响应格式
+  return response?.datas || response?.data || false;
 }
 
 /**
@@ -203,7 +208,8 @@ export async function closeOrder(orderId: number, reason: string): Promise<boole
     method: 'POST',
     data: { reason },
   });
-  return response.datas || false;
+  // 兼容多种响应格式
+  return response?.datas || response?.data || false;
 }
 
 /**
@@ -218,7 +224,8 @@ export async function shipOrder(orderId: number, params: ShipOrderParams): Promi
       waybillNo: params.waybillNo,
     },
   });
-  return response.datas || false;
+  // 兼容多种响应格式
+  return response?.datas || response?.data || false;
 }
 
 // Close order reason options

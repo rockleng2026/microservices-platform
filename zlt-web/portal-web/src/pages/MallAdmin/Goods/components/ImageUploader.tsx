@@ -2,10 +2,11 @@
  * 多图上传组件 - ADMIN-02-08
  * 支持最多5张图片上传和拖拽排序
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Upload, Image, Button, message } from 'antd';
 import { DeleteOutlined, UploadOutlined, HolderOutlined } from '@ant-design/icons';
 import type { UploadFile, UploadProps } from 'antd/lib/upload/interface';
+import { request } from '@/utils/request';
 
 // Max number of images allowed
 const MAX_FILES = 5;
@@ -16,16 +17,29 @@ interface ImageUploaderProps {
   maxFiles?: number;                   // Max files (default: 5)
 }
 
+/** 给图片URL追加access_token，用于< img >标签认证 */
+const appendToken = (url: string): string => {
+  if (!url || !url.includes('api-file/files/local')) return url;
+  const token = localStorage.getItem('access_token');
+  if (!token) return url;  // 无token则不附加，避免 ?access_token=null
+  return url + (url.includes('?') ? '&' : '?') + 'access_token=' + token;
+};
+
 const ImageUploader: React.FC<ImageUploaderProps> = ({
   value = [],
   onChange,
   maxFiles = MAX_FILES,
 }) => {
-  // Internal state
+  // Internal state - always store clean URLs (no token) for onChange
   const [imageUrls, setImageUrls] = useState<string[]>(value);
   const [uploading, setUploading] = useState(false);
 
-  // Update internal state and notify parent
+  // Sync with value prop changes (e.g., editing saved goods)
+  useEffect(() => {
+    setImageUrls(value);
+  }, [value]);
+
+  // Update internal state and notify parent (store clean URLs)
   const updateUrls = (newUrls: string[]) => {
     setImageUrls(newUrls);
     onChange?.(newUrls);
@@ -44,19 +58,16 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       const formData = new FormData();
       formData.append('file', file);
 
-      const response = await fetch('http://localhost:5000/files-anon', {
-        method: 'POST',
-        body: formData,
-      });
+      // Use request utility which carries x-tenant-header automatically
+      // Upload via gateway /api-file route → file-center /files-anon
+      const result = await request<{ url?: string; resp_msg?: string; message?: string; error?: string }>(
+        '/api-file/files-anon',
+        { method: 'POST', data: formData }
+      );
 
-      const result = await response.json();
-
-      // file-center returns FileInfo directly with 'url' field (not wrapped)
-      // URL is like "/files/local/xxx" - need to prepend file-center base URL
-      const FILE_CENTER_BASE = 'http://localhost:5000';
+      // Store clean URL (no token) in DB to avoid stale-token issues on re-login
       if (result.url) {
-        const fullUrl = result.url.startsWith('http') ? result.url : FILE_CENTER_BASE + result.url;
-        const newUrls = [...imageUrls, fullUrl];
+        const newUrls = [...imageUrls, result.url];
         updateUrls(newUrls);
         message.success('上传成功');
       } else {
@@ -134,7 +145,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         }}
       >
         <Image
-          src={url}
+          src={appendToken(url)}
           width={80}
           height={80}
           style={{ objectFit: 'cover' }}

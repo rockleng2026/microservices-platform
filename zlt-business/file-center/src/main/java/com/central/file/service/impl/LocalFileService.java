@@ -16,6 +16,8 @@ import java.io.InputStream;
 @ConditionalOnProperty(prefix = com.central.oss.properties.FileServerProperties.PREFIX, name = "type", havingValue = FileServerProperties.TYPE_LOCAL)
 public class LocalFileService extends AbstractIFileService {
     private static final String BASE_PATH = System.getProperty("user.home") + "/file-center-data/files/"; // 绝对路径
+    // 网关地址前缀，图片URL通过网关访问
+    private static final String GATEWAY_BASE = "http://localhost:9900/api-file";
 
     @Override
     protected String fileType() {
@@ -37,7 +39,7 @@ public class LocalFileService extends AbstractIFileService {
         }
         ObjectInfo info = new ObjectInfo();
         info.setObjectPath(filePath);
-        info.setObjectUrl("/files/local/" + fileKey); // 可自定义本地访问路径
+        info.setObjectUrl(GATEWAY_BASE + "/files/local/" + fileKey); // 通过网关访问的URL
         return info;
     }
 
@@ -51,8 +53,13 @@ public class LocalFileService extends AbstractIFileService {
 
     @Override
     public void out(String id, OutputStream os) {
-        // 本地文件下载实现
-        com.central.file.model.FileInfo fileInfo = baseMapper.selectById(id);
+        // id 是 fileKey（如 "1778474470821_logo.png"），path 列存的是完整路径
+        // 用 like 查询找到对应记录（fileKey 在 path 末尾，唯一）
+        com.central.file.model.FileInfo fileInfo = baseMapper.selectOne(
+            new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<com.central.file.model.FileInfo>()
+                .like(com.central.file.model.FileInfo::getPath, id)
+                .last("LIMIT 1")
+        );
         if (fileInfo != null) {
             try (InputStream in = new FileInputStream(fileInfo.getPath())) {
                 byte[] buffer = new byte[4096];

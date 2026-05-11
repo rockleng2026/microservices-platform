@@ -151,6 +151,7 @@ Plans:
 | 12 | v2.0 | 0/16 | Pending | — |
 | 13 | v2.0 | 0/all | Pending | — |
 | 14 | v2.0 | 1/5 | Pending | — |
+| 15 | v2.0 | 0/1 | Pending | — |
 
 ---
 
@@ -173,4 +174,26 @@ Plans:
 
 ---
 
-*Roadmap updated: 2026-05-10 — Phase 14 added (前端工程合并)*
+## Phase 15: 管理后台前端UAT测试
+
+| Module | Requirements | Count |
+|--------|--------------|-------|
+| ADMIN-UAT-01 管理后台UAT | ADMIN-01~ADMIN-11 | 全部 |
+| **Total** | | **待定** |
+
+**ADMIN-UAT-01 管理后台测试范围:**
+- 01: Dashboard 工作台页面测试
+- 02: 商品管理页面测试
+- 03: 订单管理页面测试
+- 04: 分类管理页面测试
+- 05: Banner管理页面测试
+- 06: 优惠券管理页面测试
+- 07: 库存管理页面测试
+- 08: 会员管理页面测试
+
+**Plans:**
+- [x] 15-ADMIN-UAT-01-PLAN.md — 管理后台页面UAT计划
+
+---
+
+*Roadmap updated: 2026-05-11 — Phase 15 added (管理后台前端UAT测试)*

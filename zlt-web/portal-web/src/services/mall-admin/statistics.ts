@@ -1,8 +1,9 @@
 import { request } from '@/utils/request';
 
 // API基础路径 - 通过网关访问 mall-center
-// 网关StripPrefix=1去掉/api-mall, 需要保留完整后端路径
-const MALL_CENTER_API = '/api-mall/mall-center';
+// 网关路由: /api-mall/** -> lb://mall-center, StripPrefix=1
+// 所以实际路径是: /api-mall/api/mall/admin/...
+const MALL_CENTER_API = '/api-mall';
 
 // 获取今日统计数据
 export async function getTodayStatistics(): Promise<any> {

@@ -7,11 +7,9 @@ const MALL_CENTER_API = '/api-mall';
 
 // 获取今日统计数据
 export async function getTodayStatistics(): Promise<any> {
-  console.log('[API] getTodayStatistics called, URL:', `${MALL_CENTER_API}/api/mall/admin/statistics/today`);
   const response = await request(`${MALL_CENTER_API}/api/mall/admin/statistics/today`, {
     method: 'GET',
   });
-  console.log('[API] getTodayStatistics response:', response);
   // 兼容多种响应格式
   return response?.datas || response?.data || response || null;
 }

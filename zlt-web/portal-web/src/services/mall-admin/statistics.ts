@@ -22,13 +22,32 @@ export async function getSalesTrend(
   startDate?: string,
   endDate?: string
 ): Promise<any[]> {
+  // 后端要求 startDate 和 endDate 参数
   const response = await request(`${MALL_CENTER_API}/api/mall/admin/statistics/sales-trend`, {
     method: 'GET',
-    params: { type, startDate, endDate },
+    params: { type, startDate: startDate || getDefaultStartDate(type), endDate: endDate || getDefaultEndDate() },
   });
   // 兼容多种响应格式
   const data = response?.datas || response?.data || response;
   return Array.isArray(data) ? data : [];
+}
+
+// 获取默认开始日期
+function getDefaultStartDate(type: string): string {
+  const now = new Date();
+  if (type === 'day') {
+    now.setDate(now.getDate() - 7); // 7天前
+  } else if (type === 'week') {
+    now.setDate(now.getDate() - 30); // 30天前
+  } else {
+    now.setMonth(now.getMonth() - 3); // 3个月前
+  }
+  return now.toISOString().split('T')[0];
+}
+
+// 获取默认结束日期
+function getDefaultEndDate(): string {
+  return new Date().toISOString().split('T')[0];
 }
 
 // 获取库存预警列表
@@ -51,12 +70,19 @@ export async function getUserAnalysis(): Promise<any> {
 }
 
 // 获取热销商品排行
+// TODO: 后端暂无此API，暂时返回空数组
 export async function getTopProducts(limit: number = 10): Promise<any[]> {
+  // 后端 /api/mall/admin/statistics/top-products 接口不存在
+  // 暂时返回空数组，避免前端报错
+  console.warn('[API] getTopProducts: 后端接口不存在，暂时返回空数据');
+  return [];
+  // 正式上线前需要后端实现此接口
+  /*
   const response = await request(`${MALL_CENTER_API}/api/mall/admin/statistics/top-products`, {
     method: 'GET',
     params: { limit },
   });
-  // 兼容多种响应格式
   const data = response?.datas || response?.data || response;
   return Array.isArray(data) ? data : [];
+  */
 }

@@ -305,6 +305,8 @@ const StockPage: React.FC = () => {
             <Input.TextArea placeholder="可选备注信息" />
           </Form.Item>
         </Form>
+      </Modal>
+
       {/* Stock Create Modal */}
       <Modal
         title="库存录入"

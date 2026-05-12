@@ -177,6 +177,43 @@ public class AdminStockServiceImpl implements IAdminStockService {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public Long createStock(com.central.mall.model.dto.StockCreateDTO dto) {
+        String tenantId = TenantInterceptor.getCurrentTenantId();
+
+        // Check if skuCode already exists
+        LambdaQueryWrapper<MallGoodsSku> existWrapper = new LambdaQueryWrapper<>();
+        existWrapper.eq(MallGoodsSku::getTenantId, tenantId)
+                   .eq(MallGoodsSku::getSkuCode, dto.getSkuCode())
+                   .eq(MallGoodsSku::getDelFlag, 0);
+        Long existingCount = skuMapper.selectCount(existWrapper);
+        if (existingCount > 0) {
+            throw new RuntimeException("SKU编码已存在: " + dto.getSkuCode());
+        }
+
+        // Validate goods exists
+        MallGoods goods = goodsMapper.selectById(dto.getGoodsId());
+        if (goods == null || goods.getDelFlag() != 0) {
+            throw new RuntimeException("商品不存在: " + dto.getGoodsId());
+        }
+
+        // Create SKU stock record
+        MallGoodsSku sku = new MallGoodsSku();
+        sku.setGoodsId(dto.getGoodsId());
+        sku.setTenantId(tenantId);
+        sku.setSkuCode(dto.getSkuCode());
+        sku.setSpecs(dto.getSpecs() != null ? dto.getSpecs() : "{}");
+        sku.setPrice(dto.getPrice());
+        sku.setStock(dto.getStock() != null ? dto.getStock() : 0);
+        sku.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
+        sku.setDelFlag(0);
+        sku.setCreateTime(LocalDateTime.now());
+        sku.setUpdateTime(LocalDateTime.now());
+
+        skuMapper.insert(sku);
+        return sku.getId();
+    }
+
     private SkuStockDTO convertToDTO(MallGoodsSku sku, Map<Long, String> goodsNameMap, Integer threshold) {
         SkuStockDTO dto = new SkuStockDTO();
         dto.setId(sku.getId());

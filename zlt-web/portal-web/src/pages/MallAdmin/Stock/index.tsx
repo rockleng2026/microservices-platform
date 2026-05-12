@@ -3,8 +3,8 @@
  * SKU stock management with search, filter, and manual correction
  */
 import React, { useState, useRef, useCallback } from 'react';
-import { Button, Space, message, Modal, Form, Input, Tag, Popconfirm } from 'antd';
-import { ReloadOutlined, EditOutlined } from '@ant-design/icons';
+import { Button, Space, message, Modal, Form, Input, InputNumber, Select, Tag } from 'antd';
+import { ReloadOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons';
 import { ProTable } from '@ant-design/pro-components';
 import type { ActionRef, ProColumns } from '@ant-design/pro-components';
 import { request } from '@/utils/request';
@@ -20,11 +20,22 @@ interface SkuStockDTO {
   status: number;
 }
 
+interface StockCreateForm {
+  goodsId: number;
+  skuCode: string;
+  specs: string;
+  price: number;
+  stock: number;
+  status: number;
+}
+
 const StockPage: React.FC = () => {
   const actionRef = useRef<ActionRef>(null);
   const [correctModalVisible, setCorrectModalVisible] = useState(false);
+  const [createModalVisible, setCreateModalVisible] = useState(false);
   const [selectedSku, setSelectedSku] = useState<SkuStockDTO | null>(null);
   const [form] = Form.useForm();
+  const [createForm] = Form.useForm();
 
   // Fetch stock list
   const fetchStockList = useCallback(async (params: {
@@ -32,7 +43,10 @@ const StockPage: React.FC = () => {
     pageSize?: number;
     goodsId?: number;
     keyword?: string;
+    goodsName?: string;
   }) => {
+    // Support both keyword and goodsName (ProTable sends column dataIndex as param name)
+    const searchKeyword = params.keyword || params.goodsName;
     try {
       const response = await request<{ datas?: { records: SkuStockDTO[]; total: number } }>('/api-mall/api/mall/admin/stock/list', {
         method: 'GET',
@@ -40,7 +54,7 @@ const StockPage: React.FC = () => {
           page: params.page || 1,
           pageSize: params.pageSize || 20,
           goodsId: params.goodsId,
-          keyword: params.keyword,
+          keyword: searchKeyword,
         },
       });
       const data = response.datas;
@@ -61,6 +75,36 @@ const StockPage: React.FC = () => {
     setSelectedSku(record);
     form.setFieldsValue({ change: 0, operator: '', remark: '' });
     setCorrectModalVisible(true);
+  };
+
+  // Open create modal
+  const handleOpenCreate = () => {
+    createForm.resetFields();
+    setCreateModalVisible(true);
+  };
+
+  // Submit new stock record
+  const handleCreateSubmit = async () => {
+    try {
+      const values = await createForm.validateFields();
+      await request('/api-mall/api/mall/admin/stock', {
+        method: 'POST',
+        data: {
+          goodsId: values.goodsId,
+          skuCode: values.skuCode,
+          specs: values.specs || '{}',
+          price: values.price,
+          stock: values.stock ?? 0,
+          status: values.status ?? 1,
+        },
+      });
+      message.success('库存录入成功');
+      setCreateModalVisible(false);
+      actionRef.current?.reload();
+    } catch (error) {
+      console.error('Failed to create stock:', error);
+      message.error('库存录入失败');
+    }
   };
 
   // Submit correction
@@ -209,6 +253,14 @@ const StockPage: React.FC = () => {
         }}
         toolBarRender={() => [
           <Button
+            key="create"
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleOpenCreate}
+          >
+            录入
+          </Button>,
+          <Button
             key="refresh"
             icon={<ReloadOutlined />}
             onClick={() => actionRef.current?.reload()}
@@ -251,6 +303,52 @@ const StockPage: React.FC = () => {
           </Form.Item>
           <Form.Item name="remark" label="备注">
             <Input.TextArea placeholder="可选备注信息" />
+          </Form.Item>
+        </Form>
+      {/* Stock Create Modal */}
+      <Modal
+        title="库存录入"
+        open={createModalVisible}
+        onOk={handleCreateSubmit}
+        onCancel={() => setCreateModalVisible(false)}
+        destroyOnClose
+      >
+        <Form form={createForm} layout="vertical">
+          <Form.Item
+            name="goodsId"
+            label="商品ID"
+            rules={[{ required: true, message: '请输入商品ID' }]}
+          >
+            <InputNumber min={1} placeholder="请输入商品ID" style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item
+            name="skuCode"
+            label="SKU编码"
+            rules={[{ required: true, message: '请输入SKU编码' }]}
+          >
+            <Input placeholder="请输入SKU编码（唯一）" />
+          </Form.Item>
+          <Form.Item name="specs" label="规格JSON">
+            <Input placeholder='例如: {"color":"red","size":"M"}' />
+          </Form.Item>
+          <Form.Item
+            name="price"
+            label="价格"
+            rules={[{ required: true, message: '请输入价格' }]}
+          >
+            <InputNumber min={0.01} precision={2} placeholder="请输入价格" style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="stock" label="初始库存">
+            <InputNumber min={0} placeholder="请输入初始库存数量" style={{ width: '100%' }} />
+          </Form.Item>
+          <Form.Item name="status" label="状态">
+            <Select
+              placeholder="请选择状态"
+              options={[
+                { label: '启用', value: 1 },
+                { label: '禁用', value: 0 },
+              ]}
+            />
           </Form.Item>
         </Form>
       </Modal>

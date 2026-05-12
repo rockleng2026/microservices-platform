@@ -56,15 +56,29 @@ public class AdminStockServiceImpl implements IAdminStockService {
         // Filter by keyword (goodsName, sub_title, or skuCode)
         if (params.get("keyword") != null && StringUtils.isNotBlank(params.get("keyword").toString())) {
             String keyword = params.get("keyword").toString();
-            // Use left join to search goods.name, goods.sub_title, AND sku.skuCode
-            wrapper.leftJoin(MallGoods.class, MallGoods::getId, MallGoodsSku::getGoodsId);
-            wrapper.and(w -> w
-                .like(MallGoods::getName, keyword)
-                .or()
-                .like(MallGoods::getSubTitle, keyword)
-                .or()
-                .like(MallGoodsSku::getSkuCode, keyword)
-            );
+            // Search in goods.name, goods.sub_title, and mall_goods_sku.sku_code via Java filtering
+            // Step 1: find matching goods IDs
+            LambdaQueryWrapper<MallGoods> goodsWrapper = new LambdaQueryWrapper<>();
+            goodsWrapper.eq(MallGoods::getTenantId, tenantId)
+                    .and(w -> w
+                            .like(MallGoods::getName, keyword)
+                            .or()
+                            .like(MallGoods::getSubTitle, keyword)
+                    );
+            List<MallGoods> matchedGoods = goodsMapper.selectList(goodsWrapper);
+            List<Long> matchedGoodsIds = matchedGoods.stream().map(MallGoods::getId).collect(Collectors.toList());
+
+            // Step 2: filter SKU by matched goods IDs OR by skuCode directly
+            if (!matchedGoodsIds.isEmpty()) {
+                wrapper.and(w -> w
+                        .in(MallGoodsSku::getGoodsId, matchedGoodsIds)
+                        .or()
+                        .like(MallGoodsSku::getSkuCode, keyword)
+                );
+            } else {
+                // No goods matched, only search by skuCode
+                wrapper.like(MallGoodsSku::getSkuCode, keyword);
+            }
         }
 
         wrapper.orderByDesc(MallGoodsSku::getUpdateTime);
@@ -184,8 +198,7 @@ public class AdminStockServiceImpl implements IAdminStockService {
         // Check if skuCode already exists
         LambdaQueryWrapper<MallGoodsSku> existWrapper = new LambdaQueryWrapper<>();
         existWrapper.eq(MallGoodsSku::getTenantId, tenantId)
-                   .eq(MallGoodsSku::getSkuCode, dto.getSkuCode())
-                   .eq(MallGoodsSku::getDelFlag, 0);
+                   .eq(MallGoodsSku::getSkuCode, dto.getSkuCode());
         Long existingCount = skuMapper.selectCount(existWrapper);
         if (existingCount > 0) {
             throw new RuntimeException("SKU编码已存在: " + dto.getSkuCode());
@@ -206,7 +219,6 @@ public class AdminStockServiceImpl implements IAdminStockService {
         sku.setPrice(dto.getPrice());
         sku.setStock(dto.getStock() != null ? dto.getStock() : 0);
         sku.setStatus(dto.getStatus() != null ? dto.getStatus() : 1);
-        sku.setDelFlag(0);
         sku.setCreateTime(LocalDateTime.now());
         sku.setUpdateTime(LocalDateTime.now());
 

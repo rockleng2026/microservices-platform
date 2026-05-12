@@ -3,10 +3,10 @@
  * Read-only view of complete order information
  */
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'umi';
-import { Card, Descriptions, Table, Tag, Button, Space, Spin, message, Timeline, Divider, Typography } from 'antd';
+import { useParams, useNavigate, useSearchParams } from 'umi';
+import { Card, Descriptions, Table, Tag, Button, Space, Spin, message, Timeline, Divider, Typography, Modal, Form, Input } from 'antd';
 const { Text } = Typography;
-import { ArrowLeftOutlined, CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
+import { ArrowLeftOutlined, CheckCircleFilled, CloseCircleFilled, ShoppingCartOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/lib/table';
 import {
   getOrderDetail,
@@ -14,6 +14,7 @@ import {
   OrderItemDTO,
   ORDER_STATUS,
   ORDER_STATUS_TEXT,
+  shipOrder,
 } from '../services/orders';
 import { GOODS_TYPE_TEXT } from '../../Goods/services/goods';
 
@@ -45,6 +46,10 @@ const OrderDetailPage: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState<OrderDetailDTO | null>(null);
+  const [shipModalVisible, setShipModalVisible] = useState(false);
+  const [shipping, setShipping] = useState(false);
+  const [form] = Form.useForm();
+  const [searchParams] = useSearchParams();
 
   // Fetch order detail
   useEffect(() => {
@@ -74,6 +79,14 @@ const OrderDetailPage: React.FC = () => {
 
     fetchDetail();
   }, [id, navigate]);
+
+  // Auto-open shipment modal if ?action=ship in URL
+  useEffect(() => {
+    if (searchParams.get('action') === 'ship' && order?.status === ORDER_STATUS.PAID) {
+      form.setFieldsValue({ expressCode: '', expressName: '', waybillNo: '' });
+      setShipModalVisible(true);
+    }
+  }, [searchParams, order, form]);
 
   // Order items table columns
   const itemColumns: ColumnsType<OrderItemDTO> = [
@@ -149,6 +162,18 @@ const OrderDetailPage: React.FC = () => {
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/mall-admin/orders')}>
           返回
         </Button>
+        {order.status === ORDER_STATUS.PAID && !order.shipTime && (
+          <Button
+            type="primary"
+            icon={<ShoppingCartOutlined />}
+            onClick={() => {
+              form.setFieldsValue({ expressCode: '', expressName: '', waybillNo: '' });
+              setShipModalVisible(true);
+            }}
+          >
+            发货
+          </Button>
+        )}
       </Space>
 
       {/* Basic order info card */}
@@ -250,6 +275,60 @@ const OrderDetailPage: React.FC = () => {
           {order.status === 7 && order.refundTime && <Timeline.Item color="red">退款完成：{order.refundTime}</Timeline.Item>}
         </Timeline>
       </Card>
+
+      {/* Shipment Modal */}
+      <Modal
+        title="订单发货"
+        open={shipModalVisible}
+        onOk={async () => {
+          try {
+            const values = await form.validateFields();
+            setShipping(true);
+            await shipOrder(order!.id, {
+              expressCode: values.expressCode,
+              expressName: values.expressName,
+              waybillNo: values.waybillNo,
+            });
+            message.success('发货成功');
+            setShipModalVisible(false);
+            // Refresh order detail
+            const data = await getOrderDetail(order!.id);
+            if (data) setOrder(data);
+          } catch (error) {
+            console.error('Failed to ship order:', error);
+            message.error('发货失败');
+          } finally {
+            setShipping(false);
+          }
+        }}
+        onCancel={() => setShipModalVisible(false)}
+        confirmLoading={shipping}
+        destroyOnClose
+      >
+        <Form form={form} layout="vertical">
+          <Form.Item
+            name="expressCode"
+            label="快递公司编码"
+            rules={[{ required: true, message: '请输入快递公司编码' }]}
+          >
+            <Input placeholder="例如: yto, zto, sf" />
+          </Form.Item>
+          <Form.Item
+            name="expressName"
+            label="快递公司名称"
+            rules={[{ required: true, message: '请输入快递公司名称' }]}
+          >
+            <Input placeholder="例如: 圆通速递, 中通快递, 顺丰速运" />
+          </Form.Item>
+          <Form.Item
+            name="waybillNo"
+            label="运单号"
+            rules={[{ required: true, message: '请输入运单号' }]}
+          >
+            <Input placeholder="请输入运单号" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 };

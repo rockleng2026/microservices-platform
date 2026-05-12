@@ -11,7 +11,7 @@ import { request } from '@/utils/request';
 import type { OrderListDTO, PageResponse } from './services/orders';
 import { ORDER_STATUS, ORDER_STATUS_TEXT } from './services/orders';
 import type { ColumnsType } from 'antd/lib/table';
-import { FileTextOutlined } from '@ant-design/icons';
+import { FileTextOutlined, ShoppingCartOutlined } from '@ant-design/icons';
 
 const { TabPane } = Tabs;
 
@@ -116,14 +116,26 @@ const OrderListPage: React.FC = () => {
       align: 'center',
       fixed: 'right',
       render: (_: unknown, record: OrderListDTO) => (
-        <Button
-          type="link"
-          size="small"
-          icon={<FileTextOutlined />}
-          onClick={() => navigate(`/mall-admin/orders/detail/${record.id}`)}
-        >
-          查看详情
-        </Button>
+        <Space size="small">
+          {record.status === ORDER_STATUS.PAID && (
+            <Button
+              type="link"
+              size="small"
+              icon={<ShoppingCartOutlined />}
+              onClick={() => handleShipOrder(record)}
+            >
+              发货
+            </Button>
+          )}
+          <Button
+            type="link"
+            size="small"
+            icon={<FileTextOutlined />}
+            onClick={() => navigate(`/mall-admin/orders/detail/${record.id}`)}
+          >
+            查看详情
+          </Button>
+        </Space>
       ),
     },
   ];
@@ -169,6 +181,10 @@ const OrderListPage: React.FC = () => {
   const handleTabChange = (key: string) => {
     setActiveTab(key);
     actionRef.current?.reload();
+  };
+
+  const handleShipOrder = (record: OrderListDTO) => {
+    navigate(`/mall-admin/orders/detail/${record.id}?action=ship`);
   };
 
   return (

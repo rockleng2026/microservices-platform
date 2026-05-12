@@ -182,48 +182,42 @@ export async function getOrderDetail(id: number): Promise<OrderDetailDTO | null>
     goodsId: item.goodsId,
     goodsName: item.goodsName,
     skuId: item.skuId,
-    specs: item.skuSpecs || item.specs || '',
+    specs: item.specs || '{}',
     price: item.price != null ? String(item.price) : '0',
     quantity: item.quantity,
     subtotal: item.subtotal != null ? String(item.subtotal) : '0',
-    image: item.goodsImage || item.image || '',
+    image: item.image || '',
   }));
-
-  const addr = raw.address || {};
-  const delivery = raw.delivery;
-  const refund = raw.refund;
-
-  // 构建完整地址
-  const fullAddress = [addr.province, addr.city, addr.district, addr.detail].filter(Boolean).join('');
 
   return {
     id: o.id,
     orderNo: o.orderNo || '',
     userId: o.userId,
     goodsType: o.goodsType,
-    goodsTypeDesc: o.goodsTypeName || '',
+    goodsTypeDesc: o.goodsTypeName || (o.goodsType === 1 ? '实物商品' : '虚拟商品'),
     totalAmount: o.totalAmount != null ? String(o.totalAmount) : '0',
     freightAmount: o.freightAmount != null ? String(o.freightAmount) : '0',
     payAmount: o.payAmount != null ? String(o.payAmount) : '0',
     status: o.status,
-    statusDesc: o.statusName || '',
+    statusDesc: o.statusName || ORDER_STATUS_TEXT[o.status] || '未知',
     remark: o.remark || '',
     payTime: o.payTime || '',
     shipTime: o.shipTime || '',
     completeTime: o.completeTime || '',
     createTime: o.createTime || '',
-    addressId: addr.id || 0,
-    addressName: addr.name || '',
-    addressPhone: addr.phone || '',
-    addressDetail: fullAddress || addr.detail || '',
+    // Address (physical goods)
+    addressId: raw.address?.id || o.addressId || 0,
+    addressName: raw.address?.consigneeName || o.consigneeName || '',
+    addressPhone: raw.address?.consigneePhone || o.consigneePhone || '',
+    addressDetail: raw.address?.detailAddress || o.detailAddress || '',
     items,
-    delivery: delivery ? {
-      expressCode: delivery.expressCode || '',
-      expressName: delivery.expressName || '',
-      waybillNo: delivery.waybillNo || '',
-      createTime: delivery.createTime || '',
+    delivery: raw.delivery ? {
+      expressCode: raw.delivery.expressCode || '',
+      expressName: raw.delivery.expressName || '',
+      waybillNo: raw.delivery.waybillNo || '',
+      createTime: raw.delivery.createTime || '',
     } : null,
-    refundTime: refund?.refundTime || null,
+    refundTime: raw.refund?.refundTime || null,
   };
 }
 

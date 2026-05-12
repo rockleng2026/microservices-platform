@@ -151,7 +151,7 @@ Plans:
 | 12 | v2.0 | 0/16 | Pending | — |
 | 13 | v2.0 | 0/all | Pending | — |
 | 14 | v2.0 | 1/5 | Pending | — |
-| 15 | v2.0 | 1/1 | ✅ Complete | 2026-05-11 |
+| 15 | v2.0 | 3/3 | ✅ Complete | 2026-05-12 |
 
 ---
 
@@ -193,7 +193,9 @@ Plans:
 
 **Plans:**
 - [x] 15-ADMIN-UAT-01-PLAN.md — 管理后台页面UAT计划 ✅ (完成于 2026-05-11)
+- [x] 15-ADMIN-UAT-02-PLAN.md — 订单详情+发货功能修复 ✅ (完成于 2026-05-12)
+- [x] 15-ADMIN-UAT-03-PLAN.md — 会员地址管理功能 ✅ (完成于 2026-05-12)
 
 ---
 
-*Roadmap updated: 2026-05-11 — Phase 15 added (管理后台前端UAT测试)*
+*Roadmap updated: 2026-05-12 — Phase 15 gap closure plans 02 and 03 added*

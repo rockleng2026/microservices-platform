@@ -5,12 +5,18 @@ import com.central.mall.mapper.MallPointsAccountMapper;
 import com.central.mall.mapper.MallPointsLogMapper;
 import com.central.mall.model.entity.MallPointsAccount;
 import com.central.mall.model.entity.MallPointsLog;
+import com.central.mall.model.entity.MallUserAddress;
+import com.central.mall.model.entity.MallMember;
+import com.central.mall.service.IMallMemberService;
+import com.central.mall.service.IUserAddressService;
+import com.central.mall.config.TenantInterceptor;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 管理员会员积分控制器
@@ -23,6 +29,8 @@ public class AdminMemberController {
 
     private final MallPointsAccountMapper pointsAccountMapper;
     private final MallPointsLogMapper pointsLogMapper;
+    private final IUserAddressService userAddressService;
+    private final IMallMemberService mallMemberService;
 
     @GetMapping("/list")
     @Operation(summary = "会员列表")
@@ -30,7 +38,31 @@ public class AdminMemberController {
             @RequestParam(required = false) Long page,
             @RequestParam(required = false) Long pageSize) {
         var accounts = pointsAccountMapper.selectList(null);
-        return Result.succeed(accounts);
+        java.util.List<java.util.Map<String, Object>> result = new java.util.ArrayList<>();
+        for (MallPointsAccount account : accounts) {
+            MallMember member = mallMemberService.getByUserId(account.getUserId());
+            java.util.Map<String, Object> map = new java.util.HashMap<>();
+            map.put("id", account.getId());
+            map.put("userId", account.getUserId());
+            map.put("balance", account.getBalance());
+            map.put("totalEarned", account.getTotalEarned());
+            map.put("totalSpent", account.getTotalSpent());
+            map.put("createTime", account.getCreateTime());
+            map.put("updateTime", account.getUpdateTime());
+            if (member != null) {
+                map.put("nickname", member.getNickname());
+                map.put("avatar", member.getAvatar());
+                map.put("phone", member.getPhone());
+                map.put("gender", member.getGender());
+                map.put("birthday", member.getBirthday());
+                map.put("province", member.getProvince());
+                map.put("city", member.getCity());
+                map.put("wxNickname", member.getWxNickname());
+                map.put("wxOpenId", member.getWxOpenId());
+            }
+            result.add(map);
+        }
+        return Result.succeed(result);
     }
 
     @GetMapping("/{id}")
@@ -40,7 +72,11 @@ public class AdminMemberController {
         if (account == null) {
             return Result.failed("会员不存在");
         }
-        return Result.succeed(account);
+        MallMember member = mallMemberService.getByUserId(account.getUserId());
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("points", account);
+        result.put("member", member);
+        return Result.succeed(result);
     }
 
     @PutMapping("/{id}/points")
@@ -84,5 +120,42 @@ public class AdminMemberController {
         pointsLogMapper.insert(log);
 
         return Result.succeed(true, "积分调整成功");
+    }
+
+    @GetMapping("/{userId}/addresses")
+    @Operation(summary = "获取会员地址列表")
+    public Result<List<MallUserAddress>> getMemberAddresses(@PathVariable Long userId) {
+        List<MallUserAddress> addresses = userAddressService.getByUserId(userId);
+        return Result.succeed(addresses);
+    }
+
+    @PostMapping("/{userId}/address")
+    @Operation(summary = "新增会员地址")
+    public Result<Void> addMemberAddress(@PathVariable Long userId, @RequestBody MallUserAddress address) {
+        address.setUserId(userId);
+        String tenantId = TenantInterceptor.getCurrentTenantId();
+        if (tenantId == null) tenantId = "default";
+        address.setTenantId(tenantId);
+        userAddressService.save(address);
+        return Result.succeed();
+    }
+
+    @PutMapping("/address/{id}")
+    @Operation(summary = "修改会员地址")
+    public Result<Void> updateMemberAddress(@PathVariable Long id, @RequestBody MallUserAddress address) {
+        MallUserAddress existing = userAddressService.getById(id);
+        if (existing == null) {
+            return Result.failed("地址不存在");
+        }
+        address.setId(id);
+        userAddressService.updateById(address);
+        return Result.succeed();
+    }
+
+    @DeleteMapping("/address/{id}")
+    @Operation(summary = "删除会员地址")
+    public Result<Void> deleteMemberAddress(@PathVariable Long id) {
+        userAddressService.removeById(id);
+        return Result.succeed();
     }
 }

@@ -98,6 +98,8 @@ export interface OrderDetailDTO {
   items: OrderItemDTO[];
   // Delivery
   delivery: DeliveryDTO | null;
+  // Refund
+  refundTime: string | null;
 }
 
 // Adjust order price params
@@ -164,11 +166,65 @@ export async function getOrderList(params: OrderListParams): Promise<PageRespons
  * Get order detail by ID
  */
 export async function getOrderDetail(id: number): Promise<OrderDetailDTO | null> {
-  const response = await request<ApiResponse<OrderDetailDTO>>(`/api-mall/api/mall/admin/order/${id}`, {
+  const response = await request<ApiResponse<any>>(`/api-mall/api/mall/admin/order/${id}`, {
     method: 'GET',
   });
-  // 兼容多种响应格式: response.datas, response.data, 或直接返回数据
-  return response?.datas || response?.data || response || null;
+  // 兼容多种响应格式
+  const raw = response?.datas || response?.data || response;
+
+  if (!raw || !raw.order) {
+    return null;
+  }
+
+  const o = raw.order;
+  const items = (raw.items || []).map((item: any) => ({
+    id: item.id,
+    goodsId: item.goodsId,
+    goodsName: item.goodsName,
+    skuId: item.skuId,
+    specs: item.skuSpecs || item.specs || '',
+    price: item.price != null ? String(item.price) : '0',
+    quantity: item.quantity,
+    subtotal: item.subtotal != null ? String(item.subtotal) : '0',
+    image: item.goodsImage || item.image || '',
+  }));
+
+  const addr = raw.address || {};
+  const delivery = raw.delivery;
+  const refund = raw.refund;
+
+  // 构建完整地址
+  const fullAddress = [addr.province, addr.city, addr.district, addr.detail].filter(Boolean).join('');
+
+  return {
+    id: o.id,
+    orderNo: o.orderNo || '',
+    userId: o.userId,
+    goodsType: o.goodsType,
+    goodsTypeDesc: o.goodsTypeName || '',
+    totalAmount: o.totalAmount != null ? String(o.totalAmount) : '0',
+    freightAmount: o.freightAmount != null ? String(o.freightAmount) : '0',
+    payAmount: o.payAmount != null ? String(o.payAmount) : '0',
+    status: o.status,
+    statusDesc: o.statusName || '',
+    remark: o.remark || '',
+    payTime: o.payTime || '',
+    shipTime: o.shipTime || '',
+    completeTime: o.completeTime || '',
+    createTime: o.createTime || '',
+    addressId: addr.id || 0,
+    addressName: addr.name || '',
+    addressPhone: addr.phone || '',
+    addressDetail: fullAddress || addr.detail || '',
+    items,
+    delivery: delivery ? {
+      expressCode: delivery.expressCode || '',
+      expressName: delivery.expressName || '',
+      waybillNo: delivery.waybillNo || '',
+      createTime: delivery.createTime || '',
+    } : null,
+    refundTime: refund?.refundTime || null,
+  };
 }
 
 /**

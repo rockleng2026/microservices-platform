@@ -4,7 +4,8 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'umi';
-import { Card, Descriptions, Table, Tag, Button, Space, Spin, message, Timeline, Divider } from 'antd';
+import { Card, Descriptions, Table, Tag, Button, Space, Spin, message, Timeline, Divider, Typography } from 'antd';
+const { Text } = Typography;
 import { ArrowLeftOutlined, CheckCircleFilled, CloseCircleFilled } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/lib/table';
 import {
@@ -15,8 +16,6 @@ import {
   ORDER_STATUS_TEXT,
 } from '../services/orders';
 import { GOODS_TYPE_TEXT } from '../../Goods/services/goods';
-
-const { Text } = require('antd');
 
 // Parse specs JSON to display string
 const parseSpecs = (specsJson: string | undefined): string => {
@@ -85,7 +84,7 @@ const OrderDetailPage: React.FC = () => {
       render: (_: unknown, record: OrderItemDTO) => (
         <div>
           <div style={{ fontWeight: 500 }}>{record.goodsName}</div>
-          <Text type="secondary" style={{ fontSize: 12 }}>{parseSpecs(record.specs)}</Text>
+          <Text type="secondary" style={{ fontSize: 12 }}>{parseSpecs(record.specs || (record as any).skuSpecs)}</Text>
         </div>
       ),
     },
@@ -94,7 +93,10 @@ const OrderDetailPage: React.FC = () => {
       dataIndex: 'image',
       key: 'image',
       width: 80,
-      render: (image: string) => image ? <img src={image} alt="" style={{ width: 50, height: 50, objectFit: 'cover' }} /> : '-',
+      render: (image: string, record: OrderItemDTO) => {
+        const img = image || (record as any).goodsImage || '';
+        return img ? <img src={img} alt="" style={{ width: 50, height: 50, objectFit: 'cover' }} /> : '-';
+      },
     },
     {
       title: '单价',
@@ -102,7 +104,7 @@ const OrderDetailPage: React.FC = () => {
       key: 'price',
       width: 100,
       align: 'right',
-      render: (price: string) => `¥${parseFloat(price).toFixed(2)}`,
+      render: (price: string | number) => `¥${parseFloat(String(price)).toFixed(2)}`,
     },
     {
       title: '数量',
@@ -117,7 +119,7 @@ const OrderDetailPage: React.FC = () => {
       key: 'subtotal',
       width: 120,
       align: 'right',
-      render: (subtotal: string) => <Text strong>¥{parseFloat(subtotal).toFixed(2)}</Text>,
+      render: (subtotal: string | number) => <Text strong>¥{parseFloat(String(subtotal)).toFixed(2)}</Text>,
     },
   ];
 
@@ -170,14 +172,14 @@ const OrderDetailPage: React.FC = () => {
           <Descriptions.Item label="实付金额">
             <Text strong style={{ color: '#cf1322' }}>¥{parseFloat(order.payAmount).toFixed(2)}</Text>
           </Descriptions.Item>
-          {order.freightAmount && parseFloat(order.freightAmount) > 0 && (
-            <Descriptions.Item label="运费">¥{parseFloat(order.freightAmount).toFixed(2)}</Descriptions.Item>
-          )}
-          {order.remark && (
+          {order.freightAmount && parseFloat(order.freightAmount) > 0 ? (
+            <Descriptions.Item label="运费" span={2}>¥{parseFloat(order.freightAmount).toFixed(2)}</Descriptions.Item>
+          ) : null}
+          {order.remark ? (
             <Descriptions.Item label="用户备注" span={2}>
               <Text type="secondary">{order.remark}</Text>
             </Descriptions.Item>
-          )}
+          ) : null}
         </Descriptions>
       </Card>
 
@@ -240,26 +242,13 @@ const OrderDetailPage: React.FC = () => {
 
       {/* Timeline */}
       <Card title="订单时间线">
-        <Timeline
-          items={[
-            order.createTime && {
-              color: 'green',
-              children: `下单时间：${order.createTime}`,
-            },
-            order.payTime && {
-              color: 'blue',
-              children: `支付时间：${order.payTime}`,
-            },
-            order.shipTime && {
-              color: 'blue',
-              children: `发货时间：${order.shipTime}`,
-            },
-            order.completeTime && {
-              color: 'green',
-              children: `完成时间：${order.completeTime}`,
-            },
-          ].filter(Boolean)}
-        />
+        <Timeline>
+          {order.createTime && <Timeline.Item color="green">下单时间：{order.createTime}</Timeline.Item>}
+          {order.payTime && <Timeline.Item color="blue">支付时间：{order.payTime}</Timeline.Item>}
+          {order.shipTime && <Timeline.Item color="blue">发货时间：{order.shipTime}</Timeline.Item>}
+          {order.completeTime && <Timeline.Item color="green">完成时间：{order.completeTime}</Timeline.Item>}
+          {order.status === 7 && order.refundTime && <Timeline.Item color="red">退款完成：{order.refundTime}</Timeline.Item>}
+        </Timeline>
       </Card>
     </div>
   );

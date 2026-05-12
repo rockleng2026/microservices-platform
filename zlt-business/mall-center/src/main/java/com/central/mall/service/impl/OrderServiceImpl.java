@@ -34,6 +34,7 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
     private final MallCartMapper cartMapper;
     private final MallUserAddressMapper addressMapper;
     private final MallDeliveryMapper deliveryMapper;
+    private final MallRefundMapper refundMapper;
     private final MallResourceDeliveryMapper resourceDeliveryMapper;
 
     @Lazy
@@ -225,6 +226,15 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
         if (order.getAddressId() != null) {
             MallUserAddress address = addressMapper.selectById(order.getAddressId());
             result.put("address", address);
+        }
+
+        // Get refund info if order is refunded (status=7)
+        if (order.getStatus() == 7) {
+            LambdaQueryWrapper<MallRefund> refundWrapper = new LambdaQueryWrapper<>();
+            refundWrapper.eq(MallRefund::getOrderId, orderId);
+            refundWrapper.orderByDesc(MallRefund::getCreateTime);
+            MallRefund refund = refundMapper.selectOne(refundWrapper);
+            result.put("refund", refund);
         }
 
         return result;

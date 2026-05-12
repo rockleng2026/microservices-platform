@@ -20,13 +20,9 @@ interface SkuStockDTO {
   status: number;
 }
 
-interface StockCreateForm {
-  goodsId: number;
-  skuCode: string;
-  specs: string;
-  price: number;
-  stock: number;
-  status: number;
+interface GoodsOption {
+  id: number;
+  name: string;
 }
 
 const StockPage: React.FC = () => {
@@ -34,6 +30,7 @@ const StockPage: React.FC = () => {
   const [correctModalVisible, setCorrectModalVisible] = useState(false);
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [selectedSku, setSelectedSku] = useState<SkuStockDTO | null>(null);
+  const [goodsOptions, setGoodsOptions] = useState<GoodsOption[]>([]);
   const [form] = Form.useForm();
   const [createForm] = Form.useForm();
 
@@ -81,7 +78,27 @@ const StockPage: React.FC = () => {
   const handleOpenCreate = () => {
     createForm.resetFields();
     setCreateModalVisible(true);
+    // Load goods options for the dropdown
+    fetchGoodsOptions('');
   };
+
+  // Fetch goods options with keyword search (for fuzzy select)
+  const fetchGoodsOptions = useCallback(async (keyword: string) => {
+    try {
+      const response = await request<{ datas?: { records: GoodsOption[]; total: number } }>('/api-mall/api/mall/admin/goods/list', {
+        method: 'GET',
+        params: {
+          page: 1,
+          pageSize: 50,
+          keyword: keyword || '',
+        },
+      });
+      const records = response.datas?.records || [];
+      setGoodsOptions(records.map((g: { id: number; name: string }) => ({ id: g.id, name: g.name })));
+    } catch (error) {
+      console.error('Failed to fetch goods options:', error);
+    }
+  }, []);
 
   // Submit new stock record
   const handleCreateSubmit = async () => {
@@ -318,10 +335,24 @@ const StockPage: React.FC = () => {
         <Form form={createForm} layout="vertical">
           <Form.Item
             name="goodsId"
-            label="商品ID"
-            rules={[{ required: true, message: '请输入商品ID' }]}
+            label="商品"
+            rules={[{ required: true, message: '请选择商品' }]}
           >
-            <InputNumber min={1} placeholder="请输入商品ID" style={{ width: '100%' }} />
+            <Select
+              showSearch
+              placeholder="输入商品名称搜索"
+              optionFilterProp="children"
+              onSearch={fetchGoodsOptions}
+              onFocus={() => fetchGoodsOptions('')}
+              filterOption={false}
+              allowClear
+            >
+              {goodsOptions.map((g) => (
+                <Select.Option key={g.id} value={g.id}>
+                  {g.name} (ID:{g.id})
+                </Select.Option>
+              ))}
+            </Select>
           </Form.Item>
           <Form.Item
             name="skuCode"

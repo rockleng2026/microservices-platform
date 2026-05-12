@@ -30,4 +30,11 @@ public interface IAdminStockService {
      * Get list of SKUs below threshold for alert notification (STOCK-06)
      */
     List<SkuStockDTO> getStockAlertList();
+
+    /**
+     * Create new SKU stock record (STOCK-07)
+     * @param dto Stock creation data
+     * @return Created SKU ID
+     */
+    Long createStock(com.central.mall.model.dto.StockCreateDTO dto);
 }

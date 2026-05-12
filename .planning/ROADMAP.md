@@ -151,7 +151,7 @@ Plans:
 | 12 | v2.0 | 0/16 | Pending | — |
 | 13 | v2.0 | 0/all | Pending | — |
 | 14 | v2.0 | 1/5 | Pending | — |
-| 15 | v2.0 | 3/3 | ✅ Complete | 2026-05-12 |
+| 15 | v2.0 | 6/6 | ✅ Complete | 2026-05-12 |
 
 ---
 
@@ -195,7 +195,10 @@ Plans:
 - [x] 15-ADMIN-UAT-01-PLAN.md — 管理后台页面UAT计划 ✅ (完成于 2026-05-11)
 - [x] 15-ADMIN-UAT-02-PLAN.md — 订单详情+发货功能修复 ✅ (完成于 2026-05-12)
 - [x] 15-ADMIN-UAT-03-PLAN.md — 会员地址管理功能 ✅ (完成于 2026-05-12)
+- [x] 15-ADMIN-UAT-04-PLAN.md — 库存搜索修复(skuCode+SQL注入) ✅ (完成于 2026-05-12)
+- [x] 15-ADMIN-UAT-05-PLAN.md — 库存列表添加商品名称列 ✅ (完成于 2026-05-12)
+- [x] 15-ADMIN-UAT-06-PLAN.md — 库存录入接口 ✅ (完成于 2026-05-12)
 
 ---
 
-*Roadmap updated: 2026-05-12 — Phase 15 gap closure plans 02 and 03 added*
+*Roadmap updated: 2026-05-12 — Phase 15 gap closure plans 04/05/06 added (库存管理)*

@@ -116,6 +116,15 @@ const StockPage: React.FC = () => {
       search: false,
     },
     {
+      title: '商品名称',
+      dataIndex: 'goodsName',
+      key: 'goodsName',
+      width: 200,
+      align: 'center',
+      search: true,
+      render: (goodsName: string | undefined) => goodsName || '-',
+    },
+    {
       title: 'SKU编码',
       dataIndex: 'skuCode',
       key: 'skuCode',

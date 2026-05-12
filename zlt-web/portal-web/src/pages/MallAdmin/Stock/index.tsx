@@ -41,9 +41,10 @@ const StockPage: React.FC = () => {
     goodsId?: number;
     keyword?: string;
     goodsName?: string;
+    skuCode?: string;
   }) => {
-    // Support both keyword and goodsName (ProTable sends column dataIndex as param name)
-    const searchKeyword = params.keyword || params.goodsName;
+    // Support keyword, goodsName, and skuCode search params from ProTable
+    const searchKeyword = params.keyword || params.goodsName || params.skuCode;
     try {
       const response = await request<{ datas?: { records: SkuStockDTO[]; total: number } }>('/api-mall/api/mall/admin/stock/list', {
         method: 'GET',

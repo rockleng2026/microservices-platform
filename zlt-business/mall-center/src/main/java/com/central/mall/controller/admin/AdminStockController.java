@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.central.common.model.Result;
 import com.central.mall.model.dto.SkuStockDTO;
 import com.central.mall.model.dto.StockCorrectDTO;
+import com.central.mall.model.dto.StockCreateDTO;
 import com.central.mall.service.IAdminStockService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -70,5 +72,16 @@ public class AdminStockController {
     public Result<List<SkuStockDTO>> getStockAlertList() {
         List<SkuStockDTO> alerts = adminStockService.getStockAlertList();
         return Result.succeed(alerts);
+    }
+
+    @PostMapping
+    @Operation(summary = "Create SKU stock record (STOCK-07)")
+    public Result<Long> createStock(@Valid @RequestBody StockCreateDTO dto) {
+        try {
+            Long skuId = adminStockService.createStock(dto);
+            return Result.succeed(skuId);
+        } catch (RuntimeException e) {
+            return Result.failed(e.getMessage());
+        }
     }
 }

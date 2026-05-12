@@ -53,12 +53,18 @@ public class AdminStockServiceImpl implements IAdminStockService {
             wrapper.eq(MallGoodsSku::getGoodsId, goodsId);
         }
 
-        // Filter by keyword (goodsName or skuCode)
+        // Filter by keyword (goodsName, sub_title, or skuCode)
         if (params.get("keyword") != null && StringUtils.isNotBlank(params.get("keyword").toString())) {
             String keyword = params.get("keyword").toString();
-            // Need to join with MallGoods for goodsName - use sub-query
-            wrapper.inSql(MallGoodsSku::getGoodsId,
-                "SELECT id FROM mall_goods WHERE tenant_id = '" + tenantId + "' AND del_flag = 0 AND (name LIKE '%" + keyword + "%' OR sub_title LIKE '%" + keyword + "%')");
+            // Use left join to search goods.name, goods.sub_title, AND sku.skuCode
+            wrapper.leftJoin(MallGoods.class, MallGoods::getId, MallGoodsSku::getGoodsId);
+            wrapper.and(w -> w
+                .like(MallGoods::getName, keyword)
+                .or()
+                .like(MallGoods::getSubTitle, keyword)
+                .or()
+                .like(MallGoodsSku::getSkuCode, keyword)
+            );
         }
 
         wrapper.orderByDesc(MallGoodsSku::getUpdateTime);

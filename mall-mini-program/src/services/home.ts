@@ -39,6 +39,10 @@ const request = <T>(url: string, options?: any): Promise<T> => {
     uni.request({
       url: `${API_BASE}${url}`,
       ...options,
+      header: {
+        'x-tenant-header': 'default',
+        ...options?.header
+      },
       success: (res: any) => {
         if (res.statusCode === 200) {
           resolve(res.data.datas || res.data.data || res.data)

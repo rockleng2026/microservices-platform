@@ -13,7 +13,8 @@
 </template>
 
 <script setup>
-import { ref, onLoad, onShow } from '@dcloudio/uni-app'
+import { ref } from 'vue'
+import { onLoad, onShow, onPullDownRefresh } from '@dcloudio/uni-app'
 import SearchBar from './components/SearchBar.vue'
 import BannerSwiper from './components/BannerSwiper.vue'
 import CategoryGrid from './components/CategoryGrid.vue'

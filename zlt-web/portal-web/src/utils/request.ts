@@ -4,7 +4,7 @@ export async function request<T = any>(url: string, options: any = {}): Promise<
   
   // 自动添加认证Token和租户ID
   const token = localStorage.getItem('access_token');
-  const tenantId = localStorage.getItem('tenant_id') || 'default';
+  const tenantId = localStorage.getItem('tenant_id') || 'UNKNOWN';
   
   const defaultHeaders: any = {
     'Content-Type': 'application/json',

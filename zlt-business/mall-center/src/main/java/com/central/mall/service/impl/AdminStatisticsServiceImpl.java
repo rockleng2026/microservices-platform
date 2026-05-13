@@ -3,6 +3,7 @@ package com.central.mall.service.impl;
 import com.central.mall.config.TenantInterceptor;
 import com.central.mall.mapper.MallGoodsMapper;
 import com.central.mall.mapper.MallGoodsSkuMapper;
+import com.central.mall.mapper.MallMemberMapper;
 import com.central.mall.mapper.MallOrderMapper;
 import com.central.mall.mapper.MallSettingsMapper;
 import com.central.mall.model.dto.SalesTrendDTO;
@@ -11,6 +12,7 @@ import com.central.mall.model.dto.StockWarningDTO;
 import com.central.mall.model.dto.UserAnalysisDTO;
 import com.central.mall.model.entity.MallGoods;
 import com.central.mall.model.entity.MallGoodsSku;
+import com.central.mall.model.entity.MallMember;
 import com.central.mall.model.entity.MallOrder;
 import com.central.mall.service.IAdminStatisticsService;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -54,6 +56,7 @@ public class AdminStatisticsServiceImpl implements IAdminStatisticsService {
     private final MallOrderMapper orderMapper;
     private final MallGoodsSkuMapper goodsSkuMapper;
     private final MallGoodsMapper goodsMapper;
+    private final MallMemberMapper memberMapper;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -61,6 +64,7 @@ public class AdminStatisticsServiceImpl implements IAdminStatisticsService {
         String tenantId = TenantInterceptor.getCurrentTenantId();
         String today = LocalDate.now().format(DateTimeFormatter.ISO_DATE);
         String cacheKey = String.format(STATS_CACHE_KEY, tenantId, today);
+        log.info("[Statistics] getTodayStatistics called, tenantId={}, cacheKey={}", tenantId, cacheKey);
 
         try {
             // 尝试从Redis获取缓存
@@ -141,7 +145,13 @@ public class AdminStatisticsServiceImpl implements IAdminStatisticsService {
             stats.setTodayOrderCount((int) todayOrderCount);
             stats.setTodaySalesAmount(todaySalesAmount);
             stats.setWaitDeliveryCount((int) waitDeliveryCount);
-            stats.setTodayNewUsers(0); // 用户表尚未集成
+            // 今日新增会员数
+            LocalDateTime todayStartForStats = LocalDate.now().atStartOfDay();
+            LambdaQueryWrapper<MallMember> todayMemberWrapper = new LambdaQueryWrapper<>();
+            todayMemberWrapper.eq(MallMember::getTenantId, tenantId);
+            todayMemberWrapper.ge(MallMember::getCreateTime, todayStartForStats);
+            long todayNewUsers = memberMapper.selectCount(todayMemberWrapper);
+            stats.setTodayNewUsers((int) todayNewUsers);
             stats.setYesterdayOrderCount((int) yesterdayOrderCount);
             stats.setYesterdaySalesAmount(yesterdaySalesAmount);
             stats.setTotalPv(0L); // PV统计尚未实现
@@ -174,12 +184,16 @@ public class AdminStatisticsServiceImpl implements IAdminStatisticsService {
     public List<SalesTrendDTO> getSalesTrend(String type, String startDate, String endDate) {
         List<SalesTrendDTO> trends = new ArrayList<>();
         try {
+            String tenantId = TenantInterceptor.getCurrentTenantId();
+            log.info("[Statistics] getSalesTrend called, tenantId={}, type={}, startDate={}, endDate={}",
+                    tenantId, type, startDate, endDate);
+
             LocalDate start = LocalDate.parse(startDate);
             LocalDate end = LocalDate.parse(endDate);
 
             // 查询日期范围内的已支付订单
             LambdaQueryWrapper<MallOrder> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(MallOrder::getTenantId, TenantInterceptor.getCurrentTenantId());
+            wrapper.eq(MallOrder::getTenantId, tenantId);
             wrapper.ge(MallOrder::getStatus, 2);
             wrapper.between(MallOrder::getCreateTime, start.atStartOfDay(), end.plusDays(1).atStartOfDay());
             List<MallOrder> orders = orderMapper.selectList(wrapper);
@@ -247,15 +261,60 @@ public class AdminStatisticsServiceImpl implements IAdminStatisticsService {
 
     @Override
     public UserAnalysisDTO getUserAnalysis() {
-        // Phase 2: mall_order 表尚未创建，返回全0数据
-        // Phase 3: 实际查询 mall_order 表计算
-        // 今日/本周/本月新增用户，活跃用户(当月有订单)，平均订单金额
         UserAnalysisDTO dto = new UserAnalysisDTO();
-        dto.setTodayNewUsers(0);
-        dto.setWeekNewUsers(0);
-        dto.setMonthNewUsers(0);
-        dto.setActiveUsers(0);
-        dto.setAvgOrderAmount(BigDecimal.ZERO);
+        String tenantId = TenantInterceptor.getCurrentTenantId();
+        log.info("[Statistics] getUserAnalysis called, tenantId={}", tenantId);
+
+        try {
+            LocalDate today = LocalDate.now();
+            LocalDate weekStart = today.minusDays(today.getDayOfWeek().getValue() - 1);
+            LocalDate monthStart = today.withDayOfMonth(1);
+
+            LocalDateTime todayStart = today.atStartOfDay();
+            LocalDateTime weekStartDateTime = weekStart.atStartOfDay();
+            LocalDateTime monthStartDateTime = monthStart.atStartOfDay();
+
+            // 今日新增会员
+            LambdaQueryWrapper<MallMember> todayWrapper = new LambdaQueryWrapper<>();
+            todayWrapper.eq(MallMember::getTenantId, tenantId);
+            todayWrapper.ge(MallMember::getCreateTime, todayStart);
+            long todayNewUsers = memberMapper.selectCount(todayWrapper);
+            dto.setTodayNewUsers((int) todayNewUsers);
+
+            // 本周新增会员
+            LambdaQueryWrapper<MallMember> weekWrapper = new LambdaQueryWrapper<>();
+            weekWrapper.eq(MallMember::getTenantId, tenantId);
+            weekWrapper.ge(MallMember::getCreateTime, weekStartDateTime);
+            long weekNewUsers = memberMapper.selectCount(weekWrapper);
+            dto.setWeekNewUsers((int) weekNewUsers);
+
+            // 本月新增会员
+            LambdaQueryWrapper<MallMember> monthWrapper = new LambdaQueryWrapper<>();
+            monthWrapper.eq(MallMember::getTenantId, tenantId);
+            monthWrapper.ge(MallMember::getCreateTime, monthStartDateTime);
+            long monthNewUsers = memberMapper.selectCount(monthWrapper);
+            dto.setMonthNewUsers((int) monthNewUsers);
+
+            // 活跃用户：当月有有效订单（已付款/已发货/已完成）的用户数
+            LambdaQueryWrapper<MallOrder> activeWrapper = new LambdaQueryWrapper<>();
+            activeWrapper.eq(MallOrder::getTenantId, tenantId);
+            activeWrapper.ge(MallOrder::getStatus, 2); // status >= 2 已付款/已发货/已完成
+            activeWrapper.ge(MallOrder::getCreateTime, monthStartDateTime);
+            activeWrapper.select(MallOrder::getUserId);
+            List<MallOrder> activeOrders = orderMapper.selectList(activeWrapper);
+            long activeUsers = activeOrders.stream()
+                    .map(MallOrder::getUserId)
+                    .distinct()
+                    .count();
+            dto.setActiveUsers((int) activeUsers);
+
+            log.info("[Statistics] getUserAnalysis result: todayNew={}, weekNew={}, monthNew={}, active={}",
+                    todayNewUsers, weekNewUsers, monthNewUsers, activeUsers);
+
+        } catch (Exception e) {
+            log.error("Error getting user analysis: {}", e.getMessage(), e);
+        }
+
         return dto;
     }
 }

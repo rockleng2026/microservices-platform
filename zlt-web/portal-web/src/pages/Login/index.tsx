@@ -3,7 +3,7 @@ import { API_ENDPOINTS, API_PATHS, getApiUrl } from '@/config/api';
 import { Card, Form, Input, Button, Checkbox, message, Typography } from 'antd';
 import { UserOutlined, LockOutlined, SafetyOutlined, ReloadOutlined } from '@ant-design/icons';
 import { history } from 'umi';
-import { login, getCaptcha } from '@/services/auth';
+import { login, getCaptcha, getCurrentUser } from '@/services/auth';
 
 const { Title, Text } = Typography;
 
@@ -71,11 +71,28 @@ const Login: React.FC = () => {
         // 保存token
         localStorage.setItem('access_token', loginResult.datas.access_token);
         localStorage.setItem('refresh_token', loginResult.datas.refresh_token || '');
-        
+
         console.log('Portal用户登录成功，Token:', loginResult.datas.access_token.substring(0, 20) + '...');
-        
+
+        // 获取用户信息以保存tenant_id
+        try {
+          const userResponse = await getCurrentUser();
+          if (userResponse && (userResponse.resp_code === 0 || userResponse.success === true)) {
+            const userData = userResponse?.datas || userResponse?.data;
+            if (userData?.tenantId) {
+              localStorage.setItem('tenant_id', userData.tenantId);
+              console.log('保存tenant_id:', userData.tenantId);
+            } else if (userData?.tenant_id) {
+              localStorage.setItem('tenant_id', userData.tenant_id);
+              console.log('保存tenant_id:', userData.tenant_id);
+            }
+          }
+        } catch (e) {
+          console.warn('获取用户信息失败，跳过保存tenant_id:', e);
+        }
+
         message.success('登录成功');
-        
+
         // 跳转到工作台
         history.push('/dashboard');
       } else {

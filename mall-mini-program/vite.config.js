@@ -5,13 +5,17 @@ export default defineConfig({
   plugins: [uni()],
   server: {
     proxy: {
+      // 代理 mall-center API 请求到网关（网关端口9900）
       '/mall-center': {
         target: 'http://localhost:9900',
         changeOrigin: true,
-        secure: false,
-        headers: {
-          'x-tenant-header': 'default'
-        }
+        secure: false
+      },
+      // 代理 api-mall 请求（如果使用）
+      '/api-mall': {
+        target: 'http://localhost:9900',
+        changeOrigin: true,
+        secure: false
       }
     }
   }

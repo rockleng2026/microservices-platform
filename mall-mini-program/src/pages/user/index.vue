@@ -2,11 +2,11 @@
   <view class="user-page">
     <!-- User header -->
     <view class="user-header">
-      <view class="user-info" @click="goLogin">
+      <view class="user-info" @click="handleUserClick">
         <image class="avatar" :src="userInfo?.avatar || '/static/default-avatar.png'" mode="aspectFill" />
         <view class="info">
           <text class="nickname">{{ userInfo?.nickname || '点击登录' }}</text>
-          <text class="tip">登录后享受更多服务</text>
+          <text class="tip">{{ userInfo ? '点击查看资料' : '登录后享受更多服务' }}</text>
         </view>
       </view>
     </view>
@@ -39,6 +39,11 @@
 
     <!-- Menu list -->
     <view class="menu-section">
+      <view class="menu-item" @click="goProfile">
+        <text class="icon">👤</text>
+        <text class="label">编辑资料</text>
+        <text class="arrow">></text>
+      </view>
       <view class="menu-item" @click="goAddress">
         <text class="icon">📍</text>
         <text class="label">收货地址</text>
@@ -64,8 +69,15 @@ import { onShow } from '@dcloudio/uni-app'
 
 const userInfo = ref(null)
 
-const goLogin = () => {
-  uni.navigateTo({ url: '/pages/login/index' })
+// Handle user header click - go to profile if logged in, otherwise go to login
+const handleUserClick = () => {
+  if (userInfo.value) {
+    // Already logged in - go to profile
+    uni.navigateTo({ url: '/pages/user/profile' })
+  } else {
+    // Not logged in - go to login
+    uni.navigateTo({ url: '/pages/login/index' })
+  }
 }
 
 const goOrderList = (status) => {
@@ -75,6 +87,15 @@ const goOrderList = (status) => {
 
 const goAddress = () => {
   uni.navigateTo({ url: '/pages/address/index' })
+}
+
+const goProfile = () => {
+  const token = uni.getStorageSync('token')
+  if (!token) {
+    uni.navigateTo({ url: '/pages/login/index' })
+    return
+  }
+  uni.navigateTo({ url: '/pages/user/profile' })
 }
 
 const goCoupons = () => {

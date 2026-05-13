@@ -69,9 +69,42 @@
       }
     },
     {
+      "path": "pages/evaluate-list/index",
+      "style": {
+        "navigationBarTitleText": "商品评价"
+      }
+    },
+    {
       "path": "pages/payment/result",
       "style": {
         "navigationBarTitleText": "支付结果"
+      }
+    },
+    {
+      "path": "pages/login/index",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/register/index",
+      "style": {
+        "navigationBarTitleText": "注册",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/forgot-password/index",
+      "style": {
+        "navigationBarTitleText": "找回密码",
+        "navigationStyle": "custom"
+      }
+    },
+    {
+      "path": "pages/user/profile",
+      "style": {
+        "navigationBarTitleText": "编辑资料"
       }
     }
   ],

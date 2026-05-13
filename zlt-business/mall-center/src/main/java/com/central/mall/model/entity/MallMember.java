@@ -22,6 +22,7 @@ public class MallMember {
     private String wxOpenId;      // 微信OpenId
     private String wxNickname;    // 微信昵称
     private String phone;         // 手机号
+    private String password;     // 登录密码(加密)
     private Integer gender;       // 性别:0=未知,1=男,2=女
     private LocalDate birthday;   // 生日
     private String province;      // 省份

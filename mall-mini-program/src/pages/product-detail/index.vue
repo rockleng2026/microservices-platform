@@ -7,7 +7,7 @@
 
     <scroll-view class="detail-scroll" v-else scroll-y>
       <!-- 图片轮播 -->
-      <ImageCarousel :images="goodsDetail.images || [goodsDetail.mainImage]" />
+      <ImageCarousel :images="carouselImages" />
 
       <!-- 商品基础信息 -->
       <view class="goods-info">
@@ -60,7 +60,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
 import ImageCarousel from './components/ImageCarousel.vue'
 import SpecSelector from './components/SpecSelector.vue'
 import QuantityStepper from './components/QuantityStepper.vue'
@@ -84,12 +85,15 @@ const quantity = ref(1)
 // 商品是否已下架
 const isOffline = ref(false)
 
-// 显示价格：优先选中的SKU价格，否则用商品原价
-const displayPrice = computed(() => {
-  if (selectedSku.value) {
-    return selectedSku.value.price.toFixed(2)
+const carouselImages = computed(() => {
+  const imgs = goodsDetail.value.images
+  let arr: string[] = []
+  if (imgs) {
+    try { arr = JSON.parse(imgs) } catch {}
   }
-  return (goodsDetail.value.price || 0).toFixed(2)
+  const main = goodsDetail.value.mainImage
+  if (main && !arr.includes(main)) arr.unshift(main)
+  return arr
 })
 
 // 显示库存：优先选中的SKU库存，否则用商品默认库存

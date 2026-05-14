@@ -30,7 +30,7 @@ const props = defineProps({
   }
 })
 
-const placeholderImage = '/static/images/placeholder.png'
+const placeholderImage = '/static/default.png'
 
 const onBannerTap = (e) => {
   const currentIndex = e.detail.current

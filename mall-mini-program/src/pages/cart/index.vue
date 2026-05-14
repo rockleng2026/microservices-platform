@@ -127,6 +127,11 @@ import { cartStore, type CartItem } from '@/stores/cart'
 // Cart items from store
 const cartItems = computed(() => cartStore.getItems())
 
+// Reload cart when page mounts
+onMounted(async () => {
+  await cartStore.reload()
+})
+
 // Selected state
 const activeSwipe = ref<number | null>(null)
 

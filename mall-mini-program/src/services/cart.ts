@@ -21,9 +21,33 @@ const request = <T>(url: string, options?: any): Promise<T> => {
 
 // Get cart list from server (with full goods details)
 export const getCartList = (userId: string): Promise<CartItem[]> => {
-  return request<CartItem[]>(CART_API, {
-    method: 'GET',
-    header: { 'x-user-id': userId }
+  return new Promise((resolve, reject) => {
+    uni.request({
+      url: `${API_BASE}${CART_API}/list`,
+      method: 'GET',
+      header: { 'x-user-id': userId },
+      success: (res: any) => {
+        if (res.statusCode === 200 && res.data.datas) {
+          const items: any[] = res.data.datas || []
+          // Map backend field names to CartItem interface
+          const mapped = items.map((item: any) => ({
+            skuId: item.skuId,
+            quantity: item.quantity,
+            goodsName: item.goodsName,
+            goodsImage: item.mainImage,
+            price: item.skuPrice,
+            specs: item.skuSpecs
+          }))
+          resolve(mapped)
+        } else {
+          resolve([])
+        }
+      },
+      fail: (err) => {
+        console.warn('getCartList failed, using local cache', err)
+        resolve([])
+      }
+    })
   })
 }
 

@@ -6,7 +6,7 @@
   "scripts": {
     "dev:mp-weixin": "uni -p mp-weixin",
     "build:mp-weixin": "uni build -p mp-weixin",
-    "dev:h5": "uni",
+    "dev:h5": "uni  --host 0.0.0.0",
     "build:h5": "uni build"
   },
   "dependencies": {

@@ -2,7 +2,7 @@
   <view class="product-card" @tap="onProductTap">
     <image
       class="product-image"
-      :src="product.mainImage || '/static/images/placeholder.png'"
+      :src="getProductImageSrc()"
       mode="aspectFill"
       @error="onImageError"
     />
@@ -17,6 +17,8 @@
 </template>
 
 <script setup>
+import { getFullImageUrl, DEFAULT_AVATAR_DATAURI } from '@/utils/helpers'
+
 const props = defineProps({
   product: {
     type: Object,
@@ -28,6 +30,13 @@ const formatPrice = (price) => {
   return typeof price === 'number' ? price.toFixed(2) : '0.00'
 }
 
+const getProductImageSrc = () => {
+  const imageUrl = props.product.mainImage
+  if (!imageUrl) return DEFAULT_AVATAR_DATAURI
+  // Always use getFullImageUrl to ensure localhost replacement
+  return getFullImageUrl(imageUrl)
+}
+
 const onProductTap = () => {
   uni.navigateTo({
     url: `/pages/product-detail/index?id=${props.product.id}`
@@ -35,7 +44,7 @@ const onProductTap = () => {
 }
 
 const onImageError = (e) => {
-  e.target.src = '/static/images/placeholder.png'
+  e.target.src = DEFAULT_AVATAR_DATAURI
 }
 </script>
 

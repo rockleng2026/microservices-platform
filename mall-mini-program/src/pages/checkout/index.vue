@@ -40,7 +40,7 @@
           <text>商品清单</text>
         </view>
         <view class="order-item" v-for="item in orderItems" :key="item.skuId">
-          <image class="item-image" :src="item.goodsImage || '/static/default.png'" mode="aspectFill"></image>
+          <image class="item-image" :src="getImageSrc(item.goodsImage)" mode="aspectFill"></image>
           <view class="item-info">
             <view class="item-name">{{ item.goodsName }}</view>
             <view class="item-specs" v-if="item.specs">{{ item.specs }}</view>
@@ -165,6 +165,15 @@
 import { ref, computed, onMounted } from 'vue'
 import { API_BASE, ORDER_CREATE, ADDRESS_LIST, COUPON_LIST } from '@/config/api'
 import { cartStore, type CartItem } from '@/stores/cart'
+import { getFullImageUrl, DEFAULT_AVATAR_DATAURI } from '@/utils/helpers'
+
+// Helper to get image src with fallback
+const getImageSrc = (path: string) => {
+  if (!path) return DEFAULT_AVATAR_DATAURI
+  if (path.startsWith('data:') || path.startsWith('http') || path.startsWith('//')) return path
+  if (path.startsWith('/')) return getFullImageUrl(path)
+  return path
+}
 
 // Order items from skuIds
 const orderItems = ref<CartItem[]>([])

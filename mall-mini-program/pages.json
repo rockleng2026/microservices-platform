@@ -69,6 +69,12 @@
       }
     },
     {
+      "path": "pages/evaluate-list/index",
+      "style": {
+        "navigationBarTitleText": "商品评价"
+      }
+    },
+    {
       "path": "pages/payment/result",
       "style": {
         "navigationBarTitleText": "支付结果"

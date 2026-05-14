@@ -10,7 +10,7 @@
       indicator-active-color="#ffffff"
       indicator-color="rgba(255,255,255,0.5)"
     >
-      <swiper-item v-for="(image, index) in images" :key="index">
+      <swiper-item v-for="(image, index) in imageList" :key="index">
         <image
           class="carousel-image"
           :src="image"
@@ -22,18 +22,20 @@
     </swiper>
 
     <!-- 加载占位 -->
-    <view class="placeholder" v-if="images.length === 0">
+    <view class="placeholder" v-if="imageList.length === 0">
       <text>图片加载中...</text>
     </view>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const props = defineProps<{
   images: string[]
 }>()
+
+const imageList = computed(() => props.images || [])
 
 // 处理图片加载失败
 const onImageError = (index: number) => {

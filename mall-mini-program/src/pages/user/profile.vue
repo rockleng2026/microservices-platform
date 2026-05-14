@@ -11,7 +11,7 @@
         <view class="avatar-row">
           <image
             class="avatar-img"
-            :src="avatarPreview || '/static/default-avatar.png'"
+            :src="getAvatarSrc()"
             mode="aspectFill"
           />
           <view class="avatar-actions">
@@ -106,8 +106,10 @@
 </template>
 
 <script setup>
-import { ref, onLoad } from 'vue'
-import { getUserInfo, updateProfile } from '@/services/user'
+import { ref } from 'vue'
+import { onLoad } from '@dcloudio/uni-app'
+import { getLocalUserInfo, updateProfile } from '@/services/user'
+import { getFullImageUrl, DEFAULT_AVATAR_DATAURI } from '@/utils/helpers'
 
 const nickname = ref('')
 const avatar = ref('')
@@ -119,13 +121,36 @@ const region = ref([])
 const regionText = ref('')
 const loading = ref(false)
 
+// Helper to get avatar with fallback to data URI default avatar
+const getAvatarSrc = () => {
+  const src = avatarPreview.value || avatar.value
+  if (!src) {
+    return DEFAULT_AVATAR_DATAURI
+  }
+  if (src.startsWith('data:') || src.startsWith('http') || src.startsWith('//')) {
+    return src
+  }
+  // If it's a local static resource, return as-is
+  if (src.startsWith('/static/')) {
+    return src
+  }
+  // Otherwise use file server to get full URL
+  if (src.startsWith('/')) {
+    return getFullImageUrl(src)
+  }
+  return src
+}
+
 // Load current user info
 onLoad(() => {
-  const userInfo = uni.getStorageSync('userInfo')
+  const userInfo = getLocalUserInfo()
   if (userInfo) {
     nickname.value = userInfo.nickname || ''
     avatarPreview.value = userInfo.avatar || ''
     avatar.value = userInfo.avatar || ''
+    gender.value = userInfo.gender || 0
+    birthday.value = userInfo.birthday || ''
+    phone.value = userInfo.phone || ''
   }
 })
 

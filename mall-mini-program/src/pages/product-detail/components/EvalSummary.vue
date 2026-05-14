@@ -46,7 +46,7 @@ const goToEvalList = () => {
 onMounted(async () => {
   try {
     const result = await getEvaluateList(props.goodsId, 1, 10)
-    evaluations.value = result.datas || []
+    evaluations.value = result.records || []
     totalCount.value = result.total || 0
   } catch (e) {
     console.error('加载评价摘要失败', e)

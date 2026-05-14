@@ -24,7 +24,7 @@
               class="sub-item"
               @click="goToProductList(sub)"
             >
-              <image class="sub-icon" :src="sub.icon || '/static/default.png'" mode="aspectFit" />
+              <image class="sub-icon" :src="getImageSrc(sub.icon)" mode="aspectFit" />
               <text class="sub-name">{{ sub.name }}</text>
             </view>
           </view>
@@ -36,7 +36,7 @@
           <view class="section-title">{{ selectedCategory.name }} 商品</view>
           <view class="product-grid" v-if="products.length">
             <view class="product-item" v-for="p in products" :key="p.id" @click="goToDetail(p)">
-              <image class="product-image" :src="p.mainImage || '/static/default.png'" mode="aspectFill" />
+              <image class="product-image" :src="getImageSrc(p.mainImage)" mode="aspectFill" />
               <view class="product-info">
                 <text class="product-name">{{ p.name }}</text>
                 <text class="product-price">¥{{ p.price }}</text>
@@ -55,10 +55,17 @@ import { ref } from 'vue'
 import { onLoad } from '@dcloudio/uni-app'
 import { getCategories } from '@/services/home'
 import { getGoodsList } from '@/services/goods'
+import { getFullImageUrl, DEFAULT_AVATAR_DATAURI } from '@/utils/helpers'
 
 const categories = ref([])
 const selectedCategory = ref(null)
 const products = ref([])
+
+// Helper to get image src with fallback
+const getImageSrc = (path) => {
+  if (!path) return DEFAULT_AVATAR_DATAURI
+  return getFullImageUrl(path)
+}
 
 const loadCategories = async () => {
   try {
@@ -80,7 +87,7 @@ const selectCategory = async (cat) => {
 const loadProducts = async (categoryId) => {
   try {
     const res = await getGoodsList({ categoryId, pageSize: 20 })
-    products.value = res?.datas || []
+    products.value = res?.records || []
   } catch (e) {
     console.error('Failed to load products:', e)
     products.value = []

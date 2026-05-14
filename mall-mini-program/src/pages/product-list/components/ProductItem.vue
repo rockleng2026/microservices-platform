@@ -2,7 +2,7 @@
   <view class="product-item" @click="goDetail">
     <!-- 商品图片 -->
     <view class="product-image">
-      <image :src="product.mainImage" mode="aspectFill" />
+      <image :src="getProductImageSrc()" mode="aspectFill" />
     </view>
 
     <!-- 商品信息 -->
@@ -18,6 +18,7 @@
 
 <script setup lang="ts">
 import type { MallGoods } from '@/services/home'
+import { getFullImageUrl, DEFAULT_AVATAR_DATAURI } from '@/utils/helpers'
 
 const props = defineProps<{
   product: MallGoods
@@ -30,6 +31,13 @@ const emit = defineEmits<{
 // 格式化价格
 const formatPrice = (price: number): string => {
   return price.toFixed(2)
+}
+
+// 获取商品图片
+const getProductImageSrc = (): string => {
+  if (!props.product.mainImage) return DEFAULT_AVATAR_DATAURI
+  // Always use getFullImageUrl to ensure localhost replacement
+  return getFullImageUrl(props.product.mainImage)
 }
 
 // 跳转到商品详情

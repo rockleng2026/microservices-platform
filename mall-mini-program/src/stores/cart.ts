@@ -76,6 +76,13 @@ class CartStore {
     return this.cartItems
   }
 
+  async reload(): Promise<void> {
+    // Reload from local storage first (clear existing)
+    this.cartItems = loadCart()
+    // Then fetch latest from server and merge
+    await this.loadFromServer()
+  }
+
   getTotalPrice(): number {
     return this.cartItems.reduce((sum, item) => sum + (item.price || 0) * item.quantity, 0)
   }

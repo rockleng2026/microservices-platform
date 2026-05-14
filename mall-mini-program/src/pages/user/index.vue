@@ -3,7 +3,7 @@
     <!-- User header -->
     <view class="user-header">
       <view class="user-info" @click="handleUserClick">
-        <image class="avatar" :src="userInfo?.avatar || '/static/default-avatar.png'" mode="aspectFill" />
+        <image class="avatar" :src="getAvatarSrc()" mode="aspectFill" />
         <view class="info">
           <text class="nickname">{{ userInfo?.nickname || '点击登录' }}</text>
           <text class="tip">{{ userInfo ? '点击查看资料' : '登录后享受更多服务' }}</text>
@@ -66,8 +66,32 @@
 <script setup>
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
+import { getFullImageUrl, DEFAULT_AVATAR_DATAURI } from '@/utils/helpers'
 
 const userInfo = ref(null)
+
+// Helper to get avatar with fallback to data URI default avatar
+const getAvatarSrc = () => {
+  const avatar = userInfo.value?.avatar
+  // If no avatar or empty string, use data URI
+  if (!avatar) {
+    return DEFAULT_AVATAR_DATAURI
+  }
+  // If avatar is a data URI or valid URL, use it
+  if (avatar.startsWith('data:') || avatar.startsWith('http') || avatar.startsWith('//')) {
+    return avatar
+  }
+  // If it's a relative path starting with /static/, return as-is for local static resource
+  if (avatar.startsWith('/static/')) {
+    return avatar
+  }
+  // If it's a relative path (starts with /), use helper to get full URL from file server
+  if (avatar.startsWith('/')) {
+    return getFullImageUrl(avatar)
+  }
+  // Otherwise return as-is
+  return avatar
+}
 
 // Handle user header click - go to profile if logged in, otherwise go to login
 const handleUserClick = () => {

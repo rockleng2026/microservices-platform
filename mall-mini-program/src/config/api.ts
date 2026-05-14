@@ -1,5 +1,6 @@
 // API configuration for mall-mini-program
-export const API_BASE = '/mall-center'
+// 网关路由地址
+export const API_BASE = 'http://localhost:9900/mall-center'
 
 // API endpoints
 export const BANNER_LIST = '/api/mall/admin/banner/list'

@@ -59,6 +59,11 @@
         <text class="label">我的积分</text>
         <text class="arrow">></text>
       </view>
+      <view class="menu-item" @click="handleLogout" v-if="userInfo">
+        <text class="icon">🚪</text>
+        <text class="label">退出登录</text>
+        <text class="arrow">></text>
+      </view>
     </view>
   </view>
 </template>
@@ -128,6 +133,23 @@ const goCoupons = () => {
 
 const goPoints = () => {
   uni.showToast({ title: '积分功能开发中', icon: 'none' })
+}
+
+// Handle logout
+const handleLogout = () => {
+  uni.showModal({
+    title: '确认退出',
+    content: '确定要退出登录吗？',
+    success: (res) => {
+      if (res.confirm) {
+        // Clear token and user info
+        uni.removeStorageSync('token')
+        uni.removeStorageSync('userInfo')
+        userInfo.value = null
+        uni.showToast({ title: '已退出登录', icon: 'success' })
+      }
+    }
+  })
 }
 
 onShow(() => {

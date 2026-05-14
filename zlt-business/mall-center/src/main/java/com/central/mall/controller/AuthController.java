@@ -6,7 +6,11 @@ import com.central.mall.service.IMallMemberService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -25,6 +29,14 @@ import java.util.UUID;
 public class AuthController {
 
     private final IMallMemberService memberService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    // 微信小程序配置
+    @Value("${wechat.miniapp.appid:}")
+    private String wechatAppId;
+
+    @Value("${wechat.miniapp.secret:}")
+    private String wechatSecret;
 
     /**
      * SHA-256哈希密码
@@ -52,6 +64,17 @@ public class AuthController {
         return hashPassword(rawPassword).equals(hashedPassword);
     }
 
+    private boolean isBlank(String str) {
+        return str == null || str.trim().isEmpty();
+    }
+
+    private String getFirstNotBlank(String... strings) {
+        for (String s : strings) {
+            if (!isBlank(s)) return s;
+        }
+        return null;
+    }
+
     /**
      * 微信授权登录
      */
@@ -59,9 +82,38 @@ public class AuthController {
     @Operation(summary = "微信授权登录")
     public Result<?> wxLogin(@RequestBody Map<String, String> params) {
         String code = params.get("code");
-        // TODO: 正式实现需调用微信接口用code换取openid
-        // 暂时返回模拟数据
-        String openId = "mock_openid_" + System.currentTimeMillis();
+
+        if (isBlank(code)) {
+            return Result.failed("code不能为空");
+        }
+
+        // 用 code 换取 openid
+        String openId;
+        if (isBlank(wechatAppId) || isBlank(wechatSecret)) {
+            // 开发环境使用 mock
+            openId = "mock_openid_" + System.currentTimeMillis();
+        } else {
+            // 生产环境调用微信接口
+            String url = "https://api.weixin.qq.com/sns/jscode2session?" +
+                "appid=" + wechatAppId +
+                "&secret=" + wechatSecret +
+                "&js_code=" + code +
+                "&grant_type=authorization_code";
+
+            try {
+                RestTemplate restTemplate = new RestTemplate();
+                String response = restTemplate.getForObject(url, String.class);
+                JsonNode jsonNode = objectMapper.readTree(response);
+                openId = jsonNode.get("openid").asText();
+
+                if (isBlank(openId)) {
+                    return Result.failed("微信授权失败：" + jsonNode.get("errmsg").asText());
+                }
+            } catch (Exception e) {
+                return Result.failed("微信服务调用失败：" + e.getMessage());
+            }
+        }
+
         String token = "WX_" + UUID.randomUUID().toString().replace("-", "");
 
         // 查找或创建会员
@@ -231,10 +283,39 @@ public class AuthController {
     @GetMapping("/wx/openid")
     @Operation(summary = "获取微信openid")
     public Result<?> getWxOpenId(@RequestParam String code) {
-        // TODO: 调用微信接口用code换取openid
-        // 模拟返回
-        Map<String, String> data = new HashMap<>();
-        data.put("openid", "mock_openid_" + code);
-        return Result.succeed(data);
+        if (isBlank(wechatAppId) || isBlank(wechatSecret)) {
+            // 开发环境使用 mock
+            Map<String, String> data = new HashMap<>();
+            data.put("openid", "mock_openid_" + code);
+            data.put("session_key", "mock_session_key_" + code);
+            return Result.succeed(data);
+        }
+
+        try {
+            // 调用微信接口用 code 换取 openid
+            String url = "https://api.weixin.qq.com/sns/jscode2session?" +
+                "appid=" + wechatAppId +
+                "&secret=" + wechatSecret +
+                "&js_code=" + code +
+                "&grant_type=authorization_code";
+
+            RestTemplate restTemplate = new RestTemplate();
+            String response = restTemplate.getForObject(url, String.class);
+
+            JsonNode jsonNode = objectMapper.readTree(response);
+            String openid = jsonNode.get("openid").asText();
+            String sessionKey = jsonNode.get("session_key").asText();
+
+            if (isBlank(openid)) {
+                return Result.failed("微信授权失败：" + jsonNode.get("errmsg").asText());
+            }
+
+            Map<String, String> data = new HashMap<>();
+            data.put("openid", openid);
+            data.put("session_key", sessionKey);
+            return Result.succeed(data);
+        } catch (Exception e) {
+            return Result.failed("微信服务调用失败：" + e.getMessage());
+        }
     }
 }

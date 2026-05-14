@@ -56,7 +56,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { login } from '@/services/auth'
+import { login, wxLogin } from '@/services/auth'
 
 const username = ref('')
 const password = ref('')
@@ -110,13 +110,50 @@ const goForgotPwd = () => {
   uni.navigateTo({ url: '/pages/forgot-password/index' })
 }
 
-// Handle WeChat login (mock)
+// Handle WeChat login (静默登录，仅获取 openid)
 const handleWxLogin = () => {
   // #ifdef H5
-  uni.showToast({ title: '微信登录开发中', icon: 'none' })
-  // #endif
-  // #ifndef H5
   uni.showToast({ title: '请在微信小程序中使用', icon: 'none' })
+  return
+  // #endif
+
+  // #ifndef H5
+  // 调用 wx.login 获取 code
+  uni.login({
+    provider: 'weixin',
+    success: (res) => {
+      if (!res.code) {
+        uni.showToast({ title: '微信登录失败', icon: 'none' })
+        return
+      }
+
+      loading.value = true
+      // 静默登录：不弹授权窗口，后端自动注册
+      wxLogin(res.code)
+        .then((result) => {
+          uni.setStorageSync('token', result.token)
+          uni.setStorageSync('userInfo', {
+            userId: result.userId,
+            nickname: result.nickname || '微信用户',
+            avatar: result.avatar || '/static/default-avatar.png'
+          })
+          uni.showToast({ title: '登录成功', icon: 'success' })
+          setTimeout(() => {
+            uni.switchTab({ url: '/pages/user/index' })
+          }, 1500)
+        })
+        .catch((e) => {
+          console.error('WeChat login failed:', e)
+          uni.showToast({ title: e.message || '登录失败', icon: 'none' })
+        })
+        .finally(() => {
+          loading.value = false
+        })
+    },
+    fail: () => {
+      uni.showToast({ title: '微信登录失败', icon: 'none' })
+    }
+  })
   // #endif
 }
 </script>

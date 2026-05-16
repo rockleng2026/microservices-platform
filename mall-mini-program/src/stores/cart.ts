@@ -27,9 +27,16 @@ const saveCart = (items: CartItem[]) => {
   uni.setStorageSync('cart', JSON.stringify(items))
 }
 
-// Check if user is logged in
+// Check if user is logged in - userId is stored inside userInfo object
 const isLoggedIn = (): boolean => {
-  return !!uni.getStorageSync('userId')
+  const userInfo = uni.getStorageSync('userInfo')
+  return !!(userInfo && userInfo.userId)
+}
+
+// Get current userId (from userInfo object)
+const getUserId = (): string => {
+  const userInfo = uni.getStorageSync('userInfo')
+  return (userInfo && userInfo.userId) ? String(userInfo.userId) : '1'
 }
 
 // Reactive state using Vue 3 reactive()
@@ -47,12 +54,19 @@ const state = reactive<{
 
 // Init cart from server
 const init = async () => {
-  if (state._inited || !isLoggedIn()) return
+  console.log('[cart:store] init called, _inited=', state._inited, 'isLoggedIn=', isLoggedIn())
+  if (state._inited || !isLoggedIn()) {
+    console.log('[cart:store] init skipping: _inited already', state._inited, 'or not logged in')
+    return
+  }
   state._inited = true
-  const userId = uni.getStorageSync('userId') || '1'
+  const userId = getUserId()
+  console.log('[cart:store] init fetching cart for userId=', userId)
   try {
     const serverItems = await getCartList(userId)
+    console.log('[cart:store] init got', serverItems?.length, 'server items')
     if (serverItems && serverItems.length > 0) {
+      // Server has cart data - use it (merge with local only for items server doesn't have)
       const serverSkuIds = new Set(serverItems.map((item: any) => item.skuId))
       const localOnlyItems = state.cartItems.filter(item => !serverSkuIds.has(item.skuId))
       state.cartItems = [...localOnlyItems, ...serverItems]
@@ -60,6 +74,12 @@ const init = async () => {
         .filter(item => item.checked !== 0)
         .map(item => item.skuId)
       saveCart(state.cartItems)
+    } else {
+      // Server returned empty - logged-in user should have empty cart (don't keep local anonymous cart)
+      console.log('[cart:store] server returned empty, clearing local items for logged-in user')
+      state.cartItems = []
+      state._selectedItems = []
+      saveCart([])
     }
   } catch (e) {
     console.warn('Failed to load cart from server', e)
@@ -131,7 +151,7 @@ const getSelectedSkuIds = (): number[] => {
 // Sync to server
 const syncToServer = async () => {
   if (!isLoggedIn()) return
-  const userId = uni.getStorageSync('userId') || '1'
+  const userId = getUserId()
   try {
     await syncCartToServer(state.cartItems, userId)
   } catch (e) {
@@ -155,7 +175,9 @@ const addToCart = (skuId: number, quantity: number) => {
           } else {
             state.cartItems.push({ skuId, quantity, checked: 1 })
           }
-          state._selectedItems.push(skuId)
+          if (isLoggedIn()) {
+            state._selectedItems.push(skuId)
+          }
           saveCart(state.cartItems)
           resolve()
         } else {

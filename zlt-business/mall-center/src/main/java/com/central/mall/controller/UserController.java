@@ -1,6 +1,7 @@
 package com.central.mall.controller;
 
 import com.central.common.model.Result;
+import com.central.mall.common.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +36,6 @@ public class UserController {
     }
 
     private Long getCurrentUserId() {
-        // TODO: integrate with real auth context (SecurityContextHolder / token)
-        return 1L;
+        return UserContext.getCurrentUserId();
     }
 }

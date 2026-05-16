@@ -1,6 +1,7 @@
 package com.central.mall.controller;
 
 import com.central.common.model.Result;
+import com.central.mall.common.UserContext;
 import com.central.mall.service.IMarketingService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -51,7 +52,6 @@ public class CouponController {
     }
 
     private Long getCurrentUserId() {
-        // TODO: integrate with real auth context
-        return 1L;
+        return UserContext.getCurrentUserId();
     }
 }

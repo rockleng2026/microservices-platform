@@ -1,10 +1,10 @@
 <template>
   <view class="cart-page">
     <!-- Cart items list -->
-    <scroll-view class="cart-scroll" scroll-y v-if="cartStore.cartItems.length > 0">
+    <scroll-view class="cart-scroll" scroll-y v-if="cartItems.length > 0">
       <view class="cart-list">
         <view
-          v-for="(item, index) in cartStore.cartItems"
+          v-for="(item, index) in cartItems"
           :key="item.skuId"
           class="cart-item"
         >
@@ -80,7 +80,7 @@
     </view>
 
     <!-- Bottom fixed bar -->
-    <view class="bottom-bar" v-if="cartStore.cartItems.length > 0">
+    <view class="bottom-bar" v-if="cartItems.length > 0">
       <!-- Select all -->
       <view class="select-all" @click="handleSelectAll">
         <view
@@ -117,17 +117,29 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
 import { cartStore } from '@/stores/cart'
 
 onMounted(async () => {
+  console.log('[cart:page] onMounted, calling reload')
   await cartStore.reload()
+})
+
+// Also reload on page show (covers hot reload scenarios)
+onShow(() => {
+  console.log('[cart:page] onShow, reloading cart')
+  cartStore.reload()
 })
 
 const activeSwipe = ref<number | null>(null)
 
+// Use toRefs to create a reactive reference to cartStore's cartItems
+// This ensures v-for can properly track the reactive array
+const cartItems = computed(() => cartStore.cartItems)
+
 // Check if item at index is selected
 const isItemSelected = (index: number): boolean => {
-  const item = cartStore.cartItems[index]
+  const item = cartItems.value[index]
   if (!item) return false
   return cartStore.getSelectedItems().some(i => i.skuId === item.skuId)
 }
@@ -174,42 +186,6 @@ const handleDelete = (skuId: number) => {
       }
     }
   })
-}
-
-const createMinusHandler = (skuId: number) => {
-  return () => {
-    const item = cartStore.cartItems.find(i => i.skuId === skuId)
-    if (item && item.quantity > 1) {
-      cartStore.updateQuantity(skuId, item.quantity - 1)
-    } else if (item) {
-      cartStore.removeFromCart(skuId)
-    }
-  }
-}
-
-const createPlusHandler = (skuId: number) => {
-  return () => {
-    const item = cartStore.cartItems.find(i => i.skuId === skuId)
-    if (item) {
-      cartStore.updateQuantity(skuId, item.quantity + 1)
-    }
-  }
-}
-
-const createDeleteHandler = (skuId: number) => {
-  return () => {
-    uni.showModal({
-      title: '确认删除',
-      content: '确定要从购物车删除该商品吗？',
-      confirmColor: '#ff4d4f',
-      success: (res) => {
-        if (res.confirm) {
-          cartStore.removeFromCart(skuId)
-          uni.showToast({ title: '已删除', icon: 'success' })
-        }
-      }
-    })
-  }
 }
 
 const handleSelectAll = () => {

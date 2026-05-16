@@ -1,6 +1,7 @@
 package com.central.mall.controller;
 
 import com.central.common.model.Result;
+import com.central.mall.common.UserContext;
 import com.central.mall.model.dto.CreateOrderDTO;
 import com.central.mall.model.dto.LogisticsTrackDTO;
 import com.central.mall.model.dto.UpdateRemarkDTO;
@@ -132,7 +133,6 @@ public class OrderController {
     }
 
     private Long getCurrentUserId() {
-        // TODO: integrate with real auth context
-        return 1L;
+        return UserContext.getCurrentUserId();
     }
 }

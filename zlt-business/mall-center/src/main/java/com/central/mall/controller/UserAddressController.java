@@ -1,6 +1,7 @@
 package com.central.mall.controller;
 
 import com.central.common.model.Result;
+import com.central.mall.common.UserContext;
 import com.central.mall.model.entity.MallUserAddress;
 import com.central.mall.service.IUserAddressService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -76,8 +77,6 @@ public class UserAddressController {
     }
 
     private Long getCurrentUserId() {
-        // TODO: integrate with real auth context (SecurityContextHolder / token)
-        // For now: extract from x-user-id header or fallback to 1L for dev
-        return 1L;
+        return UserContext.getCurrentUserId();
     }
 }

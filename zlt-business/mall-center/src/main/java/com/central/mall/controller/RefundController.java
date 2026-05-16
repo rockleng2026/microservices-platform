@@ -1,6 +1,7 @@
 package com.central.mall.controller;
 
 import com.central.common.model.Result;
+import com.central.mall.common.UserContext;
 import com.central.mall.model.dto.RefundApplyDTO;
 import com.central.mall.service.IRefundService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -55,7 +56,6 @@ public class RefundController {
     }
 
     private Long getCurrentUserId() {
-        // TODO: integrate with real auth context
-        return 1L;
+        return UserContext.getCurrentUserId();
     }
 }

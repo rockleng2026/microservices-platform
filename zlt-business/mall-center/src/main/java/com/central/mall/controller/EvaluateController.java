@@ -1,6 +1,7 @@
 package com.central.mall.controller;
 
 import com.central.common.model.Result;
+import com.central.mall.common.UserContext;
 import com.central.mall.model.dto.EvaluateDTO;
 import com.central.mall.model.dto.EvaluateListDTO;
 import com.central.mall.service.IEvaluateService;
@@ -59,7 +60,6 @@ public class EvaluateController {
     }
 
     private Long getCurrentUserId() {
-        // TODO: integrate with real auth context
-        return 1L;
+        return UserContext.getCurrentUserId();
     }
 }

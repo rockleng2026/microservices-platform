@@ -2,6 +2,7 @@ package com.central.mall.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.central.mall.common.UserContext;
 import com.central.mall.config.TenantInterceptor;
 import com.central.mall.mapper.*;
 import com.central.mall.model.dto.CreateOrderDTO;
@@ -46,7 +47,7 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
      * TODO: integrate with zlt-uaa auth system
      */
     private Long getCurrentUserId() {
-        return 1L;
+        return UserContext.getCurrentUserId();
     }
 
     @Override

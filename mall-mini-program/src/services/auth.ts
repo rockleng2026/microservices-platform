@@ -1,4 +1,4 @@
-import { API_BASE } from '@/config/api'
+import { API_BASE, TENANT_ID } from '@/config/api'
 
 const request = <T>(url: string, options?: any): Promise<T> => {
   return new Promise((resolve, reject) => {
@@ -6,8 +6,8 @@ const request = <T>(url: string, options?: any): Promise<T> => {
       url: `${API_BASE}${url}`,
       ...options,
       header: {
-        'x-tenant-header': 'default',
-        ...options?.header
+        ...options?.header,
+        'x-tenant-header': TENANT_ID
       },
       success: (res: any) => {
         if (res.statusCode === 200) {

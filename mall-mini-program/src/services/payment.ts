@@ -1,4 +1,4 @@
-import { API_BASE, PAY_CREATE, ORDER_DETAIL } from '@/config/api'
+import { API_BASE, PAY_CREATE, ORDER_DETAIL, TENANT_ID } from '@/config/api'
 
 // WeChat payment parameter types
 export interface WeChatPayParams {
@@ -33,7 +33,7 @@ export async function createPayment(orderId: number): Promise<'success' | 'fail'
       url: `${API_BASE}${PAY_CREATE}`,
       method: 'POST',
       data: { orderId },
-      header: { 'x-user-id': uni.getStorageSync('userId') || '1' },
+      header: { 'x-tenant-header': TENANT_ID, 'x-user-id': uni.getStorageSync('userId') || '1' },
       success: (r: any) => {
         if (r.statusCode === 200) resolve(r.data)
         else reject(r)
@@ -83,7 +83,7 @@ export async function getOrderStatus(orderId: number): Promise<string> {
     uni.request({
       url: `${API_BASE}${ORDER_DETAIL}/${orderId}`,
       method: 'GET',
-      header: { 'x-user-id': uni.getStorageSync('userId') || '1' },
+      header: { 'x-tenant-header': TENANT_ID, 'x-user-id': uni.getStorageSync('userId') || '1' },
       success: (res: any) => {
         if (res.statusCode === 200) {
           resolve(res.data?.status || 'unknown')

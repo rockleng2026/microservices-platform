@@ -1,4 +1,4 @@
-import { API_BASE, BANNER_LIST, CATEGORIES, HOT_GOODS } from '@/config/api'
+import { API_BASE, BANNER_LIST, CATEGORIES, HOT_GOODS, TENANT_ID } from '@/config/api'
 
 export interface BannerDTO {
   id: number
@@ -40,8 +40,8 @@ const request = <T>(url: string, options?: any): Promise<T> => {
       url: `${API_BASE}${url}`,
       ...options,
       header: {
-        'x-tenant-header': 'default',
-        ...options?.header
+        ...options?.header,
+        'x-tenant-header': TENANT_ID
       },
       success: (res: any) => {
         if (res.statusCode === 200) {

@@ -2,6 +2,9 @@
 // 网关路由地址
 export const API_BASE = 'http://localhost:9900/mall-center'
 
+// 默认租户ID
+export const TENANT_ID = 'default'
+
 // API endpoints
 export const BANNER_LIST = '/api/mall/admin/banner/list'
 export const CATEGORIES = '/api/mall/goods/categories'

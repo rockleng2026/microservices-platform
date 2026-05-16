@@ -139,7 +139,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { API_BASE, REFUND_APPLY, REFUND_DETAIL, REFUND_CANCEL } from '@/config/api'
+import { API_BASE, REFUND_APPLY, REFUND_DETAIL, REFUND_CANCEL, TENANT_ID } from '@/config/api'
 
 // 预设退款原因
 const presetReasons = ['不想要了', '商品损坏', '发错货', '与描述不符', '其他']
@@ -392,9 +392,10 @@ const request = <T>(url: string, options?: any): Promise<T> => {
       url: `${API_BASE}${url}`,
       ...options,
       header: {
+        ...options?.header,
+        'x-tenant-header': TENANT_ID,
         'x-user-id': uni.getStorageSync('userId') || '1',
-        'Content-Type': 'application/json',
-        ...options?.header
+        'Content-Type': 'application/json'
       },
       success: (res: any) => {
         if (res.statusCode === 200) {

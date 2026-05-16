@@ -1,4 +1,4 @@
-import { API_BASE, ORDER_CREATE, ORDER_LIST, ORDER_DETAIL } from '@/config/api'
+import { API_BASE, ORDER_CREATE, ORDER_LIST, ORDER_DETAIL, TENANT_ID } from '@/config/api'
 
 // Re-export API constants for convenience
 export { ORDER_CREATE, ORDER_LIST, ORDER_DETAIL }
@@ -9,6 +9,10 @@ const request = <T>(url: string, options?: any): Promise<T> => {
     uni.request({
       url: `${API_BASE}${url}`,
       ...options,
+      header: {
+        ...options?.header,
+        'x-tenant-header': TENANT_ID
+      },
       success: (res: any) => {
         if (res.statusCode === 200) {
           resolve(res.data)
@@ -113,11 +117,11 @@ export const TAB_STATUS_MAP: (string | undefined)[] = [
 
 // Get order list
 export const getOrderList = (status: string | undefined, page: number = 1, pageSize: number = 10): Promise<OrderListResponse> => {
-  const params = new URLSearchParams()
-  if (status) params.append('status', status)
-  params.append('page', String(page))
-  params.append('pageSize', String(pageSize))
-  return request<OrderListResponse>(`${ORDER_LIST}?${params.toString()}`, {
+  const parts: string[] = []
+  if (status) parts.push(`status=${status}`)
+  parts.push(`page=${page}`)
+  parts.push(`pageSize=${pageSize}`)
+  return request<OrderListResponse>(`${ORDER_LIST}?${parts.join('&')}`, {
     method: 'GET'
   })
 }

@@ -1,6 +1,7 @@
 .idea/
 logs/
 target/
+mall-mini-program/dist/
 .txlcn/
 **/node_modules
 

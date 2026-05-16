@@ -1,29 +1,23 @@
 <template>
   <view class="cart-page">
     <!-- Cart items list -->
-    <scroll-view class="cart-scroll" scroll-y v-if="cartItems.length > 0">
-      <!-- Swipe-action cart items -->
+    <scroll-view class="cart-scroll" scroll-y v-if="cartStore.cartItems.length > 0">
       <view class="cart-list">
         <view
-          v-for="item in cartItems"
+          v-for="(item, index) in cartStore.cartItems"
           :key="item.skuId"
           class="cart-item"
         >
-          <!-- Swipe action wrapper -->
           <view class="swipe-item" :class="{ 'swipe-open': activeSwipe === item.skuId }">
-            <!-- Main content -->
             <view class="item-content">
               <!-- Selection checkbox -->
-              <view
-                class="item-checkbox"
-                @click="toggleSelect(item.skuId)"
-              >
+              <view class="item-checkbox" :data-sku="item.skuId" @click="() => handleToggle(item.skuId)">
                 <view
                   class="checkbox-icon"
-                  :class="{ checked: isSelected(item.skuId) }"
+                  :class="{ checked: isItemSelected(index) }"
                 >
                   <uni-icons
-                    v-if="isSelected(item.skuId)"
+                    v-if="isItemSelected(index)"
                     type="checkmark"
                     size="12"
                     color="#ffffff"
@@ -44,26 +38,28 @@
                 <view class="item-spec" v-if="item.specs">{{ item.specs }}</view>
                 <view class="item-bottom">
                   <view class="item-price">¥{{ (item.price || 0).toFixed(2) }}</view>
-                  <!-- Quantity stepper -->
                   <view class="quantity-stepper">
                     <view
                       class="stepper-btn minus"
-                      @click="decreaseQuantity(item)"
+                      :data-sku="item.skuId"
+                      @click="() => handleMinus(item.skuId)"
                     >-</view>
                     <view class="stepper-num">{{ item.quantity }}</view>
                     <view
                       class="stepper-btn plus"
-                      @click="increaseQuantity(item)"
+                      :data-sku="item.skuId"
+                      @click="() => handlePlus(item.skuId)"
                     >+</view>
                   </view>
                 </view>
               </view>
             </view>
 
-            <!-- Delete button (shown on swipe) -->
+            <!-- Delete button -->
             <view
               class="delete-btn"
-              @click="deleteItem(item.skuId)"
+              :data-sku="item.skuId"
+              @click="() => handleDelete(item.skuId)"
             >
               <text>删除</text>
             </view>
@@ -71,7 +67,6 @@
         </view>
       </view>
 
-      <!-- Bottom padding for fixed bar -->
       <view style="height: 120px"></view>
     </scroll-view>
 
@@ -85,9 +80,9 @@
     </view>
 
     <!-- Bottom fixed bar -->
-    <view class="bottom-bar" v-if="cartItems.length > 0">
+    <view class="bottom-bar" v-if="cartStore.cartItems.length > 0">
       <!-- Select all -->
-      <view class="select-all" @click="toggleSelectAll">
+      <view class="select-all" @click="handleSelectAll">
         <view
           class="checkbox-icon"
           :class="{ checked: isAllSelected }"
@@ -122,69 +117,52 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { cartStore, type CartItem } from '@/stores/cart'
+import { cartStore } from '@/stores/cart'
 
-// Cart items from store
-const cartItems = computed(() => cartStore.getItems())
-
-// Reload cart when page mounts
 onMounted(async () => {
   await cartStore.reload()
 })
 
-// Selected state
 const activeSwipe = ref<number | null>(null)
 
-// Check if item is selected
-const isSelected = (skuId: number): boolean => {
-  const selectedItems = cartStore.getSelectedItems()
-  // If no explicit selection, all items are considered selected
-  const hasExplicitSelection = (cartStore as any).selectedItems?.size > 0
-  if (!hasExplicitSelection) {
-    return true
-  }
-  return selectedItems.some(item => item.skuId === skuId)
+// Check if item at index is selected
+const isItemSelected = (index: number): boolean => {
+  const item = cartStore.cartItems[index]
+  if (!item) return false
+  return cartStore.getSelectedItems().some(i => i.skuId === item.skuId)
 }
 
-// Selected count
-const selectedCount = computed(() => {
-  const selected = cartStore.getSelectedItems()
-  return selected.length
-})
-
-// Selected total
+const selectedCount = computed(() => cartStore.getSelectedItems().length)
 const selectedTotal = computed(() => cartStore.getSelectedTotal())
-
-// Is all selected
 const isAllSelected = computed(() => cartStore.isAllSelected())
 
-// Toggle select single item
-const toggleSelect = (skuId: number) => {
+// Simple handler functions for each item - no data-idx needed
+// Use arrow function () => handleToggle(item.skuId) in template to avoid v-for @click compiler bug
+const handleToggle = (skuId: number) => {
+  console.log('[cart:page] handleToggle skuId=', skuId)
   cartStore.toggleSelect(skuId)
 }
 
-// Toggle select all
-const toggleSelectAll = () => {
-  cartStore.selectAll(!isAllSelected.value)
-}
-
-// Decrease quantity
-const decreaseQuantity = (item: CartItem) => {
-  if (item.quantity > 1) {
-    cartStore.updateQuantity(item.skuId, item.quantity - 1)
-  } else {
-    // If quantity is 1, ask to delete
-    deleteItem(item.skuId)
+const handleMinus = (skuId: number) => {
+  console.log('[cart:page] handleMinus skuId=', skuId)
+  const item = cartStore.cartItems.find(i => i.skuId === skuId)
+  if (item && item.quantity > 1) {
+    cartStore.updateQuantity(skuId, item.quantity - 1)
+  } else if (item) {
+    cartStore.removeFromCart(skuId)
   }
 }
 
-// Increase quantity
-const increaseQuantity = (item: CartItem) => {
-  cartStore.updateQuantity(item.skuId, item.quantity + 1)
+const handlePlus = (skuId: number) => {
+  console.log('[cart:page] handlePlus skuId=', skuId)
+  const item = cartStore.cartItems.find(i => i.skuId === skuId)
+  if (item) {
+    cartStore.updateQuantity(skuId, item.quantity + 1)
+  }
 }
 
-// Delete item
-const deleteItem = (skuId: number) => {
+const handleDelete = (skuId: number) => {
+  console.log('[cart:page] handleDelete skuId=', skuId)
   uni.showModal({
     title: '确认删除',
     content: '确定要从购物车删除该商品吗？',
@@ -198,12 +176,50 @@ const deleteItem = (skuId: number) => {
   })
 }
 
-// Go shopping (navigate to home)
+const createMinusHandler = (skuId: number) => {
+  return () => {
+    const item = cartStore.cartItems.find(i => i.skuId === skuId)
+    if (item && item.quantity > 1) {
+      cartStore.updateQuantity(skuId, item.quantity - 1)
+    } else if (item) {
+      cartStore.removeFromCart(skuId)
+    }
+  }
+}
+
+const createPlusHandler = (skuId: number) => {
+  return () => {
+    const item = cartStore.cartItems.find(i => i.skuId === skuId)
+    if (item) {
+      cartStore.updateQuantity(skuId, item.quantity + 1)
+    }
+  }
+}
+
+const createDeleteHandler = (skuId: number) => {
+  return () => {
+    uni.showModal({
+      title: '确认删除',
+      content: '确定要从购物车删除该商品吗？',
+      confirmColor: '#ff4d4f',
+      success: (res) => {
+        if (res.confirm) {
+          cartStore.removeFromCart(skuId)
+          uni.showToast({ title: '已删除', icon: 'success' })
+        }
+      }
+    })
+  }
+}
+
+const handleSelectAll = () => {
+  cartStore.selectAll(!isAllSelected.value)
+}
+
 const goShopping = () => {
   uni.switchTab({ url: '/pages/home/index' })
 }
 
-// Go to checkout
 const goCheckout = () => {
   const skuIds = cartStore.getSelectedSkuIds()
   if (skuIds.length === 0) {
@@ -361,7 +377,6 @@ const goCheckout = () => {
   font-size: 14px;
 }
 
-// Empty state
 .empty-state {
   flex: 1;
   display: flex;
@@ -389,7 +404,6 @@ const goCheckout = () => {
   font-size: 14px;
 }
 
-// Bottom fixed bar
 .bottom-bar {
   position: fixed;
   left: 0;

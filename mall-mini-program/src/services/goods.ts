@@ -1,4 +1,4 @@
-import { API_BASE, GOODS_LIST, GOODS_DETAIL, EVALUATE_LIST } from '@/config/api'
+import { API_BASE, GOODS_LIST, GOODS_DETAIL, EVALUATE_LIST, TENANT_ID } from '@/config/api'
 import type { MallGoods } from './home'
 
 export interface GoodsListParams {
@@ -58,6 +58,10 @@ const request = <T>(url: string, options?: any): Promise<T> => {
     uni.request({
       url: `${API_BASE}${url}`,
       ...options,
+      header: {
+        ...options?.header,
+        'x-tenant-header': TENANT_ID
+      },
       success: (res: any) => {
         if (res.statusCode === 200) {
           resolve(res.data.datas || res.data.data || res.data)
@@ -72,16 +76,16 @@ const request = <T>(url: string, options?: any): Promise<T> => {
 
 // Get goods list
 export const getGoodsList = (params: GoodsListParams): Promise<{ datas: MallGoods[], pageNum: number, pageSize: number, total: number }> => {
-  const queryParams = new URLSearchParams()
-  if (params.page) queryParams.append('page', String(params.page))
-  if (params.pageSize) queryParams.append('pageSize', String(params.pageSize))
-  if (params.categoryId) queryParams.append('categoryId', String(params.categoryId))
-  if (params.keyword) queryParams.append('keyword', params.keyword)
-  if (params.sortField) queryParams.append('sortField', params.sortField)
-  if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder)
+  const parts: string[] = []
+  if (params.page) parts.push(`page=${params.page}`)
+  if (params.pageSize) parts.push(`pageSize=${params.pageSize}`)
+  if (params.categoryId) parts.push(`categoryId=${params.categoryId}`)
+  if (params.keyword) parts.push(`keyword=${encodeURIComponent(params.keyword)}`)
+  if (params.sortField) parts.push(`sortField=${params.sortField}`)
+  if (params.sortOrder) parts.push(`sortOrder=${params.sortOrder}`)
 
-  const query = queryParams.toString()
-  return request<any>(`${GOODS_LIST}${query ? '?' + query : ''}`, { method: 'GET' })
+  const query = parts.length > 0 ? '?' + parts.join('&') : ''
+  return request<any>(`${GOODS_LIST}${query}`, { method: 'GET' })
 }
 
 // Get goods detail

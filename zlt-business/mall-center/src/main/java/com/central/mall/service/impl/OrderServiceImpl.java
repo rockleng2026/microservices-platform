@@ -245,7 +245,7 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
                 if (address != null) {
                     Map<String, Object> addrMap = new HashMap<>();
                     addrMap.put("id", address.getId());
-                    addrMap.put("receiverName", address.getReceiverName());
+                    addrMap.put("receiverName", address.getName());
                     addrMap.put("phone", address.getPhone());
                     addrMap.put("province", address.getProvince());
                     addrMap.put("city", address.getCity());

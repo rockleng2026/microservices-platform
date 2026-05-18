@@ -56,20 +56,25 @@
 
         <!-- Items: Item list with name, specs, price, quantity -->
         <view class="items-list">
-          <view
-            v-for="item in order.items"
-            :key="item.id"
-            class="item-row"
-            @click.stop="goToProduct(item.skuId)"
-          >
-            <view class="item-info">
-              <text class="item-name">{{ item.goodsName }}</text>
-              <text class="item-specs" v-if="item.specs">{{ item.specs }}</text>
+          <template v-if="order.items && order.items.length > 0">
+            <view
+              v-for="item in order.items"
+              :key="item.id"
+              class="item-row"
+              @click.stop="goToProduct(item.skuId)"
+            >
+              <view class="item-info">
+                <text class="item-name">{{ item.goodsName }}</text>
+                <text class="item-specs" v-if="item.specs">{{ item.specs }}</text>
+              </view>
+              <view class="item-right">
+                <text class="item-price">¥{{ item.price.toFixed(2) }}</text>
+                <text class="item-qty">x{{ item.quantity }}</text>
+              </view>
             </view>
-            <view class="item-right">
-              <text class="item-price">¥{{ item.price.toFixed(2) }}</text>
-              <text class="item-qty">x{{ item.quantity }}</text>
-            </view>
+          </template>
+          <view v-else class="item-empty" @click.stop="goToDetail(order.id)">
+            <text class="item-empty-text">点击查看商品详情</text>
           </view>
         </view>
 
@@ -80,17 +85,13 @@
             <text class="create-time">{{ formatTime(order.createdAt) }}</text>
           </view>
           <view class="footer-actions">
-            <!-- pending_payment: 取消 + 去支付 -->
-            <template v-if="order.status === 'PENDING'">
+            <!-- 1=待付款: 取消 + 去支付 -->
+            <template v-if="order.status === 1 || order.status === 'PENDING'">
               <view class="btn btn-destroy" @click.stop="onCancelOrder(order.id)">取消</view>
               <view class="btn btn-accent" @click.stop="goToPayment(order.id)">去支付</view>
             </template>
-            <!-- PAID/SHIPPED/DELIVERED: 查看明细 -->
-            <template v-else-if="order.status === 'PAID' || order.status === 'SHIPPED' || order.status === 'DELIVERED'">
-              <view class="btn btn-outline" @click.stop="goToDetail(order.id)">查看明细</view>
-            </template>
-            <!-- COMPLETED: 查看明细 -->
-            <template v-else-if="order.status === 'COMPLETED'">
+            <!-- 2=待发货/3=已发货/4=待收货: 查看明细 -->
+            <template v-else-if="order.status === 2 || order.status === 3 || order.status === 4 || order.status === 'PAID' || order.status === 'SHIPPED' || order.status === 'DELIVERED' || order.status === 'COMPLETED'">
               <view class="btn btn-outline" @click.stop="goToDetail(order.id)">查看明细</view>
             </template>
           </view>
@@ -136,20 +137,29 @@ const statusStyles: Record<string, { bg: string; color: string }> = {
   refunding: { bg: '#fff1f0', color: '#ff4d4f' }
 }
 
-// Status text mapping (backend returns English enums: PENDING, PAID, SHIPPED, etc.)
+// Status text mapping (backend returns integer status: 1=PENDING, 2=PAID, 3=SHIPPED, 4=COMPLETED, etc.)
 const statusTextMap: Record<string, string> = {
-  PENDING: '待付款',
-  PAID: '待发货',
-  SHIPPED: '已发货',
-  DELIVERED: '待收货',
-  COMPLETED: '已完成',
-  CANCELLED: '已取消',
-  REFUNDING: '退款中',
-  REFUNDED: '已退款',
-  CLOSED: '已关闭'
+  '1': '待付款',
+  '2': '待发货',
+  '3': '已发货',
+  '4': '已完成',
+  '5': '已取消',
+  '6': '退款中',
+  '7': '已退款',
+  '8': '已关闭',
+  // Also support string enum keys from previous implementation
+  'PENDING': '待付款',
+  'PAID': '待发货',
+  'SHIPPED': '已发货',
+  'DELIVERED': '待收货',
+  'COMPLETED': '已完成',
+  'CANCELLED': '已取消',
+  'REFUNDING': '退款中',
+  'REFUNDED': '已退款',
+  'CLOSED': '已关闭'
 }
 
-const getStatusText = (status: string) => statusTextMap[status] || status
+const getStatusText = (status: string | number) => statusTextMap[String(status)] || String(status)
 
 // Format time
 const formatTime = (time: string) => {
@@ -410,29 +420,57 @@ onMounted(() => {
     font-weight: 500;
   }
 
-  .status-pending_payment {
+  // String status
+  .status-PENDING {
+    background: #fff7e6;
+    color: #fa8c16;
+  }
+  .status-PENDING {
     background: #fff7e6;
     color: #fa8c16;
   }
 
-  .status-paid,
-  .status-shipped {
+  .status-PAID,
+  .status-SHIPPED {
     background: #e6f7ff;
     color: #1890ff;
   }
 
-  .status-delivered,
-  .status-completed {
+  .status-DELIVERED,
+  .status-COMPLETED {
     background: #f6ffed;
     color: #52c41a;
   }
 
-  .status-cancelled {
+  .status-CANCELLED {
     background: #f5f5f5;
     color: #999;
   }
 
-  .status-refunding {
+  .status-REFUNDING {
+    background: #fff1f0;
+    color: #ff4d4f;
+  }
+
+  // Integer status (from backend API)
+  .status-1 {
+    background: #fff7e6;
+    color: #fa8c16;
+  }
+  .status-2,
+  .status-3 {
+    background: #e6f7ff;
+    color: #1890ff;
+  }
+  .status-4 {
+    background: #f6ffed;
+    color: #52c41a;
+  }
+  .status-5 {
+    background: #f5f5f5;
+    color: #999;
+  }
+  .status-6 {
     background: #fff1f0;
     color: #ff4d4f;
   }
@@ -494,6 +532,16 @@ onMounted(() => {
   .item-qty {
     font-size: 12px;
     color: #999;
+  }
+
+  .item-empty {
+    padding: 10px 0;
+    text-align: center;
+  }
+
+  .item-empty-text {
+    font-size: 13px;
+    color: #1890ff;
   }
 
   // Card footer

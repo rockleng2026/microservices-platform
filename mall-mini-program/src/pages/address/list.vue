@@ -82,6 +82,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { API_BASE, ADDRESS_LIST } from '@/config/api'
+import { getCurrentUserId } from '@/utils/helpers'
 
 interface Address {
   id: number
@@ -103,7 +104,7 @@ const isDrawerMode = ref(false)
 const loadAddressList = async () => {
   uni.showLoading({ title: '加载中...' })
   try {
-    const userId = uni.getStorageSync('userId') || '1'
+    const userId = getCurrentUserId()
     const res: any = await new Promise((resolve, reject) => {
       uni.request({
         url: `${API_BASE}${ADDRESS_LIST}`,
@@ -130,7 +131,7 @@ const setDefault = async (item: Address) => {
   if (item.isDefault === 1) return
 
   try {
-    const userId = uni.getStorageSync('userId') || '1'
+    const userId = getCurrentUserId()
     await new Promise((resolve, reject) => {
       uni.request({
         url: `${API_BASE}${ADDRESS_LIST}/${item.id}/default`,
@@ -166,7 +167,7 @@ const deleteAddress = (id: number) => {
     success: async (res) => {
       if (res.confirm) {
         try {
-          const userId = uni.getStorageSync('userId') || '1'
+          const userId = getCurrentUserId()
           await new Promise((resolve, reject) => {
             uni.request({
               url: `${API_BASE}${ADDRESS_LIST}/${id}`,

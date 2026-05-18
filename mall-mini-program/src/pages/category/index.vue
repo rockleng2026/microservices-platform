@@ -52,7 +52,7 @@
 
 <script setup>
 import { ref } from 'vue'
-import { onLoad } from '@dcloudio/uni-app'
+import { onShow } from '@dcloudio/uni-app'
 import { getCategories } from '@/services/home'
 import { getGoodsList } from '@/services/goods'
 import { getFullImageUrl, DEFAULT_AVATAR_DATAURI } from '@/utils/helpers'
@@ -60,6 +60,8 @@ import { getFullImageUrl, DEFAULT_AVATAR_DATAURI } from '@/utils/helpers'
 const categories = ref([])
 const selectedCategory = ref(null)
 const products = ref([])
+
+const hasLoaded = ref(false)
 
 // Helper to get image src with fallback
 const getImageSrc = (path) => {
@@ -71,7 +73,7 @@ const loadCategories = async () => {
   try {
     const res = await getCategories()
     categories.value = res || []
-    if (categories.value.length > 0) {
+    if (categories.value.length > 0 && !selectedCategory.value) {
       selectCategory(categories.value[0])
     }
   } catch (e) {
@@ -106,8 +108,13 @@ const goToDetail = (p) => {
   })
 }
 
-onLoad(() => {
-  loadCategories()
+onShow(() => {
+  // For tabBar pages, onShow is called every time tab is switched
+  // Only load if we haven't loaded yet or categories are empty
+  if (!hasLoaded.value || categories.value.length === 0) {
+    hasLoaded.value = true
+    loadCategories()
+  }
 })
 </script>
 

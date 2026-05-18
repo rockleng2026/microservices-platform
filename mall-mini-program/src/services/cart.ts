@@ -1,5 +1,6 @@
-import { API_BASE, CART_API, CART_SYNC_API, TENANT_ID } from '@/config/api'
+import { API_BASE, CART_API, CART_SYNC_API } from '@/config/api'
 import type { CartItem } from '@/stores/cart'
+import { getCommonHeaders } from '@/utils/helpers'
 
 // Request wrapper
 const request = <T>(url: string, options?: any): Promise<T> => {
@@ -9,7 +10,7 @@ const request = <T>(url: string, options?: any): Promise<T> => {
       ...options,
       header: {
         ...options?.header,
-        'x-tenant-header': TENANT_ID
+        ...getCommonHeaders()
       },
       success: (res: any) => {
         if (res.statusCode === 200) {
@@ -68,7 +69,6 @@ export const syncCartToServer = (items: CartItem[], userId: string): Promise<voi
 export const addToCart = (skuId: number, quantity: number): Promise<void> => {
   return request<void>(CART_API, {
     method: 'POST',
-    data: { skuId, quantity },
-    header: { 'x-user-id': uni.getStorageSync('userId') || '1' }
+    data: { skuId, quantity }
   })
 }

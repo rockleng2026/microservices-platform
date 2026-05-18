@@ -1,6 +1,7 @@
 import { reactive, computed, watch } from 'vue'
-import { API_BASE, CART_API, TENANT_ID } from '@/config/api'
+import { API_BASE, CART_API } from '@/config/api'
 import { getCartList, syncCartToServer } from '@/services/cart'
+import { getCommonHeaders } from '@/utils/helpers'
 
 export interface CartItem {
   skuId: number
@@ -166,7 +167,7 @@ const addToCart = (skuId: number, quantity: number) => {
       url: `${API_BASE}${CART_API}`,
       method: 'POST',
       data: { skuId, quantity },
-      header: { 'x-tenant-header': TENANT_ID, 'x-user-id': uni.getStorageSync('userId') || '1' },
+      header: getCommonHeaders(),
       success: (res: any) => {
         if (res.statusCode === 200) {
           const existing = state.cartItems.find(item => item.skuId === skuId)

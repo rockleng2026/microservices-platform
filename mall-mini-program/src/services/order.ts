@@ -1,4 +1,5 @@
-import { API_BASE, ORDER_CREATE, ORDER_LIST, ORDER_DETAIL, TENANT_ID } from '@/config/api'
+import { API_BASE, ORDER_CREATE, ORDER_LIST, ORDER_DETAIL } from '@/config/api'
+import { getCommonHeaders } from '@/utils/helpers'
 
 // Re-export API constants for convenience
 export { ORDER_CREATE, ORDER_LIST, ORDER_DETAIL }
@@ -11,7 +12,7 @@ const request = <T>(url: string, options?: any): Promise<T> => {
       ...options,
       header: {
         ...options?.header,
-        'x-tenant-header': TENANT_ID
+        ...getCommonHeaders()
       },
       success: (res: any) => {
         if (res.statusCode === 200) {
@@ -100,8 +101,7 @@ export interface OrderCreateParams {
 export const createOrder = (params: OrderCreateParams): Promise<Order> => {
   return request<Order>(ORDER_CREATE, {
     method: 'POST',
-    data: params,
-    header: { 'x-user-id': uni.getStorageSync('userId') || '1' }
+    data: params
   })
 }
 

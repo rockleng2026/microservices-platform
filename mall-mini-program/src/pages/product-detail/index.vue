@@ -105,6 +105,14 @@ const displayStock = computed(() => {
   return 999
 })
 
+// 显示价格：优先选中的SKU价格，否则用商品默认价格
+const displayPrice = computed(() => {
+  if (selectedSku.value) {
+    return selectedSku.value.price
+  }
+  return goodsDetail.value.price || 0
+})
+
 // 规格选择回调
 const onSpecSelect = (sku: MallGoodsSku) => {
   selectedSku.value = sku
@@ -127,14 +135,34 @@ const addToCart = async () => {
   }
 }
 
-// 立即购买（后续 Phase 9+ 实现支付，当前仅提示）
+// 立即购买
 const buyNow = () => {
-  if (!selectedSku.value && goodsDetail.value.skus?.length) {
-    uni.showToast({ title: '请选择规格', icon: 'none' })
+  // Check login first
+  const userInfo = uni.getStorageSync('userInfo')
+  if (!userInfo || !userInfo.userId) {
+    uni.showToast({ title: '请先登录', icon: 'none' })
+    setTimeout(() => {
+      uni.navigateTo({ url: '/pages/login/index' })
+    }, 1000)
     return
   }
-  uni.showToast({ title: '支付功能开发中', icon: 'none' })
-  // 后续 Phase 跳转结算页: uni.navigateTo({ url: '/pages/checkout/index?skuId=...' })
+
+  // Auto-select if only one SKU
+  if (!selectedSku.value) {
+    if (goodsDetail.value.skus?.length === 1) {
+      selectedSku.value = goodsDetail.value.skus[0]
+    } else if (goodsDetail.value.skus?.length > 1) {
+      uni.showToast({ title: '请选择规格', icon: 'none' })
+      return
+    }
+  }
+  if (!selectedSku.value) {
+    uni.showToast({ title: '商品不可购买', icon: 'none' })
+    return
+  }
+  const skuId = selectedSku.value.id
+  const goodsId = goodsDetail.value.id
+  uni.navigateTo({ url: `/pages/checkout/index?skuId=${skuId}&goodsId=${goodsId}` })
 }
 
 // 页面加载

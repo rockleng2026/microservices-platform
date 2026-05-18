@@ -18,7 +18,7 @@
         <view class="form-label">收货人</view>
         <view class="form-input">
           <input
-            v-model="formData.receiverName"
+            v-model="formData.name"
             placeholder="请输入收货人姓名"
             placeholder-class="input-placeholder"
           />
@@ -30,7 +30,7 @@
         <view class="form-label">手机号</view>
         <view class="form-input">
           <input
-            v-model="formData.receiverPhone"
+            v-model="formData.phone"
             type="number"
             maxlength="11"
             placeholder="请输入手机号"
@@ -40,13 +40,25 @@
       </view>
 
       <!-- 所在地区 -->
-      <view class="form-item" @click="openRegionPicker">
+      <view class="form-item">
+        <!-- #ifdef MP-WEIXIN -->
+        <picker mode="region" @change="onRegionChange">
+          <view class="form-label">所在地区</view>
+          <view class="form-input arrow-right">
+            <text :class="selectedRegion ? 'region-text' : 'input-placeholder'">
+              {{ selectedRegion || '请选择省/市/区' }}
+            </text>
+          </view>
+        </picker>
+        <!-- #endif -->
+        <!-- #ifdef H5 -->
         <view class="form-label">所在地区</view>
-        <view class="form-input arrow-right">
+        <view class="form-input arrow-right" @click="openRegionPicker">
           <text :class="selectedRegion ? 'region-text' : 'input-placeholder'">
             {{ selectedRegion || '请选择省/市/区' }}
           </text>
         </view>
+        <!-- #endif -->
       </view>
 
       <!-- 详细地址 -->
@@ -54,7 +66,7 @@
         <view class="form-label">详细地址</view>
         <view class="form-input">
           <textarea
-            v-model="formData.detailAddress"
+            v-model="formData.detail"
             placeholder="请输入详细地址"
             placeholder-class="input-placeholder"
             maxlength="100"
@@ -89,16 +101,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { API_BASE, ADDRESS_LIST } from '@/config/api'
+import { ref, computed } from 'vue'
+import { onShow } from '@dcloudio/uni-app'
+import { API_BASE } from '@/config/api'
+import { getCurrentUserId } from '@/utils/helpers'
+
+const ADDRESS_API = '/api/mall/address'
 
 interface AddressFormData {
-  receiverName: string
-  receiverPhone: string
+  name: string
+  phone: string
   province: string
   city: string
   district: string
-  detailAddress: string
+  detail: string
   isDefault: number
 }
 
@@ -107,12 +123,12 @@ const isEditMode = computed(() => addressId.value !== null)
 const selectedRegion = ref('')
 
 const formData = ref<AddressFormData>({
-  receiverName: '',
-  receiverPhone: '',
+  name: '',
+  phone: '',
   province: '',
   city: '',
   district: '',
-  detailAddress: '',
+  detail: '',
   isDefault: 0
 })
 
@@ -126,39 +142,67 @@ const onDefaultChange = (e: any) => {
   formData.value.isDefault = e.detail.value ? 1 : 0
 }
 
-// 打开地区选择器
+// 打开地区选择器 (H5)
 const openRegionPicker = () => {
-  uni.picker({
-    mode: 'region',
-    success: (res: any) => {
-      const { province, city, district } = res.result
-      formData.value.province = province.name
-      formData.value.city = city.name
-      formData.value.district = district.name
-      selectedRegion.value = `${province.name} ${city.name} ${district.name}`
+  uni.showModal({
+    title: '请输入所在地区',
+    editable: true,
+    placeholderText: '例如：广东省 深圳市 南山区',
+    success: (res) => {
+      if (res.confirm && res.content) {
+        const parts = res.content.trim().split(/\s+/)
+        if (parts.length >= 3) {
+          formData.value.province = parts[0]
+          formData.value.city = parts[1]
+          formData.value.district = parts[2]
+          selectedRegion.value = `${parts[0]} ${parts[1]} ${parts[2]}`
+        } else if (parts.length === 2) {
+          formData.value.province = parts[0]
+          formData.value.city = parts[1]
+          formData.value.district = ''
+          selectedRegion.value = `${parts[0]} ${parts[1]}`
+        } else if (parts.length === 1) {
+          formData.value.province = parts[0]
+          formData.value.city = ''
+          formData.value.district = ''
+          selectedRegion.value = parts[0]
+        }
+      }
+    },
+    fail: () => {
+      uni.showToast({ title: '请手动输入所在地区', icon: 'none' })
     }
   })
+}
+
+// 地区选择变化 (小程序)
+const onRegionChange = (e: any) => {
+  const { province, city, district } = e.detail.value
+  formData.value.province = province
+  formData.value.city = city
+  formData.value.district = district
+  selectedRegion.value = `${province} ${city} ${district}`
 }
 
 // 保存地址
 const saveAddress = async () => {
   // 验证
-  if (!formData.value.receiverName.trim()) {
+  if (!formData.value.name.trim()) {
     uni.showToast({ title: '请输入收货人姓名', icon: 'none' })
     return
   }
 
-  if (!formData.value.receiverPhone.trim() || formData.value.receiverPhone.length !== 11) {
+  if (!formData.value.phone.trim() || formData.value.phone.length !== 11) {
     uni.showToast({ title: '请输入11位手机号', icon: 'none' })
     return
   }
 
-  if (!formData.value.province || !formData.value.city || !formData.value.district) {
+  if (!formData.value.province) {
     uni.showToast({ title: '请选择所在地区', icon: 'none' })
     return
   }
 
-  if (!formData.value.detailAddress.trim()) {
+  if (!formData.value.detail.trim()) {
     uni.showToast({ title: '请输入详细地址', icon: 'none' })
     return
   }
@@ -166,13 +210,14 @@ const saveAddress = async () => {
   uni.showLoading({ title: '保存中...' })
 
   try {
-    const userId = uni.getStorageSync('userId') || '1'
+    // API path without /list suffix for save operations
     const url = addressId.value
-      ? `${API_BASE}${ADDRESS_LIST}/${addressId.value}`
-      : `${API_BASE}${ADDRESS_LIST}`
+      ? `${API_BASE}${ADDRESS_API}/${addressId.value}`
+      : `${API_BASE}${ADDRESS_API}`
 
     const method = addressId.value ? 'PUT' : 'POST'
 
+    const userId = getCurrentUserId()
     const res: any = await new Promise((resolve, reject) => {
       uni.request({
         url,
@@ -180,7 +225,8 @@ const saveAddress = async () => {
         data: formData.value,
         header: {
           'Content-Type': 'application/json',
-          'x-user-id': userId
+          'x-user-id': userId,
+          'x-tenant-header': 'default'
         },
         success: (r: any) => resolve(r),
         fail: reject
@@ -214,10 +260,10 @@ const deleteAddress = () => {
     success: async (res) => {
       if (res.confirm) {
         try {
-          const userId = uni.getStorageSync('userId') || '1'
+          const userId = getCurrentUserId()
           await new Promise((resolve, reject) => {
             uni.request({
-              url: `${API_BASE}${ADDRESS_LIST}/${addressId.value}`,
+              url: `${API_BASE}${ADDRESS_API}/${addressId.value}`,
               method: 'DELETE',
               header: { 'x-user-id': userId },
               success: (r: any) => {
@@ -247,12 +293,12 @@ const deleteAddress = () => {
 const loadAddressDetail = async (id: number) => {
   uni.showLoading({ title: '加载中...' })
   try {
-    const userId = uni.getStorageSync('userId') || '1'
+    const userId = getCurrentUserId()
     const res: any = await new Promise((resolve, reject) => {
       uni.request({
-        url: `${API_BASE}${ADDRESS_LIST}/${id}`,
+        url: `${API_BASE}${ADDRESS_API}/${id}`,
         method: 'GET',
-        header: { 'x-user-id': userId },
+        header: { 'x-user-id': userId, 'x-tenant-header': 'default' },
         success: (r: any) => resolve(r),
         fail: reject
       })
@@ -261,12 +307,12 @@ const loadAddressDetail = async (id: number) => {
     if (res.statusCode === 200 && res.data) {
       const data = res.data
       formData.value = {
-        receiverName: data.receiverName || '',
-        receiverPhone: data.receiverPhone || '',
+        name: data.name || '',
+        phone: data.phone || '',
         province: data.province || '',
         city: data.city || '',
         district: data.district || '',
-        detailAddress: data.detailAddress || '',
+        detail: data.detail || '',
         isDefault: data.isDefault || 0
       }
 
@@ -282,7 +328,7 @@ const loadAddressDetail = async (id: number) => {
   }
 }
 
-onMounted(() => {
+onShow(() => {
   const pages = getCurrentPages()
   const currentPage = pages[pages.length - 1]
   const query = (currentPage as any).options || {}
@@ -290,6 +336,19 @@ onMounted(() => {
   if (query.id) {
     addressId.value = Number(query.id)
     loadAddressDetail(addressId.value)
+  } else {
+    // Reset form for new address
+    addressId.value = null
+    formData.value = {
+      name: '',
+      phone: '',
+      province: '',
+      city: '',
+      district: '',
+      detail: '',
+      isDefault: 0
+    }
+    selectedRegion.value = ''
   }
 })
 </script>

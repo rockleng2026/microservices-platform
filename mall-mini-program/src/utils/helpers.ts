@@ -33,7 +33,21 @@ export const getFullImageUrl = (relativePath) => {
 }
 
 // 默认头像 - base64 SVG
-export const DEFAULT_AVATAR_DATAURI = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+PHJlY3QgZmlsbD0iI2Y1ZjVmNSIgd2lkdGg9IjEyMCIgaGVpZ2h0PSIxMjAiLz48Y2lyY2xlIGN4PSI2MCIgY3k9IjQwIiByPSIyMCIgZmlsbD0iI2M4YzhjOCIvPjx0ZXh0IHg9IjYwIiB5PSI0NSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1mYW1pbHk9IkFyaWFsIiBmb250LXNpemU9IjMwIiBmaWxsPSJ3aGl0ZSIgdGV4dC1kb21pbmFudC1iYXNlbGluZT0ibWlkZGxlIj5Vc2VyPC90ZXh0Pjwvc3ZnPg=='
+export const DEFAULT_AVATAR_DATAURI = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMjAiIGhlaWdodD0iMTIwIiB2aWV3Qm94PSIwIDAgMTIwIDEyMCI+PHJlY3QgZmlsbD0iI2Y1ZjVmNSIgd2lkdGg9IjEyMCIgaGVpZ2hodD0iMTIwIi8+PGNpcmNsZSBjeD0iNjAiIGN5PSI0MCIgcj0iMjAiIGZpbGw9IiNjOGM4YzgiLz48dGV4dCB4PSI2MCIgeT0iNDUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIzMCIgZmlsbD0id2hpdGUiIHRleHQtZG9taW5hbnQtYmFzZWxpbmU9Im1pZGRsZSI+VXNlcjwvdGV4dD48L3N2Zz4='
 
 // 默认头像路径（本地静态资源）
 export const DEFAULT_AVATAR = '/static/default-avatar.png'
+
+// 获取当前登录用户ID（从 userInfo 中获取）
+export const getCurrentUserId = (): string => {
+  const userInfo = uni.getStorageSync('userInfo')
+  return userInfo?.userId ? String(userInfo.userId) : '1'
+}
+
+// 获取请求头（通用）
+export const getCommonHeaders = () => {
+  return {
+    'x-user-id': getCurrentUserId(),
+    'x-tenant-header': 'default'
+  }
+}

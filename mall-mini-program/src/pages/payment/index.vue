@@ -68,6 +68,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { API_BASE, PAY_CREATE, ORDER_DETAIL } from '@/config/api'
+import { getCurrentUserId } from '@/utils/helpers'
 
 const orderId = ref<string>('')
 const orderInfo = ref<any>({})
@@ -97,7 +98,7 @@ const startCountdown = () => {
 
 // Load order info
 const loadOrderInfo = () => {
-  const userId = uni.getStorageSync('userId') || '1'
+  const userId = getCurrentUserId()
   uni.request({
     url: `${API_BASE}${ORDER_DETAIL}/${orderId.value}`,
     method: 'GET',
@@ -137,7 +138,7 @@ const handlePay = () => {
   isPaying.value = true
   uni.showLoading({ title: '正在唤起支付...' })
 
-  const userId = uni.getStorageSync('userId') || '1'
+  const userId = getCurrentUserId()
 
   uni.request({
     url: `${API_BASE}${PAY_CREATE}`,

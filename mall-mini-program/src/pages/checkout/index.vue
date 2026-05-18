@@ -163,8 +163,11 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { onLoad, onShow } from '@dcloudio/uni-app'
 import { API_BASE, ORDER_CREATE, ADDRESS_LIST, COUPON_LIST } from '@/config/api'
 import { cartStore, type CartItem } from '@/stores/cart'
+import { getGoodsDetail } from '@/services/goods'
+import { getCurrentUserId } from '@/utils/helpers'
 import { getFullImageUrl, DEFAULT_AVATAR_DATAURI } from '@/utils/helpers'
 
 // Helper to get image src with fallback
@@ -215,15 +218,18 @@ const finalAmount = computed(() => {
 
 // Load address list
 const loadAddressList = () => {
-  const userId = uni.getStorageSync('userId') || '1'
+  const userId = getCurrentUserId()
   uni.request({
     url: `${API_BASE}${ADDRESS_LIST}`,
     method: 'GET',
-    data: { userId },
-    header: { 'x-user-id': userId },
+    header: {
+      'x-user-id': userId,
+      'x-tenant-header': 'default'
+    },
     success: (res: any) => {
       if (res.statusCode === 200 && res.data) {
-        addressList.value = Array.isArray(res.data) ? res.data : []
+        // API返回格式: { datas: [...], resp_code: 0 }
+        addressList.value = Array.isArray(res.data.datas) ? res.data.datas : []
         // Auto-select default address
         const defaultAddr = addressList.value.find((a: any) => a.isDefault === 1)
         if (defaultAddr) {
@@ -238,12 +244,12 @@ const loadAddressList = () => {
 
 // Load coupon list
 const loadCouponList = () => {
-  const userId = uni.getStorageSync('userId') || '1'
+  const userId = getCurrentUserId()
   uni.request({
     url: `${API_BASE}${COUPON_LIST}`,
     method: 'GET',
     data: { userId, minAmount: productTotal.value },
-    header: { 'x-user-id': userId },
+    header: { 'x-user-id': userId, 'x-tenant-header': 'default' },
     success: (res: any) => {
       if (res.statusCode === 200 && res.data) {
         couponList.value = Array.isArray(res.data) ? res.data : []
@@ -268,7 +274,9 @@ const selectAddress = (addr: any) => {
 
 const navigateToAddAddress = () => {
   closeAddressDrawer()
-  uni.navigateTo({ url: '/pages/address/edit' })
+  uni.navigateTo({
+    url: '/pages/address/edit'
+  })
 }
 
 // Coupon picker
@@ -301,7 +309,7 @@ const submitOrder = () => {
   if (isSubmitting.value) return
   isSubmitting.value = true
 
-  const userId = uni.getStorageSync('userId') || '1'
+  const userId = getCurrentUserId()
   const skuIds = orderItems.value.map(item => item.skuId)
 
   uni.request({
@@ -333,8 +341,23 @@ const submitOrder = () => {
   })
 }
 
+// Check if user is logged in
+const isLoggedIn = (): boolean => {
+  const userInfo = uni.getStorageSync('userInfo')
+  return !!(userInfo && userInfo.userId)
+}
+
 // Page onLoad
-onLoad((options: any) => {
+onLoad(async (options: any) => {
+  // Check login first
+  if (!isLoggedIn()) {
+    uni.showToast({ title: '请先登录', icon: 'none' })
+    setTimeout(() => {
+      uni.navigateTo({ url: '/pages/login/index' })
+    }, 1000)
+    return
+  }
+
   // Get skuIds from query param
   let skuIds: number[] = []
   if (options.skuIds) {
@@ -349,8 +372,28 @@ onLoad((options: any) => {
     orderItems.value = cartStore.getSelectedItems()
   } else {
     // Filter cart items by skuIds
-    const allItems = cartStore.getItems()
+    const allItems = cartStore.cartItems
     orderItems.value = allItems.filter(item => skuIds.includes(item.skuId))
+
+    // If still no items (direct buy without cart), fetch goods detail
+    if (orderItems.value.length === 0 && options.goodsId) {
+      try {
+        const detail = await getGoodsDetail(Number(options.goodsId))
+        const sku = detail.skus?.find((s: any) => s.id === Number(options.skuId))
+        if (sku) {
+          orderItems.value = [{
+            skuId: sku.id,
+            quantity: 1,
+            goodsName: detail.name,
+            goodsImage: detail.mainImage,
+            price: sku.price,
+            specs: sku.specs
+          }]
+        }
+      } catch (e) {
+        console.error('Failed to fetch goods detail', e)
+      }
+    }
   }
 
   if (orderItems.value.length === 0) {
@@ -362,8 +405,152 @@ onLoad((options: any) => {
   loadAddressList()
   loadCouponList()
 })
+
+// Reload address list when page is shown (tabBar page)
+onShow(() => {
+  if (isLoggedIn()) {
+    loadAddressList()
+  }
+})
 </script>
 
 <style scoped lang="scss">
-@import '@/pages/checkout/checkout.less';
+.checkout-page {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  position: relative;
+}
+
+.checkout-scroll {
+  height: calc(100vh - 60px);
+}
+
+.section {
+  background-color: #fff;
+  margin-bottom: 8px;
+  padding: 12px 16px;
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+}
+
+.address-section { cursor: pointer; }
+.address-content, .coupon-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.address-info { flex: 1; }
+.address-name { font-size: 15px; font-weight: 600; color: #333; margin-bottom: 4px; }
+.address-detail { font-size: 13px; color: #666; line-height: 1.4; }
+.address-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 14px;
+  color: #999;
+}
+.coupon-section { cursor: pointer; }
+.coupon-value { font-size: 14px; color: #ff5500; }
+.coupon-placeholder { font-size: 14px; color: #999; }
+
+.order-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid #f0f0f0;
+  &:first-of-type { border-top: none; }
+}
+.item-image { width: 60px; height: 60px; border-radius: 4px; background-color: #f5f5f5; flex-shrink: 0; }
+.item-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+.item-name { font-size: 14px; color: #333; line-height: 1.3; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.item-specs { font-size: 12px; color: #999; margin-top: 2px; }
+.item-price-row { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
+.item-price { font-size: 14px; color: #ff5500; font-weight: 600; }
+.item-quantity { font-size: 13px; color: #999; }
+
+.remark-input {
+  width: 100%; min-height: 80px; padding: 10px; border: 1px solid #e8e8e8;
+  border-radius: 8px; font-size: 14px; color: #333; resize: none; box-sizing: border-box;
+  &:focus { border-color: #ff5500; }
+}
+
+.submit-bar {
+  position: fixed; bottom: 0; left: 0; right: 0; height: 60px;
+  background-color: #fff; display: flex; align-items: center; justify-content: space-between;
+  padding: 0 16px; box-shadow: 0 -2px 8px rgba(0,0,0,0.06); z-index: 100;
+}
+.total-info { display: flex; align-items: baseline; gap: 4px; }
+.total-label { font-size: 14px; color: #666; }
+.total-amount { font-size: 20px; font-weight: 700; color: #ff5500; }
+.submit-btn {
+  background-color: #ff5500; color: #fff; font-size: 16px; font-weight: 600;
+  padding: 12px 32px; border-radius: 24px;
+  &.disabled { background-color: #ccc; pointer-events: none; }
+}
+
+.address-drawer-mask, .coupon-popup-mask {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background-color: rgba(0,0,0,0.5); z-index: 200;
+}
+.address-drawer, .coupon-popup {
+  position: fixed; bottom: 0; left: 0; right: 0; max-height: 60vh;
+  background-color: #fff; border-radius: 16px 16px 0 0; z-index: 201;
+  transform: translateY(100%); transition: transform 0.3s ease;
+  &.open { transform: translateY(0); }
+}
+.drawer-header, .popup-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px; border-bottom: 1px solid #f0f0f0;
+}
+.drawer-title, .popup-title { font-size: 16px; font-weight: 600; color: #333; }
+.drawer-close, .popup-close { padding: 4px; }
+.drawer-content, .popup-content { max-height: calc(60vh - 120px); padding: 0 16px; }
+
+.address-item {
+  display: flex; align-items: flex-start; gap: 10px; padding: 14px 0;
+  border-bottom: 1px solid #f5f5f5; cursor: pointer;
+  &.selected { background-color: #fff5f0; margin: 0 -16px; padding-left: 16px; padding-right: 16px; border-left: 3px solid #ff5500; }
+  &:last-child { border-bottom: none; }
+}
+.address-item-radio { padding-top: 2px; }
+.address-item-info { flex: 1; }
+.address-item-name { font-size: 15px; font-weight: 600; color: #333; margin-bottom: 4px; }
+.address-item-detail { font-size: 13px; color: #666; line-height: 1.4; }
+.address-empty { text-align: center; padding: 32px 0; font-size: 14px; color: #999; }
+.drawer-footer { padding: 12px 16px; border-top: 1px solid #f0f0f0; }
+.add-address-btn {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  width: 100%; height: 44px; background-color: #ff5500; color: #fff;
+  font-size: 15px; font-weight: 600; border-radius: 8px;
+}
+
+.coupon-popup { max-height: 70vh; }
+.popup-content { max-height: calc(70vh - 120px); }
+.coupon-item {
+  display: flex; align-items: center; gap: 10px; padding: 14px 0;
+  border-bottom: 1px solid #f5f5f5; cursor: pointer;
+  &.selected { background-color: #fff5f0; margin: 0 -16px; padding-left: 16px; padding-right: 16px; border-left: 3px solid #ff5500; }
+  &:last-child { border-bottom: none; }
+  &.no-coupon { border-top: 1px solid #f0f0f0; margin-top: 8px; padding-top: 16px; }
+}
+.coupon-item-radio { padding-top: 2px; }
+.coupon-item-info { flex: 1; }
+.coupon-item-name { font-size: 14px; font-weight: 600; color: #333; margin-bottom: 2px; }
+.coupon-item-desc { font-size: 12px; color: #666; margin-bottom: 2px; }
+.coupon-item-time { font-size: 11px; color: #999; }
+.coupon-item-discount { font-size: 18px; font-weight: 700; color: #ff5500; }
+.popup-footer { padding: 12px 16px; border-top: 1px solid #f0f0f0; }
+.confirm-coupon-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 44px; background-color: #ff5500; color: #fff;
+  font-size: 15px; font-weight: 600; border-radius: 8px;
+}
 </style>

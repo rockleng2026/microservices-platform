@@ -121,8 +121,8 @@ import { onShow } from '@dcloudio/uni-app'
 import { cartStore } from '@/stores/cart'
 
 onMounted(async () => {
-  console.log('[cart:page] onMounted, calling reload')
-  await cartStore.reload()
+  console.log('[cart:page] onMounted, calling init')
+  await cartStore.init()
 })
 
 // Also reload on page show (covers hot reload scenarios)

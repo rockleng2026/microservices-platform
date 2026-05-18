@@ -162,7 +162,7 @@ const buyNow = () => {
   }
   const skuId = selectedSku.value.id
   const goodsId = goodsDetail.value.id
-  uni.navigateTo({ url: `/pages/checkout/index?skuId=${skuId}&goodsId=${goodsId}` })
+  uni.navigateTo({ url: `/pages/checkout/index?skuId=${skuId}&goodsId=${goodsId}&quantity=${quantity.value}` })
 }
 
 // 页面加载

@@ -105,24 +105,56 @@ export const createOrder = (params: OrderCreateParams): Promise<Order> => {
   })
 }
 
-// Tab status mapping: tab index -> status filter
-// 0: all (no status param), 1: pending_payment, 2: paid, 3: shipped, 4: delivered+completed
+// Tab status mapping: tab index -> status filter (backend uses English enums)
+// 0: all (no status param), 1: PENDING, 2: PAID, 3: SHIPPED, 4: DELIVERED/COMPLETED
 export const TAB_STATUS_MAP: (string | undefined)[] = [
-  undefined,           // 0: all
-  'pending_payment',  // 1: 待付款
-  'paid',             // 2: 待发货
-  'shipped',          // 3: 待收货
-  'delivered'         // 4: 已完成 (delivered or completed)
+  undefined,      // 0: all
+  'PENDING',      // 1: 待付款
+  'PAID',         // 2: 待发货
+  'SHIPPED',      // 3: 已发货
+  'COMPLETED'     // 4: 已完成
 ]
 
+// Backend status enum to integer mapping
+const STATUS_ENUM_TO_INT: Record<string, number> = {
+  PENDING: 1,
+  PAID: 2,
+  SHIPPED: 3,
+  COMPLETED: 4,
+  CANCELLED: 5,
+  REFUNDING: 6,
+  REFUNDED: 7,
+  CLOSED: 8
+}
+
 // Get order list
-export const getOrderList = (status: string | undefined, page: number = 1, pageSize: number = 10): Promise<OrderListResponse> => {
+export const getOrderList = (status: string | undefined, page: number = 1, pageSize: number = 10): Promise<{ list: any[], total: number, page: number, pageSize: number }> => {
   const parts: string[] = []
-  if (status) parts.push(`status=${status}`)
-  parts.push(`page=${page}`)
-  parts.push(`pageSize=${pageSize}`)
-  return request<OrderListResponse>(`${ORDER_LIST}?${parts.join('&')}`, {
-    method: 'GET'
+  if (status) {
+    const statusInt = STATUS_ENUM_TO_INT[status]
+    if (statusInt !== undefined) parts.push(`status=${statusInt}`)
+  }
+  return new Promise((resolve, reject) => {
+    uni.request({
+      url: `${API_BASE}${ORDER_LIST}?${parts.join('&')}`,
+      method: 'GET',
+      header: getCommonHeaders(),
+      success: (res: any) => {
+        if (res.statusCode === 200 && res.data) {
+          // Backend returns { datas: [...orders], resp_code, resp_msg }
+          const orders = res.data.datas || []
+          resolve({
+            list: orders,
+            total: orders.length,
+            page,
+            pageSize
+          })
+        } else {
+          reject(res)
+        }
+      },
+      fail: reject
+    })
   })
 }
 

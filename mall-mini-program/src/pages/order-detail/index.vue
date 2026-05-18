@@ -172,26 +172,28 @@ const orderId = ref<number>(0)
 const order = ref<Order | null>(null)
 const isLoading = ref(false)
 
-// Status text mapping
+// Status text mapping (backend returns English enums)
 const statusTextMap: Record<string, string> = {
-  pending_payment: '待付款',
-  paid: '待发货',
-  shipped: '运输中',
-  delivered: '待收货',
-  completed: '已完成',
-  cancelled: '已取消',
-  refunding: '退款中'
+  PENDING: '待付款',
+  PAID: '待发货',
+  SHIPPED: '已发货',
+  DELIVERED: '待收货',
+  COMPLETED: '已完成',
+  CANCELLED: '已取消',
+  REFUNDING: '退款中',
+  REFUNDED: '已退款',
+  CLOSED: '已关闭'
 }
 
 // Status descriptions
 const statusDescMap: Record<string, string> = {
-  pending_payment: '请在30分钟内完成支付',
-  paid: '商家正在准备商品',
-  shipped: '商品已在运输途中',
-  delivered: '请确认收到货物',
-  completed: '交易已完成',
-  cancelled: '订单已取消',
-  refunding: '退款申请处理中'
+  PENDING: '请在30分钟内完成支付',
+  PAID: '商家正在准备商品',
+  SHIPPED: '商品已在运输途中',
+  DELIVERED: '请确认收到货物',
+  COMPLETED: '交易已完成',
+  CANCELLED: '订单已取消',
+  REFUNDING: '退款申请处理中'
 }
 
 const getStatusText = (status: string) => statusTextMap[status] || status

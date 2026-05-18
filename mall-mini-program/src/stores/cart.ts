@@ -56,9 +56,19 @@ const state = reactive<{
 // Init cart from server
 const init = async () => {
   console.log('[cart:store] init called, _inited=', state._inited, 'isLoggedIn=', isLoggedIn())
-  if (state._inited || !isLoggedIn()) {
-    console.log('[cart:store] init skipping: _inited already', state._inited, 'or not logged in')
+  if (!isLoggedIn()) {
+    console.log('[cart:store] init skipping: not logged in')
     return
+  }
+  if (state._inited) {
+    console.log('[cart:store] init skipping: already inited, cartItems count=', state.cartItems.length)
+    // If cart is empty but we're logged in, force refresh from server
+    if (state.cartItems.length === 0) {
+      console.log('[cart:store] cart is empty, refreshing from server')
+      state._inited = false
+    } else {
+      return
+    }
   }
   state._inited = true
   const userId = getUserId()

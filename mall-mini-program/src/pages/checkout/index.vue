@@ -46,7 +46,11 @@
             <view class="item-specs" v-if="item.specs">{{ item.specs }}</view>
             <view class="item-price-row">
               <text class="item-price">¥{{ (item.price || 0).toFixed(2) }}</text>
-              <text class="item-quantity">x{{ item.quantity }}</text>
+              <view class="item-quantity-stepper">
+                <view class="qty-btn" @click="decreaseQty(item)">-</view>
+                <text class="qty-num">{{ item.quantity }}</text>
+                <view class="qty-btn" @click="increaseQty(item)">+</view>
+              </view>
             </view>
           </view>
         </view>
@@ -181,6 +185,9 @@ const getImageSrc = (path: string) => {
 // Order items from skuIds
 const orderItems = ref<CartItem[]>([])
 
+// Editable quantity for direct buy
+const editQuantity = ref(1)
+
 // Address state
 const selectedAddress = ref<any>(null)
 const addressList = ref<any[]>([])
@@ -196,6 +203,17 @@ const remark = ref('')
 
 // Submit state
 const isSubmitting = ref(false)
+
+// Quantity controls
+const increaseQty = (item: any) => {
+  item.quantity = (item.quantity || 1) + 1
+}
+
+const decreaseQty = (item: any) => {
+  if (item.quantity > 1) {
+    item.quantity = item.quantity - 1
+  }
+}
 
 // Computed amounts
 const productTotal = computed(() => {
@@ -310,27 +328,37 @@ const submitOrder = () => {
   isSubmitting.value = true
 
   const userId = getCurrentUserId()
-  const skuIds = orderItems.value.map(item => item.skuId)
+
+  // Build items array for direct buy
+  const items = orderItems.value.map(item => ({
+    skuId: item.skuId,
+    quantity: item.quantity || 1,
+    goodsId: item.goodsId || null
+  }))
 
   uni.request({
     url: `${API_BASE}${ORDER_CREATE}`,
     method: 'POST',
     data: {
-      userId,
-      skuIds,
+      goodsType: 1, // 1=实物
       addressId: selectedAddress.value.id,
-      couponId: selectedCoupon.value?.id || null,
+      items,
       remark: remark.value
     },
-    header: { 'x-user-id': userId, 'Content-Type': 'application/json' },
+    header: {
+      'Content-Type': 'application/json',
+      'x-user-id': userId,
+      'x-tenant-header': 'default'
+    },
     success: (res: any) => {
-      if (res.statusCode === 200 && res.data && res.data.orderId) {
+      if (res.statusCode === 200 && res.data && res.data.datas) {
+        const orderId = res.data.datas
         uni.showToast({ title: '订单创建成功', icon: 'success' })
         setTimeout(() => {
-          uni.navigateTo({ url: `/pages/payment/index?orderId=${res.data.orderId}` })
+          uni.navigateTo({ url: `/pages/payment/index?orderId=${orderId}` })
         }, 500)
       } else {
-        uni.showToast({ title: res.data?.message || '创建订单失败', icon: 'none' })
+        uni.showToast({ title: res.data?.resp_msg || '创建订单失败', icon: 'none' })
         isSubmitting.value = false
       }
     },
@@ -358,14 +386,21 @@ onLoad(async (options: any) => {
     return
   }
 
+  // Ensure cart is loaded before accessing cartItems (cart init is async)
+  await cartStore.init()
+
   // Get skuIds from query param
   let skuIds: number[] = []
   if (options.skuIds) {
-    skuIds = options.skuIds.split(',').map(Number)
+    skuIds = options.skuIds.split(',').map((id: string) => Number(id))
   } else if (options.skuId) {
     // Single skuId from direct buy
     skuIds = [Number(options.skuId)]
   }
+
+  console.log('[checkout] options:', options)
+  console.log('[checkout] skuIds:', skuIds)
+  console.log('[checkout] cartItems count:', cartStore.cartItems.length)
 
   if (skuIds.length === 0) {
     // Fall back to selected items from cart
@@ -373,25 +408,52 @@ onLoad(async (options: any) => {
   } else {
     // Filter cart items by skuIds
     const allItems = cartStore.cartItems
-    orderItems.value = allItems.filter(item => skuIds.includes(item.skuId))
+    console.log('[checkout] allItems:', JSON.stringify(allItems.map(i => ({ skuId: i.skuId, name: i.goodsName }))))
+    orderItems.value = allItems.filter((item: any) => skuIds.includes(item.skuId))
+    console.log('[checkout] filtered orderItems:', JSON.stringify(orderItems.value.map(i => ({ skuId: i.skuId, name: i.goodsName }))))
 
     // If still no items (direct buy without cart), fetch goods detail
     if (orderItems.value.length === 0 && options.goodsId) {
       try {
         const detail = await getGoodsDetail(Number(options.goodsId))
         const sku = detail.skus?.find((s: any) => s.id === Number(options.skuId))
-        if (sku) {
-          orderItems.value = [{
-            skuId: sku.id,
-            quantity: 1,
-            goodsName: detail.name,
-            goodsImage: detail.mainImage,
-            price: sku.price,
-            specs: sku.specs
-          }]
+        // Direct buy path: use quantity from options if provided
+          const buyQuantity = options.quantity ? Number(options.quantity) : 1
+          if (sku) {
+            orderItems.value = [{
+              skuId: sku.id,
+              quantity: buyQuantity,
+              goodsName: detail.name,
+              goodsImage: detail.mainImage,
+              price: sku.price,
+              specs: sku.specs
+            }]
+            console.log('[checkout] direct buy orderItems:', JSON.stringify(orderItems.value))
         }
       } catch (e) {
         console.error('Failed to fetch goods detail', e)
+      }
+    } else {
+      // Cart has items but goodsName is missing — fetch goods detail to fill missing info
+      if (orderItems.value.length > 0 && !orderItems.value[0].goodsName && options.goodsId) {
+        try {
+          console.log('[checkout] cart item missing goodsName, fetching goods detail...')
+          const detail = await getGoodsDetail(Number(options.goodsId))
+          const sku = detail.skus?.find((s: any) => s.id === Number(skuIds[0]))
+          if (sku) {
+            orderItems.value = [{
+              skuId: sku.id,
+              quantity: orderItems.value[0].quantity || 1,
+              goodsName: detail.name,
+              goodsImage: detail.mainImage,
+              price: sku.price,
+              specs: sku.specs
+            }]
+            console.log('[checkout] enriched orderItems:', JSON.stringify(orderItems.value))
+          }
+        } catch (e) {
+          console.error('Failed to enrich goods detail', e)
+        }
       }
     }
   }
@@ -407,8 +469,9 @@ onLoad(async (options: any) => {
 })
 
 // Reload address list when page is shown (tabBar page)
-onShow(() => {
+onShow(async () => {
   if (isLoggedIn()) {
+    await cartStore.init()
     loadAddressList()
   }
 })
@@ -475,6 +538,30 @@ onShow(() => {
 .item-price-row { display: flex; align-items: center; justify-content: space-between; margin-top: 4px; }
 .item-price { font-size: 14px; color: #ff5500; font-weight: 600; }
 .item-quantity { font-size: 13px; color: #999; }
+
+.item-quantity-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.qty-btn {
+  width: 24px;
+  height: 24px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #666;
+  &:active { background: #e8e8e8; }
+}
+.qty-num {
+  min-width: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: #333;
+}
 
 .remark-input {
   width: 100%; min-height: 80px; padding: 10px; border: 1px solid #e8e8e8;

@@ -69,17 +69,17 @@
         <!-- Card Footer: Price + Time + Actions -->
         <view class="card-footer">
           <view class="footer-left">
-            <text class="final-amount">实付: ¥{{ order.finalAmount.toFixed(2) }}</text>
+            <text class="final-amount">实付: ¥{{ (order.payAmount || order.totalAmount || 0).toFixed(2) }}</text>
             <text class="create-time">{{ formatTime(order.createdAt) }}</text>
           </view>
           <view class="footer-actions">
             <!-- pending_payment: 取消 + 去支付 -->
-            <template v-if="order.status === 'pending_payment'">
+            <template v-if="order.status === 'PENDING'">
               <view class="btn btn-destroy" @click.stop="onCancelOrder(order.id)">取消</view>
               <view class="btn btn-accent" @click.stop="goToPayment(order.id)">去支付</view>
             </template>
-            <!-- delivered: 确认收货 -->
-            <template v-else-if="order.status === 'delivered'">
+            <!-- DELIVERED: 确认收货 -->
+            <template v-else-if="order.status === 'DELIVERED'">
               <view class="btn btn-accent" @click.stop="onConfirmReceipt(order.id)">确认收货</view>
             </template>
           </view>
@@ -125,15 +125,17 @@ const statusStyles: Record<string, { bg: string; color: string }> = {
   refunding: { bg: '#fff1f0', color: '#ff4d4f' }
 }
 
-// Status text mapping
+// Status text mapping (backend returns English enums: PENDING, PAID, SHIPPED, etc.)
 const statusTextMap: Record<string, string> = {
-  pending_payment: '待付款',
-  paid: '待发货',
-  shipped: '运输中',
-  delivered: '待收货',
-  completed: '已完成',
-  cancelled: '已取消',
-  refunding: '退款中'
+  PENDING: '待付款',
+  PAID: '待发货',
+  SHIPPED: '已发货',
+  DELIVERED: '待收货',
+  COMPLETED: '已完成',
+  CANCELLED: '已取消',
+  REFUNDING: '退款中',
+  REFUNDED: '已退款',
+  CLOSED: '已关闭'
 }
 
 const getStatusText = (status: string) => statusTextMap[status] || status

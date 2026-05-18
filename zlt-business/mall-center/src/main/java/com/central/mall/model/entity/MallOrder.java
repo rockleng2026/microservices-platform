@@ -34,15 +34,15 @@ public class MallOrder {
 
     public String getStatusName() {
         switch (status) {
-            case 1: return "待付款";
-            case 2: return "已付款";
-            case 3: return "已发货";
-            case 4: return "已完成";
-            case 5: return "已取消";
-            case 6: return "退款中";
-            case 7: return "已退款";
-            case 8: return "已关闭";
-            default: return "未知";
+            case 1: return "PENDING";
+            case 2: return "PAID";
+            case 3: return "SHIPPED";
+            case 4: return "COMPLETED";
+            case 5: return "CANCELLED";
+            case 6: return "REFUNDING";
+            case 7: return "REFUNDED";
+            case 8: return "CLOSED";
+            default: return "UNKNOWN";
         }
     }
 

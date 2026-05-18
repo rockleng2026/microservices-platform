@@ -1,5 +1,5 @@
 ---
-status: testing
+status: partial
 phase: 09-小程序交易流程
 source: [09-01-SUMMARY.md, 09-02-SUMMARY.md, 09-03-SUMMARY.md, 09-04-SUMMARY.md, 09-05-SUMMARY.md, 09-06-SUMMARY.md]
 started: 2026-05-10T11:45:00Z
@@ -18,10 +18,8 @@ awaiting: user response
 
 ### 1. 小程序登录功能验证
 expected: 在H5运行环境下，点击"我的"页面中的"点击登录"区域，应跳转到登录页面。
-result: issue
-reported: "我h5运行时，浏览器打开页面，点击我的然后点击登录没有反应"
-severity: blocker
-reported_at: 2026-05-13
+result: pass
+note: "2026-05-14: 登录页面跳转已修复并验证通过。微信登录按钮显示'微信登录开发中'为预期行为（功能待实现）。"
 
 ### 2. 购物车 - 添加商品到购物车
 expected: POST /api/mall/cart 返回成功，购物车列表显示添加的商品
@@ -100,49 +98,39 @@ result: pass
 ## Summary
 
 total: 19
-passed: 15
-issues: 1
+passed: 16
+issues: 0
 pending: 0
 skipped: 0
 blocked: 3
 
 ## Gaps
 
-- truth: "在H5运行环境下，点击"我的"页面中的"点击登录"区域，应跳转到登录页面"
-  status: failed
-  reason: "User reported: 我h5运行时，浏览器打开页面，点击我的然后点击登录没有反应"
-  severity: blocker
-  test: 1
-  artifacts: []
-  missing: []
-  root_cause: "登录页面 /pages/login/index 在 pages.json 中不存在，且 src/pages/login/ 目录也不存在。user/index.vue 中的 goLogin 函数调用 uni.navigateTo({ url: '/pages/login/index' }) 会导致页面跳转失败且无任何提示。"
+[none - 登录跳转问题已修复]
 
 ## Issues Found
 
-### ISSUE-09-FRONTEND-01: 小程序登录页面缺失 (blocker)
+### ISSUE-09-01: 微信登录功能待实现
 
 **问题描述：**
-在H5运行环境下，点击"我的"页面中的"点击登录"区域无反应
+- 微信登录按钮显示"微信登录开发中"，未实现真正的微信登录
 
-**根因分析：**
-1. `user/index.vue` 第67-69行的 `goLogin` 函数调用 `uni.navigateTo({ url: '/pages/login/index' })`
-2. `/pages/login/index` 页面在 `pages.json` 中不存在
-3. `src/pages/login/` 目录也不存在
-4. `uni.navigateTo` 跳转不存在的页面会静默失败，无错误提示
+**根因：**
+微信登录需要调用 wx.login() 获取 code，然后调用后端接口用 code 换取 openid。当前 H5 环境下的微信登录按钮显示"微信登录开发中"。
 
-**影响范围：**
-- 用户无法登录小程序
-- 所有需要登录的功能都无法使用
+**实现建议：**
+1. 前端：调用 uni.login() 获取 code，发送到后端
+2. 后端：调用微信接口用 code 换取 openid
+3. 根据 openid 判断用户是否存在，存在则登录，不存在则创建用户
 
-**修复方案：**
-1. 创建 `src/pages/login/index.vue` 登录页面组件
-2. 在 `pages.json` 中添加登录页面路由配置
-3. 实现登录表单（手机号+验证码 或 用户名+密码）
-4. 调用后端登录API获取token
+**当前状态：**
+- 登录页面已就绪
+- 用户名密码登录已实现
+- 微信登录需要真实的微信小程序环境才能完整测试
 
 ---
 
-### ISSUE-09-01: WeChat Pay配置不完整
+### ISSUE-09-02: WeChat Pay配置不完整
 
 **问题描述：**
 - POST /api/mall/order/{id}/pay 返回错误：WeChat Pay configuration incomplete
@@ -159,7 +147,7 @@ blocked: 3
 
 ---
 
-### ISSUE-09-02: 退款申请中文reason偶尔失败
+### ISSUE-09-03: 退款申请中文reason偶尔失败
 
 **问题描述：**
 - POST /api/mall/refund 使用中文reason在某些情况下返回400

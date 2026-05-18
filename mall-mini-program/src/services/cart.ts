@@ -1,4 +1,4 @@
-import { API_BASE, CART_API, CART_SYNC_API } from '@/config/api'
+import { API_BASE, CART_API, CART_SYNC_API, TENANT_ID } from '@/config/api'
 import type { CartItem } from '@/stores/cart'
 import { getCommonHeaders } from '@/utils/helpers'
 

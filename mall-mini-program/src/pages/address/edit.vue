@@ -177,11 +177,12 @@ const openRegionPicker = () => {
 
 // 地区选择变化 (小程序)
 const onRegionChange = (e: any) => {
-  const { province, city, district } = e.detail.value
-  formData.value.province = province
-  formData.value.city = city
-  formData.value.district = district
-  selectedRegion.value = `${province} ${city} ${district}`
+  // picker mode="region" 返回的是数组 [province, city, district]，不是对象
+  const [province, city, district] = e.detail.value
+  formData.value.province = province || ''
+  formData.value.city = city || ''
+  formData.value.district = district || ''
+  selectedRegion.value = `${province || ''} ${city || ''} ${district || ''}`.trim()
 }
 
 // 保存地址

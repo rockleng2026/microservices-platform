@@ -103,16 +103,28 @@ const loadOrderInfo = () => {
     url: `${API_BASE}${ORDER_DETAIL}/${orderId.value}`,
     method: 'GET',
     data: { userId },
-    header: { 'x-user-id': userId },
+    header: { 'x-user-id': userId, 'x-tenant-header': 'default' },
     success: (res: any) => {
-      if (res.statusCode === 200 && res.data) {
-        orderInfo.value = res.data
+      if (res.statusCode === 200 && res.data && res.data.datas) {
+        const serverData = res.data.datas
+        // Normalize: order info may be nested under 'order' or flat
+        const serverStatus = serverData.order?.status
+        const statusName = serverData.statusName || (serverStatus === 1 ? 'PENDING' : serverStatus === 2 ? 'PAID' : serverStatus === 3 ? 'SHIPPED' : serverStatus === 4 ? 'COMPLETED' : serverStatus === 5 ? 'CANCELLED' : serverStatus === 6 ? 'REFUNDING' : serverStatus === 7 ? 'REFUNDED' : serverStatus === 8 ? 'CLOSED' : '')
+        orderInfo.value = {
+          orderNo: serverData.order?.orderNo,
+          amount: serverData.order?.payAmount || serverData.order?.totalAmount,
+          createdAt: serverData.order?.createTime,
+          status: statusName,
+          expireSeconds: serverData.order?.expireSeconds,
+          ...serverData.order
+        }
         // Use server countdown if available
-        if (res.data.expireSeconds && res.data.expireSeconds > 0) {
-          totalSeconds.value = Math.min(res.data.expireSeconds, 1800)
+        if (serverData.order?.expireSeconds && serverData.order.expireSeconds > 0) {
+          totalSeconds.value = Math.min(serverData.order.expireSeconds, 1800)
         }
         // Check if order already paid or expired
-        if (res.data.status === 'PAID' || res.data.status === 'EXPIRED') {
+        const rawStatus = serverData.order?.status
+        if (rawStatus === 2 || rawStatus === 4 || rawStatus === 5) {
           isExpired.value = true
         }
       }

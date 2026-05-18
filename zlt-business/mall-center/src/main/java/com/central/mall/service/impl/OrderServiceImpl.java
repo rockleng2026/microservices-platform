@@ -190,7 +190,7 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
     }
 
     @Override
-    public List<MallOrder> getOrderList(Long userId, Integer status) {
+    public List<Map<String, Object>> getOrderList(Long userId, Integer status) {
         LambdaQueryWrapper<MallOrder> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(MallOrder::getUserId, userId);
         wrapper.eq(MallOrder::getDelFlag, 0);
@@ -198,7 +198,51 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
             wrapper.eq(MallOrder::getStatus, status);
         }
         wrapper.orderByDesc(MallOrder::getCreateTime);
-        return baseMapper.selectList(wrapper);
+        List<MallOrder> orders = baseMapper.selectList(wrapper);
+
+        // Build result with order + items
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (MallOrder order : orders) {
+            Map<String, Object> orderMap = new HashMap<>();
+            orderMap.put("id", order.getId());
+            orderMap.put("orderNo", order.getOrderNo());
+            orderMap.put("userId", order.getUserId());
+            orderMap.put("status", order.getStatus());
+            orderMap.put("totalAmount", order.getTotalAmount());
+            orderMap.put("freightAmount", order.getFreightAmount());
+            orderMap.put("payAmount", order.getPayAmount());
+            orderMap.put("discountAmount", order.getDiscountAmount());
+            orderMap.put("remark", order.getRemark());
+            orderMap.put("createdAt", order.getCreateTime());
+            orderMap.put("paidAt", order.getPayTime());
+            orderMap.put("shippedAt", order.getShipTime());
+            orderMap.put("completeAt", order.getCompleteTime());
+
+            // Get order items
+            LambdaQueryWrapper<MallOrderItem> itemWrapper = new LambdaQueryWrapper<>();
+            itemWrapper.eq(MallOrderItem::getOrderId, order.getId());
+            List<MallOrderItem> items = orderItemMapper.selectList(itemWrapper);
+            orderMap.put("items", items);
+
+            // Get address for physical goods
+            if (order.getAddressId() != null) {
+                MallUserAddress address = addressMapper.selectById(order.getAddressId());
+                if (address != null) {
+                    Map<String, Object> addrMap = new HashMap<>();
+                    addrMap.put("id", address.getId());
+                    addrMap.put("receiverName", address.getReceiverName());
+                    addrMap.put("phone", address.getPhone());
+                    addrMap.put("province", address.getProvince());
+                    addrMap.put("city", address.getCity());
+                    addrMap.put("district", address.getDistrict());
+                    addrMap.put("detail", address.getDetail());
+                    orderMap.put("address", addrMap);
+                }
+            }
+
+            result.add(orderMap);
+        }
+        return result;
     }
 
     @Override

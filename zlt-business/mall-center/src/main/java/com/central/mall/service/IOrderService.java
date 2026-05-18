@@ -20,9 +20,10 @@ public interface IOrderService extends IService<MallOrder> {
     Long createOrder(Long userId, CreateOrderDTO dto);
 
     /**
-     * Get user order list (ORDER-03)
+     * Get user order list with items (ORDER-03)
+     * Returns list of maps, each containing order info plus associated items
      */
-    List<MallOrder> getOrderList(Long userId, Integer status);
+    List<Map<String, Object>> getOrderList(Long userId, Integer status);
 
     /**
      * Get order detail with items and delivery info (ORDER-04)

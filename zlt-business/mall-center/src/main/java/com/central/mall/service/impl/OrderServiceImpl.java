@@ -222,7 +222,22 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
             LambdaQueryWrapper<MallOrderItem> itemWrapper = new LambdaQueryWrapper<>();
             itemWrapper.eq(MallOrderItem::getOrderId, order.getId());
             List<MallOrderItem> items = orderItemMapper.selectList(itemWrapper);
-            orderMap.put("items", items);
+            // Convert to list of maps with frontend-friendly field names
+            List<Map<String, Object>> itemsList = new ArrayList<>();
+            for (MallOrderItem item : items) {
+                Map<String, Object> itemMap = new HashMap<>();
+                itemMap.put("id", item.getId());
+                itemMap.put("orderId", item.getOrderId());
+                itemMap.put("skuId", item.getSkuId());
+                itemMap.put("goodsId", item.getGoodsId());
+                itemMap.put("goodsName", item.getGoodsName());
+                itemMap.put("goodsImage", item.getGoodsImage());
+                itemMap.put("price", item.getPrice());
+                itemMap.put("quantity", item.getQuantity());
+                itemMap.put("specs", item.getSkuSpecs()); // frontend expects 'specs'
+                itemsList.add(itemMap);
+            }
+            orderMap.put("items", itemsList);
 
             // Get address for physical goods
             if (order.getAddressId() != null) {

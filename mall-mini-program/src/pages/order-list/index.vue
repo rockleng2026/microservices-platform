@@ -54,17 +54,24 @@
           </view>
         </view>
 
-        <!-- Items: Horizontal scroll thumbnails -->
-        <scroll-view class="items-scroll" scroll-x>
+        <!-- Items: Item list with name, specs, price, quantity -->
+        <view class="items-list">
           <view
             v-for="item in order.items"
             :key="item.id"
-            class="item-thumb"
+            class="item-row"
             @click.stop="goToProduct(item.skuId)"
           >
-            <image class="item-image" :src="item.goodsImage" mode="aspectFill"></image>
+            <view class="item-info">
+              <text class="item-name">{{ item.goodsName }}</text>
+              <text class="item-specs" v-if="item.specs">{{ item.specs }}</text>
+            </view>
+            <view class="item-right">
+              <text class="item-price">¥{{ item.price.toFixed(2) }}</text>
+              <text class="item-qty">x{{ item.quantity }}</text>
+            </view>
           </view>
-        </scroll-view>
+        </view>
 
         <!-- Card Footer: Price + Time + Actions -->
         <view class="card-footer">
@@ -78,9 +85,13 @@
               <view class="btn btn-destroy" @click.stop="onCancelOrder(order.id)">取消</view>
               <view class="btn btn-accent" @click.stop="goToPayment(order.id)">去支付</view>
             </template>
-            <!-- DELIVERED: 确认收货 -->
-            <template v-else-if="order.status === 'DELIVERED'">
-              <view class="btn btn-accent" @click.stop="onConfirmReceipt(order.id)">确认收货</view>
+            <!-- PAID/SHIPPED/DELIVERED: 查看明细 -->
+            <template v-else-if="order.status === 'PAID' || order.status === 'SHIPPED' || order.status === 'DELIVERED'">
+              <view class="btn btn-outline" @click.stop="goToDetail(order.id)">查看明细</view>
+            </template>
+            <!-- COMPLETED: 查看明细 -->
+            <template v-else-if="order.status === 'COMPLETED'">
+              <view class="btn btn-outline" @click.stop="goToDetail(order.id)">查看明细</view>
             </template>
           </view>
         </view>
@@ -426,25 +437,63 @@ onMounted(() => {
     color: #ff4d4f;
   }
 
-  // Items scroll
-  .items-scroll {
-    display: flex;
-    white-space: nowrap;
+  // Items list
+  .items-list {
     margin-bottom: 10px;
   }
 
-  .item-thumb {
-    width: 40px;
-    height: 40px;
-    margin-right: 8px;
-    border-radius: 4px;
+  .item-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 6px 0;
+    border-bottom: 1px solid #f5f5f5;
+
+    &:last-child {
+      border-bottom: none;
+    }
+  }
+
+  .item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-right: 12px;
+  }
+
+  .item-name {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.3;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  .item-specs {
+    font-size: 12px;
+    color: #999;
+  }
+
+  .item-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
     flex-shrink: 0;
   }
 
-  .item-image {
-    width: 40px;
-    height: 40px;
+  .item-price {
+    font-size: 14px;
+    color: #333;
+    font-weight: 500;
+  }
+
+  .item-qty {
+    font-size: 12px;
+    color: #999;
   }
 
   // Card footer
@@ -493,6 +542,12 @@ onMounted(() => {
     background: #fff;
     color: #ff4d4f;
     border: 1px solid #ff4d4f;
+  }
+
+  .btn-outline {
+    background: #fff;
+    color: #666;
+    border: 1px solid #ddd;
   }
 }
 

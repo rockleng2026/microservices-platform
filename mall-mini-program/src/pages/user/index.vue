@@ -59,6 +59,11 @@
         <text class="label">我的积分</text>
         <text class="arrow">></text>
       </view>
+      <view class="menu-item" @click="goFavorites">
+        <text class="icon">❤️</text>
+        <text class="label">我的收藏</text>
+        <text class="arrow">></text>
+      </view>
       <view class="menu-item" @click="handleLogout" v-if="userInfo">
         <text class="icon">🚪</text>
         <text class="label">退出登录</text>
@@ -134,6 +139,10 @@ const goCoupons = () => {
 
 const goPoints = () => {
   uni.navigateTo({ url: '/pages/points/index' })
+}
+
+const goFavorites = () => {
+  uni.navigateTo({ url: '/pages/favorites/index' })
 }
 
 // Handle logout

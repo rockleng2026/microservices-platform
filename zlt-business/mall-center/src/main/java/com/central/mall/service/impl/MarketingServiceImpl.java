@@ -5,6 +5,7 @@ import com.central.common.model.Result;
 import com.central.mall.mapper.*;
 import com.central.mall.model.entity.*;
 import com.central.mall.service.IMarketingService;
+import com.central.mall.service.IMallMemberService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RBucket;
@@ -36,6 +37,7 @@ public class MarketingServiceImpl implements IMarketingService {
     private final MallMarketingActivityMapper activityMapper;
     private final MallPointsAccountMapper pointsAccountMapper;
     private final MallPointsLogMapper pointsLogMapper;
+    private final IMallMemberService memberService;
     private final RedissonClient redissonClient;
     private final StringRedisTemplate redisTemplate;
 
@@ -134,7 +136,46 @@ public class MarketingServiceImpl implements IMarketingService {
         }
         wrapper.orderByDesc(MallCoupon::getReceiveTime);
         List<MallCoupon> coupons = couponMapper.selectList(wrapper);
-        return Result.succeed(coupons);
+
+        // Transform to frontend format
+        List<Map<String, Object>> transformed = new ArrayList<>();
+        for (MallCoupon coupon : coupons) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", coupon.getId());
+            item.put("name", coupon.getName());
+            item.put("type", getCouponTypeName(coupon.getType()));
+            item.put("discount", coupon.getFaceValue() != null ? coupon.getFaceValue() : coupon.getDiscountRate());
+            item.put("minAmount", coupon.getMinAmount());
+            item.put("validStartTime", coupon.getReceiveTime());
+            item.put("validEndTime", coupon.getExpireTime());
+            item.put("status", getCouponStatusName(coupon.getStatus()));
+            transformed.add(item);
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("list", transformed);
+        result.put("total", transformed.size());
+        return Result.succeed(result);
+    }
+
+    private String getCouponTypeName(Integer type) {
+        if (type == null) return "fixed";
+        return switch (type) {
+            case 1 -> "fixed";  // 满减券
+            case 2 -> "discount"; // 折扣券
+            case 3 -> "fixed";  // 无门槛券
+            default -> "fixed";
+        };
+    }
+
+    private String getCouponStatusName(Integer status) {
+        if (status == null) return "unused";
+        return switch (status) {
+            case 1 -> "unused";
+            case 2 -> "used";
+            case 3 -> "expired";
+            default -> "unused";
+        };
     }
 
     @Override
@@ -322,6 +363,14 @@ public class MarketingServiceImpl implements IMarketingService {
                 .eq(MallPointsAccount::getUserId, userId)
         );
 
+        // Also get member profile for nickname/avatar
+        MallMember member = null;
+        try {
+            member = memberService.getByUserId(userId);
+        } catch (Exception e) {
+            log.debug("Member not found for userId: {}", userId);
+        }
+
         if (account == null) {
             // Create new account
             account = new MallPointsAccount();
@@ -339,6 +388,13 @@ public class MarketingServiceImpl implements IMarketingService {
         result.put("balance", account.getBalance());
         result.put("totalEarned", account.getTotalEarned());
         result.put("totalSpent", account.getTotalSpent());
+        // Include member profile info
+        if (member != null) {
+            result.put("nickname", member.getNickname());
+            result.put("avatar", member.getAvatar());
+            result.put("phone", member.getPhone());
+            result.put("level", 1); // Default level
+        }
 
         return Result.succeed(result);
     }
@@ -350,7 +406,23 @@ public class MarketingServiceImpl implements IMarketingService {
                 .eq(MallPointsLog::getUserId, userId)
                 .orderByDesc(MallPointsLog::getCreateTime)
         );
-        return Result.succeed(logs);
+
+        // Transform to frontend format
+        List<Map<String, Object>> transformed = new ArrayList<>();
+        for (MallPointsLog log : logs) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("id", log.getId());
+            item.put("type", log.getType() == 1 ? "earn" : "deduct");
+            item.put("points", log.getPoints());
+            item.put("reason", log.getRemark());
+            item.put("createTime", log.getCreateTime());
+            transformed.add(item);
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("list", transformed);
+        result.put("total", transformed.size());
+        return Result.succeed(result);
     }
 
     @Override

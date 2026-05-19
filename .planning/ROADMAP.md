@@ -103,17 +103,15 @@ Plans:
 | ADMIN-10 Banner Management | ADMIN-10-01~05 | 5 |
 | **Total** | | **34** |
 
-### Phase 11: 管理后台运营模块
+**Plans:**
+- [ ] 11-ADMIN-06-PLAN.md — 退款审核页面 (ADMIN-06-01~06)
+- [ ] 11-ADMIN-07-PLAN.md — 物流管理页面 (ADMIN-07-01~06)
+- [ ] 11-ADMIN-08-PLAN.md — 用户管理页面 (ADMIN-08-01~04)
+- [ ] 11-ADMIN-09-PLAN.md — 商户管理页面 (ADMIN-09-01~05)
 
-| Module | Requirements | Count |
-|--------|--------------|-------|
-| ADMIN-06 Refund Audit | ADMIN-06-01~06 | 6 |
-| ADMIN-07 Logistics Management | ADMIN-07-01~06 | 6 |
-| ADMIN-08 User Management | ADMIN-08-01~04 | 4 |
-| ADMIN-09 Merchant Management | ADMIN-09-01~05 | 5 |
-| **Total** | | **21** |
+---
 
-### Phase 12: 管理后台配置与小程序个人中心
+## Phase 12: 管理后台配置与小程序个人中心
 
 | Module | Requirements | Count |
 |--------|--------------|-------|
@@ -122,7 +120,16 @@ Plans:
 | MINI-09 Personal Center | MINI-09-01~07 | 7 |
 | **Total** | | **16** |
 
-### Phase 13: 集成测试与优化
+**Plans:**
+- [ ] 12-ADMIN-05-PLAN.md — 促销管理页面 (ADMIN-05-01~06)
+- [ ] 12-ADMIN-05-INTEGRATION-PLAN.md — 促销后端 API
+- [ ] 12-ADMIN-11-PLAN.md — 微信支付配置 (ADMIN-11-01~03)
+- [ ] 12-MINI-09-PLAN.md — 小程序个人中心 (MINI-09-01~07)
+- [ ] 12-MINI-09-INTEGRATION-PLAN.md — 个人中心后端 API
+
+---
+
+## Phase 13: 集成测试与优化
 
 | Scope | Description |
 |-------|-------------|
@@ -147,8 +154,8 @@ Plans:
 | 8 | v2.0 | 4/4 | Complete | 2026-05-09 |
 | 9 | v2.0 | 6/6 | Complete | 2026-05-09 |
 | 10 | v2.0 | 5/5 | ✅ Complete | 2026-05-19 |
-| 11 | v2.0 | 0/21 | Pending | — |
-| 12 | v2.0 | 0/16 | Pending | — |
+| 11 | v2.0 | 4/4 | Pending | — |
+| 12 | v2.0 | 5/5 | Pending | — |
 | 13 | v2.0 | 0/all | Pending | — |
 | 14 | v2.0 | 1/5 | ✅ Complete | 2026-05-19 |
 | 15 | v2.0 | 6/6 | ✅ Complete | 2026-05-19 |

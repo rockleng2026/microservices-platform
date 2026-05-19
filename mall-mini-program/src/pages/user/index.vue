@@ -132,7 +132,7 @@ const goCoupons = () => {
 }
 
 const goPoints = () => {
-  uni.showToast({ title: '积分功能开发中', icon: 'none' })
+  uni.navigateTo({ url: '/pages/points/index' })
 }
 
 // Handle logout

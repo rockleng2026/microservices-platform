@@ -20,7 +20,7 @@ export async function getPromotionList(params: {
   startTime?: string;
   endTime?: string;
 }): Promise<{ records: PromotionDTO[]; total: number; size: number; current: number }> {
-  const response = await request(`${MALL_CENTER_API}/api/mall/marketing/promotions`, {
+  const response = await request(`${MALL_CENTER_API}/api/mall/admin/promotions`, {
     method: 'GET',
     params: {
       page: params.page || 1,
@@ -45,7 +45,7 @@ export async function getPromotionList(params: {
  * 创建促销活动
  */
 export async function createPromotion(data: Partial<PromotionDTO>): Promise<void> {
-  await request(`${MALL_CENTER_API}/api/mall/marketing/promotions`, {
+  await request(`${MALL_CENTER_API}/api/mall/admin/promotions`, {
     method: 'POST',
     data,
   });
@@ -55,7 +55,7 @@ export async function createPromotion(data: Partial<PromotionDTO>): Promise<void
  * 更新促销活动
  */
 export async function updatePromotion(id: number, data: Partial<PromotionDTO>): Promise<void> {
-  await request(`${MALL_CENTER_API}/api/mall/marketing/promotions/${id}`, {
+  await request(`${MALL_CENTER_API}/api/mall/admin/promotions/${id}`, {
     method: 'PUT',
     data,
   });
@@ -65,7 +65,7 @@ export async function updatePromotion(id: number, data: Partial<PromotionDTO>): 
  * 删除促销活动
  */
 export async function deletePromotion(id: number): Promise<void> {
-  await request(`${MALL_CENTER_API}/api/mall/marketing/promotions/${id}`, {
+  await request(`${MALL_CENTER_API}/api/mall/admin/promotions/${id}`, {
     method: 'DELETE',
   });
 }
@@ -74,7 +74,7 @@ export async function deletePromotion(id: number): Promise<void> {
  * 启用/禁用促销活动
  */
 export async function togglePromotion(id: number, enabled: boolean): Promise<void> {
-  await request(`${MALL_CENTER_API}/api/mall/marketing/promotions/${id}/toggle`, {
+  await request(`${MALL_CENTER_API}/api/mall/admin/promotions/${id}/toggle`, {
     method: 'PUT',
     data: { enabled },
   });
@@ -98,9 +98,9 @@ export async function getPointsRules(): Promise<PointsRuleDTO[]> {
  * 调整会员积分
  */
 export async function adjustPoints(userId: number, points: number, reason: string): Promise<void> {
-  await request(`${MALL_CENTER_API}/api/mall/member/points/adjust`, {
-    method: 'POST',
-    data: { userId, points, reason },
+  await request(`${MALL_CENTER_API}/api/mall/admin/member/${userId}/points?remark=${encodeURIComponent(reason)}`, {
+    method: 'PUT',
+    data: points,
   });
 }
 

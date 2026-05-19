@@ -216,8 +216,7 @@ const handleSave = async () => {
     }
     uni.setStorageSync('userInfo', userInfo)
 
-    // TODO: Call API to update server
-    // await updateProfile({ nickname, avatar, gender, birthday, province, city })
+    await updateProfile({ nickname: nickname.value, avatar: avatar.value, gender: gender.value, birthday: birthday.value, province: regionText.value })
 
     uni.showToast({ title: '保存成功', icon: 'success' })
     setTimeout(() => {

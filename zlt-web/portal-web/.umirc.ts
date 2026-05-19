@@ -329,6 +329,11 @@ export default defineConfig({
               component: '@/pages/MallAdmin/Member',
             },
             {
+              path: '/mall-admin/promotion',
+              name: '促销管理',
+              component: '@/pages/MallAdmin/Promotion',
+            },
+            {
               path: '/mall-admin/wechat-config',
               name: '微信支付配置',
               component: '@/pages/MallAdmin/WeChatConfig',

@@ -6,7 +6,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'umi';
 import { Card, Descriptions, Table, Tag, Button, Space, Spin, message, Timeline, Divider, Typography, Modal, Form, Input } from 'antd';
 const { Text } = Typography;
-import { ArrowLeftOutlined, CheckCircleFilled, CloseCircleFilled, ShoppingCartOutlined } from '@ant-design/icons';
+import { ArrowLeftOutlined, CheckCircleFilled, CloseCircleFilled, ShoppingCartOutlined, EditOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/lib/table';
 import {
   getOrderDetail,
@@ -17,6 +17,7 @@ import {
   shipOrder,
 } from '../services/orders';
 import { GOODS_TYPE_TEXT } from '../../Goods/services/goods';
+import PriceEditor from '../components/PriceEditor';
 
 // Parse specs JSON to display string
 const parseSpecs = (specsJson: string | undefined): string => {
@@ -47,6 +48,7 @@ const OrderDetailPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [order, setOrder] = useState<OrderDetailDTO | null>(null);
   const [shipModalVisible, setShipModalVisible] = useState(false);
+  const [priceEditorVisible, setPriceEditorVisible] = useState(false);
   const [shipping, setShipping] = useState(false);
   const [form] = Form.useForm();
   const [searchParams] = useSearchParams();
@@ -162,6 +164,14 @@ const OrderDetailPage: React.FC = () => {
         <Button icon={<ArrowLeftOutlined />} onClick={() => navigate('/mall-admin/orders')}>
           返回
         </Button>
+        {(order.status === ORDER_STATUS.PENDING_PAYMENT) && (
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => setPriceEditorVisible(true)}
+          >
+            改价
+          </Button>
+        )}
         {order.status === ORDER_STATUS.PAID && !order.shipTime && (
           <Button
             type="primary"
@@ -329,6 +339,20 @@ const OrderDetailPage: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      {/* 改价弹窗 */}
+      <PriceEditor
+        visible={priceEditorVisible}
+        orderId={order.id}
+        currentAmount={order.payAmount}
+        onCancel={() => setPriceEditorVisible(false)}
+        onSuccess={async () => {
+          setPriceEditorVisible(false);
+          // Refresh order detail
+          const data = await getOrderDetail(order.id);
+          if (data) setOrder(data);
+        }}
+      />
     </div>
   );
 };

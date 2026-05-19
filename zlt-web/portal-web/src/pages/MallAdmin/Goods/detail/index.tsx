@@ -245,7 +245,7 @@ const GoodsDetailPage: React.FC = () => {
           <Table
             columns={skuColumns}
             dataSource={goods.skus}
-            rowKey={(record, index) => `sku-${index}`}
+            rowKey={(record: any, index: number) => `sku-${record.id || index}`}
             pagination={false}
             size="small"
           />

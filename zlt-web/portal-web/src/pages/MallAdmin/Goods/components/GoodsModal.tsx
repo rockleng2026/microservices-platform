@@ -257,7 +257,10 @@ const GoodsModal: React.FC<GoodsModalProps> = ({
         </Form.Item>
       </ProForm>
 
-      <Divider orientation="left">SKU 规格管理</Divider>
+      <Divider orientation="left">SKU 规格管理（可选）</Divider>
+      <div style={{ marginBottom: 8, color: '#888', fontSize: 12 }}>
+        添加 SKU 可以设置多规格商品的价格和库存，如颜色、尺寸等组合。无 SKU 时使用商品主价格。
+      </div>
 
       <SkuEditor value={skus} onChange={setSkus} />
     </Modal>

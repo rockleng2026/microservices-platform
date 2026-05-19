@@ -39,6 +39,7 @@ export interface SkuDTO {
   skuCode?: string;
   specs: string;         // JSON: "{\"颜色\":\"红色\",\"尺寸\":\"XL\"}"
   price: number | string;
+  costPrice?: number | string;  // 成本价 (D-09)
   stock: number;
   image?: string;
   status?: number;       // 0=下架, 1=上架

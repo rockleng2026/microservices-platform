@@ -2,10 +2,10 @@
  * 多图上传组件 - ADMIN-02-08
  * 支持最多5张图片上传和拖拽排序
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
 import { Upload, Image, Button, message } from 'antd';
 import { DeleteOutlined, UploadOutlined, HolderOutlined } from '@ant-design/icons';
-import type { UploadFile, UploadProps } from 'antd/lib/upload/interface';
+import type { UploadProps } from 'antd/lib/upload/interface';
 import { request } from '@/utils/request';
 
 // Max number of images allowed
@@ -30,23 +30,21 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   onChange,
   maxFiles = MAX_FILES,
 }) => {
-  // Internal state - always store clean URLs (no token) for onChange
-  const [imageUrls, setImageUrls] = useState<string[]>(value);
+  // Track images locally for session
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+  // Track the last known value to detect changes
+  const lastValueRef = useRef<string[]>([]);
 
-  // Sync with value prop changes (e.g., editing saved goods)
-  useEffect(() => {
+  // Sync with parent value only when it actually changes
+  // Use a ref to track changes without causing re-renders
+  if (value !== lastValueRef.current && JSON.stringify(value) !== JSON.stringify(lastValueRef.current)) {
+    lastValueRef.current = value;
     setImageUrls(value);
-  }, [value]);
+  }
 
-  // Update internal state and notify parent (store clean URLs)
-  const updateUrls = (newUrls: string[]) => {
-    setImageUrls(newUrls);
-    onChange?.(newUrls);
-  };
-
-  // Handle file upload
-  const handleUpload = async (file: File): Promise<void> => {
+  // Upload handler
+  const handleUpload = useCallback(async (file: File) => {
     if (imageUrls.length >= maxFiles) {
       message.warning(`最多只能上传 ${maxFiles} 张图片`);
       return;
@@ -54,21 +52,19 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
     setUploading(true);
     try {
-      // Build form data - file-center uses /files-anon endpoint (public)
       const formData = new FormData();
       formData.append('file', file);
 
-      // Use request utility which carries x-tenant-header automatically
-      // Upload via gateway /api-file route → file-center /files-anon
       const result = await request<{ url?: string; resp_msg?: string; message?: string; error?: string }>(
         '/api-file/files-anon',
         { method: 'POST', data: formData }
       );
 
-      // Store clean URL (no token) in DB to avoid stale-token issues on re-login
       if (result.url) {
         const newUrls = [...imageUrls, result.url];
-        updateUrls(newUrls);
+        setImageUrls(newUrls);
+        lastValueRef.current = newUrls;
+        onChange?.(newUrls);
         message.success('上传成功');
       } else {
         message.error(result.resp_msg || result.message || result.error || JSON.stringify(result) || '上传失败');
@@ -79,7 +75,26 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     } finally {
       setUploading(false);
     }
-  };
+  }, [imageUrls, maxFiles, onChange]);
+
+  // Remove handler
+  const handleRemove = useCallback((index: number) => {
+    const newUrls = imageUrls.filter((_, i) => i !== index);
+    setImageUrls(newUrls);
+    lastValueRef.current = newUrls;
+    onChange?.(newUrls);
+  }, [imageUrls, onChange]);
+
+  // Move handler
+  const handleMove = useCallback((fromIndex: number, toIndex: number) => {
+    if (toIndex < 0 || toIndex >= imageUrls.length) return;
+    const newUrls = [...imageUrls];
+    const [moved] = newUrls.splice(fromIndex, 1);
+    newUrls.splice(toIndex, 0, moved);
+    setImageUrls(newUrls);
+    lastValueRef.current = newUrls;
+    onChange?.(newUrls);
+  }, [imageUrls, onChange]);
 
   // Upload props
   const uploadProps: UploadProps = {
@@ -87,45 +102,25 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     multiple: false,
     showUploadList: false,
     beforeUpload: (file) => {
-      // Check file type
       const isImage = file.type.startsWith('image/');
       if (!isImage) {
         message.error('只能上传图片文件');
         return false;
       }
-
-      // Check file size (5MB)
       const isLt5M = file.size / 1024 / 1024 < 5;
       if (!isLt5M) {
         message.error('图片大小不能超过 5MB');
         return false;
       }
-
-      // Handle upload
       handleUpload(file);
-      return false; // Prevent default upload
+      return false;
     },
-  };
-
-  // Remove image
-  const handleRemove = (index: number) => {
-    const newUrls = imageUrls.filter((_, i) => i !== index);
-    updateUrls(newUrls);
-  };
-
-  // Move image (drag and drop reorder)
-  const handleMove = (fromIndex: number, toIndex: number) => {
-    if (toIndex < 0 || toIndex >= imageUrls.length) return;
-    const newUrls = [...imageUrls];
-    const [moved] = newUrls.splice(fromIndex, 1);
-    newUrls.splice(toIndex, 0, moved);
-    updateUrls(newUrls);
   };
 
   // Render single image item
   const renderImageItem = (url: string, index: number) => (
     <div
-      key={url}
+      key={url + '-' + index}
       style={{
         display: 'inline-block',
         margin: '0 8px 8px 0',
@@ -151,8 +146,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           style={{ objectFit: 'cover' }}
           preview={{ mask: <span>预览</span> }}
         />
-
-        {/* Drag handle */}
         <div
           style={{
             position: 'absolute',
@@ -173,8 +166,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
         >
           <HolderOutlined />
         </div>
-
-        {/* Delete button */}
         <Button
           type="text"
           danger
@@ -193,8 +184,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           }}
         />
       </div>
-
-      {/* Move buttons */}
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 4 }}>
         <Button
           size="small"
@@ -217,12 +206,9 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   return (
     <div style={{ display: 'block' }}>
-      {/* Image list */}
       <div style={{ marginBottom: 8 }}>
         {imageUrls.map((url, index) => renderImageItem(url, index))}
       </div>
-
-      {/* Upload button */}
       {imageUrls.length < maxFiles && (
         <Upload {...uploadProps}>
           <Button icon={<UploadOutlined />} loading={uploading}>
@@ -230,8 +216,6 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           </Button>
         </Upload>
       )}
-
-      {/* Hint text */}
       <div style={{ marginTop: 8, color: '#888', fontSize: 12 }}>
         {imageUrls.length}/{maxFiles} 张图片
         {imageUrls.length < maxFiles && `（还能上传 ${maxFiles - imageUrls.length} 张）`}

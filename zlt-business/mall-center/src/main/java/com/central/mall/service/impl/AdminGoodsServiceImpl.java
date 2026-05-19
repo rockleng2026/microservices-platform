@@ -115,6 +115,7 @@ public class AdminGoodsServiceImpl extends ServiceImpl<MallGoodsMapper, MallGood
                 sku.setSkuCode(skuDTO.getSkuCode());
                 sku.setSpecs(skuDTO.getSpecs());
                 sku.setPrice(skuDTO.getPrice());
+                sku.setCostPrice(skuDTO.getCostPrice());
                 sku.setStock(skuDTO.getStock() != null ? skuDTO.getStock() : -1);
                 sku.setImage(skuDTO.getImage());
                 sku.setStatus(skuDTO.getStatus() != null ? skuDTO.getStatus() : 1);
@@ -160,6 +161,7 @@ public class AdminGoodsServiceImpl extends ServiceImpl<MallGoodsMapper, MallGood
                 sku.setSkuCode(skuDTO.getSkuCode());
                 sku.setSpecs(skuDTO.getSpecs());
                 sku.setPrice(skuDTO.getPrice());
+                sku.setCostPrice(skuDTO.getCostPrice());
                 sku.setStock(skuDTO.getStock() != null ? skuDTO.getStock() : -1);
                 sku.setImage(skuDTO.getImage());
                 sku.setStatus(skuDTO.getStatus() != null ? skuDTO.getStatus() : 1);
@@ -248,6 +250,7 @@ public class AdminGoodsServiceImpl extends ServiceImpl<MallGoodsMapper, MallGood
             newSku.setSkuCode(originalSku.getSkuCode());
             newSku.setSpecs(originalSku.getSpecs());
             newSku.setPrice(originalSku.getPrice());
+            newSku.setCostPrice(originalSku.getCostPrice());
             newSku.setStock(originalSku.getStock());
             newSku.setImage(originalSku.getImage());
             newSku.setStatus(originalSku.getStatus());
@@ -285,6 +288,7 @@ public class AdminGoodsServiceImpl extends ServiceImpl<MallGoodsMapper, MallGood
         dto.setSkuCode(sku.getSkuCode());
         dto.setSpecs(sku.getSpecs());
         dto.setPrice(sku.getPrice());
+        dto.setCostPrice(sku.getCostPrice());
         dto.setStock(sku.getStock());
         dto.setImage(sku.getImage());
         dto.setStatus(sku.getStatus());

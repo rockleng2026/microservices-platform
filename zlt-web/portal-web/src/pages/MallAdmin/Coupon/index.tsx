@@ -1,12 +1,15 @@
 /**
  * 优惠券管理页面 - ADMIN-07
- * Coupon template management (create, edit, publish, offline)
+ * Coupon template management (create, edit, publish, offline, issue, statistics, claim code)
  */
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button, Space, message, Modal, Form, Input, Select, InputNumber, Tag, Table, Popconfirm } from 'antd';
-import { PlusOutlined, EditOutlined, SendOutlined, StopOutlined, ReloadOutlined } from '@ant-design/icons';
+import { PlusOutlined, EditOutlined, SendOutlined, StopOutlined, ReloadOutlined, CopyOutlined } from '@ant-design/icons';
 import type { ColumnsType } from 'antd/lib/table';
 import { request } from '@/utils/request';
+import IssueModal from './components/IssueModal';
+import StatisticsModal from './components/StatisticsModal';
+import { getCouponTemplateList, publishCoupon, offlineCoupon, generateClaimCode, CouponTemplateDTO, CouponStatistics } from './services/coupons';
 
 interface CouponTemplateDTO {
   id?: string;
@@ -64,6 +67,10 @@ const CouponPage: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<CouponTemplateDTO | null>(null);
   const [form] = Form.useForm();
+  // 发放弹窗
+  const [issueModalVisible, setIssueModalVisible] = useState(false);
+  const [statisticsModalVisible, setStatisticsModalVisible] = useState(false);
+  const [selectedCoupon, setSelectedCoupon] = useState<CouponTemplateDTO | null>(null);
 
   // Fetch template list
   const fetchTemplates = useCallback(async () => {
@@ -182,6 +189,55 @@ const CouponPage: React.FC = () => {
     }
   };
 
+  // 打开发放弹窗
+  const handleOpenIssueModal = (record: CouponTemplateDTO) => {
+    setSelectedCoupon(record);
+    setIssueModalVisible(true);
+  };
+
+  // 打开统计弹窗
+  const handleOpenStatisticsModal = (record: CouponTemplateDTO) => {
+    setSelectedCoupon(record);
+    setStatisticsModalVisible(true);
+  };
+
+  // 生成领取链接
+  const handleGenerateLink = async (record: CouponTemplateDTO) => {
+    try {
+      const result = await generateClaimCode(record.id!);
+      Modal.success({
+        title: '领取链接已生成',
+        content: (
+          <div>
+            <p style={{ marginBottom: 8 }}>优惠券：{record.name}</p>
+            <p style={{ marginBottom: 8 }}>领取码：{result.claimCode}</p>
+            <p style={{ marginBottom: 8 }}>有效期至：{result.expireTime}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+              <Input.TextArea
+                value={result.claimUrl}
+                readOnly
+                rows={1}
+                style={{ flex: 1, fontSize: 12 }}
+              />
+              <Button
+                icon={<CopyOutlined />}
+                onClick={() => {
+                  navigator.clipboard.writeText(result.claimUrl);
+                  message.success('链接已复制');
+                }}
+              >
+                复制
+              </Button>
+            </div>
+          </div>
+        ),
+        okText: '关闭',
+      });
+    } catch (error: any) {
+      message.error(error?.message || '生成失败');
+    }
+  };
+
   // Table columns
   const columns: ColumnsType<CouponTemplateDTO> = [
     {
@@ -256,7 +312,7 @@ const CouponPage: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      width: 200,
+      width: 320,
       align: 'center',
       render: (_: unknown, record: CouponTemplateDTO) => (
         <Space size="small">
@@ -271,9 +327,20 @@ const CouponPage: React.FC = () => {
             </>
           )}
           {record.status === 1 && (
-            <Button type="link" size="small" danger icon={<StopOutlined />} onClick={() => handleOffline(record.id!)}>
-              下架
-            </Button>
+            <>
+              <Button type="link" size="small" icon={<StopOutlined />} onClick={() => handleOffline(record.id!)}>
+                下架
+              </Button>
+              <Button type="link" size="small" onClick={() => handleOpenIssueModal(record)}>
+                发放
+              </Button>
+              <Button type="link" size="small" onClick={() => handleOpenStatisticsModal(record)}>
+                统计
+              </Button>
+              <Button type="link" size="small" onClick={() => handleGenerateLink(record)}>
+                生成链接
+              </Button>
+            </>
           )}
         </Space>
       ),
@@ -391,6 +458,21 @@ const CouponPage: React.FC = () => {
           </Form.Item>
         </Form>
       </Modal>
+
+      {/* 发放弹窗 */}
+      <IssueModal
+        visible={issueModalVisible}
+        coupon={selectedCoupon}
+        onClose={() => setIssueModalVisible(false)}
+        onSuccess={fetchTemplates}
+      />
+
+      {/* 统计弹窗 */}
+      <StatisticsModal
+        visible={statisticsModalVisible}
+        coupon={selectedCoupon}
+        onClose={() => setStatisticsModalVisible(false)}
+      />
     </div>
   );
 };

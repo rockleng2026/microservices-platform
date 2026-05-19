@@ -10,6 +10,7 @@ interface PriceEditorProps {
   visible: boolean;
   orderId: number;
   currentAmount: string;
+  costPrice?: string;  // 成本价参考 (D-09)
   onCancel: () => void;
   onSuccess: () => void;
 }
@@ -18,6 +19,7 @@ const PriceEditor: React.FC<PriceEditorProps> = ({
   visible,
   orderId,
   currentAmount,
+  costPrice,
   onCancel,
   onSuccess,
 }) => {
@@ -152,7 +154,7 @@ const PriceEditor: React.FC<PriceEditorProps> = ({
         <Alert
           type="warning"
           message="注意：改价只能是减少金额"
-          description="由于成本价字段不可用，前端仅做减价校验，实际成本价校验由后端处理。"
+          description={costPrice ? `成本价参考：¥${costPrice}，改价后不能低于成本价` : '改价后不能低于成本价'}
           showIcon
         />
 

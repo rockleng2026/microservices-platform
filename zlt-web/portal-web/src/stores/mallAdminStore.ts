@@ -6,6 +6,22 @@ import {
   getUserAnalysis,
   getTopProducts,
 } from '@/services/mall-admin/statistics';
+import {
+  getWeChatConfig as fetchWeChatConfig,
+  updateWeChatConfig as saveWeChatConfig,
+  testWeChatConfig as checkWeChatConfig,
+  WeChatConfig,
+} from '@/services/mall-admin/wechatConfig';
+
+// WeChat config status type
+export type WeChatConfigStatus = 'unconfigured' | 'configured' | 'testing' | 'success' | 'failed';
+
+interface WeChatConfigState {
+  wechatConfig: WeChatConfig | null;
+  wechatConfigStatus: WeChatConfigStatus;
+  wechatConfigLoading: boolean;
+  wechatConfigError: string | null;
+}
 
 interface AdminState {
   // 统计数据
@@ -14,6 +30,12 @@ interface AdminState {
   stockWarnings: any[];
   userAnalysis: any;
   topProducts: any[];
+
+  // 微信支付配置状态 (ADMIN-11)
+  wechatConfig: WeChatConfig | null;
+  wechatConfigStatus: WeChatConfigStatus;
+  wechatConfigLoading: boolean;
+  wechatConfigError: string | null;
 
   // 加载状态
   loading: {
@@ -39,6 +61,10 @@ interface AdminState {
   fetchStockWarnings: () => Promise<void>;
   fetchUserAnalysis: () => Promise<void>;
   fetchTopProducts: (limit?: number) => Promise<void>;
+  // 微信支付配置方法 (ADMIN-11)
+  fetchWeChatConfig: () => Promise<void>;
+  updateWeChatConfig: (config: WeChatConfig) => Promise<boolean>;
+  testWeChatConfig: () => Promise<{ success: boolean; message: string }>;
   clearAll: () => void;
 }
 
@@ -49,6 +75,12 @@ export const useAdminStore = create<AdminState>((set) => ({
   stockWarnings: [],
   userAnalysis: null,
   topProducts: [],
+
+  // 微信支付配置状态 (ADMIN-11)
+  wechatConfig: null,
+  wechatConfigStatus: 'unconfigured',
+  wechatConfigLoading: false,
+  wechatConfigError: null,
 
   loading: {
     statistics: false,
@@ -171,6 +203,85 @@ export const useAdminStore = create<AdminState>((set) => ({
     }
   },
 
+  // 获取微信支付配置 (ADMIN-11-01)
+  fetchWeChatConfig: async () => {
+    set((state) => ({
+      wechatConfigLoading: true,
+      wechatConfigError: null,
+    }));
+
+    try {
+      const config = await fetchWeChatConfig();
+      set((state) => ({
+        wechatConfig: config,
+        wechatConfigStatus: config ? 'configured' : 'unconfigured',
+        wechatConfigLoading: false,
+      }));
+    } catch (error: any) {
+      set((state) => ({
+        wechatConfigError: error.message || '获取微信支付配置失败',
+        wechatConfigStatus: 'failed',
+        wechatConfigLoading: false,
+      }));
+    }
+  },
+
+  // 更新微信支付配置 (ADMIN-11-01)
+  updateWeChatConfig: async (config: WeChatConfig) => {
+    set((state) => ({
+      wechatConfigLoading: true,
+      wechatConfigError: null,
+    }));
+
+    try {
+      const success = await saveWeChatConfig(config);
+      if (success) {
+        set((state) => ({
+          wechatConfig: config,
+          wechatConfigStatus: 'configured',
+          wechatConfigLoading: false,
+        }));
+      } else {
+        set((state) => ({
+          wechatConfigError: '更新微信支付配置失败',
+          wechatConfigStatus: 'failed',
+          wechatConfigLoading: false,
+        }));
+      }
+      return success;
+    } catch (error: any) {
+      set((state) => ({
+        wechatConfigError: error.message || '更新微信支付配置失败',
+        wechatConfigStatus: 'failed',
+        wechatConfigLoading: false,
+      }));
+      return false;
+    }
+  },
+
+  // 测试微信支付配置连通性 (ADMIN-11-02)
+  testWeChatConfig: async () => {
+    set((state) => ({
+      wechatConfigStatus: 'testing',
+      wechatConfigError: null,
+    }));
+
+    try {
+      const result = await checkWeChatConfig();
+      set((state) => ({
+        wechatConfigStatus: result.success ? 'success' : 'failed',
+        wechatConfigError: result.success ? null : result.message,
+      }));
+      return result;
+    } catch (error: any) {
+      set((state) => ({
+        wechatConfigStatus: 'failed',
+        wechatConfigError: error.message || '测试微信支付配置失败',
+      }));
+      return { success: false, message: error.message || '测试微信支付配置失败' };
+    }
+  },
+
   // 清空所有数据
   clearAll: () => {
     set({
@@ -179,6 +290,10 @@ export const useAdminStore = create<AdminState>((set) => ({
       stockWarnings: [],
       userAnalysis: null,
       topProducts: [],
+      wechatConfig: null,
+      wechatConfigStatus: 'unconfigured',
+      wechatConfigLoading: false,
+      wechatConfigError: null,
       loading: {
         statistics: false,
         salesTrend: false,

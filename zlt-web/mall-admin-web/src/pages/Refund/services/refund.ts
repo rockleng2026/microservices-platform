@@ -3,6 +3,10 @@
  * Endpoints for refund audit management in admin panel
  */
 import { request } from '@/utils/request';
+import { API_BASE_URL } from '@/config/api';
+
+// Refund API base path (proxied to mall-center backend)
+const API_BASE = `${API_BASE_URL}/api/mall/admin/refund`;
 
 // Refund status constants (per ADMIN-06-01)
 export const REFUND_STATUS = {
@@ -66,7 +70,7 @@ export interface ApiResponse<T> {
  * GET /api/mall/admin/refund/list
  */
 export async function getRefundList(params: RefundListParams): Promise<PageResponse<RefundListDTO>> {
-  const response = await request<ApiResponse<PageResponse<RefundListDTO>>>('/api/mall/admin/refund/list', {
+  const response = await request<ApiResponse<PageResponse<RefundListDTO>>>(`${API_BASE}/list`, {
     method: 'GET',
     params: {
       page: params.page || 1,
@@ -85,7 +89,7 @@ export async function getRefundList(params: RefundListParams): Promise<PageRespo
  * POST /api/mall/admin/refund/{id}/approve?remark=xxx
  */
 export async function approveRefund(id: number, remark?: string): Promise<boolean> {
-  const response = await request<ApiResponse<boolean>>(`/api/mall/admin/refund/${id}/approve`, {
+  const response = await request<ApiResponse<boolean>>(`${API_BASE}/${id}/approve`, {
     method: 'POST',
     params: {
       remark: remark || '',
@@ -99,7 +103,7 @@ export async function approveRefund(id: number, remark?: string): Promise<boolea
  * POST /api/mall/admin/refund/{id}/reject?remark=xxx
  */
 export async function rejectRefund(id: number, remark?: string): Promise<boolean> {
-  const response = await request<ApiResponse<boolean>>(`/api/mall/admin/refund/${id}/reject`, {
+  const response = await request<ApiResponse<boolean>>(`${API_BASE}/${id}/reject`, {
     method: 'POST',
     params: {
       remark: remark || '',

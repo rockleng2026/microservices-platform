@@ -6,9 +6,9 @@ import React, { useState, useRef } from 'react';
 import { Tabs, Tag, Button, Space, message, Modal, Input, Popconfirm } from 'antd';
 import { ProTable } from '@ant-design/pro-components';
 import type { ActionRef } from '@ant-design/pro-components';
-import { request } from '@/utils/request';
-import type { RefundListDTO, PageResponse } from './services/refund';
+import type { RefundListDTO } from './services/refund';
 import { REFUND_STATUS, REFUND_STATUS_TEXT } from './services/refund';
+import { getRefundList, approveRefund, rejectRefund } from './services/refund';
 import type { ColumnsType } from 'antd/lib/table';
 import { EyeOutlined, CheckOutlined, CloseOutlined } from '@ant-design/icons';
 
@@ -75,13 +75,15 @@ const RefundListPage: React.FC = () => {
     if (!selectedRefund) return;
     setSubmitting(true);
     try {
-      // TODO: Wire up real API when Wave 2 is implemented
-      // const success = await approveRefund(selectedRefund.id, approveRemark);
-      console.log('Approve refund:', selectedRefund.id, approveRemark);
-      message.success('退款申请已通过');
-      setApproveModalVisible(false);
-      setApproveRemark('');
-      actionRef.current?.reload();
+      const success = await approveRefund(selectedRefund.id, approveRemark);
+      if (success) {
+        message.success('退款申请已通过');
+        setApproveModalVisible(false);
+        setApproveRemark('');
+        actionRef.current?.reload();
+      } else {
+        message.error('操作失败，请重试');
+      }
     } catch (error) {
       console.error('Failed to approve refund:', error);
       message.error('操作失败，请重试');
@@ -99,13 +101,15 @@ const RefundListPage: React.FC = () => {
     }
     setSubmitting(true);
     try {
-      // TODO: Wire up real API when Wave 2 is implemented
-      // const success = await rejectRefund(selectedRefund.id, rejectRemark);
-      console.log('Reject refund:', selectedRefund.id, rejectRemark);
-      message.success('退款申请已拒绝');
-      setRejectModalVisible(false);
-      setRejectRemark('');
-      actionRef.current?.reload();
+      const success = await rejectRefund(selectedRefund.id, rejectRemark);
+      if (success) {
+        message.success('退款申请已拒绝');
+        setRejectModalVisible(false);
+        setRejectRemark('');
+        actionRef.current?.reload();
+      } else {
+        message.error('操作失败，请重试');
+      }
     } catch (error) {
       console.error('Failed to reject refund:', error);
       message.error('操作失败，请重试');
@@ -138,19 +142,15 @@ const RefundListPage: React.FC = () => {
     endTime?: string;
   }) => {
     try {
-      const response = await request<{ datas?: PageResponse<RefundListDTO> }>('/api/mall/admin/refund/list', {
-        method: 'GET',
-        params: {
-          page: params.page || 1,
-          pageSize: params.pageSize || 20,
-          orderId: params.orderId,
-          status: getStatusValue(activeTab),
-          startTime: params.startTime,
-          endTime: params.endTime,
-        },
+      const data = await getRefundList({
+        page: params.page || 1,
+        pageSize: params.pageSize || 20,
+        orderId: params.orderId,
+        status: getStatusValue(activeTab),
+        startTime: params.startTime,
+        endTime: params.endTime,
       });
 
-      const data = response.datas || { records: [], total: 0, size: 20, current: 1 };
       return {
         data: data.records || [],
         total: data.total || 0,

@@ -72,6 +72,7 @@
 import { ref } from 'vue'
 import { onShow } from '@dcloudio/uni-app'
 import { getFullImageUrl, DEFAULT_AVATAR_DATAURI } from '@/utils/helpers'
+import { getMemberInfo } from '@/services/user'
 
 const userInfo = ref(null)
 
@@ -152,12 +153,17 @@ const handleLogout = () => {
   })
 }
 
-onShow(() => {
-  // Check login status
+onShow(async () => {
   const token = uni.getStorageSync('token')
   if (token) {
-    // Load user info
-    userInfo.value = uni.getStorageSync('userInfo') || { nickname: '用户' }
+    try {
+      const memberInfo = await getMemberInfo()
+      userInfo.value = memberInfo
+      uni.setStorageSync('userInfo', memberInfo)
+    } catch (e) {
+      // Fallback to cached
+      userInfo.value = uni.getStorageSync('userInfo') || { nickname: '用户' }
+    }
   } else {
     userInfo.value = null
   }

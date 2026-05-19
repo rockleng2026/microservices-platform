@@ -503,6 +503,20 @@ public class OrderServiceImpl extends ServiceImpl<MallOrderMapper, MallOrder> im
             if (newPayAmount.compareTo(order.getTotalAmount()) > 0) {
                 throw new RuntimeException("Pay amount cannot exceed total amount");
             }
+            // D-09: 改价不能低于成本价校验
+            java.math.BigDecimal totalCost = java.math.BigDecimal.ZERO;
+            LambdaQueryWrapper<MallOrderItem> itemWrapper = new LambdaQueryWrapper<>();
+            itemWrapper.eq(MallOrderItem::getOrderId, orderId);
+            List<MallOrderItem> orderItems = orderItemMapper.selectList(itemWrapper);
+            for (MallOrderItem item : orderItems) {
+                MallGoodsSku sku = skuMapper.selectById(item.getSkuId());
+                if (sku != null && sku.getCostPrice() != null) {
+                    totalCost = totalCost.add(sku.getCostPrice().multiply(java.math.BigDecimal.valueOf(item.getQuantity())));
+                }
+            }
+            if (totalCost.compareTo(java.math.BigDecimal.ZERO) > 0 && newPayAmount.compareTo(totalCost) < 0) {
+                throw new RuntimeException("改价后金额不能低于成本价" + totalCost.setScale(2));
+            }
             order.setPayAmount(newPayAmount);
             order.setUpdateTime(LocalDateTime.now());
             baseMapper.updateById(order);

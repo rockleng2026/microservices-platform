@@ -11,67 +11,39 @@
 
 import { ArrowLeftOutlined, SaveOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
-import { ProForm, ProFormDateRangePicker, ProFormDigit, ProFormGroup, ProFormRadio, ProFormSelect, ProFormText } from '@ant-design/pro-form';
-import { Card, Button, message, Typography, Divider } from 'antd';
+import { ProForm, ProFormDateRangePicker, ProFormDigit, ProFormGroup, ProFormRadio, ProFormText } from '@ant-design/pro-form';
+import { Card, Button, message, Typography, Divider, RadioChangeEvent } from 'antd';
 import React, { useEffect, useState } from 'react';
 import { history, useParams } from 'umi';
+import dayjs from 'dayjs';
 import { CouponTemplateParams, createCouponTemplate, getCouponTemplateList, updateCouponTemplate } from './services/coupons';
 
 const { Text } = Typography;
-
-/** 优惠券类型选项 */
-const couponTypeOptions = [
-  { label: '满减券', value: 1 },
-  { label: '折扣券', value: 2 },
-];
-
-/** 有效期类型选项 */
-const validTypeOptions = [
-  { label: '固定时间', value: 1 },
-  { label: '领券后N天', value: 2 },
-];
 
 const CouponCreatePage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id;
   const [loading, setLoading] = useState(false);
-  const [initialValues, setInitialValues] = useState<CouponTemplateParams | null>(null);
+  const [validType, setValidType] = useState<number>(1);
 
-  // 加载编辑数据
-  useEffect(() => {
-    if (isEdit && id) {
-      const loadData = async () => {
-        try {
-          const list = await getCouponTemplateList();
-          const coupon = list.find(item => item.id === parseInt(id));
-          if (coupon) {
-            setInitialValues({
-              name: coupon.name,
-              type: coupon.type,
-              faceValue: coupon.faceValue,
-              discountRate: coupon.discountRate,
-              minAmount: coupon.minAmount,
-              maxDiscount: coupon.maxDiscount,
-              totalCount: coupon.totalCount,
-              perUserLimit: coupon.perUserLimit,
-              validType: coupon.validType,
-              startTime: coupon.startTime,
-              endTime: coupon.endTime,
-              validDays: coupon.validDays,
-            });
-          }
-        } catch (error) {
-          message.error('加载优惠券数据失败');
-        }
-      };
-      loadData();
-    }
-  }, [isEdit, id]);
+  /** 有效期类型切换 */
+  const handleValidTypeChange = (value: number) => {
+    setValidType(value);
+  };
 
   /** 表单提交 */
   const handleFinish = async (values: Record<string, unknown>) => {
     setLoading(true);
     try {
+      // 固定日期：开始时间 00:00:00，结束时间下一天减1秒
+      let startTime: string | undefined;
+      let endTime: string | undefined;
+      if (values.validType === 1 && values.validTime) {
+        const [startDate, endDate] = values.validTime as [dayjs.Dayjs, dayjs.Dayjs];
+        startTime = startDate.format('yyyy-MM-dd 00:00:00');
+        // 结束时间为选择日期的下一天减1秒
+        endTime = endDate.add(1, 'day').subtract(1, 'second').format('yyyy-MM-dd HH:mm:ss');
+      }
       const params: CouponTemplateParams = {
         name: values.name as string,
         type: values.type as 1 | 2,
@@ -82,8 +54,8 @@ const CouponCreatePage: React.FC = () => {
         totalCount: values.totalCount as number,
         perUserLimit: values.perUserLimit as number,
         validType: values.validType as 1 | 2,
-        startTime: Array.isArray(values.validTime) ? values.validTime[0] : undefined,
-        endTime: Array.isArray(values.validTime) ? values.validTime[1] : undefined,
+        startTime,
+        endTime,
         validDays: values.validDays as number,
       };
 
@@ -109,14 +81,7 @@ const CouponCreatePage: React.FC = () => {
       backIcon={<ArrowLeftOutlined />}
     >
       <Card>
-        <ProForm<CouponTemplateParams>
-          initialValues={initialValues || {
-            type: 1,
-            validType: 1,
-            totalCount: 100,
-            perUserLimit: 1,
-            minAmount: '0',
-          }}
+        <ProForm
           onFinish={handleFinish}
           submitter={{
             searchConfig: {
@@ -146,7 +111,10 @@ const CouponCreatePage: React.FC = () => {
           <ProFormRadio.Group
             name="type"
             label="优惠券类型"
-            options={couponTypeOptions}
+            options={[
+              { label: '满减券', value: 1 },
+              { label: '折扣券', value: 2 },
+            ]}
             rules={[{ required: true, message: '请选择优惠券类型' }]}
           />
 
@@ -223,21 +191,32 @@ const CouponCreatePage: React.FC = () => {
           <ProFormRadio.Group
             name="validType"
             label="有效期类型"
-            options={validTypeOptions}
+            options={[
+              { label: '固定时间', value: 1 },
+              { label: '领券后N天', value: 2 },
+            ]}
             rules={[{ required: true, message: '请选择有效期类型' }]}
+            fieldProps={{
+              onChange: (e: RadioChangeEvent) => handleValidTypeChange(e.target.value),
+            }}
           />
 
-          <ProFormDateRangePicker
-            name="validTime"
-            label="固定有效期"
-            tooltip="选择优惠券的有效时间范围"
-            disabled={initialValues?.validType === 2}
-            fieldProps={{
-              showTime: { format: 'HH:mm:ss' },
-              format: 'YYYY-MM-DD HH:mm:ss',
-            }}
-            rules={[{ required: true, message: '请选择固定有效期' }]}
-          />
+          {/* 固定日期：使用 ProFormDateRangePicker */}
+          <ProForm.Group>
+            <ProFormDateRangePicker
+              name="validTime"
+              label="固定有效期"
+              disabled={validType === 2}
+              fieldProps={{
+                format: 'YYYY-MM-DD',
+                placeholder: ['开始日期', '结束日期'],
+              }}
+              rules={[{ required: validType === 1, message: '请选择固定有效期' }]}
+            />
+          </ProForm.Group>
+          <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+            固定日期：开始时间为选择日 00:00:00，结束时间为下一天 00:00:00 减1秒（即 23:59:59）
+          </Text>
 
           <ProFormDigit
             name="validDays"

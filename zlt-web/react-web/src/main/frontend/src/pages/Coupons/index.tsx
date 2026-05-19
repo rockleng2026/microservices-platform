@@ -2,9 +2,9 @@ import { PlusOutlined } from '@ant-design/icons';
 import { PageContainer } from '@ant-design/pro-components';
 import { ActionType, ProColumns, ProTable } from '@ant-design/pro-table';
 import { history } from 'umi';
-import { message, Modal, Tabs, Tag } from 'antd';
+import { message, Modal, Tabs, Tag, Button, Input, CopyOutlined } from 'antd';
 import React, { useRef, useState } from 'react';
-import { MallCouponTemplate, publishCoupon, offlineCoupon, CouponStatus } from './services/coupons';
+import { MallCouponTemplate, publishCoupon, offlineCoupon, CouponStatus, generateClaimCode } from './services/coupons';
 import IssueModal from './components/IssueModal';
 import StatisticsModal from './components/StatisticsModal';
 
@@ -104,13 +104,41 @@ const CouponsPage: React.FC = () => {
     setStatisticsModalVisible(true);
   };
 
-  /** 生成领取链接 - BLOCKED */
-  const handleGenerateLink = (record: MallCouponTemplate) => {
-    Modal.info({
-      title: '生成领取链接',
-      content: '后端 API 暂未实现，无法生成领取链接。\n\nD-11 要求：限时一次性码，有时间限制。需后端实现生成一次性 claim code 并设置过期时间后，方可使用此功能。',
-      okText: '知道了',
-    });
+  /** 生成领取链接 - D-11 */
+  const handleGenerateLink = async (record: MallCouponTemplate) => {
+    try {
+      const result = await generateClaimCode(record.id);
+      Modal.success({
+        title: '领取链接已生成',
+        content: (
+          <div>
+            <p style={{ marginBottom: 8 }}>优惠券：{record.name}</p>
+            <p style={{ marginBottom: 8 }}>领取码：{result.claimCode}</p>
+            <p style={{ marginBottom: 8 }}>有效期至：{result.expireTime}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+              <Input.TextArea
+                value={result.claimUrl}
+                readOnly
+                rows={1}
+                style={{ flex: 1, fontSize: 12 }}
+              />
+              <Button
+                icon={<CopyOutlined />}
+                onClick={() => {
+                  navigator.clipboard.writeText(result.claimUrl);
+                  message.success('链接已复制');
+                }}
+              >
+                复制
+              </Button>
+            </div>
+          </div>
+        ),
+        okText: '关闭',
+      });
+    } catch (error: any) {
+      message.error(error?.message || '生成失败');
+    }
   };
 
   /** 格式化金额/折扣显示 */
@@ -296,14 +324,15 @@ const CouponsPage: React.FC = () => {
         </Tabs>
       </div>
 
-      {/* 发放弹窗 - BLOCKED */}
+      {/* 发放弹窗 */}
       <IssueModal
         visible={issueModalVisible}
         coupon={selectedCoupon}
         onClose={() => setIssueModalVisible(false)}
+        onSuccess={reloadTable}
       />
 
-      {/* 统计弹窗 - BLOCKED */}
+      {/* 统计弹窗 */}
       <StatisticsModal
         visible={statisticsModalVisible}
         coupon={selectedCoupon}

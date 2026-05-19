@@ -79,6 +79,7 @@ CREATE TABLE IF NOT EXISTS `mall_goods_sku` (
     `sku_code` VARCHAR(128) COMMENT '商家SKU编码',
     `specs` TEXT COMMENT '规格组合(JSON:{"CPU型号":"i7-13700","内存":"32GB"})',
     `price` DECIMAL(10,2) NOT NULL COMMENT '销售价',
+    `cost_price` DECIMAL(10,2) DEFAULT 0 COMMENT '成本价',
     `stock` INT NOT NULL DEFAULT 0 COMMENT '库存数量(-1表示无限制)',
     `image` VARCHAR(255) COMMENT 'SKU图片',
     `status` TINYINT DEFAULT 1 COMMENT '状态(0禁用,1启用)',

@@ -10,6 +10,7 @@ public class SkuDTO implements Serializable {
     private String skuCode;
     private String specs;
     private BigDecimal price;
+    private BigDecimal costPrice;  // 成本价
     private Integer stock;
     private String image;
     private Integer status;

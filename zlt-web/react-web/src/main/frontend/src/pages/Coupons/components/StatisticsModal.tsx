@@ -1,15 +1,11 @@
 /**
- * 优惠券统计弹窗 (BLOCKED 骨架)
- *
- * ADMIN-04-06 优惠券使用统计
- *
- * BLOCKED: 后端无统计聚合 endpoint
- * 需后端实现统计接口后填充数据
+ * 优惠券统计弹窗 (ADMIN-04-06)
+ * 显示优惠券使用统计数据
  */
 
-import { Descriptions, Modal, Statistic, Typography } from 'antd';
+import { Card, Col, Row, Statistic, Modal, Typography, Spin } from 'antd';
 import React from 'react';
-import { MallCouponTemplate } from '../services/coupons';
+import { MallCouponTemplate, getCouponStatistics, CouponStatistics } from '../services/coupons';
 
 const { Text } = Typography;
 
@@ -19,18 +15,28 @@ interface StatisticsModalProps {
   onClose: () => void;
 }
 
-/**
- * 统计 Modal (BLOCKED 骨架)
- *
- * 功能说明:
- * - 显示优惠券的使用统计数据
- * - 当前无后端 API，数据为占位符
- *
- * TODO: 后端实现后替换为实际 API 调用
- *   GET /api-mall/admin/coupon/template/{id}/statistics
- *   需返回: 已发放数量、已使用数量、未使用数量、使用率
- */
 const StatisticsModal: React.FC<StatisticsModalProps> = ({ visible, coupon, onClose }) => {
+  const [loading, setLoading] = React.useState(false);
+  const [stats, setStats] = React.useState<CouponStatistics | null>(null);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (visible && coupon?.id) {
+      setLoading(true);
+      setError(null);
+      getCouponStatistics(coupon.id)
+        .then(data => {
+          setStats(data);
+        })
+        .catch((err: any) => {
+          setError(err?.message || '加载失败');
+        })
+        .finally(() => {
+          setLoading(false);
+        });
+    }
+  }, [visible, coupon?.id]);
+
   return (
     <Modal
       title="优惠券统计"
@@ -40,40 +46,51 @@ const StatisticsModal: React.FC<StatisticsModalProps> = ({ visible, coupon, onCl
       destroyOnClose
       width={600}
     >
-      <div style={{ marginBottom: 16, padding: 12, background: '#fffbe6', border: '1px solid #ffe58f', borderRadius: 4 }}>
-        <Text type="secondary">
-          <strong>BLOCKED 状态</strong> — 后端 API 暂未实现
-        </Text>
-        <br />
-        <Text type="secondary" style={{ fontSize: 12 }}>
-          ADMIN-04-06: 优惠券使用统计
-        </Text>
-        <br />
-        <Text type="secondary" style={{ fontSize: 12 }}>
-          需后端实现统计聚合 endpoint 后填充实际数据
-        </Text>
-      </div>
+      <Spin spinning={loading}>
+        {error ? (
+          <div style={{ textAlign: 'center', padding: 24, color: '#ff4d4f' }}>{error}</div>
+        ) : stats ? (
+          <>
+            <Card size="small" title={coupon?.name} style={{ marginBottom: 16 }}>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Statistic title="总数量" value={stats.totalCount} />
+                </Col>
+                <Col span={12}>
+                  <Statistic title="剩余数量" value={stats.remainCount} />
+                </Col>
+              </Row>
+            </Card>
 
-      <Descriptions column={2} bordered size="small" title={coupon?.name}>
-        <Descriptions.Item label="总数量">{coupon?.totalCount ?? '-'}</Descriptions.Item>
-        <Descriptions.Item label="剩余数量">{coupon?.remainCount ?? '-'}</Descriptions.Item>
-        <Descriptions.Item label="已发放数量" span={2}>
-          <Text type="secondary">后端 API 暂未实现</Text>
-        </Descriptions.Item>
-        <Descriptions.Item label="已使用数量">
-          <Text type="secondary">-</Text>
-        </Descriptions.Item>
-        <Descriptions.Item label="未使用数量">
-          <Text type="secondary">-</Text>
-        </Descriptions.Item>
-        <Descriptions.Item label="使用率" span={2}>
-          <Text type="secondary">-</Text>
-        </Descriptions.Item>
-      </Descriptions>
+            <Card size="small" title="发放统计" style={{ marginBottom: 16 }}>
+              <Row gutter={16}>
+                <Col span={8}>
+                  <Statistic title="已发放" value={stats.issuedCount} valueStyle={{ color: '#1890ff' }} />
+                </Col>
+                <Col span={8}>
+                  <Statistic title="已使用" value={stats.usedCount} valueStyle={{ color: '#52c41a' }} />
+                </Col>
+                <Col span={8}>
+                  <Statistic title="未使用" value={stats.unusedCount} valueStyle={{ color: '#faad14' }} />
+                </Col>
+              </Row>
+            </Card>
 
-      <div style={{ marginTop: 24 }}>
-        <Statistic title="已发放数量" value="-" />
-      </div>
+            <Card size="small" title="使用率">
+              <Statistic
+                title="使用率"
+                value={stats.usageRate}
+                valueStyle={{ color: stats.usageRate === '0.0%' ? '#999' : '#52c41a', fontSize: 28 }}
+              />
+              <div style={{ marginTop: 8 }}>
+                <Text type="secondary">
+                  已使用 / 已发放 = {stats.usedCount} / {stats.issuedCount}
+                </Text>
+              </div>
+            </Card>
+          </>
+        ) : null}
+      </Spin>
     </Modal>
   );
 };

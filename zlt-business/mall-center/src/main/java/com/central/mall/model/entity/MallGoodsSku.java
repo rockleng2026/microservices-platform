@@ -17,6 +17,7 @@ public class MallGoodsSku {
     private String skuCode;
     private String specs;  // JSON对象
     private BigDecimal price;
+    private BigDecimal costPrice;  // 成本价
     private Integer stock;  // -1表示无限制
     private String image;
     private Integer status;

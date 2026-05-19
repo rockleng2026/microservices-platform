@@ -1,17 +1,25 @@
 package com.central.mall.controller.admin;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.central.common.model.Result;
+import com.central.mall.mapper.MallCouponMapper;
 import com.central.mall.mapper.MallCouponTemplateMapper;
+import com.central.mall.model.entity.MallCoupon;
 import com.central.mall.model.entity.MallCouponTemplate;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 管理员优惠券控制器
@@ -22,7 +30,13 @@ import java.util.Map;
 @Tag(name = "管理员-优惠券管理")
 public class AdminCouponController {
 
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     private final MallCouponTemplateMapper templateMapper;
+    private final MallCouponMapper couponMapper;
+
+    @Autowired
+    private StringRedisTemplate redisTemplate;
 
     @PostMapping("/template")
     @Operation(summary = "创建优惠券模板 (MARKETING-01)")
@@ -46,8 +60,12 @@ public class AdminCouponController {
         template.setRemainCount((Integer) params.get("totalCount"));
         template.setPerUserLimit(params.get("perUserLimit") != null ? (Integer) params.get("perUserLimit") : 1);
         template.setValidType(params.get("validType") != null ? (Integer) params.get("validType") : 1);
-        template.setStartTime(params.get("startTime") != null ? LocalDateTime.parse(params.get("startTime").toString()) : null);
-        template.setEndTime(params.get("endTime") != null ? LocalDateTime.parse(params.get("endTime").toString()) : null);
+        if (params.get("startTime") != null) {
+            template.setStartTime(LocalDateTime.parse(params.get("startTime").toString(), DATE_TIME_FORMATTER));
+        }
+        if (params.get("endTime") != null) {
+            template.setEndTime(LocalDateTime.parse(params.get("endTime").toString(), DATE_TIME_FORMATTER));
+        }
         template.setValidDays(params.get("validDays") != null ? (Integer) params.get("validDays") : null);
         template.setStatus(0); // 未发布
         template.setCreateTime(LocalDateTime.now());
@@ -72,8 +90,8 @@ public class AdminCouponController {
         if (params.get("totalCount") != null) template.setTotalCount((Integer) params.get("totalCount"));
         if (params.get("perUserLimit") != null) template.setPerUserLimit((Integer) params.get("perUserLimit"));
         if (params.get("validType") != null) template.setValidType((Integer) params.get("validType"));
-        if (params.get("startTime") != null) template.setStartTime(LocalDateTime.parse(params.get("startTime").toString()));
-        if (params.get("endTime") != null) template.setEndTime(LocalDateTime.parse(params.get("endTime").toString()));
+        if (params.get("startTime") != null) template.setStartTime(LocalDateTime.parse(params.get("startTime").toString(), DATE_TIME_FORMATTER));
+        if (params.get("endTime") != null) template.setEndTime(LocalDateTime.parse(params.get("endTime").toString(), DATE_TIME_FORMATTER));
         if (params.get("validDays") != null) template.setValidDays((Integer) params.get("validDays"));
         template.setUpdateTime(LocalDateTime.now());
         templateMapper.updateById(template);
@@ -123,5 +141,123 @@ public class AdminCouponController {
         wrapper.orderByDesc(MallCouponTemplate::getCreateTime);
         var templates = templateMapper.selectList(wrapper);
         return Result.succeed(templates);
+    }
+
+    @PostMapping("/template/{id}/issue")
+    @Operation(summary = "向指定用户发放优惠券 (ADMIN-04-05)")
+    public Result<?> issueCouponToUser(@PathVariable Long id, @RequestBody Map<String, Object> params) {
+        MallCouponTemplate template = templateMapper.selectById(id);
+        if (template == null) {
+            return Result.failed("优惠券不存在");
+        }
+        if (template.getStatus() != 1) {
+            return Result.failed("只能向已发布的优惠券发放");
+        }
+        Long userId = ((Number) params.get("userId")).longValue();
+        if (userId == null || userId <= 0) {
+            return Result.failed("用户ID无效");
+        }
+        // 检查剩余数量
+        if (template.getRemainCount() <= 0) {
+            return Result.failed("优惠券已领完");
+        }
+        // 创建用户优惠券（复制模板数据）
+        MallCoupon coupon = new MallCoupon();
+        coupon.setUserId(userId);
+        coupon.setTemplateId(id);
+        coupon.setCouponNo(UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase());
+        coupon.setName(template.getName());
+        coupon.setType(template.getType());
+        coupon.setFaceValue(template.getFaceValue());
+        coupon.setDiscountRate(template.getDiscountRate());
+        coupon.setMinAmount(template.getMinAmount());
+        coupon.setMaxDiscount(template.getMaxDiscount());
+        coupon.setStatus(1); // 1=未使用
+        coupon.setReceiveTime(LocalDateTime.now());
+        // 计算过期时间
+        LocalDateTime now = LocalDateTime.now();
+        if (template.getValidType() == 1) {
+            coupon.setExpireTime(template.getEndTime());
+        } else {
+            coupon.setExpireTime(now.plusDays(template.getValidDays() != null ? template.getValidDays() : 7));
+        }
+        coupon.setCreateTime(now);
+        coupon.setUpdateTime(now);
+        couponMapper.insert(coupon);
+        // 扣减 remainCount
+        template.setRemainCount(template.getRemainCount() - 1);
+        template.setUpdateTime(now);
+        templateMapper.updateById(template);
+        return Result.succeed(coupon.getId(), "发放成功");
+    }
+
+    @GetMapping("/template/{id}/statistics")
+    @Operation(summary = "优惠券使用统计 (ADMIN-04-06)")
+    public Result<Map<String, Object>> getCouponStatistics(@PathVariable Long id) {
+        MallCouponTemplate template = templateMapper.selectById(id);
+        if (template == null) {
+            return Result.failed("优惠券不存在");
+        }
+        // 统计已发放数量 = totalCount - remainCount
+        int totalCount = template.getTotalCount() != null ? template.getTotalCount() : 0;
+        int remainCount = template.getRemainCount() != null ? template.getRemainCount() : 0;
+        int issuedCount = totalCount - remainCount;
+        // 统计已使用/未使用
+        LambdaQueryWrapper<MallCoupon> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(MallCoupon::getTemplateId, id);
+        var coupons = couponMapper.selectList(wrapper);
+        int usedCount = 0;
+        int unusedCount = 0;
+        for (MallCoupon c : coupons) {
+            if (c.getStatus() != null) {
+                if (c.getStatus() == 2) usedCount++;
+                else if (c.getStatus() == 1) unusedCount++;
+            }
+        }
+        double usageRate = issuedCount > 0 ? (double) usedCount / issuedCount * 100 : 0;
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalCount", totalCount);
+        stats.put("remainCount", remainCount);
+        stats.put("issuedCount", issuedCount);
+        stats.put("usedCount", usedCount);
+        stats.put("unusedCount", unusedCount);
+        stats.put("usageRate", String.format("%.1f", usageRate) + "%");
+        return Result.succeed(stats);
+    }
+
+    @GetMapping("/template/{id}/claim-code")
+    @Operation(summary = "生成限时领取码 (D-11)")
+    public Result<Map<String, Object>> generateClaimCode(@PathVariable Long id,
+        @RequestParam(defaultValue = "7") Integer expireDays) {
+        MallCouponTemplate template = templateMapper.selectById(id);
+        if (template == null) {
+            return Result.failed("优惠券不存在");
+        }
+        if (template.getStatus() != 1) {
+            return Result.failed("只能为已发布的优惠券生成领取码");
+        }
+        // 生成一次性 UUID 作为 claim code
+        String claimCode = UUID.randomUUID().toString().replace("-", "").substring(0, 16).toUpperCase();
+        String redisKey = "coupon:claim:" + claimCode;
+        // 存入 Redis，设置过期时间
+        redisTemplate.opsForValue().set(redisKey, String.valueOf(id), expireDays, TimeUnit.DAYS);
+        LocalDateTime expireTime = LocalDateTime.now().plusDays(expireDays);
+        Map<String, Object> result = new HashMap<>();
+        result.put("claimCode", claimCode);
+        result.put("claimUrl", "/pages/index/index?claimCode=" + claimCode);
+        result.put("expireTime", expireTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        result.put("expireDays", expireDays);
+        return Result.succeed(result, "领取码生成成功");
+    }
+
+    @DeleteMapping("/template/{id}")
+    @Operation(summary = "删除优惠券模板 (ADMIN-04-03)")
+    public Result<?> deleteTemplate(@PathVariable Long id) {
+        MallCouponTemplate template = templateMapper.selectById(id);
+        if (template == null) {
+            return Result.failed("优惠券不存在");
+        }
+        templateMapper.deleteById(id);
+        return Result.succeed(true, "删除成功");
     }
 }

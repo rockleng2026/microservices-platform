@@ -124,11 +124,63 @@ export async function offlineCoupon(id: number): Promise<boolean> {
 /**
  * 删除优惠券模板
  * DELETE /api-mall/admin/coupon/template/{id}
- * NOTE: 后端是否有此 endpoint 未确认，标记为 TODO
  */
 export async function deleteCoupon(id: number): Promise<boolean> {
   const response = await request<{ datas?: boolean }>(`/api-mall/admin/coupon/template/${id}`, {
     method: 'DELETE',
   });
   return response.datas as boolean;
+}
+
+/**
+ * 向指定用户发放优惠券 (ADMIN-04-05)
+ * POST /api-mall/admin/coupon/template/{id}/issue
+ */
+export async function issueCoupon(templateId: number, userId: number): Promise<number> {
+  const response = await request<{ datas?: number }>(`/api-mall/admin/coupon/template/${templateId}/issue`, {
+    method: 'POST',
+    data: { userId },
+  });
+  return response.datas as number;
+}
+
+/** 优惠券统计结果 */
+export interface CouponStatistics {
+  totalCount: number;
+  remainCount: number;
+  issuedCount: number;
+  usedCount: number;
+  unusedCount: number;
+  usageRate: string;
+}
+
+/**
+ * 获取优惠券使用统计 (ADMIN-04-06)
+ * GET /api-mall/admin/coupon/template/{id}/statistics
+ */
+export async function getCouponStatistics(templateId: number): Promise<CouponStatistics> {
+  const response = await request<{ datas?: CouponStatistics }>(`/api-mall/admin/coupon/template/${templateId}/statistics`, {
+    method: 'GET',
+  });
+  return response.datas as CouponStatistics;
+}
+
+/** 领取码生成结果 */
+export interface ClaimCodeResult {
+  claimCode: string;
+  claimUrl: string;
+  expireTime: string;
+  expireDays: number;
+}
+
+/**
+ * 生成限时领取码 (D-11)
+ * GET /api-mall/admin/coupon/template/{id}/claim-code
+ */
+export async function generateClaimCode(templateId: number, expireDays: number = 7): Promise<ClaimCodeResult> {
+  const response = await request<{ datas?: ClaimCodeResult }>(`/api-mall/admin/coupon/template/${templateId}/claim-code`, {
+    method: 'GET',
+    params: { expireDays },
+  });
+  return response.datas as ClaimCodeResult;
 }

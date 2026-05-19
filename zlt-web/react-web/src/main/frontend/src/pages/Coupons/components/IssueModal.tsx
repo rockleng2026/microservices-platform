@@ -1,15 +1,11 @@
 /**
- * 优惠券发放弹窗 (BLOCKED 骨架)
- *
- * ADMIN-04-05 手动发放优惠券给指定用户
- *
- * BLOCKED: 后端 AdminCouponController 无 /issue 接口
- * 需后端实现 POST /coupon/template/{id}/issue {userId} 后方可使用
+ * 优惠券发放弹窗 (ADMIN-04-05)
+ * 向指定用户发放优惠券
  */
 
-import { Button, Form, Input, InputNumber, Modal, Tooltip, Typography } from 'antd';
+import { Button, Form, Input, InputNumber, Modal, message, Typography } from 'antd';
 import React from 'react';
-import { MallCouponTemplate } from '../services/coupons';
+import { MallCouponTemplate, issueCoupon } from '../services/coupons';
 
 const { Text } = Typography;
 
@@ -17,29 +13,31 @@ interface IssueModalProps {
   visible: boolean;
   coupon: MallCouponTemplate | null;
   onClose: () => void;
+  onSuccess?: () => void;
 }
 
-/**
- * 发放给用户 Modal (BLOCKED 骨架)
- *
- * 功能说明:
- * - 输入用户ID或手机号定向发放优惠券
- * - 当前无后端 API，UI 为禁用状态
- *
- * TODO: 后端实现后替换为实际 API 调用
- *   POST /api-mall/admin/coupon/template/{templateId}/issue
- *   Request: { userId: number } 或 { phone: string }
- */
-const IssueModal: React.FC<IssueModalProps> = ({ visible, coupon, onClose }) => {
+const IssueModal: React.FC<IssueModalProps> = ({ visible, coupon, onClose, onSuccess }) => {
   const [form] = Form.useForm();
+  const [loading, setLoading] = React.useState(false);
 
-  const handleIssue = () => {
-    // BLOCKED: 无后端 API，暂不实现
-    Modal.info({
-      title: '功能暂未开放',
-      content: '后端 API 暂未实现，敬请期待。\n\nADMIN-04-05: 手动发放优惠券给指定用户\nBLOCKED: 后端 AdminCouponController 无 /issue 接口',
-      okText: '知道了',
-    });
+  const handleIssue = async () => {
+    try {
+      const values = await form.validateFields();
+      setLoading(true);
+      await issueCoupon(coupon!.id, values.userId);
+      message.success('发放成功');
+      form.resetFields();
+      onSuccess?.();
+      onClose();
+    } catch (error: any) {
+      if (error.errorFields) {
+        // Form validation error
+        return;
+      }
+      message.error(error?.message || '发放失败');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -50,24 +48,16 @@ const IssueModal: React.FC<IssueModalProps> = ({ visible, coupon, onClose }) => 
       footer={null}
       destroyOnClose
     >
-      <div style={{ marginBottom: 16, padding: 12, background: '#fffbe6', border: '1px solid #ffe58f', borderRadius: 4 }}>
+      <div style={{ marginBottom: 16, padding: 12, background: '#f6ffed', border: '1px solid #b7eb8f', borderRadius: 4 }}>
         <Text type="secondary">
-          <strong>BLOCKED 状态</strong> — 后端 API 暂未实现
-        </Text>
-        <br />
-        <Text type="secondary" style={{ fontSize: 12 }}>
-          ADMIN-04-05: 手动发放优惠券给指定用户
-        </Text>
-        <br />
-        <Text type="secondary" style={{ fontSize: 12 }}>
-          需后端实现 POST /coupon/template/{coupon?.id}/issue {userId} 后方可使用
+          向指定用户发放优惠券，该用户可直接获得此券
         </Text>
       </div>
 
       <Form
         form={form}
         layout="vertical"
-        disabled={true}
+        initialValues={{ userId: undefined, phone: '' }}
       >
         <Form.Item
           label="优惠券"
@@ -82,22 +72,13 @@ const IssueModal: React.FC<IssueModalProps> = ({ visible, coupon, onClose }) => 
           name="userId"
           rules={[{ required: true, message: '请输入用户ID' }]}
         >
-          <InputNumber style={{ width: '100%' }} placeholder="请输入用户ID" />
-        </Form.Item>
-
-        <Form.Item
-          label="手机号（可选）"
-          name="phone"
-        >
-          <Input placeholder="可通过手机号查询用户ID" />
+          <InputNumber style={{ width: '100%' }} placeholder="请输入用户ID" min={1} />
         </Form.Item>
 
         <Form.Item style={{ marginBottom: 0 }}>
-          <Tooltip title="后端 API 暂未实现">
-            <Button type="primary" disabled block onClick={handleIssue}>
-              发放
-            </Button>
-          </Tooltip>
+          <Button type="primary" loading={loading} block onClick={handleIssue}>
+            发放
+          </Button>
         </Form.Item>
       </Form>
     </Modal>

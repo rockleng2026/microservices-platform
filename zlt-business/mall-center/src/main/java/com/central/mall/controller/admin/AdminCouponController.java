@@ -68,6 +68,7 @@ public class AdminCouponController {
         }
         template.setValidDays(params.get("validDays") != null ? (Integer) params.get("validDays") : null);
         template.setStatus(0); // 未发布
+        template.setTenantId("default"); // 租户ID
         template.setCreateTime(LocalDateTime.now());
         template.setUpdateTime(LocalDateTime.now());
         templateMapper.insert(template);
@@ -173,6 +174,7 @@ public class AdminCouponController {
         coupon.setMinAmount(template.getMinAmount());
         coupon.setMaxDiscount(template.getMaxDiscount());
         coupon.setStatus(1); // 1=未使用
+        coupon.setTenantId(template.getTenantId()); // 继承模板的租户ID
         coupon.setReceiveTime(LocalDateTime.now());
         // 计算过期时间
         LocalDateTime now = LocalDateTime.now();

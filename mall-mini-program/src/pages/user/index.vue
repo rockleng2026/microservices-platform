@@ -128,7 +128,7 @@ const goProfile = () => {
 }
 
 const goCoupons = () => {
-  uni.showToast({ title: '优惠券功能开发中', icon: 'none' })
+  uni.navigateTo({ url: '/pages/coupons/index' })
 }
 
 const goPoints = () => {

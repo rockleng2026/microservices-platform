@@ -3,6 +3,7 @@
  * Endpoints for logistics tracking and express company management
  */
 import { request } from '@/utils/request';
+import { API_BASE_URL } from '@/config/api';
 
 // ============= Express Company Types =============
 
@@ -118,7 +119,7 @@ export interface ApiResponse<T> {
  * GET /api/mall/admin/express/list
  */
 export async function getExpressList(params: ExpressListParams): Promise<PageResponse<ExpressDTO>> {
-  const response = await request<ApiResponse<PageResponse<ExpressDTO>>>('/api/mall/admin/express/list', {
+  const response = await request<ApiResponse<PageResponse<ExpressDTO>>>(`${API_BASE_URL}/api/mall/admin/express/list`, {
     method: 'GET',
     params: {
       page: params.page || 1,
@@ -135,7 +136,7 @@ export async function getExpressList(params: ExpressListParams): Promise<PageRes
  * POST /api/mall/admin/express
  */
 export async function createExpress(data: ExpressDTO): Promise<boolean> {
-  const response = await request<ApiResponse<boolean>>('/api/mall/admin/express', {
+  const response = await request<ApiResponse<boolean>>(`${API_BASE_URL}/api/mall/admin/express`, {
     method: 'POST',
     data,
   });
@@ -147,7 +148,7 @@ export async function createExpress(data: ExpressDTO): Promise<boolean> {
  * PUT /api/mall/admin/express
  */
 export async function updateExpress(data: ExpressDTO): Promise<boolean> {
-  const response = await request<ApiResponse<boolean>>('/api/mall/admin/express', {
+  const response = await request<ApiResponse<boolean>>(`${API_BASE_URL}/api/mall/admin/express`, {
     method: 'PUT',
     data,
   });
@@ -159,7 +160,7 @@ export async function updateExpress(data: ExpressDTO): Promise<boolean> {
  * DELETE /api/mall/admin/express/{id}
  */
 export async function deleteExpress(id: number): Promise<boolean> {
-  const response = await request<ApiResponse<boolean>>(`/api/mall/admin/express/${id}`, {
+  const response = await request<ApiResponse<boolean>>(`${API_BASE_URL}/api/mall/admin/express/${id}`, {
     method: 'DELETE',
   });
   return response.datas || false;
@@ -170,7 +171,7 @@ export async function deleteExpress(id: number): Promise<boolean> {
  * PUT /api/mall/admin/express/{id}/status/{status}
  */
 export async function updateExpressStatus(id: number, status: number): Promise<boolean> {
-  const response = await request<ApiResponse<boolean>>(`/api/mall/admin/express/${id}/status/${status}`, {
+  const response = await request<ApiResponse<boolean>>(`${API_BASE_URL}/api/mall/admin/express/${id}/status/${status}`, {
     method: 'PUT',
   });
   return response.datas || false;
@@ -183,7 +184,7 @@ export async function updateExpressStatus(id: number, status: number): Promise<b
  * GET /api/mall/admin/logistics/tracking?orderId=xxx
  */
 export async function getLogisticsTracking(orderId: number): Promise<LogisticsTrackDTO | null> {
-  const response = await request<ApiResponse<LogisticsTrackDTO>>('/api/mall/admin/logistics/tracking', {
+  const response = await request<ApiResponse<LogisticsTrackDTO>>(`${API_BASE_URL}/api/mall/admin/logistics/tracking`, {
     method: 'GET',
     params: { orderId },
   });

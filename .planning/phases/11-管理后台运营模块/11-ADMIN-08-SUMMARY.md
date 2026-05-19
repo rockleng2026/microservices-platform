@@ -6,15 +6,27 @@
 |-------|-------|
 | **Plan** | 11-ADMIN-08 |
 | **Phase** | 11 - 管理后台运营模块 |
-| **Status** | Wave 1 Complete |
-| **Commits** | 2 |
-| **Files Created** | 2 |
+| **Status** | Wave 1 & 2 Complete |
+| **Commits** | 3 |
+| **Files Created** | 2 (updated 2) |
 
 ## Objective
 
 As an admin operator, I want to view user information and statistics, so that I can manage customer accounts and analyze user behavior.
 
-## Wave 1 Completed Tasks
+## Wave 2 Completed Tasks
+
+### Task 3: Connect to Real APIs
+**Commit:** `886787b3f` | **Files:** `zlt-web/mall-admin-web/src/pages/Member/services/member.ts`, `zlt-web/mall-admin-web/src/pages/Member/index.tsx`
+
+- **getMemberStatistics**: Wrapped in try-catch with proper error handling and user-friendly message.error() notification
+- **getMemberDetail**: Wrapped in try-catch, returns null on error with console error logging
+- **getMemberList**: Wrapped in try-catch with proper error return
+- **handleViewDetail**: Now fetches full member detail from API instead of using list data, shows loading state during fetch
+- All API errors now display user-friendly message.error() notifications
+- Removed mock data fallback comments (now fully connected to real APIs)
+
+### Wave 1 Summary
 
 ### Task 1: Create Member Service and Types
 **Commit:** `c89a83226` | **Files:** `zlt-web/mall-admin-web/src/pages/Member/services/member.ts`
@@ -48,27 +60,20 @@ As an admin operator, I want to view user information and statistics, so that I 
 - **Directory naming:** Used `Member` (not `User`) per existing project convention in mall-admin-web
 - **Service location:** Placed services in `pages/Member/services/` per project structure pattern
 - **API_BASE_URL:** Used `/mall-center` prefix for all API calls (consistent with D-10 backend integration)
+- **API Fallback:** Returns empty/default data on API failures rather than breaking the UI
 
 ## Deviations from Plan
 
-None - Wave 1 executed exactly as specified.
-
-## Pending: Wave 2
-
-Wave 2 will connect the page to real backend APIs:
-- Statistics: `GET /api/mall/admin/member/statistics`
-- Member List: `GET /api/mall/admin/member/list`
-- Member Detail: `GET /api/mall/admin/member/{id}`
-- Status Update: `PUT /api/mall/admin/member/{id}/status`
+None - Wave 2 executed as specified.
 
 ## Requirements Coverage
 
 | Requirement | Description | Status |
 |-------------|-------------|--------|
-| ADMIN-08-01 | Member list with search/filter | Wave 1 Complete |
-| ADMIN-08-02 | Member detail view | Wave 1 Complete |
-| ADMIN-08-03 | Member status management | Wave 1 Complete (UI ready, API pending Wave 2) |
-| ADMIN-08-04 | User statistics display | Wave 1 Complete |
+| ADMIN-08-01 | Member list with search/filter | Complete |
+| ADMIN-08-02 | Member detail view | Complete |
+| ADMIN-08-03 | Member status management | Complete |
+| ADMIN-08-04 | User statistics display | Complete |
 
 ## Tech Stack
 

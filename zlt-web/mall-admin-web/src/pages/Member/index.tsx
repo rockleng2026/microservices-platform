@@ -154,7 +154,7 @@ const MemberListPage: React.FC = () => {
       setStatistics(data);
     } catch (error) {
       console.error('Failed to fetch statistics:', error);
-      // Use mock data for Wave 1
+      message.error('加载统计数据失败');
       setStatistics({
         totalUsers: 0,
         newUsersToday: 0,
@@ -196,12 +196,26 @@ const MemberListPage: React.FC = () => {
     }
   }, []);
 
-  // Handle view detail
+  // Handle view detail - fetch full details from API
   const handleViewDetail = async (member: MemberDTO) => {
     setDetailLoading(true);
-    setSelectedMember(member);
     setDetailVisible(true);
-    setDetailLoading(false);
+
+    try {
+      const detail = await getMemberDetail(member.id);
+      if (detail) {
+        setSelectedMember(detail);
+      } else {
+        message.error('获取会员详情失败');
+        setDetailVisible(false);
+      }
+    } catch (error) {
+      console.error('Failed to fetch member detail:', error);
+      message.error('获取会员详情失败');
+      setDetailVisible(false);
+    } finally {
+      setDetailLoading(false);
+    }
   };
 
   // Handle status toggle

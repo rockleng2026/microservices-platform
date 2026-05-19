@@ -78,39 +78,60 @@ export async function getMemberList(params: MemberListParams): Promise<PageRespo
       },
     }
   );
-  return response.datas || { records: [], total: 0, size: 20, current: 1 };
+  if (!response.datas) {
+    return { records: [], total: 0, size: 20, current: 1 };
+  }
+  return response.datas;
 }
 
 /**
  * Get member detail by ID
+ * Returns null if member not found or on error
  */
 export async function getMemberDetail(id: number): Promise<MemberDTO | null> {
-  const response = await request<ApiResponse<MemberDTO>>(
-    `${API_BASE_URL}/api/mall/admin/member/${id}`,
-    {
-      method: 'GET',
-    }
-  );
-  return response.datas || null;
+  try {
+    const response = await request<ApiResponse<MemberDTO>>(
+      `${API_BASE_URL}/api/mall/admin/member/${id}`,
+      {
+        method: 'GET',
+      }
+    );
+    return response.datas || null;
+  } catch (error) {
+    console.error('Failed to get member detail:', error);
+    return null;
+  }
 }
 
 /**
  * Get user/member statistics (ADMIN-08-04)
+ * Returns default values if statistics API fails
  */
 export async function getMemberStatistics(): Promise<UserStatisticsDTO> {
-  const response = await request<ApiResponse<UserStatisticsDTO>>(
-    `${API_BASE_URL}/api/mall/admin/member/statistics`,
-    {
-      method: 'GET',
-    }
-  );
-  return response.datas || {
-    totalUsers: 0,
-    newUsersToday: 0,
-    activeUsers: 0,
-    totalOrders: 0,
-    totalAmount: '0',
-  };
+  try {
+    const response = await request<ApiResponse<UserStatisticsDTO>>(
+      `${API_BASE_URL}/api/mall/admin/member/statistics`,
+      {
+        method: 'GET',
+      }
+    );
+    return response.datas || {
+      totalUsers: 0,
+      newUsersToday: 0,
+      activeUsers: 0,
+      totalOrders: 0,
+      totalAmount: '0',
+    };
+  } catch (error) {
+    console.error('Failed to get member statistics:', error);
+    return {
+      totalUsers: 0,
+      newUsersToday: 0,
+      activeUsers: 0,
+      totalOrders: 0,
+      totalAmount: '0',
+    };
+  }
 }
 
 /**

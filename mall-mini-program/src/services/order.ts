@@ -160,8 +160,22 @@ export const getOrderList = (status: string | undefined, page: number = 1, pageS
 
 // Get order detail
 export const getOrderDetail = (orderId: number): Promise<Order> => {
-  return request<Order>(`${ORDER_DETAIL}/${orderId}`, {
-    method: 'GET'
+  return new Promise((resolve, reject) => {
+    uni.request({
+      url: `${API_BASE}${ORDER_DETAIL}/${orderId}`,
+      method: 'GET',
+      header: getCommonHeaders(),
+      success: (res: any) => {
+        if (res.statusCode === 200 && res.data) {
+          // Backend wraps in Result: { code, msg, datas }
+          const orderData = res.data.datas || res.data
+          resolve(orderData)
+        } else {
+          reject(res)
+        }
+      },
+      fail: reject
+    })
   })
 }
 
@@ -176,5 +190,25 @@ export const cancelOrder = (orderId: number): Promise<void> => {
 export const confirmReceipt = (orderId: number): Promise<void> => {
   return request<void>(`${ORDER_DETAIL}/${orderId}/confirm`, {
     method: 'PUT'
+  })
+}
+
+// Get logistics info for an order
+export const getLogistics = (orderId: number): Promise<LogisticsInfo> => {
+  return new Promise((resolve, reject) => {
+    uni.request({
+      url: `${API_BASE}${ORDER_DETAIL}/${orderId}/delivery`,
+      method: 'GET',
+      header: getCommonHeaders(),
+      success: (res: any) => {
+        if (res.statusCode === 200 && res.data) {
+          const data = res.data.datas || res.data
+          resolve(data)
+        } else {
+          reject(res)
+        }
+      },
+      fail: reject
+    })
   })
 }

@@ -3,9 +3,15 @@
     <scroll-view class="checkout-scroll" scroll-y>
       <!-- Address Section -->
       <view class="section address-section" @click="openAddressDrawer">
-        <view class="section-label">
-          <uni-icons type="location" size="16" color="#ff5500"></uni-icons>
-          <text>收货地址</text>
+        <view class="section-header-row">
+          <view class="section-label">
+            <uni-icons type="location" size="16" color="#ff5500"></uni-icons>
+            <text>收货地址</text>
+          </view>
+          <view class="wechat-address-btn" @click.stop="chooseWeChatAddress">
+            <uni-icons type="plus" size="12" color="#07c160"></uni-icons>
+            <text class="wechat-address-btn-text">使用微信地址</text>
+          </view>
         </view>
         <view class="address-content" v-if="selectedAddress">
           <view class="address-info">
@@ -173,6 +179,7 @@ import { cartStore, type CartItem } from '@/stores/cart'
 import { getGoodsDetail } from '@/services/goods'
 import { getCurrentUserId } from '@/utils/helpers'
 import { getFullImageUrl, DEFAULT_AVATAR_DATAURI } from '@/utils/helpers'
+import { saveWeChatAddress } from '@/services/user'
 
 // Helper to get image src with fallback
 const getImageSrc = (path: string) => {
@@ -283,6 +290,37 @@ const openAddressDrawer = () => {
 
 const closeAddressDrawer = () => {
   showAddressDrawer.value = false
+}
+
+// Use WeChat address via wx.chooseAddress
+const chooseWeChatAddress = async () => {
+  try {
+    const res = await new Promise<any>((resolve, reject) => {
+      wx.chooseAddress({
+        success: (res: any) => resolve(res),
+        fail: (err: any) => reject(err)
+      })
+    })
+    // Save to backend
+    await saveWeChatAddress({
+      userName: res.userName,
+      telNumber: res.telNumber,
+      provinceName: res.provinceName,
+      cityName: res.cityName,
+      countyName: res.countyName,
+      detailInfo: res.detailInfo
+    })
+    uni.showToast({ title: '地址已同步', icon: 'success' })
+    // Reload address list
+    loadAddressList()
+  } catch (e: any) {
+    console.error('chooseWeChatAddress failed', e)
+    if (e.errMsg && e.errMsg.includes('cancel')) {
+      // User cancelled, do nothing
+    } else {
+      uni.showToast({ title: '获取地址失败', icon: 'none' })
+    }
+  }
 }
 
 const selectAddress = (addr: any) => {
@@ -505,6 +543,26 @@ onShow(async () => {
 }
 
 .address-section { cursor: pointer; }
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.wechat-address-btn {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 8px;
+  background-color: #f0f9f0;
+  border-radius: 12px;
+  border: 1px solid #07c160;
+}
+.wechat-address-btn-text {
+  font-size: 11px;
+  color: #07c160;
+  font-weight: 500;
+}
 .address-content, .coupon-content {
   display: flex;
   align-items: center;

@@ -70,6 +70,11 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { API_BASE, PAY_CREATE, ORDER_DETAIL } from '@/config/api'
 import { getCurrentUserId } from '@/utils/helpers'
 
+interface WechatLoginResponse {
+  errMsg: string
+  code: string
+}
+
 const orderId = ref<string>('')
 const orderInfo = ref<any>({})
 const isPaying = ref(false)
@@ -144,56 +149,83 @@ const copyOrderNo = () => {
 }
 
 // Handle pay button click
-const handlePay = () => {
+const handlePay = async () => {
   if (isExpired.value || isPaying.value) return
 
   isPaying.value = true
   uni.showLoading({ title: '正在唤起支付...' })
 
-  const userId = getCurrentUserId()
+  try {
+    // Step 1: Call wx.login to get code (required for backend to get openid)
+    const loginRes = await new Promise<WechatLoginResponse>((resolve, reject) => {
+      wx.login({
+        success: (res: any) => resolve(res),
+        fail: reject
+      })
+    })
 
-  uni.request({
-    url: `${API_BASE}${PAY_CREATE}`,
-    method: 'POST',
-    data: { orderId: orderId.value, userId },
-    header: { 'x-user-id': userId, 'Content-Type': 'application/json' },
-    success: (res: any) => {
-      uni.hideLoading()
-      if (res.statusCode === 200 && res.data) {
-        const payData = res.data
-        // Call WeChat JSAPI payment
-        wx.requestPayment({
-          timeStamp: payData.timestamp || payData.timeStamp,
-          nonceStr: payData.nonceStr,
-          package: `prepay_id=${payData.prepay_id}`,
-          signType: payData.signType || 'MD5',
-          paySign: payData.paySign,
-          success: () => {
-            // Payment success
-            uni.redirectTo({
-              url: `/pages/payment/result?orderId=${orderId.value}&status=success`
-            })
-          },
-          fail: (err) => {
-            // Payment cancelled or failed
-            console.log('wx.requestPayment fail', err)
-            uni.redirectTo({
-              url: `/pages/payment/result?orderId=${orderId.value}&status=fail`
-            })
-          }
-        })
-      } else {
-        isPaying.value = false
-        uni.showToast({ title: res.data?.message || '获取支付参数失败', icon: 'none' })
-      }
-    },
-    fail: (err) => {
-      uni.hideLoading()
-      isPaying.value = false
-      uni.showToast({ title: '网络错误，请重试', icon: 'none' })
-      console.error('PAY_CREATE request failed', err)
+    if (!loginRes.code) {
+      throw new Error('wx.login failed - no code returned')
     }
-  })
+
+    const userId = getCurrentUserId()
+
+    // Step 2: Call backend to get payment params (backend exchanges code for openid)
+    const payRes = await new Promise<any>((resolve, reject) => {
+      uni.request({
+        url: `${API_BASE}${PAY_CREATE}?openId=${loginRes.code}`,
+        method: 'POST',
+        data: { orderId: orderId.value, userId },
+        header: { 'x-user-id': userId, 'Content-Type': 'application/json' },
+        success: (res: any) => {
+          if (res.statusCode === 200 && res.data) resolve(res.data)
+          else reject(res)
+        },
+        fail: reject
+      })
+    })
+
+    uni.hideLoading()
+
+    if (payRes.code !== 200) {
+      throw new Error(payRes.msg || '获取支付参数失败')
+    }
+
+    // Step 3: Extract pay params from backend response
+    const payData = payRes.datas || payRes.data || {}
+    const wxPayParams = {
+      timeStamp: String(payData.timestamp || payData.timeStamp || ''),
+      nonceStr: payData.nonceStr || payData.nonce_string || '',
+      package: payData.packageValue || `prepay_id=${payData.prepay_id}`,
+      signType: payData.signType || 'HMAC-SHA256',
+      paySign: payData.paySign || payData.pay_sign || ''
+    }
+
+    // Step 4: Call wx.requestPayment
+    const payResult = await new Promise<string>((resolve) => {
+      wx.requestPayment({
+        ...wxPayParams,
+        success: () => resolve('success'),
+        fail: (err: any) => {
+          if (err.errMsg && err.errMsg.includes('cancel')) {
+            resolve('cancel')
+          } else {
+            resolve('fail')
+          }
+        }
+      })
+    })
+
+    // Step 5: Redirect to result page
+    uni.redirectTo({
+      url: `/pages/payment/result?orderId=${orderId.value}&status=${payResult}`
+    })
+  } catch (e: any) {
+    uni.hideLoading()
+    isPaying.value = false
+    uni.showToast({ title: e.message || '支付失败', icon: 'none' })
+    console.error('handlePay failed', e)
+  }
 }
 
 // Page lifecycle

@@ -152,8 +152,9 @@ Plans:
 | 13 | v2.0 | 0/all | Pending | — |
 | 14 | v2.0 | 1/5 | ✅ Complete | 2026-05-19 |
 | 15 | v2.0 | 6/6 | ✅ Complete | 2026-05-19 |
-
----
+| 16 | v2.0 | 0/0 | ✅ Complete | 2026-05-19 |
+| 17 | v2.0 | 0/2 | Pending | — |
+| **Total** | | **134** | | |
 
 ## Phase 14: 前端工程合并
 
@@ -202,3 +203,25 @@ Plans:
 ---
 
 *Roadmap updated: 2026-05-12 — Phase 15 gap closure plans 04/05/06 added (库存管理)*
+
+---
+
+## Phase 16: 订单列表优化
+
+---
+
+## Phase 17: 小程序增强（物流/支付/收货地址）
+
+| Module | Requirements | Count |
+|--------|--------------|-------|
+| MINI-LOGISTICS 物流查询 | 微信物流实时查询 | TBD |
+| MINI-PAY 支付接口 | wx.login + wx.requestPayment 集成 | TBD |
+| MINI-ORDERS 小程序订单 | 已付款订单列表 + 订单明细 | TBD |
+| MINI-ADDRESS 微信收货地址 | wx.chooseAddress 同步 | TBD |
+| **Total** | | **TBD** |
+
+**Plans:**
+- [ ] 17-MINI-ORDER-PLAN.md — 订单明细修复 + 物流查询
+- [ ] 17-MINI-PAY-ADDRESS-PLAN.md — 支付接口完善 + 微信收货地址
+
+*Phase 17 added: 2026-05-19 — 小程序增强功能*

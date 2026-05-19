@@ -1,4 +1,4 @@
-import { API_BASE, TENANT_ID } from '@/config/api'
+import { API_BASE, TENANT_ID, ADDRESS_SAVE } from '@/config/api'
 
 const request = <T>(url: string, options?: any): Promise<T> => {
   return new Promise((resolve, reject) => {
@@ -59,5 +59,32 @@ export const updateProfile = (profile: Partial<UserProfile>): Promise<any> => {
   return request('/api/mall/member/update', {
     method: 'POST',
     data: profile
+  })
+}
+
+// WeChat address response from wx.chooseAddress
+export interface WeChatAddress {
+  userName: string
+  telNumber: string
+  provinceName: string
+  cityName: string
+  countyName: string
+  detailInfo: string
+}
+
+// Save WeChat address to backend
+export const saveWeChatAddress = (wechatAddr: WeChatAddress): Promise<void> => {
+  const addressDto = {
+    receiverName: wechatAddr.userName,
+    phone: wechatAddr.telNumber,
+    province: wechatAddr.provinceName,
+    city: wechatAddr.cityName,
+    district: wechatAddr.countyName,
+    detail: wechatAddr.detailInfo,
+    isDefault: 0
+  }
+  return request<void>(ADDRESS_SAVE, {
+    method: 'POST',
+    data: addressDto
   })
 }

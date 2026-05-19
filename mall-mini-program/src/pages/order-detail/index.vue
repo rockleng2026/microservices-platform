@@ -166,7 +166,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { getOrderDetail, cancelOrder, confirmReceipt, type Order } from '@/services/order'
+import { getOrderDetail, cancelOrder, confirmReceipt, getLogistics, type Order } from '@/services/order'
 
 const orderId = ref<number>(0)
 const order = ref<Order | null>(null)
@@ -289,9 +289,18 @@ const onConfirmReceipt = () => {
 }
 
 // View logistics
-const viewLogistics = () => {
+const viewLogistics = async () => {
   if (!order.value?.logistics) return
-  uni.showToast({ title: '物流详情开发中', icon: 'none' })
+  try {
+    uni.showLoading({ title: '加载物流信息...' })
+    const logistics = await getLogistics(order.value.id)
+    order.value.logistics = logistics
+    uni.hideLoading()
+  } catch (e) {
+    uni.hideLoading()
+    uni.showToast({ title: '获取物流信息失败', icon: 'none' })
+    console.error('getLogistics failed', e)
+  }
 }
 
 // Go to evaluate

@@ -62,6 +62,78 @@ export const updateProfile = (profile: Partial<UserProfile>): Promise<any> => {
   })
 }
 
+// Get member info including points balance (MINI-09-01, MINI-09-07)
+export const getMemberInfo = (): Promise<{
+  userId: number;
+  nickname: string;
+  avatar: string;
+  phone: string;
+  points: number;
+  level: number;
+}> => {
+  return request('/api/mall/member/info', { method: 'GET' });
+};
+
+// Get points history (MINI-09-07)
+export const getPointsLog = (page: number = 1, pageSize: number = 10): Promise<{
+  list: Array<{
+    id: number;
+    type: 'earn' | 'deduct';
+    points: number;
+    reason: string;
+    createTime: string;
+  }>;
+  total: number;
+}> => {
+  return request('/api/mall/member/points/log', {
+    method: 'GET',
+    params: { page, pageSize }
+  });
+};
+
+// Get user coupons (MINI-09-04)
+export const getMyCoupons = (status?: number): Promise<{
+  list: Array<{
+    id: number;
+    name: string;
+    type: string;
+    discount: number;
+    minAmount: number;
+    validStartTime: string;
+    validEndTime: string;
+    status: 'unused' | 'used' | 'expired';
+  }>;
+  total: number;
+}> => {
+  return request('/api/mall/member/coupons', {
+    method: 'GET',
+    params: { status }
+  });
+};
+
+// Get favorites (MINI-09-05)
+export const getFavorites = (page: number = 1, pageSize: number = 10): Promise<{
+  list: Array<{
+    id: number;
+    goodsId: number;
+    goodsName: string;
+    price: number;
+    image: string;
+    createTime: string;
+  }>;
+  total: number;
+}> => {
+  return request('/api/mall/member/favorites', {
+    method: 'GET',
+    params: { page, pageSize }
+  });
+};
+
+// Remove from favorites (MINI-09-06)
+export const removeFavorite = (id: number): Promise<void> => {
+  return request(`/api/mall/member/favorites/${id}`, { method: 'DELETE' });
+};
+
 // WeChat address response from wx.chooseAddress
 export interface WeChatAddress {
   userName: string

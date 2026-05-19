@@ -9,7 +9,7 @@ import type { ColumnsType } from 'antd/lib/table';
 import { request } from '@/utils/request';
 
 interface CouponTemplateDTO {
-  id?: number;
+  id?: string;
   name: string;
   type: number;
   faceValue?: number;
@@ -43,6 +43,19 @@ const STATUS_COLORS: Record<number, string> = {
   0: 'default',
   1: 'success',
   2: 'orange',
+};
+
+/** 格式化日期显示 yyyy-MM-dd */
+const formatDateForDisplay = (dateStr?: string): string => {
+  if (!dateStr) return '';
+  return dateStr.substring(0, 10); // "2026-05-19T00:00:00" -> "2026-05-19"
+};
+
+/** 解析日期用于提交，自动补全时间 */
+const parseDateForSubmit = (dateStr: string, isStartTime: boolean): string => {
+  if (!dateStr) return '';
+  const dateOnly = dateStr.substring(0, 10); // 提取 yyyy-MM-dd 部分
+  return isStartTime ? `${dateOnly}T00:00:00` : `${dateOnly}T23:59:59`;
 };
 
 const CouponPage: React.FC = () => {
@@ -100,8 +113,8 @@ const CouponPage: React.FC = () => {
       totalCount: template.totalCount,
       perUserLimit: template.perUserLimit,
       validType: template.validType,
-      startTime: template.startTime,
-      endTime: template.endTime,
+      startTime: formatDateForDisplay(template.startTime),
+      endTime: formatDateForDisplay(template.endTime),
       validDays: template.validDays,
     });
     setModalVisible(true);
@@ -115,6 +128,9 @@ const CouponPage: React.FC = () => {
         ...values,
         totalCount: values.totalCount,
         remainCount: editingTemplate?.id ? undefined : values.totalCount, // Only set on create
+        // 格式化日期提交
+        startTime: values.startTime ? parseDateForSubmit(values.startTime, true) : undefined,
+        endTime: values.endTime ? parseDateForSubmit(values.endTime, false) : undefined,
       };
 
       if (editingTemplate?.id) {
@@ -139,7 +155,7 @@ const CouponPage: React.FC = () => {
   };
 
   // Handle publish
-  const handlePublish = async (id: number) => {
+  const handlePublish = async (id: string) => {
     try {
       await request(`/api-mall/api/mall/admin/coupon/template/${id}/publish`, {
         method: 'POST',
@@ -153,7 +169,7 @@ const CouponPage: React.FC = () => {
   };
 
   // Handle offline
-  const handleOffline = async (id: number) => {
+  const handleOffline = async (id: string) => {
     try {
       await request(`/api-mall/api/mall/admin/coupon/template/${id}/offline`, {
         method: 'POST',
@@ -358,10 +374,10 @@ const CouponPage: React.FC = () => {
                 {getFieldValue('validType') === 1 && (
                   <>
                     <Form.Item name="startTime" label="开始时间">
-                      <Input placeholder="格式: 2026-05-01T00:00:00" />
+                      <Input placeholder="格式: 2026-05-01" />
                     </Form.Item>
                     <Form.Item name="endTime" label="结束时间">
-                      <Input placeholder="格式: 2026-05-31T23:59:59" />
+                      <Input placeholder="格式: 2026-05-31" />
                     </Form.Item>
                   </>
                 )}

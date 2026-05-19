@@ -14,6 +14,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -30,7 +31,8 @@ import java.util.concurrent.TimeUnit;
 @Tag(name = "管理员-优惠券管理")
 public class AdminCouponController {
 
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+    private static final DateTimeFormatter DATE_ONLY_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
     private final MallCouponTemplateMapper templateMapper;
     private final MallCouponMapper couponMapper;
@@ -61,10 +63,10 @@ public class AdminCouponController {
         template.setPerUserLimit(params.get("perUserLimit") != null ? (Integer) params.get("perUserLimit") : 1);
         template.setValidType(params.get("validType") != null ? (Integer) params.get("validType") : 1);
         if (params.get("startTime") != null) {
-            template.setStartTime(LocalDateTime.parse(params.get("startTime").toString(), DATE_TIME_FORMATTER));
+            template.setStartTime(parseDateTime(params.get("startTime").toString(), true));
         }
         if (params.get("endTime") != null) {
-            template.setEndTime(LocalDateTime.parse(params.get("endTime").toString(), DATE_TIME_FORMATTER));
+            template.setEndTime(parseDateTime(params.get("endTime").toString(), false));
         }
         template.setValidDays(params.get("validDays") != null ? (Integer) params.get("validDays") : null);
         template.setStatus(0); // 未发布
@@ -91,8 +93,8 @@ public class AdminCouponController {
         if (params.get("totalCount") != null) template.setTotalCount((Integer) params.get("totalCount"));
         if (params.get("perUserLimit") != null) template.setPerUserLimit((Integer) params.get("perUserLimit"));
         if (params.get("validType") != null) template.setValidType((Integer) params.get("validType"));
-        if (params.get("startTime") != null) template.setStartTime(LocalDateTime.parse(params.get("startTime").toString(), DATE_TIME_FORMATTER));
-        if (params.get("endTime") != null) template.setEndTime(LocalDateTime.parse(params.get("endTime").toString(), DATE_TIME_FORMATTER));
+        if (params.get("startTime") != null) template.setStartTime(parseDateTime(params.get("startTime").toString(), true));
+        if (params.get("endTime") != null) template.setEndTime(parseDateTime(params.get("endTime").toString(), false));
         if (params.get("validDays") != null) template.setValidDays((Integer) params.get("validDays"));
         template.setUpdateTime(LocalDateTime.now());
         templateMapper.updateById(template);
@@ -261,5 +263,32 @@ public class AdminCouponController {
         }
         templateMapper.deleteById(id);
         return Result.succeed(true, "删除成功");
+    }
+
+    /**
+     * 解析日期时间字符串，支持 yyyy-MM-dd 和 yyyy-MM-dd'T'HH:mm:ss 格式
+     * @param dateStr 日期字符串
+     * @param isStartTime true-开始时间自动补全00:00:00，false-结束时间自动补全23:59:59
+     */
+    private LocalDateTime parseDateTime(String dateStr, boolean isStartTime) {
+        if (dateStr == null || dateStr.isEmpty()) {
+            return null;
+        }
+        try {
+            // 尝试 ISO 格式 (yyyy-MM-dd'T'HH:mm:ss)
+            return LocalDateTime.parse(dateStr, DATE_TIME_FORMATTER);
+        } catch (Exception e) {
+            // 尝试简单日期格式 (yyyy-MM-dd)
+            try {
+                LocalDate date = LocalDate.parse(dateStr, DATE_ONLY_FORMATTER);
+                if (isStartTime) {
+                    return date.atStartOfDay(); // 00:00:00
+                } else {
+                    return date.atTime(23, 59, 59); // 23:59:59
+                }
+            } catch (Exception e2) {
+                throw new IllegalArgumentException("无效的日期格式: " + dateStr);
+            }
+        }
     }
 }

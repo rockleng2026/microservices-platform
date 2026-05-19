@@ -386,6 +386,7 @@ public class MarketingServiceImpl implements IMarketingService {
         Map<String, Object> result = new HashMap<>();
         result.put("userId", userId);
         result.put("balance", account.getBalance());
+        result.put("points", account.getBalance()); // Alias for frontend compatibility
         result.put("totalEarned", account.getTotalEarned());
         result.put("totalSpent", account.getTotalSpent());
         // Include member profile info

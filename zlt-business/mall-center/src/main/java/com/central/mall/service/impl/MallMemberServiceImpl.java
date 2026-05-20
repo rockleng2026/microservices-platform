@@ -19,10 +19,9 @@ import java.util.Map;
 public class MallMemberServiceImpl extends ServiceImpl<MallMemberMapper, MallMember> implements IMallMemberService {
 
     @Override
-    public MallMember getByUserId(Long userId) {
-        LambdaQueryWrapper<MallMember> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(MallMember::getUserId, userId);
-        return baseMapper.selectOne(wrapper);
+    public MallMember getByUserId(Long memberId) {
+        // 方法名遗留但实际按 memberId (mall_member.id) 查询
+        return baseMapper.selectById(memberId);
     }
 
     @Override
@@ -62,7 +61,7 @@ public class MallMemberServiceImpl extends ServiceImpl<MallMemberMapper, MallMem
             // Create new member if not exists
             member = new MallMember();
             member.setTenantId("default");
-            member.setUserId(userId);
+            // 不再设置冗余的 userId 字段，mall_member.id (AUTO_INCREMENT) 将作为主键
             this.save(member);
         }
 

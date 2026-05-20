@@ -69,7 +69,7 @@ public interface IMarketingService {
     /**
      * 订单完成后增加积分
      */
-    Result<?> earnPointsOnOrderComplete(Long orderId, BigDecimal payAmount);
+    Result<?> earnPointsOnOrderComplete(Long orderId, Long memberId, BigDecimal payAmount);
 
     /**
      * 退款时扣减积分

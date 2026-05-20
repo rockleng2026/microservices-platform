@@ -366,9 +366,10 @@ public class MarketingServiceImpl implements IMarketingService {
         // Also get member profile for nickname/avatar
         MallMember member = null;
         try {
-            member = memberService.getByUserId(userId);
+            // Token中的userId就是MallMember.id（自增主键）
+            member = memberService.getById(userId);
         } catch (Exception e) {
-            log.debug("Member not found for userId: {}", userId);
+            log.debug("Member not found for id: {}", userId);
         }
 
         if (account == null) {
@@ -394,6 +395,10 @@ public class MarketingServiceImpl implements IMarketingService {
             result.put("nickname", member.getNickname());
             result.put("avatar", member.getAvatar());
             result.put("phone", member.getPhone());
+            result.put("gender", member.getGender());
+            result.put("birthday", member.getBirthday());
+            result.put("province", member.getProvince());
+            result.put("city", member.getCity());
             result.put("level", 1); // Default level
         }
 
@@ -428,7 +433,7 @@ public class MarketingServiceImpl implements IMarketingService {
 
     @Override
     @Transactional
-    public Result<?> earnPointsOnOrderComplete(Long orderId, BigDecimal payAmount) {
+    public Result<?> earnPointsOnOrderComplete(Long orderId, Long memberId, BigDecimal payAmount) {
         // 根据支付金额计算积分：100元 = 1积分
         if (payAmount == null || payAmount.compareTo(BigDecimal.ZERO) <= 0) {
             return Result.succeed("支付金额为0，不计算积分");
@@ -442,12 +447,12 @@ public class MarketingServiceImpl implements IMarketingService {
         // 获取用户积分账户
         MallPointsAccount account = pointsAccountMapper.selectOne(
             new LambdaQueryWrapper<MallPointsAccount>()
-                .eq(MallPointsAccount::getUserId, 1L) // TODO: get real userId
+                .eq(MallPointsAccount::getUserId, memberId)
         );
 
         if (account == null) {
             account = new MallPointsAccount();
-            account.setUserId(1L); // TODO
+            account.setUserId(memberId);
             account.setBalance(0);
             account.setTotalEarned(0);
             account.setTotalSpent(0);

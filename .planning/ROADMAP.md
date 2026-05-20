@@ -8,7 +8,6 @@
 - 🔄 **v2.1** — Phases 18-20 (Planning)
 
 ---
-
 ## Milestone Details
 
 <details>
@@ -43,7 +42,7 @@
 <summary>✅ v2.0 (Phases 8-13) — SHIPPED 2026-05-20</summary>
 
 | Phase | Name | Goal | Requirements | Success Criteria |
-|-------|------|------|--------------|------------------|
+|-------|------|------|--------------|-----------------|
 | 8 | Admin基础框架 + 小程序首页/商品 | 搭建Admin Web基础框架（含布局/路由/权限），实现小程序首页+商品列表+商品详情 | ADMIN-01(5) + MINI-01(7) + MINI-02(5) + MINI-03(9) | Admin Web可运行，布局/导航/登录完成；小程序首页Banner/分类/推荐商品正常展示；商品列表筛选排序正常；商品详情规格选择/加入购物车正常 |
 | 9 | 小程序交易流程 | 实现小程序购物车+订单确认+微信支付+订单列表+订单详情+退款申请 | MINI-04(7) + MINI-05(9) + MINI-06(5) + MINI-07(5) + MINI-08(6) + MINI-10(5) | 购物车增删改查正常；订单确认页地址/优惠券/总价计算正确；微信支付调起成功；订单列表状态筛选正常；退款申请提交/取消正常 |
 | 10 | 管理后台核心模块 | 实现管理后台商品管理、订单管理、优惠券管理、轮播图管理、仪表盘 | ADMIN-02(10) + ADMIN-03(7) + ADMIN-04(7) + ADMIN-10(5) + ADMIN-01(5) | 商品CRUD/批量上下架正常；订单筛选/详情/改价/关单正常；优惠券创建/发放/统计正常；Banner配置正常；Dashboard图表数据正确 |
@@ -62,7 +61,6 @@
 </details>
 
 ---
-
 ## Phase Mapping
 
 ### Phase 8: Admin基础框架 + 小程序首页/商品
@@ -111,7 +109,6 @@ Plans:
 - [x] 11-ADMIN-09-PLAN.md — 商户管理页面 (ADMIN-09-01~05)
 
 ---
-
 ## Phase 12: 管理后台配置与小程序个人中心
 
 | Module | Requirements | Count |
@@ -129,7 +126,6 @@ Plans:
 - [x] 12-MINI-09-INTEGRATION-PLAN.md — 个人中心后端 API
 
 ---
-
 ## Phase 13: 集成测试与优化
 
 | Scope | Description |
@@ -148,7 +144,6 @@ Plans:
 - [x] 13-UI-PERF-SUMMARY.md — UI/Performance Summary ✅ (completed 2026-05-20)
 
 ---
-
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
@@ -190,7 +185,6 @@ Plans:
 - [ ] 14-FRONTEND-01-PLAN.md — 前端迁移计划
 
 ---
-
 ## Phase 15: 管理后台前端UAT测试
 
 | Module | Requirements | Count |
@@ -217,15 +211,11 @@ Plans:
 - [x] 15-ADMIN-UAT-06-PLAN.md — 库存录入接口 ✅ (完成于 2026-05-12)
 
 ---
-
 *Roadmap updated: 2026-05-12 — Phase 15 gap closure plans 04/05/06 added (库存管理)*
-
 ---
-
 ## Phase 16: 订单列表优化
 
 ---
-
 ## Phase 17: 小程序增强（物流/支付/收货地址）
 
 | Module | Requirements | Count |
@@ -242,17 +232,18 @@ Plans:
 
 *Phase 17 added: 2026-05-19 — 小程序增强功能*
 ---
-
 ## v2.1 商城使用帮助文档
 
 | Phase | Name | Goal | Requirements | Success Criteria |
-|-------|------|------|--------------|------------------|
+|-------|------|------|--------------|-----------------|
 | 18 | 接口文档 | 实现接口文档页面，列出 mall-center 所有 Controller 接口的内部实现描述 | HELP-01-01~04 | 接口列表完整可浏览；每个接口有路径/方法/参数/响应/业务逻辑说明；支持分类和搜索 |
-| 19 | 菜单使用说明 | 实现菜单使用说明页面，指导业务人员和前端用户使用商城模块 | HELP-02-01~04 | 功能模块列表完整；每个模块有描述/步骤/注意事项；内容简洁易懂 |
+| 19 | 商城用户登录与信息模块分析 | 商城用户登录和用户信息模块表设计及业务逻辑重新分析，修复 id/userId 混淆问题 | 5 areas | mall_member.id vs userId 职责不清、各业务表 userId 关联混乱、Token格式与表设计不对齐、getUserInfo返回假数据、积分账户创建逻辑不一致 |
 | 20 | FAQ | 实现 FAQ 页面，记录常见问题和解决方案 | HELP-03-01~04 | FAQ 列表完整；每条有问题/原因/解决方案；支持分类浏览 |
+
+**Plans:**
+- [x] 19-01-PLAN.md — 商城用户登录和用户信息模块分析 ✅ (完成于 2026-05-20)
 
 **v2.1 Summary:**
 - Phase 18: HELP-01-01~04 (接口文档)
-- Phase 19: HELP-02-01~04 (菜单使用说明)
+- Phase 19: 商城用户登录与信息模块深度分析 (id/userId混淆问题修复方向)
 - Phase 20: HELP-03-01~04 (FAQ)
-

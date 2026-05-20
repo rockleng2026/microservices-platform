@@ -27,6 +27,7 @@
       <SpecSelector
         v-if="goodsDetail.skus?.length"
         :skus="goodsDetail.skus"
+        :initialSkuId="specifiedSkuId"
         @select="onSpecSelect"
       />
 
@@ -72,6 +73,9 @@ import { cartStore } from '@/stores/cart'
 
 // 商品ID
 const goodsId = ref<number>(0)
+
+// 指定的SKU ID（从订单页跳转时传入，用于自动选中规格）
+const specifiedSkuId = ref<number | null>(null)
 
 // 商品详情
 const goodsDetail = ref<any>({})
@@ -169,6 +173,10 @@ const buyNow = () => {
 onLoad((options: any) => {
   if (options.id) {
     goodsId.value = Number(options.id)
+    // 如果跳转时传入了 skuId，则自动选中该规格
+    if (options.skuId) {
+      specifiedSkuId.value = Number(options.skuId)
+    }
     loadGoodsDetail(goodsId.value)
   } else {
     uni.showToast({ title: '参数错误', icon: 'none' })
@@ -190,8 +198,8 @@ const loadGoodsDetail = async (id: number) => {
       return
     }
 
-    // 如果只有一个SKU，直接选中
-    if (detail.skus?.length === 1) {
+    // 如果只有一个 SKU，直接选中（SpecSelector 会处理 initialSkuId 的情况）
+    if (!specifiedSkuId.value && detail.skus?.length === 1) {
       selectedSku.value = detail.skus[0]
     }
   } catch (e) {

@@ -61,7 +61,7 @@
               v-for="item in order.items"
               :key="item.id"
               class="item-row"
-              @click.stop="goToProduct(item.skuId)"
+              @click.stop="goToProduct(item)"
             >
               <view class="item-info">
                 <text class="item-name">{{ item.goodsName }}</text>
@@ -247,8 +247,9 @@ const goToDetail = (orderId: number) => {
 }
 
 // Go to product
-const goToProduct = (skuId: number) => {
-  uni.navigateTo({ url: `/pages/product-detail/index?id=${skuId}` })
+const goToProduct = (item: any) => {
+  // 传递 goodsId 和 skuId，商品详情页用 goodsId 加载商品，skuId 用于选中对应规格
+  uni.navigateTo({ url: `/pages/product-detail/index?id=${item.goodsId}&skuId=${item.skuId}` })
 }
 
 // Go to payment

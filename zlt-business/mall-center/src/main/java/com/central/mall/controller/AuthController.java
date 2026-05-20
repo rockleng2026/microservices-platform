@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -114,19 +115,20 @@ public class AuthController {
             }
         }
 
-        String token = "WX_" + UUID.randomUUID().toString().replace("-", "");
-
         // 查找或创建会员
         MallMember member = memberService.getByWxOpenId(openId);
         if (member == null) {
             member = new MallMember();
             member.setTenantId("default");
-            member.setUserId(System.currentTimeMillis());
+            // 不再设置冗余的 userId 字段，mall_member.id (AUTO_INCREMENT) 将作为主键
             member.setWxOpenId(openId);
             member.setWxNickname(params.get("nickname"));
             member.setAvatar(params.get("avatar"));
             memberService.save(member);
         }
+
+        // 生成token，格式: WX_<userId>_<32位hex>
+        String token = "WX_" + member.getId() + "_" + UUID.randomUUID().toString().replace("-", "").substring(0, 32);
 
         Map<String, Object> data = new HashMap<>();
         data.put("token", token);
@@ -160,8 +162,8 @@ public class AuthController {
             return Result.failed("密码错误");
         }
 
-        // 生成token
-        String token = "TOKEN_" + UUID.randomUUID().toString().replace("-", "");
+        // 生成token，格式: TOKEN_<userId>_<32位hex>
+        String token = "TOKEN_" + member.getId() + "_" + UUID.randomUUID().toString().replace("-", "").substring(0, 32);
 
         Map<String, Object> data = new HashMap<>();
         data.put("token", token);
@@ -208,14 +210,14 @@ public class AuthController {
         // 创建会员
         MallMember member = new MallMember();
         member.setTenantId("default");
-        member.setUserId(System.currentTimeMillis());
+        // 不再设置冗余的 userId 字段，mall_member.id (AUTO_INCREMENT) 将作为主键
         member.setNickname(username);
         member.setPhone(phone);
         member.setPassword(hashPassword(password)); // 加密存储密码
         member.setAvatar("/static/default-avatar.png");
         memberService.save(member);
 
-        String token = "TOKEN_" + UUID.randomUUID().toString().replace("-", "");
+        String token = "TOKEN_" + member.getId() + "_" + UUID.randomUUID().toString().replace("-", "").substring(0, 32);
 
         Map<String, Object> data = new HashMap<>();
         data.put("token", token);
@@ -275,6 +277,50 @@ public class AuthController {
         memberService.updateById(member);
 
         return Result.succeed("密码重置成功");
+    }
+
+    /**
+     * 验证自定义token并返回用户ID（网关专用）
+     */
+    @PostMapping("/verify-token")
+    @Operation(summary = "验证token并返回userId")
+    public Result<?> verifyToken(@RequestHeader("Authorization") String token) {
+        if (isBlank(token)) {
+            return Result.failed("token不能为空");
+        }
+        token = token.trim();
+
+        // 解析 WX_<userId>_<hex> 或 TOKEN_<userId>_<hex> 格式
+        Long userId = null;
+        try {
+            if (token.startsWith("WX_")) {
+                String[] parts = token.split("_");
+                if (parts.length >= 2) {
+                    userId = Long.parseLong(parts[1]);
+                }
+            } else if (token.startsWith("TOKEN_")) {
+                String[] parts = token.split("_");
+                if (parts.length >= 2) {
+                    userId = Long.parseLong(parts[1]);
+                }
+            }
+        } catch (NumberFormatException e) {
+            return Result.failed("无效的token格式");
+        }
+
+        if (userId == null) {
+            return Result.failed("token无效或已过期");
+        }
+
+        // 根据 userId 查找会员
+        MallMember member = memberService.getById(userId);
+        if (member == null) {
+            return Result.failed("用户不存在");
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("userId", member.getId());
+        return Result.succeed(data);
     }
 
     /**

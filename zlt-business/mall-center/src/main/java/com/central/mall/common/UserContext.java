@@ -15,22 +15,22 @@ public class UserContext {
 
     /**
      * 获取当前登录用户 ID
-     * 优先从 x-user-id header 读取，fallback 返回 1L（开发环境）
+     * 优先从 x-user-id header 读取，未登录时抛出异常
      */
     public static Long getCurrentUserId() {
         HttpServletRequest request = getRequest();
         if (request == null) {
-            return 1L;
+            throw new SecurityException("无法获取HTTP请求上下文，请检查网关配置");
         }
         String userIdHeader = request.getHeader(USER_ID_HEADER);
         if (userIdHeader != null && !userIdHeader.isEmpty()) {
             try {
                 return Long.parseLong(userIdHeader);
             } catch (NumberFormatException e) {
-                // Invalid header value, fall through to default
+                throw new SecurityException("无效的用户ID header: " + userIdHeader);
             }
         }
-        return 1L;
+        throw new SecurityException("用户未登录或登录已过期，请重新登录");
     }
 
     private static HttpServletRequest getRequest() {

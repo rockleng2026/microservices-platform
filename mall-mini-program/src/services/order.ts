@@ -31,6 +31,7 @@ export interface OrderItem {
   id: number
   orderId: number
   skuId: number
+  goodsId: number
   goodsName: string
   goodsImage: string
   price: number

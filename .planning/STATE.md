@@ -1,29 +1,28 @@
 ---
 gsd_state_version: 1.0
-milestone: v2.0
-milestone_name: milestone
-status: All phases shipped
-last_updated: "2026-05-20T03:05:40.628Z"
-last_activity: 2026-05-20 -- Phase 13 completed, v2.0 shipped; milestone summary generated; learnings extracted (all phases 1-17)
-learnings_report: .planning/reports/LEARNINGS.md
+milestone: v2.1
+milestone_name: 商城使用帮助文档
+status: planning
+last_updated: "2026-05-20"
+last_activity: 2026-05-20 — v2.1 milestone started
 progress:
-  total_phases: 9
-  completed_phases: 8
-  total_plans: 34
-  completed_plans: 34
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # State: Mall-Center 在线商城系统
 
-> 版本: v2.0 — SHIPPED
+> 版本: v2.1 — Planning
 > 更新日期: 2026-05-20
 
 ---
 
 ## Milestone Status
 
-**v2.0** — SHIPPED 2026-05-20
+**v2.1** — Planning
 
 ---
 
@@ -33,38 +32,27 @@ See: .planning/PROJECT.md
 
 **Core value:** 为IT硬件经销商提供一套完整的B2C在线销售解决方案，同时支持实物与虚拟商品，一套系统覆盖从商品展示到支付交付的全链路电商能力。
 
-**Current focus:** v2.0 shipped — all phases complete
+**Current focus:** v2.1 — 商城使用帮助文档
 
 ---
 
-## v2.0 Goals
+## v2.1 Goals
 
-1. **管理后台 Web** — React + Umi + Ant Design Pro，与 portal-web 框架保持一致
-2. **微信小程序** — uni-app + Vue，面向消费者用户侧功能
-3. **页面设计** — 调用 `/gsd-ui-phase` 进行 UI 设计规划，注重美观和交互体验
+1. **接口文档** — mall-center 后台所有 Controller 接口的内部实现描述
+2. **菜单使用说明** — 系统功能模块的使用说明，指导业务人员和前端用户使用商城模块
+3. **FAQ** — 常见问题和易错点记录
+
+**实现方式：**
+- 菜单配置：插入数据库 central_organization 的 menu_page + menu_func 表
+- 文档页面：React 组件，路由 /mall-help 下三个子路由
 
 ---
 
 ## Current Position
 
-Phase: v2.0 complete
-Status: All phases shipped
-Last activity: 2026-05-20 -- Phase 13 completed, v2.0 shipped
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-05-20 — v2.1 milestone started
 
 ---
-
-## v2.0 Phase Plan
-
-| Phase | Name | Requirements | Status |
-|-------|------|--------------|--------|
-| 8 | Admin基础框架 + 小程序首页/商品 | ADMIN-01(5) + MINI-01(7) + MINI-02(5) + MINI-03(9) = 26 | Complete |
-| 9 | 小程序交易流程 | MINI-04(7) + MINI-05(9) + MINI-06(5) + MINI-07(5) + MINI-08(6) + MINI-10(5) = 37 | Complete |
-| 10 | 管理后台核心模块 | ADMIN-01(5) + ADMIN-02(10) + ADMIN-03(7) + ADMIN-04(7) + ADMIN-10(5) = 34 | Complete |
-| 11 | 管理后台运营模块 | ADMIN-06(6) + ADMIN-07(6) + ADMIN-08(4) + ADMIN-09(5) = 21 | Complete |
-| 12 | 管理后台配置与小程序个人中心 | ADMIN-05(6) + ADMIN-11(3) + MINI-09(7) = 16 | Complete |
-| 13 | 集成测试与优化 | All v2.0 requirements | Complete |
-| **Total** | | **134** | |
-
----
-
-*State updated: 2026-05-09 — Phase 9 complete (小程序交易流程)*

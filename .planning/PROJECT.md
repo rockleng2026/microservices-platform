@@ -8,19 +8,26 @@
 
 为IT硬件经销商提供一套完整的B2C在线销售解决方案，同时支持实物与虚拟商品，一套系统覆盖从商品展示到支付交付的全链路电商能力。
 
-## Current Milestone: v2.0
+## Current Milestone: v2.1 商城使用帮助文档
 
-**Goal:** 为商城系统开发管理前端（React + Umi + Ant Design）和微信小程序前端（uni-app + Vue），覆盖所有后端 API 的管理操作界面。
+**Goal:** 在商场系统管理后台增加「商城使用帮助文档」菜单，下设三个子菜单：接口文档、菜单使用说明、FAQ，便于开发人员和业务人员快速上手使用。
 
 **Target features:**
-- 管理后台 Web（React + Umi + Ant Design Pro）：商品管理、订单管理、优惠券/促销管理、发货与物流等运营模块
-- 微信小程序（uni-app + Vue）：面向消费者的商品浏览、购物车、订单、支付等用户侧功能
-- 页面设计需调用 `/gsd-ui-phase` 进行 UI 设计规划，注重美观和交互体验
+- 接口文档：mall-center 后台所有 Controller 接口的内部实现描述
+- 菜单使用说明：系统功能模块的使用说明，指导业务人员和前端用户使用商城模块
+- FAQ：常见问题和易错点记录
+
+**实现方式：**
+- 菜单配置：插入数据库 central_organization 的 menu_page + menu_func 表
+- 文档页面：React 组件，路由 /mall-help 下三个子路由
+
+**数据库：** root/lengfeng847
 
 **技术栈：**
-- 管理后台：React 18 + Umi 4 + Ant Design 4 + TypeScript（与 portal-web 保持一致）
-- 微信小程序：uni-app + Vue 3
-- 后端 API：mall-center 微服务（端口 7010）
+- 管理后台：React + Umi + Ant Design（与 portal-web 一致）
+- 后端服务：mall-center 微服务（端口 7010）
+
+## Current Milestone: v2.0
 
 ## Requirements
 
@@ -120,4 +127,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state (users, feedback, metrics)
 
 ---
-*Last updated: 2026-05-09 after v2.0 milestone started*
+*Last updated: 2026-05-20 after v2.1 milestone started*

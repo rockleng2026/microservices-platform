@@ -95,3 +95,23 @@
 **Status:** 需求定义中
 
 ---
+
+---
+
+## v2.1 — Planning (2026-05-20)
+
+**Goal:** 在商场系统管理后台增加「商城使用帮助文档」菜单，下设三个子菜单：接口文档、菜单使用说明、FAQ，便于开发人员和业务人员快速上手使用。
+
+**Target features:**
+- 接口文档：mall-center 后台所有 Controller 接口的内部实现描述
+- 菜单使用说明：系统功能模块的使用说明，指导业务人员和前端用户使用商城模块
+- FAQ：常见问题和易错点记录
+
+**实现方式：**
+- 菜单配置：插入数据库 central_organization 的 menu_page + menu_func 表
+- 文档页面：React 组件，路由 /mall-help 下三个子路由
+
+**数据库：** root/lengfeng847
+
+**Status:** 需求定义完成，准备规划
+

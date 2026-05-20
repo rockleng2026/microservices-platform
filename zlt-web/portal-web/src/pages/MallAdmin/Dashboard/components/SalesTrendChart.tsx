@@ -145,7 +145,7 @@ const SalesTrendChart: React.FC<SalesTrendChartProps> = ({ data, loading }) => {
     <Card
       loading={loading}
       style={{ height: 400 }}
-      title="销售趋势 (ADMIN-01-02 per D-02)"
+      title="销售趋势"
       extra={
         <Space>
           <Button

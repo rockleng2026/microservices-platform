@@ -4,7 +4,7 @@
 
 - ✅ **v1.0 MVP** — Phases 1-4 (shipped 2026-05-08)
 - ✅ **v1.2** — Phases 5-7 (shipped 2026-05-08)
-- 📋 **v2.0** — Phases 8-13 (In Progress)
+- ✅ **v2.0** — Phases 8-13 (SHIPPED 2026-05-20)
 
 ---
 
@@ -39,7 +39,7 @@
 </details>
 
 <details>
-<summary>📋 v2.0 (Phases 8-13) — IN PROGRESS</summary>
+<summary>✅ v2.0 (Phases 8-13) — SHIPPED 2026-05-20</summary>
 
 | Phase | Name | Goal | Requirements | Success Criteria |
 |-------|------|------|--------------|------------------|

@@ -235,8 +235,8 @@ const WeChatConfigPage: React.FC = () => {
           <ul>
             <li><Text type="secondary">AppID：微信公众平台获取，用于标识公众号或小程序的唯一身份</Text></li>
             <li><Text type="secondary">商户号：微信支付商户平台获取，用于识别商户身份</Text></li>
-            <li><Text type="secondary">API密钥：商户平台 -> API安全 -> 设置API密钥（32位）</Text></li>
-            <li><Text type="secondary">证书路径：商户平台 -> API安全 -> 申请退款证书，下载后部署到服务器</Text></li>
+            <li><Text type="secondary">API密钥：商户平台 {'->'} API安全 {'->'} 设置API密钥（32位）</Text></li>
+            <li><Text type="secondary">证书路径：商户平台 {'->'} API安全 {'->'} 申请退款证书，下载后部署到服务器</Text></li>
           </ul>
         </div>
       </Card>

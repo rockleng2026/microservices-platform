@@ -346,6 +346,33 @@ export default defineConfig({
             },
           ],
         },
+        {
+          path: '/mall-help',
+          name: '商城使用帮助文档',
+          routes: [
+            {
+              path: '/mall-help',
+              redirect: '/mall-help/api',
+            },
+            {
+              path: '/mall-help/api',
+              name: '接口文档',
+              component: '@/pages/MallHelp/ApiDoc',
+            },
+            {
+              path: '/mall-help/menu',
+              name: '菜单使用说明',
+              component: '@/pages/MallHelp/MenuGuide',
+              hideInMenu: true,
+            },
+            {
+              path: '/mall-help/faq',
+              name: 'FAQ',
+              component: '@/pages/MallHelp/FAQ',
+              hideInMenu: true,
+            },
+          ],
+        },
       ],
     },
     {

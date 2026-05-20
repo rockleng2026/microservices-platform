@@ -1,0 +1,45 @@
+/* ApiDoc 页面样式 */
+
+.api-doc-container {
+  padding: 0;
+}
+
+.api-doc-header {
+  margin-bottom: 24px;
+
+  .api-doc-title-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .api-doc-title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+  }
+
+  .api-doc-count {
+    font-size: 13px;
+    color: #999;
+  }
+}
+
+.api-doc-content {
+  min-height: 400px;
+}
+
+/* 端点卡片样式 */
+:deep(.ant-card-head-title) {
+  font-size: 13px;
+}
+
+/* 参数表格样式 */
+:deep(.ant-table-cell) {
+  padding: 8px 12px !important;
+}
+:deep(.ant-table-small .ant-table-thead > tr > th) {
+  background: #fafafa;
+  font-weight: 600;
+}

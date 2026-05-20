@@ -148,7 +148,7 @@ const PositionSelector: React.FC<PositionSelectorProps> = ({
                 </Space>
               </Select.Option>
             )}
-            {positions.map(position => (
+            {positions.filter(p => p.id !== selectedPosition?.id).map(position => (
               <Select.Option 
                 key={position.id} 
                 value={position.id} 

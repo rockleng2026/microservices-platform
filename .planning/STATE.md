@@ -4,7 +4,7 @@ milestone: v2.1
 milestone_name: 商城使用帮助文档
 status: planning
 last_updated: "2026-05-20"
-last_activity: 2026-05-20 — v2.1 milestone started
+last_activity: 2026-05-20 — Phase 18 context gathered
 progress:
   total_phases: 0
   completed_phases: 0

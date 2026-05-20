@@ -3,7 +3,7 @@ import { BasePage } from './BasePage';
 
 export class StockPage extends BasePage {
   async goto(): Promise<void> {
-    await this.goto('/mall-admin/stock');
+    await this.navigate('/mall-admin/stock');
   }
 
   async getStockTableRows(): Promise<string[]> {

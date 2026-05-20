@@ -3,7 +3,7 @@ import { BasePage } from './BasePage';
 
 export class WeChatConfigPage extends BasePage {
   async goto(): Promise<void> {
-    await this.goto('/mall-admin/wechat-config');
+    await this.navigate('/mall-admin/wechat-config');
   }
 
   async fillAppId(value: string): Promise<void> {

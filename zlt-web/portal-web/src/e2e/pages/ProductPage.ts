@@ -3,7 +3,7 @@ import { BasePage } from './BasePage';
 
 export class ProductPage extends BasePage {
   async goto(): Promise<void> {
-    await this.goto('/mall-admin/goods');
+    await this.navigate('/mall-admin/goods');
   }
 
   async clickCreateButton(): Promise<void> {

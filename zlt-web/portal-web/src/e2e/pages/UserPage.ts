@@ -3,7 +3,7 @@ import { BasePage } from './BasePage';
 
 export class UserPage extends BasePage {
   async goto(): Promise<void> {
-    await this.goto('/mall-admin/member');
+    await this.navigate('/mall-admin/member');
   }
 
   async searchMember(keyword: string): Promise<void> {

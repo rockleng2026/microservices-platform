@@ -3,7 +3,7 @@ import { Page } from '@playwright/test';
 export class BasePage {
   constructor(protected page: Page, protected baseURL: string = 'http://localhost:8001') {}
 
-  async goto(path: string): Promise<void> {
+  async navigate(path: string): Promise<void> {
     await this.page.goto(`${this.baseURL}${path}`);
     await this.page.waitForLoadState('networkidle');
   }
@@ -18,5 +18,9 @@ export class BasePage {
 
   async getTableRows(selector: string): Promise<string[]> {
     return this.page.locator(selector).allTextContents();
+  }
+
+  async waitForSelector(selector: string, timeout: number = 10000): Promise<void> {
+    await this.page.waitForSelector(selector, { timeout });
   }
 }

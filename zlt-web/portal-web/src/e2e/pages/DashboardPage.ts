@@ -3,7 +3,7 @@ import { BasePage } from './BasePage';
 
 export class DashboardPage extends BasePage {
   async goto(): Promise<void> {
-    await this.goto('/mall-admin/dashboard');
+    await this.navigate('/mall-admin/dashboard');
   }
 
   async getMetricCards(): Promise<string[]> {
@@ -11,8 +11,10 @@ export class DashboardPage extends BasePage {
   }
 
   async getSalesChart(): Promise<boolean> {
-    return this.page.locator('.echarts-wrapper, [class*="echarts"]').count() > 0 ||
-           this.page.locator('canvas').count() > 0;
+    const count = await this.page.locator('.echarts-wrapper, [class*="echarts"]').count();
+    if (count > 0) return true;
+    const canvasCount = await this.page.locator('canvas').count();
+    return canvasCount > 0;
   }
 
   async getLowStockAlerts(): Promise<string[]> {

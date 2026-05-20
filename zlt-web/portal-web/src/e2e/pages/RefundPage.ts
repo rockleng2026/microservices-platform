@@ -3,7 +3,7 @@ import { BasePage } from './BasePage';
 
 export class RefundPage extends BasePage {
   async goto(): Promise<void> {
-    await this.goto('/mall-admin/refund');
+    await this.navigate('/mall-admin/refund');
   }
 
   async getRefundTableRows(): Promise<string[]> {

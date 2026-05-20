@@ -3,7 +3,7 @@ import { BasePage } from './BasePage';
 
 export class BannerPage extends BasePage {
   async goto(): Promise<void> {
-    await this.goto('/mall-admin/banners');
+    await this.navigate('/mall-admin/banners');
   }
 
   async clickAddBannerButton(): Promise<void> {

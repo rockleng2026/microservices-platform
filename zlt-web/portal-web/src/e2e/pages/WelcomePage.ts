@@ -3,7 +3,7 @@ import { BasePage } from './BasePage';
 
 export class WelcomePage extends BasePage {
   async goto(): Promise<void> {
-    await this.goto('/welcome');
+    await this.navigate('/welcome');
   }
 
   async getWelcomeTitle(): Promise<string> {

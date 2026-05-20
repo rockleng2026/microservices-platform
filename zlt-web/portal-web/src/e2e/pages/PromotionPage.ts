@@ -3,7 +3,7 @@ import { BasePage } from './BasePage';
 
 export class PromotionPage extends BasePage {
   async goto(): Promise<void> {
-    await this.goto('/mall-admin/promotion');
+    await this.navigate('/mall-admin/promotion');
   }
 
   async switchToTab(tabName: string): Promise<void> {

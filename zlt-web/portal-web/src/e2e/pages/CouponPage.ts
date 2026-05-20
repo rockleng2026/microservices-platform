@@ -3,7 +3,7 @@ import { BasePage } from './BasePage';
 
 export class CouponPage extends BasePage {
   async goto(): Promise<void> {
-    await this.goto('/mall-admin/coupon');
+    await this.navigate('/mall-admin/coupon');
   }
 
   async getCouponTableRows(): Promise<string[]> {

@@ -3,7 +3,7 @@ import { BasePage } from './BasePage';
 
 export class OrderPage extends BasePage {
   async goto(): Promise<void> {
-    await this.goto('/mall-admin/orders');
+    await this.navigate('/mall-admin/orders');
   }
 
   async getOrderTableRows(): Promise<string[]> {

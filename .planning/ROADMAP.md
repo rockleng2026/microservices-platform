@@ -47,7 +47,7 @@
 | 9 | 小程序交易流程 | 实现小程序购物车+订单确认+微信支付+订单列表+订单详情+退款申请 | MINI-04(7) + MINI-05(9) + MINI-06(5) + MINI-07(5) + MINI-08(6) + MINI-10(5) | 购物车增删改查正常；订单确认页地址/优惠券/总价计算正确；微信支付调起成功；订单列表状态筛选正常；退款申请提交/取消正常 |
 | 10 | 管理后台核心模块 | 实现管理后台商品管理、订单管理、优惠券管理、轮播图管理、仪表盘 | ADMIN-02(10) + ADMIN-03(7) + ADMIN-04(7) + ADMIN-10(5) + ADMIN-01(5) | 商品CRUD/批量上下架正常；订单筛选/详情/改价/关单正常；优惠券创建/发放/统计正常；Banner配置正常；Dashboard图表数据正确 |
 | 11 | 管理后台运营模块 | 4/4 | Complete    | 2026-05-19 |
-| 12 | 管理后台配置与小程序个人中心 | 5/5 | Complete   | 2026-05-19 |
+| 12 | 管理后台配置与小程序个人中心 | 5/5 | Complete    | 2026-05-19 |
 | 13 | 集成测试与优化 | 端到端测试、UI优化、性能优化、bug修复 | All v2.0 requirements | 所有功能端到端联调通过；Admin Web和小程序UI/交互优化完成；无重大bug遗留 |
 
 **v2.0 Summary:**
@@ -138,6 +138,11 @@ Plans:
 | Performance | Load time optimization, lazy loading, caching strategies |
 | Bug Fixes | Resolve any issues found during integration testing |
 
+**Plans:**
+- [x] 13-ADMIN-E2E-PLAN.md — Admin Web E2E Test Infrastructure (Wave 1)
+- [x] 13-MINI-E2E-PLAN.md — Mini Program E2E Test Infrastructure (Wave 1)
+- [x] 13-UI-PERF-PLAN.md — UI/Performance Optimization and Bug Fixes (Wave 2)
+
 ---
 
 ## Progress
@@ -156,7 +161,7 @@ Plans:
 | 10 | v2.0 | 5/5 | ✅ Complete | 2026-05-19 |
 | 11 | v2.0 | 4/4 | Pending | — |
 | 12 | v2.0 | 5/5 | Pending | — |
-| 13 | v2.0 | 0/all | Pending | — |
+| 13 | v2.0 | 3/3 | ✅ Complete | 2026-05-20 |
 | 14 | v2.0 | 1/5 | ✅ Complete | 2026-05-19 |
 | 15 | v2.0 | 6/6 | ✅ Complete | 2026-05-19 |
 | 16 | v2.0 | 0/0 | ✅ Complete | 2026-05-19 |

@@ -140,8 +140,11 @@ Plans:
 
 **Plans:**
 - [x] 13-ADMIN-E2E-PLAN.md — Admin Web E2E Test Infrastructure (Wave 1)
+- [x] 13-ADMIN-E2E-SUMMARY.md — Admin Web E2E Summary ✅ (completed 2026-05-20)
 - [x] 13-MINI-E2E-PLAN.md — Mini Program E2E Test Infrastructure (Wave 1)
+- [x] 13-MINI-E2E-SUMMARY.md — Mini Program E2E Summary ✅ (completed 2026-05-20)
 - [x] 13-UI-PERF-PLAN.md — UI/Performance Optimization and Bug Fixes (Wave 2)
+- [x] 13-UI-PERF-SUMMARY.md — UI/Performance Summary ✅ (completed 2026-05-20)
 
 ---
 
@@ -159,8 +162,8 @@ Plans:
 | 8 | v2.0 | 4/4 | Complete | 2026-05-09 |
 | 9 | v2.0 | 6/6 | Complete | 2026-05-09 |
 | 10 | v2.0 | 5/5 | ✅ Complete | 2026-05-19 |
-| 11 | v2.0 | 4/4 | Pending | — |
-| 12 | v2.0 | 5/5 | Pending | — |
+| 11 | v2.0 | 4/4 | ✅ Complete | 2026-05-19 |
+| 12 | v2.0 | 5/5 | ✅ Complete | 2026-05-19 |
 | 13 | v2.0 | 3/3 | ✅ Complete | 2026-05-20 |
 | 14 | v2.0 | 1/5 | ✅ Complete | 2026-05-19 |
 | 15 | v2.0 | 6/6 | ✅ Complete | 2026-05-19 |

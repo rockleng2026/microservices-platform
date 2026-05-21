@@ -98,20 +98,38 @@
 
 ---
 
-## v2.1 — Planning (2026-05-20)
+## v2.1 — SHIPPED 2026-05-21
 
-**Goal:** 在商场系统管理后台增加「商城使用帮助文档」菜单，下设三个子菜单：接口文档、菜单使用说明、FAQ，便于开发人员和业务人员快速上手使用。
+**Phases:** 3 | **Plans:** 4 | **Requirements:** 12/18 shipped
 
-**Target features:**
-- 接口文档：mall-center 后台所有 Controller 接口的内部实现描述
-- 菜单使用说明：系统功能模块的使用说明，指导业务人员和前端用户使用商城模块
-- FAQ：常见问题和易错点记录
+### Key Accomplishments
 
-**实现方式：**
-- 菜单配置：插入数据库 central_organization 的 menu_page + menu_func 表
-- 文档页面：React 组件，路由 /mall-help 下三个子路由
+1. Phase 18 接口文档 — 126个接口文档，6个模块Tab，Mermaid流程图渲染正常
+2. Phase 18 Plan 01 — 菜单SQL + Umi路由 + ApiDoc骨架
+3. Phase 18 Plan 02 — Mermaid集成 + 126个接口flowchart字段
+4. Phase 19 用户登录模块分析 — id/userId混淆问题识别，Token安全等5个Critical问题
+5. Phase 20 FAQ页面 — HELP-03-01~04 实现
 
-**数据库：** root/lengfeng847
+### Stats
 
-**Status:** 需求定义完成，准备规划
+- Commits: 288 total in v2.1 period
+- Timeline: 2026-05-20 → 2026-05-21
+- Requirements: 67% (12/18 shipped)
+
+### Decisions
+
+| Decision | Outcome |
+|----------|---------|
+| Mermaid流程图展示接口处理流程 | ✅ Shipped |
+| FAQ数据存储在前端JSON配置文件 | ✅ Shipped |
+| HELP-02 菜单使用说明 Deferred | ⚠ Deferred to next phase |
+
+### Known Issues
+
+- Token无签名/无过期时间 — 需要 zlt-uaa 改造（已识别，待修复）
+- mall_member 无独立 address 字段 — 需要表结构变更（已识别）
+
+### Known Deferred
+
+- HELP-02 菜单使用说明 — 4个requirements deferred（Phase 19 分析产出，非实现）
 

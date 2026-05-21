@@ -5,6 +5,7 @@ import { getCommonHeaders } from '@/utils/helpers'
 
 export interface CartItem {
   skuId: number
+  goodsId?: number
   quantity: number
   goodsName?: string
   goodsImage?: string

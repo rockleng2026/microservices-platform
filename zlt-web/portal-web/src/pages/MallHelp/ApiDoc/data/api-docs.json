@@ -15,42 +15,94 @@
               "summary": "获取分类树",
               "parameters": [],
               "responseFormat": "Result<List<Map<String, Object>>>",
-              "businessLogic": "调用 goodsService.getCategoryTree() 返回商品分类树形结构，供小程序首页分类导航使用"
+              "businessLogic": "调用 goodsService.getCategoryTree() 返回商品分类树形结构，供小程序首页分类导航使用",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "GET",
               "path": "/api/mall/goods/list",
               "summary": "商品列表",
               "parameters": [
-                {"name": "page", "in": "query", "type": "Long", "required": false, "description": "页码，默认1"},
-                {"name": "pageSize", "in": "query", "type": "Long", "required": false, "description": "每页数量，默认20"},
-                {"name": "categoryId", "in": "query", "type": "Long", "required": false, "description": "分类ID过滤"},
-                {"name": "keyword", "in": "query", "type": "String", "required": false, "description": "搜索关键字"},
-                {"name": "sortField", "in": "query", "type": "String", "required": false, "description": "排序字段，默认createTime"},
-                {"name": "sortOrder", "in": "query", "type": "String", "required": false, "description": "排序方向 asc/desc，默认desc"}
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "页码，默认1"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "每页数量，默认20"
+                },
+                {
+                  "name": "categoryId",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "分类ID过滤"
+                },
+                {
+                  "name": "keyword",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "搜索关键字"
+                },
+                {
+                  "name": "sortField",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "排序字段，默认createTime"
+                },
+                {
+                  "name": "sortOrder",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "排序方向 asc/desc，默认desc"
+                }
               ],
               "responseFormat": "Result<IPage<MallGoods>>",
-              "businessLogic": "返回带分页的商品列表，支持按分类、关键字过滤，支持排序"
+              "businessLogic": "返回带分页的商品列表，支持按分类、关键字过滤，支持排序",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "GET",
               "path": "/api/mall/goods/{id}",
               "summary": "商品详情",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "商品ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "商品ID"
+                }
               ],
               "responseFormat": "Result<Map<String, Object>>",
-              "businessLogic": "根据ID返回商品详细信息，包括规格、价格、库存、图片等"
+              "businessLogic": "根据ID返回商品详细信息，包括规格、价格、库存、图片等",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "GET",
               "path": "/api/mall/goods/hot",
               "summary": "热门推荐",
               "parameters": [
-                {"name": "limit", "in": "query", "type": "int", "required": false, "description": "返回数量，默认10"}
+                {
+                  "name": "limit",
+                  "in": "query",
+                  "type": "int",
+                  "required": false,
+                  "description": "返回数量，默认10"
+                }
               ],
               "responseFormat": "Result<List<MallGoods>>",
-              "businessLogic": "返回热销/推荐商品列表，用于小程序首页推荐模块"
+              "businessLogic": "返回热销/推荐商品列表，用于小程序首页推荐模块",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             }
           ]
         },
@@ -64,86 +116,178 @@
               "path": "/api/mall/admin/goods/list",
               "summary": "商品列表（分页）",
               "parameters": [
-                {"name": "page", "in": "query", "type": "Long", "required": false, "description": "页码，默认1"},
-                {"name": "pageSize", "in": "query", "type": "Long", "required": false, "description": "每页数量，默认20"},
-                {"name": "categoryId", "in": "query", "type": "Long", "required": false, "description": "分类ID"},
-                {"name": "keyword", "in": "query", "type": "String", "required": false, "description": "搜索关键字"},
-                {"name": "status", "in": "query", "type": "Integer", "required": false, "description": "商品状态"},
-                {"name": "goodsType", "in": "query", "type": "Integer", "required": false, "description": "商品类型（实物/虚拟）"}
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "页码，默认1"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "每页数量，默认20"
+                },
+                {
+                  "name": "categoryId",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "分类ID"
+                },
+                {
+                  "name": "keyword",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "搜索关键字"
+                },
+                {
+                  "name": "status",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "商品状态"
+                },
+                {
+                  "name": "goodsType",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "商品类型（实物/虚拟）"
+                }
               ],
               "responseFormat": "Result<IPage<AdminGoodsDTO>>",
-              "businessLogic": "后台商品列表查询，支持多条件筛选分页"
+              "businessLogic": "后台商品列表查询，支持多条件筛选分页",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "GET",
               "path": "/api/mall/admin/goods/{id}",
               "summary": "商品详情",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "商品ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "商品ID"
+                }
               ],
               "responseFormat": "Result<AdminGoodsDTO>",
-              "businessLogic": "获取单个商品的完整信息"
+              "businessLogic": "获取单个商品的完整信息",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/goods",
               "summary": "发布商品",
               "parameters": [
-                {"name": "dto", "in": "body", "type": "AdminGoodsDTO", "required": true, "description": "商品信息"}
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "AdminGoodsDTO",
+                  "required": true,
+                  "description": "商品信息"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "创建新商品，包含基本信息、规格、库存、图文详情等"
+              "businessLogic": "创建新商品，包含基本信息、规格、库存、图文详情等",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/goods",
               "summary": "更新商品",
               "parameters": [
-                {"name": "dto", "in": "body", "type": "AdminGoodsDTO", "required": true, "description": "商品信息（含ID）"}
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "AdminGoodsDTO",
+                  "required": true,
+                  "description": "商品信息（含ID）"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "更新已有商品信息"
+              "businessLogic": "更新已有商品信息",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             },
             {
               "method": "DELETE",
               "path": "/api/mall/admin/goods/{id}",
               "summary": "删除商品（软删除）",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "商品ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "商品ID"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "将商品标记为已删除，不物理删除数据"
+              "businessLogic": "将商品标记为已删除，不物理删除数据",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Record exists?]\n    C --> D[Soft Delete: SET delflag=1]\n    D --> E[Log: Delete operation]\n    E --> F([Return Success])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/goods/{id}/status/{status}",
               "summary": "更新商品状态",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "商品ID"},
-                {"name": "status", "in": "path", "type": "Integer", "required": true, "description": "状态值"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "商品ID"
+                },
+                {
+                  "name": "status",
+                  "in": "path",
+                  "type": "Integer",
+                  "required": true,
+                  "description": "状态值"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "上下架商品"
+              "businessLogic": "上下架商品",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/goods/batch/status",
               "summary": "批量更新商品状态",
               "parameters": [
-                {"name": "dto", "in": "body", "type": "BatchStatusDTO", "required": true, "description": "批量状态更新DTO"}
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "BatchStatusDTO",
+                  "required": true,
+                  "description": "批量状态更新DTO"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "批量上下架多个商品"
+              "businessLogic": "批量上下架多个商品",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/goods/clone",
               "summary": "克隆商品",
               "parameters": [
-                {"name": "dto", "in": "body", "type": "GoodsCloneDTO", "required": true, "description": "克隆参数（来源ID、可选新名称/分类）"}
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "GoodsCloneDTO",
+                  "required": true,
+                  "description": "克隆参数（来源ID、可选新名称/分类）"
+                }
               ],
               "responseFormat": "Result<Long>",
-              "businessLogic": "复制商品生成新商品，可修改名称和分类"
+              "businessLogic": "复制商品生成新商品，可修改名称和分类",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             }
           ]
         },
@@ -158,47 +302,76 @@
               "summary": "获取分类列表(树形)",
               "parameters": [],
               "responseFormat": "Result<List<AdminCategoryDTO>>",
-              "businessLogic": "返回商品分类的树形结构"
+              "businessLogic": "返回商品分类的树形结构",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/category",
               "summary": "新增分类",
               "parameters": [
-                {"name": "dto", "in": "body", "type": "AdminCategoryDTO", "required": true, "description": "分类信息"}
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "AdminCategoryDTO",
+                  "required": true,
+                  "description": "分类信息"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "在指定父分类下创建子分类"
+              "businessLogic": "在指定父分类下创建子分类",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/category",
               "summary": "编辑分类",
               "parameters": [
-                {"name": "dto", "in": "body", "type": "AdminCategoryDTO", "required": true, "description": "分类信息（含ID）"}
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "AdminCategoryDTO",
+                  "required": true,
+                  "description": "分类信息（含ID）"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "更新分类名称、图标等"
+              "businessLogic": "更新分类名称、图标等",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             },
             {
               "method": "DELETE",
               "path": "/api/mall/admin/category/{id}",
               "summary": "删除分类",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "分类ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "分类ID"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "删除分类（需先确认无商品关联）"
+              "businessLogic": "删除分类（需先确认无商品关联）",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Record exists?]\n    C --> D[Soft Delete: SET delflag=1]\n    D --> E[Log: Delete operation]\n    E --> F([Return Success])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/category/sort",
               "summary": "批量排序分类",
               "parameters": [
-                {"name": "ids", "in": "body", "type": "List<Long>", "required": true, "description": "分类ID顺序列表"}
+                {
+                  "name": "ids",
+                  "in": "body",
+                  "type": "List<Long>",
+                  "required": true,
+                  "description": "分类ID顺序列表"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "按传入顺序更新分类排序"
+              "businessLogic": "按传入顺序更新分类排序",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             }
           ]
         },
@@ -213,47 +386,76 @@
               "summary": "获取规格列表（含规格值）",
               "parameters": [],
               "responseFormat": "Result<List<SpecDTO>>",
-              "businessLogic": "返回所有规格名称及其规格值列表"
+              "businessLogic": "返回所有规格名称及其规格值列表",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/spec",
               "summary": "新增规格",
               "parameters": [
-                {"name": "params", "in": "body", "type": "Map<String,String>", "required": true, "description": "包含规格名称"}
+                {
+                  "name": "params",
+                  "in": "body",
+                  "type": "Map<String,String>",
+                  "required": true,
+                  "description": "包含规格名称"
+                }
               ],
               "responseFormat": "Result<Long>",
-              "businessLogic": "创建新的规格名称，返回规格ID"
+              "businessLogic": "创建新的规格名称，返回规格ID",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/spec/value",
               "summary": "新增规格值",
               "parameters": [
-                {"name": "params", "in": "body", "type": "Map<String,Object>", "required": true, "description": "包含specId和规格值"}
+                {
+                  "name": "params",
+                  "in": "body",
+                  "type": "Map<String,Object>",
+                  "required": true,
+                  "description": "包含specId和规格值"
+                }
               ],
               "responseFormat": "Result<Long>",
-              "businessLogic": "在指定规格下新增规格值"
+              "businessLogic": "在指定规格下新增规格值",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "DELETE",
               "path": "/api/mall/admin/spec/{id}",
               "summary": "删除规格（同时删除所有规格值）",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "规格ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "规格ID"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "级联删除规格及其下所有规格值"
+              "businessLogic": "级联删除规格及其下所有规格值",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Record exists?]\n    C --> D[Soft Delete: SET delflag=1]\n    D --> E[Log: Delete operation]\n    E --> F([Return Success])"
             },
             {
               "method": "DELETE",
               "path": "/api/mall/admin/spec/value/{id}",
               "summary": "删除单个规格值",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "规格值ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "规格值ID"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "删除指定规格值"
+              "businessLogic": "删除指定规格值",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Record exists?]\n    C --> D[Soft Delete: SET delflag=1]\n    D --> E[Log: Delete operation]\n    E --> F([Return Success])"
             }
           ]
         }
@@ -273,82 +475,150 @@
               "path": "/api/mall/order",
               "summary": "创建订单",
               "parameters": [
-                {"name": "dto", "in": "body", "type": "CreateOrderDTO", "required": true, "description": "订单创建参数（含地址ID、备注、是否虚拟商品标识）"}
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "CreateOrderDTO",
+                  "required": true,
+                  "description": "订单创建参数（含地址ID、备注、是否虚拟商品标识）"
+                }
               ],
               "responseFormat": "Result<Long>",
-              "businessLogic": "从购物车或直接购买创建订单，实物商品需校验收货地址"
+              "businessLogic": "从购物车或直接购买创建订单，实物商品需校验收货地址",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "GET",
               "path": "/api/mall/order",
               "summary": "订单列表",
               "parameters": [
-                {"name": "status", "in": "query", "type": "Integer", "required": false, "description": "订单状态筛选"}
+                {
+                  "name": "status",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "订单状态筛选"
+                }
               ],
               "responseFormat": "Result<IPage<OrderVO>>",
-              "businessLogic": "返回当前用户的订单列表，支持按状态筛选"
+              "businessLogic": "返回当前用户的订单列表，支持按状态筛选",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "GET",
               "path": "/api/mall/order/{id}",
               "summary": "订单详情",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "订单ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "订单ID"
+                }
               ],
               "responseFormat": "Result<OrderVO>",
-              "businessLogic": "返回订单详细信息，包含商品列表、地址、支付信息等"
+              "businessLogic": "返回订单详细信息，包含商品列表、地址、支付信息等",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "DELETE",
               "path": "/api/mall/order/{id}",
               "summary": "取消订单",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "订单ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "订单ID"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "用户取消未支付订单"
+              "businessLogic": "用户取消未支付订单",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Record exists?]\n    C --> D[Soft Delete: SET delflag=1]\n    D --> E[Log: Delete operation]\n    E --> F([Return Success])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/order/{id}/confirm",
               "summary": "确认收货",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "订单ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "订单ID"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "用户确认收到货物，订单完结"
+              "businessLogic": "用户确认收到货物，订单完结",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             },
             {
               "method": "POST",
               "path": "/api/mall/order/{id}/pay",
               "summary": "发起支付",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "订单ID"},
-                {"name": "openId", "in": "query", "type": "String", "required": true, "description": "微信用户openId"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "订单ID"
+                },
+                {
+                  "name": "openId",
+                  "in": "query",
+                  "type": "String",
+                  "required": true,
+                  "description": "微信用户openId"
+                }
               ],
               "responseFormat": "Result<Map<String, String>>",
-              "businessLogic": "调起微信支付，返回支付参数（prepay_id等）"
+              "businessLogic": "调起微信支付，返回支付参数（prepay_id等）",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "GET",
               "path": "/api/mall/order/{id}/delivery",
               "summary": "物流轨迹",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "订单ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "订单ID"
+                }
               ],
               "responseFormat": "Result<LogisticsTrackDTO>",
-              "businessLogic": "查询已发货订单的物流轨迹信息"
+              "businessLogic": "查询已发货订单的物流轨迹信息",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/order/{id}/remark",
               "summary": "用户添加订单备注",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "订单ID"},
-                {"name": "dto", "in": "body", "type": "UpdateRemarkDTO", "required": true, "description": "备注内容"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "订单ID"
+                },
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "UpdateRemarkDTO",
+                  "required": true,
+                  "description": "备注内容"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "用户可对订单添加或修改备注信息"
+              "businessLogic": "用户可对订单添加或修改备注信息",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             }
           ]
         },
@@ -362,37 +632,100 @@
               "path": "/api/mall/admin/order/list",
               "summary": "订单列表（分页）",
               "parameters": [
-                {"name": "page", "in": "query", "type": "Long", "required": false, "description": "页码，默认1"},
-                {"name": "pageSize", "in": "query", "type": "Long", "required": false, "description": "每页数量，默认20"},
-                {"name": "orderNo", "in": "query", "type": "String", "required": false, "description": "订单号"},
-                {"name": "status", "in": "query", "type": "Integer", "required": false, "description": "订单状态"},
-                {"name": "startTime", "in": "query", "type": "String", "required": false, "description": "开始时间"},
-                {"name": "endTime", "in": "query", "type": "String", "required": false, "description": "结束时间"},
-                {"name": "keyword", "in": "query", "type": "String", "required": false, "description": "搜索关键字（用户/商品）"}
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "页码，默认1"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "每页数量，默认20"
+                },
+                {
+                  "name": "orderNo",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "订单号"
+                },
+                {
+                  "name": "status",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "订单状态"
+                },
+                {
+                  "name": "startTime",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "开始时间"
+                },
+                {
+                  "name": "endTime",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "结束时间"
+                },
+                {
+                  "name": "keyword",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "搜索关键字（用户/商品）"
+                }
               ],
               "responseFormat": "Result<IPage<OrderListDTO>>",
-              "businessLogic": "后台多条件筛选查询订单列表"
+              "businessLogic": "后台多条件筛选查询订单列表",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "GET",
               "path": "/api/mall/admin/order/{id}",
               "summary": "订单详情",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "订单ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "订单ID"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "获取订单完整信息，包括商品明细、物流、支付等"
+              "businessLogic": "获取订单完整信息，包括商品明细、物流、支付等",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/order/{id}/ship",
               "summary": "订单发货",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "订单ID"},
-                {"name": "dto", "in": "body", "type": "ShipOrderDTO", "required": true, "description": "物流信息（快递公司、快递单号）"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "订单ID"
+                },
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "ShipOrderDTO",
+                  "required": true,
+                  "description": "物流信息（快递公司、快递单号）"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "管理员填写物流信息，订单状态变为已发货"
+              "businessLogic": "管理员填写物流信息，订单状态变为已发货",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "GET",
@@ -400,40 +733,80 @@
               "summary": "订单统计",
               "parameters": [],
               "responseFormat": "Result<Map<String,Object>>",
-              "businessLogic": "聚合统计：今日订单数、销售额、待发货数、已完成数"
+              "businessLogic": "聚合统计：今日订单数、销售额、待发货数、已完成数",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/order/{id}/close",
               "summary": "管理员关闭订单",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "订单ID"},
-                {"name": "dto", "in": "body", "type": "CloseOrderDTO", "required": true, "description": "关闭原因"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "订单ID"
+                },
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "CloseOrderDTO",
+                  "required": true,
+                  "description": "关闭原因"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "管理员强制关闭订单，需填写关闭原因"
+              "businessLogic": "管理员强制关闭订单，需填写关闭原因",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/order/{id}/adjust-amount",
               "summary": "管理员调整订单金额",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "订单ID"},
-                {"name": "dto", "in": "body", "type": "AdminAdjustOrderDTO", "required": true, "description": "调整金额及原因"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "订单ID"
+                },
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "AdminAdjustOrderDTO",
+                  "required": true,
+                  "description": "调整金额及原因"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "修改订单金额，需填写原因，支持风控"
+              "businessLogic": "修改订单金额，需填写原因，支持风控",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/order/{id}/admin-remark",
               "summary": "管理员添加订单备注",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "订单ID"},
-                {"name": "dto", "in": "body", "type": "UpdateRemarkDTO", "required": true, "description": "备注内容"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "订单ID"
+                },
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "UpdateRemarkDTO",
+                  "required": true,
+                  "description": "备注内容"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "管理员内部备注，对用户不可见"
+              "businessLogic": "管理员内部备注，对用户不可见",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             }
           ]
         },
@@ -447,10 +820,17 @@
               "path": "/api/mall/cart",
               "summary": "加入购物车",
               "parameters": [
-                {"name": "params", "in": "body", "type": "Map<String, Object>", "required": true, "description": "包含skuId和quantity"}
+                {
+                  "name": "params",
+                  "in": "body",
+                  "type": "Map<String, Object>",
+                  "required": true,
+                  "description": "包含skuId和quantity"
+                }
               ],
               "responseFormat": "Result<Void>",
-              "businessLogic": "将商品SKU加入购物车，支持相同SKU累加数量"
+              "businessLogic": "将商品SKU加入购物车，支持相同SKU累加数量",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "GET",
@@ -458,38 +838,66 @@
               "summary": "购物车列表",
               "parameters": [],
               "responseFormat": "Result<List<Map<String, Object>>>",
-              "businessLogic": "返回当前用户购物车所有商品，含选中状态"
+              "businessLogic": "返回当前用户购物车所有商品，含选中状态",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "GET",
               "path": "/api/mall/cart/total",
               "summary": "购物车总价",
               "parameters": [
-                {"name": "checkedSkuIds", "in": "query", "type": "List<Long>", "required": true, "description": "已选中的SKU ID列表"}
+                {
+                  "name": "checkedSkuIds",
+                  "in": "query",
+                  "type": "List<Long>",
+                  "required": true,
+                  "description": "已选中的SKU ID列表"
+                }
               ],
               "responseFormat": "Result<BigDecimal>",
-              "businessLogic": "计算选中商品的总价"
+              "businessLogic": "计算选中商品的总价",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/cart/{id}",
               "summary": "修改数量或选中状态",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "购物车项ID"},
-                {"name": "params", "in": "body", "type": "Map<String, Object>", "required": true, "description": "包含quantity或checked字段"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "购物车项ID"
+                },
+                {
+                  "name": "params",
+                  "in": "body",
+                  "type": "Map<String, Object>",
+                  "required": true,
+                  "description": "包含quantity或checked字段"
+                }
               ],
               "responseFormat": "Result<Void>",
-              "businessLogic": "修改购物车项数量或勾选状态"
+              "businessLogic": "修改购物车项数量或勾选状态",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             },
             {
               "method": "DELETE",
               "path": "/api/mall/cart/{id}",
               "summary": "删除购物车项",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "购物车项ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "购物车项ID"
+                }
               ],
               "responseFormat": "Result<Void>",
-              "businessLogic": "从购物车删除指定商品"
+              "businessLogic": "从购物车删除指定商品",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Record exists?]\n    C --> D[Soft Delete: SET delflag=1]\n    D --> E[Log: Delete operation]\n    E --> F([Return Success])"
             },
             {
               "method": "DELETE",
@@ -497,7 +905,8 @@
               "summary": "清空已选中",
               "parameters": [],
               "responseFormat": "Result<Void>",
-              "businessLogic": "结算后清空已勾选的购物车项"
+              "businessLogic": "结算后清空已勾选的购物车项",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Record exists?]\n    C --> D[Soft Delete: SET delflag=1]\n    D --> E[Log: Delete operation]\n    E --> F([Return Success])"
             }
           ]
         },
@@ -511,41 +920,75 @@
               "path": "/api/mall/refund",
               "summary": "申请退款",
               "parameters": [
-                {"name": "dto", "in": "body", "type": "RefundApplyDTO", "required": true, "description": "退款申请参数（订单ID、退款原因、退款金额）"}
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "RefundApplyDTO",
+                  "required": true,
+                  "description": "退款申请参数（订单ID、退款原因、退款金额）"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "用户对已支付订单申请退款"
+              "businessLogic": "用户对已支付订单申请退款",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Order + Refund record]\n    C --> D{Validate: Status allow?}\n    D -->|Yes| E[Update: Refund status]\n    D -->|No| F[Return: Invalid state]\n    E --> G{Action: Auto or Manual?}\n    G -->|Auto| H[Process: Immediate refund]\n    G -->|Manual| I[Notify: Admin review]\n    H --> J[Return: Refund processed]\n    I --> K([Return: Pending approval])"
             },
             {
               "method": "POST",
               "path": "/api/mall/refund/{id}/cancel",
               "summary": "取消退款申请",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "退款记录ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "退款记录ID"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "用户撤销退款申请"
+              "businessLogic": "用户撤销退款申请",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Order + Refund record]\n    C --> D{Validate: Status allow?}\n    D -->|Yes| E[Update: Refund status]\n    D -->|No| F[Return: Invalid state]\n    E --> G{Action: Auto or Manual?}\n    G -->|Auto| H[Process: Immediate refund]\n    G -->|Manual| I[Notify: Admin review]\n    H --> J[Return: Refund processed]\n    I --> K([Return: Pending approval])"
             },
             {
               "method": "GET",
               "path": "/api/mall/refund/list",
               "summary": "退款列表",
               "parameters": [
-                {"name": "page", "in": "query", "type": "Integer", "required": false, "description": "页码，默认1"},
-                {"name": "pageSize", "in": "query", "type": "Integer", "required": false, "description": "每页数量，默认20"}
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "页码，默认1"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "每页数量，默认20"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "返回用户的退款记录列表"
+              "businessLogic": "返回用户的退款记录列表",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Order + Refund record]\n    C --> D{Validate: Status allow?}\n    D -->|Yes| E[Update: Refund status]\n    D -->|No| F[Return: Invalid state]\n    E --> G{Action: Auto or Manual?}\n    G -->|Auto| H[Process: Immediate refund]\n    G -->|Manual| I[Notify: Admin review]\n    H --> J[Return: Refund processed]\n    I --> K([Return: Pending approval])"
             },
             {
               "method": "GET",
               "path": "/api/mall/refund/{id}",
               "summary": "退款详情",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "退款记录ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "退款记录ID"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "查看退款详情含审核状态"
+              "businessLogic": "查看退款详情含审核状态",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Order + Refund record]\n    C --> D{Validate: Status allow?}\n    D -->|Yes| E[Update: Refund status]\n    D -->|No| F[Return: Invalid state]\n    E --> G{Action: Auto or Manual?}\n    G -->|Auto| H[Process: Immediate refund]\n    G -->|Manual| I[Notify: Admin review]\n    H --> J[Return: Refund processed]\n    I --> K([Return: Pending approval])"
             }
           ]
         },
@@ -559,37 +1002,100 @@
               "path": "/api/mall/admin/refund/list",
               "summary": "退款列表（多条件筛选）",
               "parameters": [
-                {"name": "orderId", "in": "query", "type": "Long", "required": false, "description": "订单ID"},
-                {"name": "status", "in": "query", "type": "Integer", "required": false, "description": "退款状态"},
-                {"name": "startTime", "in": "query", "type": "String", "required": false, "description": "开始时间"},
-                {"name": "endTime", "in": "query", "type": "String", "required": false, "description": "结束时间"},
-                {"name": "page", "in": "query", "type": "Long", "required": false, "description": "页码"},
-                {"name": "pageSize", "in": "query", "type": "Long", "required": false, "description": "每页数量"}
+                {
+                  "name": "orderId",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "订单ID"
+                },
+                {
+                  "name": "status",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "退款状态"
+                },
+                {
+                  "name": "startTime",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "开始时间"
+                },
+                {
+                  "name": "endTime",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "结束时间"
+                },
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "页码"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "每页数量"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "管理员多条件查询退款申请列表"
+              "businessLogic": "管理员多条件查询退款申请列表",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Order + Refund record]\n    C --> D{Validate: Status allow?}\n    D -->|Yes| E[Update: Refund status]\n    D -->|No| F[Return: Invalid state]\n    E --> G{Action: Auto or Manual?}\n    G -->|Auto| H[Process: Immediate refund]\n    G -->|Manual| I[Notify: Admin review]\n    H --> J[Return: Refund processed]\n    I --> K([Return: Pending approval])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/refund/{id}/approve",
               "summary": "审核通过退款申请",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "退款记录ID"},
-                {"name": "remark", "in": "query", "type": "String", "required": false, "description": "审核备注"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "退款记录ID"
+                },
+                {
+                  "name": "remark",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "审核备注"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "同意退款，执行退款操作"
+              "businessLogic": "同意退款，执行退款操作",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Order + Refund record]\n    C --> D{Validate: Status allow?}\n    D -->|Yes| E[Update: Refund status]\n    D -->|No| F[Return: Invalid state]\n    E --> G{Action: Auto or Manual?}\n    G -->|Auto| H[Process: Immediate refund]\n    G -->|Manual| I[Notify: Admin review]\n    H --> J[Return: Refund processed]\n    I --> K([Return: Pending approval])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/refund/{id}/reject",
               "summary": "审核拒绝退款申请",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "退款记录ID"},
-                {"name": "remark", "in": "query", "type": "String", "required": false, "description": "拒绝原因"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "退款记录ID"
+                },
+                {
+                  "name": "remark",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "拒绝原因"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "拒绝退款，订单恢复原状态"
+              "businessLogic": "拒绝退款，订单恢复原状态",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Order + Refund record]\n    C --> D{Validate: Status allow?}\n    D -->|Yes| E[Update: Refund status]\n    D -->|No| F[Return: Invalid state]\n    E --> G{Action: Auto or Manual?}\n    G -->|Auto| H[Process: Immediate refund]\n    G -->|Manual| I[Notify: Admin review]\n    H --> J[Return: Refund processed]\n    I --> K([Return: Pending approval])"
             }
           ]
         },
@@ -603,34 +1109,79 @@
               "path": "/api/mall/admin/stock/list",
               "summary": "获取SKU库存列表（分页）",
               "parameters": [
-                {"name": "page", "in": "query", "type": "Long", "required": false, "description": "页码，默认1"},
-                {"name": "pageSize", "in": "query", "type": "Long", "required": false, "description": "每页数量，默认20"},
-                {"name": "goodsId", "in": "query", "type": "Long", "required": false, "description": "商品ID"},
-                {"name": "keyword", "in": "query", "type": "String", "required": false, "description": "搜索关键字（SKU编码/商品名称）"}
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "页码，默认1"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "每页数量，默认20"
+                },
+                {
+                  "name": "goodsId",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "商品ID"
+                },
+                {
+                  "name": "keyword",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "搜索关键字（SKU编码/商品名称）"
+                }
               ],
               "responseFormat": "Result<IPage<SkuStockDTO>>",
-              "businessLogic": "分页查询SKU库存信息"
+              "businessLogic": "分页查询SKU库存信息",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "GET",
               "path": "/api/mall/admin/stock/{skuId}",
               "summary": "获取单个SKU库存详情",
               "parameters": [
-                {"name": "skuId", "in": "path", "type": "Long", "required": true, "description": "SKU ID"}
+                {
+                  "name": "skuId",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "SKU ID"
+                }
               ],
               "responseFormat": "Result<SkuStockDTO>",
-              "businessLogic": "查看单个SKU的库存详情"
+              "businessLogic": "查看单个SKU的库存详情",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/stock/{skuId}/correct",
               "summary": "手工库存纠偏",
               "parameters": [
-                {"name": "skuId", "in": "path", "type": "Long", "required": true, "description": "SKU ID"},
-                {"name": "dto", "in": "body", "type": "StockCorrectDTO", "required": true, "description": "纠偏数量、操作人、原因"}
+                {
+                  "name": "skuId",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "SKU ID"
+                },
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "StockCorrectDTO",
+                  "required": true,
+                  "description": "纠偏数量、操作人、原因"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "手动调整库存数量，记录操作日志"
+              "businessLogic": "手动调整库存数量，记录操作日志",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             },
             {
               "method": "GET",
@@ -638,17 +1189,25 @@
               "summary": "获取库存预警列表",
               "parameters": [],
               "responseFormat": "Result<List<SkuStockDTO>>",
-              "businessLogic": "返回低于库存阈值的SKU列表"
+              "businessLogic": "返回低于库存阈值的SKU列表",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/stock",
               "summary": "创建SKU库存记录",
               "parameters": [
-                {"name": "dto", "in": "body", "type": "StockCreateDTO", "required": true, "description": "库存信息（含goodsId、skuCode、stock）"}
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "StockCreateDTO",
+                  "required": true,
+                  "description": "库存信息（含goodsId、skuCode、stock）"
+                }
               ],
               "responseFormat": "Result<Long>",
-              "businessLogic": "为新商品/SKU创建初始库存记录"
+              "businessLogic": "为新商品/SKU创建初始库存记录",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             }
           ]
         }
@@ -669,7 +1228,8 @@
               "summary": "获取个人信息",
               "parameters": [],
               "responseFormat": "Result<Map<String, Object>>",
-              "businessLogic": "返回当前用户基本信息（userId、nickname、avatar、phone）"
+              "businessLogic": "返回当前用户基本信息（userId、nickname、avatar、phone）",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "GET",
@@ -677,7 +1237,8 @@
               "summary": "获取收货地址列表",
               "parameters": [],
               "responseFormat": "Result<Object>",
-              "businessLogic": "返回用户所有收货地址（含默认地址标识）"
+              "businessLogic": "返回用户所有收货地址（含默认地址标识）",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             }
           ]
         },
@@ -691,62 +1252,116 @@
               "path": "/api/mall/member/info",
               "summary": "会员信息",
               "parameters": [
-                {"name": "tenantId", "in": "header", "type": "String", "required": false, "description": "租户ID（可选）"}
+                {
+                  "name": "tenantId",
+                  "in": "header",
+                  "type": "String",
+                  "required": false,
+                  "description": "租户ID（可选）"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "返回当前用户会员等级、积分等信息"
+              "businessLogic": "返回当前用户会员等级、积分等信息",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/member/update",
               "summary": "更新会员资料",
               "parameters": [
-                {"name": "params", "in": "body", "type": "Map<String, Object>", "required": true, "description": "待更新的会员资料字段"}
+                {
+                  "name": "params",
+                  "in": "body",
+                  "type": "Map<String, Object>",
+                  "required": true,
+                  "description": "待更新的会员资料字段"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "更新会员昵称、头像等资料"
+              "businessLogic": "更新会员昵称、头像等资料",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "GET",
               "path": "/api/mall/member/points/log",
               "summary": "积分记录",
               "parameters": [
-                {"name": "page", "in": "query", "type": "Long", "required": false, "description": "页码，默认1"},
-                {"name": "pageSize", "in": "query", "type": "Long", "required": false, "description": "每页数量，默认20"}
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "页码，默认1"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "每页数量，默认20"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "分页查询积分变动明细记录"
+              "businessLogic": "分页查询积分变动明细记录",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "GET",
               "path": "/api/mall/member/coupons",
               "summary": "我的优惠券",
               "parameters": [
-                {"name": "status", "in": "query", "type": "Integer", "required": false, "description": "优惠券状态（可用/已使用/已过期）"}
+                {
+                  "name": "status",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "优惠券状态（可用/已使用/已过期）"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "查看我的优惠券列表"
+              "businessLogic": "查看我的优惠券列表",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "GET",
               "path": "/api/mall/member/favorites",
               "summary": "我的收藏",
               "parameters": [
-                {"name": "page", "in": "query", "type": "Integer", "required": false, "description": "页码，默认1"},
-                {"name": "pageSize", "in": "query", "type": "Integer", "required": false, "description": "每页数量，默认10"}
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "页码，默认1"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "每页数量，默认10"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "返回用户收藏的商品列表"
+              "businessLogic": "返回用户收藏的商品列表",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "DELETE",
               "path": "/api/mall/member/favorites/{id}",
               "summary": "删除收藏",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "收藏记录ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "收藏记录ID"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "取消收藏指定商品"
+              "businessLogic": "取消收藏指定商品",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Record exists?]\n    C --> D[Soft Delete: SET delflag=1]\n    D --> E[Log: Delete operation]\n    E --> F([Return Success])"
             }
           ]
         },
@@ -761,48 +1376,83 @@
               "summary": "地址列表",
               "parameters": [],
               "responseFormat": "Result<List<MallUserAddress>>",
-              "businessLogic": "获取当前用户所有收货地址"
+              "businessLogic": "获取当前用户所有收货地址",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/address",
               "summary": "新增地址",
               "parameters": [
-                {"name": "address", "in": "body", "type": "MallUserAddress", "required": true, "description": "地址信息"}
+                {
+                  "name": "address",
+                  "in": "body",
+                  "type": "MallUserAddress",
+                  "required": true,
+                  "description": "地址信息"
+                }
               ],
               "responseFormat": "Result<Void>",
-              "businessLogic": "创建新的收货地址"
+              "businessLogic": "创建新的收货地址",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/address/{id}",
               "summary": "修改地址",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "地址ID"},
-                {"name": "address", "in": "body", "type": "MallUserAddress", "required": true, "description": "地址信息"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "地址ID"
+                },
+                {
+                  "name": "address",
+                  "in": "body",
+                  "type": "MallUserAddress",
+                  "required": true,
+                  "description": "地址信息"
+                }
               ],
               "responseFormat": "Result<Void>",
-              "businessLogic": "更新已有收货地址"
+              "businessLogic": "更新已有收货地址",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             },
             {
               "method": "DELETE",
               "path": "/api/mall/address/{id}",
               "summary": "删除地址",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "地址ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "地址ID"
+                }
               ],
               "responseFormat": "Result<Void>",
-              "businessLogic": "删除指定收货地址"
+              "businessLogic": "删除指定收货地址",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Record exists?]\n    C --> D[Soft Delete: SET delflag=1]\n    D --> E[Log: Delete operation]\n    E --> F([Return Success])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/address/{id}/default",
               "summary": "设为默认",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "地址ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "地址ID"
+                }
               ],
               "responseFormat": "Result<Void>",
-              "businessLogic": "将指定地址设为默认收货地址"
+              "businessLogic": "将指定地址设为默认收货地址",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             }
           ]
         },
@@ -816,75 +1466,154 @@
               "path": "/api/mall/admin/member/list",
               "summary": "会员列表",
               "parameters": [
-                {"name": "page", "in": "query", "type": "Integer", "required": false, "description": "页码，默认1"},
-                {"name": "pageSize", "in": "query", "type": "Integer", "required": false, "description": "每页数量，默认20"}
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "页码，默认1"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "每页数量，默认20"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "后台分页查询会员列表"
+              "businessLogic": "后台分页查询会员列表",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "GET",
               "path": "/api/mall/admin/member/{id}",
               "summary": "会员详情",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "会员ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "会员ID"
+                }
               ],
               "responseFormat": "Result<Map>",
-              "businessLogic": "查看会员详细信息，含积分余额"
+              "businessLogic": "查看会员详细信息，含积分余额",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/member/{id}/points",
               "summary": "调整会员积分",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "会员ID"},
-                {"name": "points", "in": "body", "type": "Integer", "required": false, "description": "积分调整量（正负）"},
-                {"name": "remark", "in": "query", "type": "String", "required": false, "description": "调整原因"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "会员ID"
+                },
+                {
+                  "name": "points",
+                  "in": "body",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "积分调整量（正负）"
+                },
+                {
+                  "name": "remark",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "调整原因"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "管理员手工调整会员积分"
+              "businessLogic": "管理员手工调整会员积分",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             },
             {
               "method": "GET",
               "path": "/api/mall/admin/member/{userId}/addresses",
               "summary": "获取会员地址列表",
               "parameters": [
-                {"name": "userId", "in": "path", "type": "Long", "required": true, "description": "用户ID"}
+                {
+                  "name": "userId",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "用户ID"
+                }
               ],
               "responseFormat": "Result<List<MallUserAddress>>",
-              "businessLogic": "管理员查看指定用户的收货地址"
+              "businessLogic": "管理员查看指定用户的收货地址",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/member/{userId}/address",
               "summary": "新增会员地址",
               "parameters": [
-                {"name": "userId", "in": "path", "type": "Long", "required": true, "description": "用户ID"},
-                {"name": "address", "in": "body", "type": "MallUserAddress", "required": true, "description": "地址信息"}
+                {
+                  "name": "userId",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "用户ID"
+                },
+                {
+                  "name": "address",
+                  "in": "body",
+                  "type": "MallUserAddress",
+                  "required": true,
+                  "description": "地址信息"
+                }
               ],
               "responseFormat": "Result<Void>",
-              "businessLogic": "管理员代为新增收货地址"
+              "businessLogic": "管理员代为新增收货地址",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/member/address/{id}",
               "summary": "修改会员地址",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "地址ID"},
-                {"name": "address", "in": "body", "type": "MallUserAddress", "required": true, "description": "地址信息"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "地址ID"
+                },
+                {
+                  "name": "address",
+                  "in": "body",
+                  "type": "MallUserAddress",
+                  "required": true,
+                  "description": "地址信息"
+                }
               ],
               "responseFormat": "Result<Void>",
-              "businessLogic": "管理员代为修改收货地址"
+              "businessLogic": "管理员代为修改收货地址",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             },
             {
               "method": "DELETE",
               "path": "/api/mall/admin/member/address/{id}",
               "summary": "删除会员地址",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "地址ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "地址ID"
+                }
               ],
               "responseFormat": "Result<Void>",
-              "businessLogic": "管理员代为删除收货地址"
+              "businessLogic": "管理员代为删除收货地址",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Record exists?]\n    C --> D[Soft Delete: SET delflag=1]\n    D --> E[Log: Delete operation]\n    E --> F([Return Success])"
             }
           ]
         },
@@ -898,22 +1627,48 @@
               "path": "/api/mall/admin/user/list",
               "summary": "用户列表",
               "parameters": [
-                {"name": "page", "in": "query", "type": "Integer", "required": false, "description": "页码，默认1"},
-                {"name": "pageSize", "in": "query", "type": "Integer", "required": false, "description": "每页数量，默认20"},
-                {"name": "keyword", "in": "query", "type": "String", "required": false, "description": "搜索关键字（昵称/手机号）"}
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "页码，默认1"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "每页数量，默认20"
+                },
+                {
+                  "name": "keyword",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "搜索关键字（昵称/手机号）"
+                }
               ],
               "responseFormat": "Result<IPage<UserListDTO>>",
-              "businessLogic": "后台分页查询用户列表，含消费统计"
+              "businessLogic": "后台分页查询用户列表，含消费统计",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "GET",
               "path": "/api/mall/admin/user/{userId}/statistics",
               "summary": "用户统计",
               "parameters": [
-                {"name": "userId", "in": "path", "type": "Long", "required": true, "description": "用户ID"}
+                {
+                  "name": "userId",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "用户ID"
+                }
               ],
               "responseFormat": "Result<UserStatisticsVO>",
-              "businessLogic": "查看指定用户的消费、订单统计"
+              "businessLogic": "查看指定用户的消费、订单统计",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             }
           ]
         }
@@ -933,32 +1688,65 @@
               "path": "/api/mall/coupon/list",
               "summary": "用户优惠券列表",
               "parameters": [
-                {"name": "status", "in": "query", "type": "Integer", "required": false, "description": "优惠券状态"},
-                {"name": "page", "in": "query", "type": "Long", "required": false, "description": "页码"},
-                {"name": "pageSize", "in": "query", "type": "Long", "required": false, "description": "每页数量"}
+                {
+                  "name": "status",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "优惠券状态"
+                },
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "页码"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Long",
+                  "required": false,
+                  "description": "每页数量"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "分页查询用户持有的优惠券"
+              "businessLogic": "分页查询用户持有的优惠券",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "GET",
               "path": "/api/mall/coupon/available",
               "summary": "获取可用优惠券",
               "parameters": [
-                {"name": "orderAmount", "in": "query", "type": "BigDecimal", "required": false, "description": "订单金额（用于计算可用优惠）"}
+                {
+                  "name": "orderAmount",
+                  "in": "query",
+                  "type": "BigDecimal",
+                  "required": false,
+                  "description": "订单金额（用于计算可用优惠）"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "根据订单金额返回可用的优惠券列表"
+              "businessLogic": "根据订单金额返回可用的优惠券列表",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/coupon/{id}/claim",
               "summary": "领取优惠券",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "优惠券模板ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "优惠券模板ID"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "用户从优惠券模板领取一张优惠券到账户"
+              "businessLogic": "用户从优惠券模板领取一张优惠券到账户",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             }
           ]
         },
@@ -972,95 +1760,188 @@
               "path": "/api/mall/admin/coupon/template",
               "summary": "创建优惠券模板",
               "parameters": [
-                {"name": "params", "in": "body", "type": "Map<String, Object>", "required": true, "description": "模板参数（名称、金额、有效期等）"}
+                {
+                  "name": "params",
+                  "in": "body",
+                  "type": "Map<String, Object>",
+                  "required": true,
+                  "description": "模板参数（名称、金额、有效期等）"
+                }
               ],
               "responseFormat": "Result<Long>",
-              "businessLogic": "创建新的优惠券模板（未发布状态）"
+              "businessLogic": "创建新的优惠券模板（未发布状态）",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/coupon/template/{id}",
               "summary": "更新优惠券模板",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "模板ID"},
-                {"name": "params", "in": "body", "type": "Map<String, Object>", "required": true, "description": "更新参数"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "模板ID"
+                },
+                {
+                  "name": "params",
+                  "in": "body",
+                  "type": "Map<String, Object>",
+                  "required": true,
+                  "description": "更新参数"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "修改优惠券模板信息"
+              "businessLogic": "修改优惠券模板信息",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/coupon/template/{id}/publish",
               "summary": "发布优惠券",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "模板ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "模板ID"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "将优惠券模板发布，用户可领取"
+              "businessLogic": "将优惠券模板发布，用户可领取",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/coupon/template/{id}/offline",
               "summary": "下架优惠券",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "模板ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "模板ID"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "将优惠券下架，停止领取"
+              "businessLogic": "将优惠券下架，停止领取",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "GET",
               "path": "/api/mall/admin/coupon/template/list",
               "summary": "优惠券模板列表",
               "parameters": [
-                {"name": "status", "in": "query", "type": "Integer", "required": false, "description": "模板状态"},
-                {"name": "page", "in": "query", "type": "Integer", "required": false, "description": "页码"},
-                {"name": "pageSize", "in": "query", "type": "Integer", "required": false, "description": "每页数量"}
+                {
+                  "name": "status",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "模板状态"
+                },
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "页码"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "每页数量"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "分页查询优惠券模板列表"
+              "businessLogic": "分页查询优惠券模板列表",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/coupon/template/{id}/issue",
               "summary": "向指定用户发放优惠券",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "模板ID"},
-                {"name": "userId", "in": "body", "type": "Long", "required": true, "description": "用户ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "模板ID"
+                },
+                {
+                  "name": "userId",
+                  "in": "body",
+                  "type": "Long",
+                  "required": true,
+                  "description": "用户ID"
+                }
               ],
               "responseFormat": "Result<Long>",
-              "businessLogic": "管理员指定用户发放优惠券"
+              "businessLogic": "管理员指定用户发放优惠券",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "GET",
               "path": "/api/mall/admin/coupon/template/{id}/statistics",
               "summary": "优惠券使用统计",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "模板ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "模板ID"
+                }
               ],
               "responseFormat": "Result<Map>",
-              "businessLogic": "统计优惠券发放量、使用量、使用率等"
+              "businessLogic": "统计优惠券发放量、使用量、使用率等",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "GET",
               "path": "/api/mall/admin/coupon/template/{id}/claim-code",
               "summary": "生成限时领取码",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "模板ID"},
-                {"name": "expireDays", "in": "query", "type": "Integer", "required": false, "description": "有效期天数，默认7"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "模板ID"
+                },
+                {
+                  "name": "expireDays",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "有效期天数，默认7"
+                }
               ],
               "responseFormat": "Result<Map>",
-              "businessLogic": "生成限时优惠领取码和链接"
+              "businessLogic": "生成限时优惠领取码和链接",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "DELETE",
               "path": "/api/mall/admin/coupon/template/{id}",
               "summary": "删除优惠券模板",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "模板ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "模板ID"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "删除优惠券模板（已领取的优惠券不影响）"
+              "businessLogic": "删除优惠券模板（已领取的优惠券不影响）",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Record exists?]\n    C --> D[Soft Delete: SET delflag=1]\n    D --> E[Log: Delete operation]\n    E --> F([Return Success])"
             }
           ]
         },
@@ -1074,33 +1955,72 @@
               "path": "/api/mall/evaluate",
               "summary": "提交评价",
               "parameters": [
-                {"name": "dto", "in": "body", "type": "EvaluateDTO", "required": true, "description": "评价内容（商品ID、评分、评价内容、图片）"}
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "EvaluateDTO",
+                  "required": true,
+                  "description": "评价内容（商品ID、评分、评价内容、图片）"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "用户对已收货订单提交商品评价，校验评分1-5星、字数不超过500字、图片不超过9张"
+              "businessLogic": "用户对已收货订单提交商品评价，校验评分1-5星、字数不超过500字、图片不超过9张",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "GET",
               "path": "/api/mall/evaluate",
               "summary": "我的评价列表",
               "parameters": [
-                {"name": "page", "in": "query", "type": "Integer", "required": false, "description": "页码，默认1"},
-                {"name": "pageSize", "in": "query", "type": "Integer", "required": false, "description": "每页数量，默认10"}
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "页码，默认1"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "每页数量，默认10"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "返回当前用户发表的所有评价"
+              "businessLogic": "返回当前用户发表的所有评价",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "GET",
               "path": "/api/mall/evaluate/goods/{goodsId}",
               "summary": "商品评价列表",
               "parameters": [
-                {"name": "goodsId", "in": "path", "type": "Long", "required": true, "description": "商品ID"},
-                {"name": "page", "in": "query", "type": "Integer", "required": false, "description": "页码，默认1"},
-                {"name": "pageSize", "in": "query", "type": "Integer", "required": false, "description": "每页数量，默认10"}
+                {
+                  "name": "goodsId",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "商品ID"
+                },
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "页码，默认1"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "每页数量，默认10"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "查看指定商品的评价列表"
+              "businessLogic": "查看指定商品的评价列表",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             }
           ]
         }
@@ -1121,48 +2041,83 @@
               "summary": "获取轮播图列表",
               "parameters": [],
               "responseFormat": "Result<List<BannerDTO>>",
-              "businessLogic": "返回所有启用的轮播图列表"
+              "businessLogic": "返回所有启用的轮播图列表",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/banner",
               "summary": "新增轮播图",
               "parameters": [
-                {"name": "dto", "in": "body", "type": "BannerDTO", "required": true, "description": "轮播图信息（标题、图片URL、跳转类型）"}
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "BannerDTO",
+                  "required": true,
+                  "description": "轮播图信息（标题、图片URL、跳转类型）"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "创建新的轮播图条目"
+              "businessLogic": "创建新的轮播图条目",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/banner",
               "summary": "编辑轮播图",
               "parameters": [
-                {"name": "dto", "in": "body", "type": "BannerDTO", "required": true, "description": "轮播图信息（含ID）"}
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "BannerDTO",
+                  "required": true,
+                  "description": "轮播图信息（含ID）"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "更新轮播图信息"
+              "businessLogic": "更新轮播图信息",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             },
             {
               "method": "DELETE",
               "path": "/api/mall/admin/banner/{id}",
               "summary": "删除轮播图",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "轮播图ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "轮播图ID"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "删除轮播图"
+              "businessLogic": "删除轮播图",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Record exists?]\n    C --> D[Soft Delete: SET delflag=1]\n    D --> E[Log: Delete operation]\n    E --> F([Return Success])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/banner/{id}/sort/{sort}",
               "summary": "更新轮播图排序",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "轮播图ID"},
-                {"name": "sort", "in": "path", "type": "Integer", "required": true, "description": "排序值"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "轮播图ID"
+                },
+                {
+                  "name": "sort",
+                  "in": "path",
+                  "type": "Integer",
+                  "required": true,
+                  "description": "排序值"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "调整轮播图顺序"
+              "businessLogic": "调整轮播图顺序",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             }
           ]
         },
@@ -1176,53 +2131,106 @@
               "path": "/api/mall/admin/promotions",
               "summary": "获取促销列表",
               "parameters": [
-                {"name": "page", "in": "query", "type": "Integer", "required": false, "description": "页码，默认1"},
-                {"name": "pageSize", "in": "query", "type": "Integer", "required": false, "description": "每页数量，默认10"},
-                {"name": "status", "in": "query", "type": "Integer", "required": false, "description": "促销状态"}
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "页码，默认1"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "每页数量，默认10"
+                },
+                {
+                  "name": "status",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "促销状态"
+                }
               ],
               "responseFormat": "Result<Page<MallMarketingActivity>>",
-              "businessLogic": "分页查询促销活动"
+              "businessLogic": "分页查询促销活动",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/promotions",
               "summary": "创建促销活动",
               "parameters": [
-                {"name": "promotion", "in": "body", "type": "MallMarketingActivity", "required": true, "description": "活动信息"}
+                {
+                  "name": "promotion",
+                  "in": "body",
+                  "type": "MallMarketingActivity",
+                  "required": true,
+                  "description": "活动信息"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "创建新的促销活动"
+              "businessLogic": "创建新的促销活动",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/promotions/{id}",
               "summary": "更新促销活动",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "活动ID"},
-                {"name": "promotion", "in": "body", "type": "MallMarketingActivity", "required": true, "description": "活动信息"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "活动ID"
+                },
+                {
+                  "name": "promotion",
+                  "in": "body",
+                  "type": "MallMarketingActivity",
+                  "required": true,
+                  "description": "活动信息"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "更新促销活动信息"
+              "businessLogic": "更新促销活动信息",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             },
             {
               "method": "DELETE",
               "path": "/api/mall/admin/promotions/{id}",
               "summary": "删除促销活动",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "活动ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "活动ID"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "删除促销活动"
+              "businessLogic": "删除促销活动",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Record exists?]\n    C --> D[Soft Delete: SET delflag=1]\n    D --> E[Log: Delete operation]\n    E --> F([Return Success])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/promotions/{id}/toggle",
               "summary": "启用/禁用促销活动",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "活动ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "活动ID"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "切换促销活动启用状态"
+              "businessLogic": "切换促销活动启用状态",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             }
           ]
         },
@@ -1236,61 +2244,109 @@
               "path": "/api/mall/admin/express/list",
               "summary": "获取物流公司列表",
               "parameters": [
-                {"name": "status", "in": "query", "type": "Integer", "required": false, "description": "状态筛选"}
+                {
+                  "name": "status",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "状态筛选"
+                }
               ],
               "responseFormat": "Result<List<MallExpress>>",
-              "businessLogic": "返回物流公司列表"
+              "businessLogic": "返回物流公司列表",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "GET",
               "path": "/api/mall/admin/express/{id}",
               "summary": "获取物流公司详情",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "物流公司ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "物流公司ID"
+                }
               ],
               "responseFormat": "Result<MallExpress>",
-              "businessLogic": "查看物流公司详细信息"
+              "businessLogic": "查看物流公司详细信息",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/express/",
               "summary": "创建物流公司",
               "parameters": [
-                {"name": "dto", "in": "body", "type": "MallExpress", "required": true, "description": "物流公司信息（名称、编码）"}
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "MallExpress",
+                  "required": true,
+                  "description": "物流公司信息（名称、编码）"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "新增物流公司"
+              "businessLogic": "新增物流公司",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/express/",
               "summary": "更新物流公司",
               "parameters": [
-                {"name": "dto", "in": "body", "type": "MallExpress", "required": true, "description": "物流公司信息（含ID）"}
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "MallExpress",
+                  "required": true,
+                  "description": "物流公司信息（含ID）"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "更新物流公司信息"
+              "businessLogic": "更新物流公司信息",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             },
             {
               "method": "DELETE",
               "path": "/api/mall/admin/express/{id}",
               "summary": "删除物流公司",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "物流公司ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "物流公司ID"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "软删除物流公司"
+              "businessLogic": "软删除物流公司",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Fetch: Record exists?]\n    C --> D[Soft Delete: SET delflag=1]\n    D --> E[Log: Delete operation]\n    E --> F([Return Success])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/express/{id}/status/{status}",
               "summary": "启用/禁用物流公司",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "物流公司ID"},
-                {"name": "status", "in": "path", "type": "Integer", "required": true, "description": "状态值"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "物流公司ID"
+                },
+                {
+                  "name": "status",
+                  "in": "path",
+                  "type": "Integer",
+                  "required": true,
+                  "description": "状态值"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "切换物流公司启用状态"
+              "businessLogic": "切换物流公司启用状态",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             }
           ]
         },
@@ -1305,17 +2361,25 @@
               "summary": "获取所有系统设置",
               "parameters": [],
               "responseFormat": "Result<List<SettingsDTO>>",
-              "businessLogic": "返回商城所有系统配置项"
+              "businessLogic": "返回商城所有系统配置项",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "PUT",
               "path": "/api/mall/admin/settings",
               "summary": "更新系统设置",
               "parameters": [
-                {"name": "settingsDTO", "in": "body", "type": "SettingsDTO", "required": true, "description": "设置参数"}
+                {
+                  "name": "settingsDTO",
+                  "in": "body",
+                  "type": "SettingsDTO",
+                  "required": true,
+                  "description": "设置参数"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "批量更新系统配置"
+              "businessLogic": "批量更新系统配置",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Request DTO]\n    C --> D[Fetch: Existing Record]\n    D --> E[Merge: Update fields]\n    E --> F[Save: Database]\n    F --> G[Log: Update operation]\n    G --> H([Return Success])"
             },
             {
               "method": "GET",
@@ -1323,17 +2387,25 @@
               "summary": "获取微信支付配置",
               "parameters": [],
               "responseFormat": "Result<Map<String, String>>",
-              "businessLogic": "返回解密后的微信支付配置（API密钥、证书路径等）"
+              "businessLogic": "返回解密后的微信支付配置（API密钥、证书路径等）",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/settings/test-decrypt",
               "summary": "测试解密功能",
               "parameters": [
-                {"name": "request", "in": "body", "type": "Map<String, String>", "required": true, "description": "包含待解密的key"}
+                {
+                  "name": "request",
+                  "in": "body",
+                  "type": "Map<String, String>",
+                  "required": true,
+                  "description": "包含待解密的key"
+                }
               ],
               "responseFormat": "Result<String>",
-              "businessLogic": "测试配置解密是否正常"
+              "businessLogic": "测试配置解密是否正常",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             }
           ]
         },
@@ -1348,19 +2420,39 @@
               "summary": "获取今日统计",
               "parameters": [],
               "responseFormat": "Result<StatisticsDTO>",
-              "businessLogic": "返回今日订单数、销售额、新增用户等核心指标"
+              "businessLogic": "返回今日订单数、销售额、新增用户等核心指标",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "GET",
               "path": "/api/mall/admin/statistics/sales-trend",
               "summary": "获取销售趋势统计",
               "parameters": [
-                {"name": "type", "in": "query", "type": "String", "required": true, "description": "统计维度（day/week/month）"},
-                {"name": "startDate", "in": "query", "type": "String", "required": true, "description": "开始日期"},
-                {"name": "endDate", "in": "query", "type": "String", "required": true, "description": "结束日期"}
+                {
+                  "name": "type",
+                  "in": "query",
+                  "type": "String",
+                  "required": true,
+                  "description": "统计维度（day/week/month）"
+                },
+                {
+                  "name": "startDate",
+                  "in": "query",
+                  "type": "String",
+                  "required": true,
+                  "description": "开始日期"
+                },
+                {
+                  "name": "endDate",
+                  "in": "query",
+                  "type": "String",
+                  "required": true,
+                  "description": "结束日期"
+                }
               ],
               "responseFormat": "Result<List<SalesTrendDTO>>",
-              "businessLogic": "返回指定时间范围的每日销售额趋势"
+              "businessLogic": "返回指定时间范围的每日销售额趋势",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "GET",
@@ -1368,7 +2460,8 @@
               "summary": "获取库存预警列表",
               "parameters": [],
               "responseFormat": "Result<List<StockWarningDTO>>",
-              "businessLogic": "返回所有低于库存阈值的SKU"
+              "businessLogic": "返回所有低于库存阈值的SKU",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "GET",
@@ -1376,7 +2469,8 @@
               "summary": "获取用户分析统计",
               "parameters": [],
               "responseFormat": "Result<UserAnalysisDTO>",
-              "businessLogic": "返回用户结构分析（新用户/活跃用户/留存率等）"
+              "businessLogic": "返回用户结构分析（新用户/活跃用户/留存率等）",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             }
           ]
         }
@@ -1396,34 +2490,79 @@
               "path": "/api/mall/admin/merchant/list",
               "summary": "商户列表（分页）",
               "parameters": [
-                {"name": "page", "in": "query", "type": "Integer", "required": false, "description": "页码，默认1"},
-                {"name": "pageSize", "in": "query", "type": "Integer", "required": false, "description": "每页数量，默认20"},
-                {"name": "status", "in": "query", "type": "Integer", "required": false, "description": "商户状态"},
-                {"name": "keyword", "in": "query", "type": "String", "required": false, "description": "搜索关键字"}
+                {
+                  "name": "page",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "页码，默认1"
+                },
+                {
+                  "name": "pageSize",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "每页数量，默认20"
+                },
+                {
+                  "name": "status",
+                  "in": "query",
+                  "type": "Integer",
+                  "required": false,
+                  "description": "商户状态"
+                },
+                {
+                  "name": "keyword",
+                  "in": "query",
+                  "type": "String",
+                  "required": false,
+                  "description": "搜索关键字"
+                }
               ],
               "responseFormat": "Result<IPage<MerchantDTO>>",
-              "businessLogic": "后台分页查询商户列表"
+              "businessLogic": "后台分页查询商户列表",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token + User ID]\n    B --> C[Build: SQL Query]\n    C --> D[Execute: WHERE filters]\n    D --> E[Paginate: LIMIT/OFFSET]\n    E --> F[Format: IPage response]\n    F --> G([Return paginated list])"
             },
             {
               "method": "GET",
               "path": "/api/mall/admin/merchant/{id}",
               "summary": "商户详情",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "商户ID"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "商户ID"
+                }
               ],
               "responseFormat": "Result<MerchantDTO>",
-              "businessLogic": "查看商户详细信息"
+              "businessLogic": "查看商户详细信息",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             },
             {
               "method": "POST",
               "path": "/api/mall/admin/merchant/review/{id}",
               "summary": "审核商户",
               "parameters": [
-                {"name": "id", "in": "path", "type": "Long", "required": true, "description": "商户ID"},
-                {"name": "dto", "in": "body", "type": "Map<String, Object>", "required": true, "description": "审核结果（status: 通过/拒绝，rejectReason: 拒绝原因）"}
+                {
+                  "name": "id",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "商户ID"
+                },
+                {
+                  "name": "dto",
+                  "in": "body",
+                  "type": "Map<String, Object>",
+                  "required": true,
+                  "description": "审核结果（status: 通过/拒绝，rejectReason: 拒绝原因）"
+                }
               ],
               "responseFormat": "Result<Boolean>",
-              "businessLogic": "审核商户入驻申请"
+              "businessLogic": "审核商户入驻申请",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Validate: Business rules]\n    C --> D{Find: Related records?}\n    D -->|Yes| E[Execute: Side effects]\n    D -->|No| F[Error: Invalid state]\n    E --> G[Update: Status/Db]\n    G --> H[Notify: Event/Message]\n    H --> I([Return Result])"
             }
           ]
         },
@@ -1437,60 +2576,102 @@
               "path": "/api/mall/auth/wxlogin",
               "summary": "微信授权登录",
               "parameters": [
-                {"name": "params", "in": "body", "type": "Map<String, String>", "required": true, "description": "包含code、nickname、avatar"}
+                {
+                  "name": "params",
+                  "in": "body",
+                  "type": "Map<String, String>",
+                  "required": true,
+                  "description": "包含code、nickname、avatar"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "微信小程序通过code授权登录，找或创建会员，返回token"
+              "businessLogic": "微信小程序通过code授权登录，找或创建会员，返回token",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Validate: Credentials]\n    B --> C{Credentials valid?}\n    C -->|Yes| D[Generate: JWT Token]\n    C -->|No| E[Return: Auth failed]\n    D --> F[Set: Cookie/Header]\n    F --> G([Return Token + User info])"
             },
             {
               "method": "POST",
               "path": "/api/mall/auth/login",
               "summary": "账号密码登录",
               "parameters": [
-                {"name": "params", "in": "body", "type": "Map<String, String>", "required": true, "description": "包含username、password（SHA-256）"}
+                {
+                  "name": "params",
+                  "in": "body",
+                  "type": "Map<String, String>",
+                  "required": true,
+                  "description": "包含username、password（SHA-256）"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "账号密码登录，支持手机号作为用户名"
+              "businessLogic": "账号密码登录，支持手机号作为用户名",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Validate: Credentials]\n    B --> C{Credentials valid?}\n    C -->|Yes| D[Generate: JWT Token]\n    C -->|No| E[Return: Auth failed]\n    D --> F[Set: Cookie/Header]\n    F --> G([Return Token + User info])"
             },
             {
               "method": "POST",
               "path": "/api/mall/auth/register",
               "summary": "用户注册",
               "parameters": [
-                {"name": "params", "in": "body", "type": "Map<String, String>", "required": true, "description": "包含username、password、phone、code"}
+                {
+                  "name": "params",
+                  "in": "body",
+                  "type": "Map<String, String>",
+                  "required": true,
+                  "description": "包含username、password、phone、code"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "新用户注册，密码需SHA-256加密存储"
+              "businessLogic": "新用户注册，密码需SHA-256加密存储",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Validate: Credentials]\n    B --> C{Credentials valid?}\n    C -->|Yes| D[Generate: JWT Token]\n    C -->|No| E[Return: Auth failed]\n    D --> F[Set: Cookie/Header]\n    F --> G([Return Token + User info])"
             },
             {
               "method": "POST",
               "path": "/api/mall/auth/send-code",
               "summary": "发送验证码",
               "parameters": [
-                {"name": "params", "in": "body", "type": "Map<String, String>", "required": true, "description": "包含phone、type（login/register/reset）"}
+                {
+                  "name": "params",
+                  "in": "body",
+                  "type": "Map<String, String>",
+                  "required": true,
+                  "description": "包含phone、type（login/register/reset）"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "发送短信验证码（开发模式返回123456）"
+              "businessLogic": "发送短信验证码（开发模式返回123456）",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Validate: Credentials]\n    B --> C{Credentials valid?}\n    C -->|Yes| D[Generate: JWT Token]\n    C -->|No| E[Return: Auth failed]\n    D --> F[Set: Cookie/Header]\n    F --> G([Return Token + User info])"
             },
             {
               "method": "POST",
               "path": "/api/mall/auth/reset-pwd",
               "summary": "重置密码",
               "parameters": [
-                {"name": "params", "in": "body", "type": "Map<String, String>", "required": true, "description": "包含phone、code、newPassword"}
+                {
+                  "name": "params",
+                  "in": "body",
+                  "type": "Map<String, String>",
+                  "required": true,
+                  "description": "包含phone、code、newPassword"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "通过手机验证码重置密码，新密码需>=6位，SHA-256存储"
+              "businessLogic": "通过手机验证码重置密码，新密码需>=6位，SHA-256存储",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Validate: Credentials]\n    B --> C{Credentials valid?}\n    C -->|Yes| D[Generate: JWT Token]\n    C -->|No| E[Return: Auth failed]\n    D --> F[Set: Cookie/Header]\n    F --> G([Return Token + User info])"
             },
             {
               "method": "GET",
               "path": "/api/mall/auth/wx/openid",
               "summary": "获取微信openid",
               "parameters": [
-                {"name": "code", "in": "query", "type": "String", "required": true, "description": "wx.login返回的code"}
+                {
+                  "name": "code",
+                  "in": "query",
+                  "type": "String",
+                  "required": true,
+                  "description": "wx.login返回的code"
+                }
               ],
               "responseFormat": "Result<?>",
-              "businessLogic": "内部接口，用code换openid和session_key，配置未完成时返回mock"
+              "businessLogic": "内部接口，用code换openid和session_key，配置未完成时返回mock",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Validate: Credentials]\n    B --> C{Credentials valid?}\n    C -->|Yes| D[Generate: JWT Token]\n    C -->|No| E[Return: Auth failed]\n    D --> F[Set: Cookie/Header]\n    F --> G([Return Token + User info])"
             }
           ]
         },
@@ -1504,12 +2685,31 @@
               "path": "/api/mall/resource/download/{deliveryId}",
               "summary": "下载虚拟商品资源",
               "parameters": [
-                {"name": "deliveryId", "in": "path", "type": "Long", "required": true, "description": "订单交付ID"},
-                {"name": "token", "in": "query", "type": "String", "required": true, "description": "下载Token"},
-                {"name": "expire", "in": "query", "type": "Long", "required": true, "description": "过期时间戳"}
+                {
+                  "name": "deliveryId",
+                  "in": "path",
+                  "type": "Long",
+                  "required": true,
+                  "description": "订单交付ID"
+                },
+                {
+                  "name": "token",
+                  "in": "query",
+                  "type": "String",
+                  "required": true,
+                  "description": "下载Token"
+                },
+                {
+                  "name": "expire",
+                  "in": "query",
+                  "type": "Long",
+                  "required": true,
+                  "description": "过期时间戳"
+                }
               ],
               "responseFormat": "Result<String>",
-              "businessLogic": "验证Token和有效期，返回资源URL或直接下载，访问一次后增加下载计数"
+              "businessLogic": "验证Token和有效期，返回资源URL或直接下载，访问一次后增加下载计数",
+              "flowchart": "flowchart TD\n    A([Client Request]) --> B[Auth: Token Check]\n    B --> C[Query: Database]\n    C --> D[Format: Response]\n    D --> E([Return Result])"
             }
           ]
         }

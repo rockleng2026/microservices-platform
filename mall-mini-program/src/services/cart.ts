@@ -41,6 +41,7 @@ export const getCartList = (userId: string): Promise<CartItem[]> => {
           // Map backend field names to CartItem interface
           const mapped = items.map((item: any) => ({
             skuId: item.skuId,
+            goodsId: item.goodsId,
             quantity: item.quantity,
             goodsName: item.goodsName,
             goodsImage: item.mainImage,
@@ -53,6 +54,7 @@ export const getCartList = (userId: string): Promise<CartItem[]> => {
           const items: any[] = res.data.datas || []
           const mapped = items.map((item: any) => ({
             skuId: item.skuId,
+            goodsId: item.goodsId,
             quantity: item.quantity,
             goodsName: item.goodsName,
             goodsImage: item.mainImage,

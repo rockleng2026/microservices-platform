@@ -30,10 +30,11 @@
                 class="item-image"
                 :src="item.goodsImage || '/static/images/placeholder.png'"
                 mode="aspectFill"
+                @click.stop="goToProduct(item)"
               />
 
               <!-- Product info -->
-              <view class="item-info">
+              <view class="item-info" @click.stop="goToProduct(item)">
                 <view class="item-name">{{ item.goodsName || '商品' }}</view>
                 <view class="item-spec" v-if="item.specs">{{ item.specs }}</view>
                 <view class="item-bottom">
@@ -205,6 +206,10 @@ const goCheckout = () => {
   uni.navigateTo({
     url: `/pages/checkout/index?skuIds=${skuIds.join(',')}`
   })
+}
+
+const goToProduct = (item: any) => {
+  uni.navigateTo({ url: `/pages/product-detail/index?id=${item.goodsId}&skuId=${item.skuId}` })
 }
 </script>
 

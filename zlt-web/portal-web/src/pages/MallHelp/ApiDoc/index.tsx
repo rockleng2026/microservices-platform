@@ -1,8 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { Card, Tabs, Input, Tag, Table, Empty, Tooltip } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import mermaid from 'mermaid';
 import apiDocsData from './data/api-docs.json';
 import './index.less';
+
+// Initialize mermaid once
+mermaid.initialize({ startOnLoad: false, theme: 'default' });
 
 const { Search } = Input;
 
@@ -29,6 +33,7 @@ interface Endpoint {
   }>;
   responseFormat: string;
   businessLogic: string;
+  flowchart?: string;
 }
 
 interface Controller {
@@ -100,6 +105,23 @@ const paramColumns: ColumnsType<Endpoint['parameters'][0]> = [
 const ApiDoc: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('goods');
   const [searchText, setSearchText] = useState<string>('');
+  const mermaidInitialized = useRef(false);
+
+  // Render mermaid diagrams when tab or endpoints change
+  useEffect(() => {
+    if (!mermaidInitialized.current) {
+      mermaid.initialize({ startOnLoad: false, theme: 'default' });
+      mermaidInitialized.current = true;
+    }
+    // Use a small delay to ensure DOM is ready after render
+    const timer = setTimeout(() => {
+      const container = document.querySelector('.api-doc-content');
+      if (container) {
+        mermaid.run({ nodes: container.querySelectorAll('.mermaid') });
+      }
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [activeTab]);
 
   // 当前模块数据
   const currentModule = useMemo(() => {
@@ -154,6 +176,16 @@ const ApiDoc: React.FC = () => {
         <strong>业务逻辑：</strong>
         <span>{endpoint.businessLogic}</span>
       </div>
+
+      {/* 流程图 */}
+      {endpoint.flowchart && (
+        <div style={{ marginBottom: 12, padding: 12, background: '#f5f5f5', borderRadius: 4 }}>
+          <strong>流程图：</strong>
+          <pre className="mermaid" style={{ marginTop: 8 }}>
+            {endpoint.flowchart.replace(/^```mermaid\n?|```$/g, '')}
+          </pre>
+        </div>
+      )}
 
       {/* 参数表格 */}
       {endpoint.parameters.length > 0 ? (

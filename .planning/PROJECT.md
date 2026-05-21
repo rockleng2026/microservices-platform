@@ -8,26 +8,22 @@
 
 为IT硬件经销商提供一套完整的B2C在线销售解决方案，同时支持实物与虚拟商品，一套系统覆盖从商品展示到支付交付的全链路电商能力。
 
-## Current Milestone: v2.1 商城使用帮助文档
+## Current Milestone: v2.2 (Planning)
 
-**Goal:** 在商场系统管理后台增加「商城使用帮助文档」菜单，下设三个子菜单：接口文档、菜单使用说明、FAQ，便于开发人员和业务人员快速上手使用。
+**Goal:** 下一里程碑规划中
 
-**Target features:**
-- 接口文档：mall-center 后台所有 Controller 接口的内部实现描述
-- 菜单使用说明：系统功能模块的使用说明，指导业务人员和前端用户使用商城模块
-- FAQ：常见问题和易错点记录
+## v2.1 商城使用帮助文档 — SHIPPED 2026-05-21
 
-**实现方式：**
-- 菜单配置：插入数据库 central_organization 的 menu_page + menu_func 表
-- 文档页面：React 组件，路由 /mall-help 下三个子路由
+**Delivered:**
+- 接口文档页面：126个接口，6个模块Tab，Mermaid流程图渲染
+- 用户登录模块分析：id/userId混淆问题识别，Token安全等5个Critical问题
+- FAQ页面：HELP-03-01~04 实现
 
-**数据库：** root/lengfeng847
+**Deferred:**
+- HELP-02 菜单使用说明（4 requirements）
+- Token安全改造（zlt-uaa）
 
-**技术栈：**
-- 管理后台：React + Umi + Ant Design（与 portal-web 一致）
-- 后端服务：mall-center 微服务（端口 7010）
-
-## Current Milestone: v2.0
+## v2.0 — SHIPPED 2026-05-20
 
 ## Requirements
 
@@ -55,10 +51,18 @@
 - ✓ ADVANCED-02 — Phase 7 (Redis Lua 原子化库存)
 - ✓ ADVANCED-03 — Phase 7 (商户多租户入驻)
 - ✓ ADVANCED-04 — Phase 7 (微信模板消息通知)
+- ✓ HELP-01-01~04 — Phase 18 (接口文档页面，126个接口，Mermaid流程图)
+- ✓ HELP-03-01~04 — Phase 20 (FAQ页面实现)
+- ✓ LOGIN-ANALYSIS — Phase 19 (用户登录模块分析，id/userId混淆问题识别)
 
 ### Active
 
-(None — v2.0 not yet planned)
+(None — v2.2 not yet planned)
+
+### Deferred (Pending Fix)
+
+- Token无签名/无过期时间 — zlt-uaa 改造待进行
+- mall_member 无独立 address 字段 — 表结构变更待进行
 
 ### Out of Scope
 
@@ -85,7 +89,8 @@
 **当前状态：**
 - v1.0 MVP 已完成 (2026-05-08)
 - v1.2 已完成 (2026-05-08) — 退款+营销+订单增强+扩展功能
-- v2.0 规划中
+- v2.0 已完成 (2026-05-20) — Admin Web + 小程序全功能
+- v2.1 已完成 (2026-05-21) — 接口文档+用户分析+FAQ
 
 ## Constraints
 
@@ -108,6 +113,9 @@
 | 使用 Spring Data Redis scripting 替代 Redisson evalReadOnly | Redisson API 不存在但效果相同 | ✓ |
 | 商户审批后自动生成 `MERCHANT_{id}` 作为 tenantId | 运营层面多租户隔离 | ✓ |
 | 优惠券与促销活动互斥，同一订单只能使用一种 | 避免利润侵蚀，简化业务逻辑 | ✓ |
+| 接口文档使用 Mermaid 流程图展示请求处理流程 | 图形化更直观，便于开发人员理解 | ✓ |
+| FAQ 数据存储在前端 JSON 配置文件中 | 便于扩展，无需改代码 | ✓ |
+| 购物车点击商品跳转详情（goodsId修复） | 后端已返回goodsId，前端映射补上 | ✓ |
 
 ## Evolution
 
@@ -127,4 +135,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state (users, feedback, metrics)
 
 ---
-*Last updated: 2026-05-20 after v2.1 milestone started*
+*Last updated: 2026-05-21 after v2.1 milestone shipped*

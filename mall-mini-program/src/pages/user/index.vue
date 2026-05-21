@@ -169,9 +169,17 @@ onShow(async () => {
       const memberInfo = await getMemberInfo()
       userInfo.value = memberInfo
       uni.setStorageSync('userInfo', memberInfo)
+
+      // 新用户（无昵称）自动跳转编辑资料页面
+      if (!memberInfo?.nickname) {
+        uni.navigateTo({ url: '/pages/user/profile' })
+      }
     } catch (e) {
-      // Fallback to cached
-      userInfo.value = uni.getStorageSync('userInfo') || { nickname: '用户' }
+      // 登录已过期，清除并跳转登录页
+      uni.removeStorageSync('token')
+      uni.removeStorageSync('userInfo')
+      userInfo.value = null
+      uni.navigateTo({ url: '/pages/login/index' })
     }
   } else {
     userInfo.value = null

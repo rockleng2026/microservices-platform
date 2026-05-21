@@ -77,6 +77,16 @@ public class DefaultExceptionAdvice {
     }
 
     /**
+     * SecurityException 安全/认证异常
+     * 返回状态码:401
+     */
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ExceptionHandler(SecurityException.class)
+    public Result handleSecurityException(SecurityException e) {
+        return Result.of(null, 401, e.getMessage());
+    }
+
+    /**
      * IdempotencyException 幂等性异常
      * 返回状态码:200
      */

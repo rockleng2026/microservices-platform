@@ -181,10 +181,18 @@ const addToCart = (skuId: number, quantity: number) => {
       success: (res: any) => {
         if (res.statusCode === 200) {
           const existing = state.cartItems.find(item => item.skuId === skuId)
+          // 尝试从响应中提取价格信息
+          const respData = res.data?.datas || res.data?.data
+          const price = respData?.skuPrice || respData?.price || 0
+          const goodsName = respData?.goodsName || ''
+          const goodsImage = respData?.mainImage || respData?.goodsImage || ''
+          const specs = respData?.skuSpecs || respData?.specs || ''
+
           if (existing) {
             existing.quantity += quantity
+            if (price && !existing.price) existing.price = price
           } else {
-            state.cartItems.push({ skuId, quantity, checked: 1 })
+            state.cartItems.push({ skuId, quantity, checked: 1, price, goodsName, goodsImage, specs })
           }
           if (isLoggedIn()) {
             state._selectedItems.push(skuId)

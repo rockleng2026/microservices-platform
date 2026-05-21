@@ -41,13 +41,17 @@ export const DEFAULT_AVATAR = '/static/default-avatar.png'
 // 获取当前登录用户ID（从 userInfo 中获取）
 export const getCurrentUserId = (): string => {
   const userInfo = uni.getStorageSync('userInfo')
-  return userInfo?.userId ? String(userInfo.userId) : '1'
+  if (!userInfo?.userId) {
+    throw new Error('用户未登录')
+  }
+  return String(userInfo.userId)
 }
 
 // 获取请求头（通用）
 export const getCommonHeaders = () => {
   return {
     'x-user-id': getCurrentUserId(),
-    'x-tenant-header': 'default'
+    'x-tenant-header': 'default',
+    'Authorization': uni.getStorageSync('token') || ''
   }
 }

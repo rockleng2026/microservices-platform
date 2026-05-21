@@ -12,11 +12,28 @@ const request = <T>(url: string, options?: any): Promise<T> => {
       },
       success: (res: any) => {
         if (res.statusCode === 200) {
-          if (res.data.code === 200 || res.data.code === 0) {
+          if (res.data.resp_code === 200 || res.data.resp_code === 0) {
             resolve(res.data.datas || res.data.data || res.data)
+          } else if (res.data.resp_code === 401) {
+            // 未登录，清除本地用户信息并跳转登录页
+            uni.removeStorageSync('token')
+            uni.removeStorageSync('userInfo')
+            uni.showToast({ title: '请先登录', icon: 'none' })
+            setTimeout(() => {
+              uni.navigateTo({ url: '/pages/login/index' })
+            }, 1500)
+            reject(new Error(res.data.resp_msg || '请先登录'))
           } else {
-            reject(new Error(res.data.msg || '请求失败'))
+            reject(new Error(res.data.msg || res.data.resp_msg || '请求失败'))
           }
+        } else if (res.statusCode === 401) {
+          uni.removeStorageSync('token')
+          uni.removeStorageSync('userInfo')
+          uni.showToast({ title: '登录已过期，请重新登录', icon: 'none' })
+          setTimeout(() => {
+            uni.navigateTo({ url: '/pages/login/index' })
+          }, 1500)
+          reject(res)
         } else {
           reject(res)
         }

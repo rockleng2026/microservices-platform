@@ -218,7 +218,9 @@ const goCheckout = () => {
 
 .cart-scroll {
   flex: 1;
-  height: calc(100vh - 120px);
+  height: calc(100vh - 50px);
+  padding-bottom: 50px;
+  box-sizing: border-box;
 }
 
 .cart-list {
@@ -391,6 +393,7 @@ const goCheckout = () => {
   display: flex;
   align-items: center;
   padding: 0 12px;
+  z-index: 100;
 }
 
 .select-all {

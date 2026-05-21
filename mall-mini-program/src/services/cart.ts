@@ -30,7 +30,11 @@ export const getCartList = (userId: string): Promise<CartItem[]> => {
     uni.request({
       url: `${API_BASE}${CART_API}/list`,
       method: 'GET',
-      header: { 'x-tenant-header': TENANT_ID, 'x-user-id': userId },
+      header: {
+        'x-tenant-header': TENANT_ID,
+        'x-user-id': userId,
+        'Authorization': uni.getStorageSync('token') || ''
+      },
       success: (res: any) => {
         if (res.statusCode === 200 && res.data.datas) {
           const items: any[] = res.data.datas || []
@@ -44,7 +48,20 @@ export const getCartList = (userId: string): Promise<CartItem[]> => {
             specs: item.skuSpecs
           }))
           resolve(mapped)
+        } else if (res.statusCode === 200 && res.data.resp_code === 0) {
+          // resp_code=0 means success even if datas is empty
+          const items: any[] = res.data.datas || []
+          const mapped = items.map((item: any) => ({
+            skuId: item.skuId,
+            quantity: item.quantity,
+            goodsName: item.goodsName,
+            goodsImage: item.mainImage,
+            price: item.skuPrice,
+            specs: item.skuSpecs
+          }))
+          resolve(mapped)
         } else {
+          console.warn('getCartList failed, fallback to local cache', res)
           resolve([])
         }
       },

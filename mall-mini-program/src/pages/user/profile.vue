@@ -77,9 +77,10 @@
       <!-- Phone (read-only) -->
       <view class="form-item">
         <text class="label">手机号</text>
-        <view class="input phone-input">
-          <text class="phone-text">{{ phone || '未绑定' }}</text>
+        <view class="input phone-input" v-if="phone">
+          <text class="phone-text">{{ phone }}</text>
         </view>
+        <button class="bind-phone-btn" v-else @click="bindPhone">绑定手机</button>
       </view>
 
       <!-- Province/City -->
@@ -151,6 +152,19 @@ onLoad(() => {
     gender.value = userInfo.gender || 0
     birthday.value = userInfo.birthday || ''
     phone.value = userInfo.phone || ''
+    // 加载地区信息（兼容新旧格式）
+    if (userInfo.province) {
+      if (userInfo.province.includes(' ')) {
+        // 旧格式 "省 市 区"
+        const parts = userInfo.province.split(' ').filter(Boolean)
+        region.value = parts
+        regionText.value = userInfo.province
+      } else {
+        // 新格式分别存储
+        region.value = [userInfo.province, userInfo.city || '']
+        regionText.value = userInfo.province + (userInfo.city ? ' ' + userInfo.city : '')
+      }
+    }
   }
 })
 
@@ -196,6 +210,17 @@ const onRegionChange = (e) => {
   regionText.value = e.detail.value.join(' ')
 }
 
+// Bind phone
+const bindPhone = () => {
+  // #ifdef H5
+  uni.showToast({ title: '请在微信中绑定手机号', icon: 'none' })
+  // #endif
+  // #ifndef H5
+  // 小程序环境可以调用手机号绑定组件
+  uni.showToast({ title: '绑定功能开发中', icon: 'none' })
+  // #endif
+}
+
 // Save profile
 const handleSave = async () => {
   if (!nickname.value.trim()) {
@@ -216,7 +241,14 @@ const handleSave = async () => {
     }
     uni.setStorageSync('userInfo', userInfo)
 
-    await updateProfile({ nickname: nickname.value, avatar: avatar.value, gender: gender.value, birthday: birthday.value, province: regionText.value })
+    await updateProfile({
+      nickname: nickname.value,
+      avatar: avatar.value,
+      gender: gender.value,
+      birthday: birthday.value,
+      province: region.value[0] || '',
+      city: region.value[1] || ''
+    })
 
     uni.showToast({ title: '保存成功', icon: 'success' })
     setTimeout(() => {
@@ -362,6 +394,20 @@ const handleSave = async () => {
 
   .phone-text {
     color: #666;
+  }
+}
+
+.bind-phone-btn {
+  display: inline-block;
+  padding: 12rpx 32rpx;
+  background: #fff;
+  color: #ff5500;
+  font-size: 26rpx;
+  border: 2rpx solid #ff5500;
+  border-radius: 8rpx;
+
+  &::after {
+    border: none;
   }
 }
 

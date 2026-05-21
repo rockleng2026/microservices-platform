@@ -7,7 +7,8 @@ const request = <T>(url: string, options?: any): Promise<T> => {
       ...options,
       header: {
         ...options?.header,
-        'x-tenant-header': TENANT_ID
+        'x-tenant-header': TENANT_ID,
+        'Authorization': uni.getStorageSync('token') || ''
       },
       success: (res: any) => {
         if (res.statusCode === 200) {

@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v2.1
 milestone_name: 商城使用帮助文档
-status: planning
-last_updated: "2026-05-20"
-last_activity: 2026-05-20 — Phase 18 context gathered
+status: Defining requirements
+last_updated: "2026-05-20T14:15:13.381Z"
+last_activity: 2026-05-20 — v2.1 milestone started
 progress:
-  total_phases: 0
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 9
+  completed_phases: 8
+  total_plans: 34
+  completed_plans: 34
+  percent: 100
 ---
 
 # State: Mall-Center 在线商城系统
@@ -43,6 +43,7 @@ See: .planning/PROJECT.md
 3. **FAQ** — 常见问题和易错点记录
 
 **实现方式：**
+
 - 菜单配置：插入数据库 central_organization 的 menu_page + menu_func 表
 - 文档页面：React 组件，路由 /mall-help 下三个子路由
 
